@@ -65,6 +65,8 @@ def _run_install_sh_home_selection(
         [
             "set -e",
             f'export HOME="{home}"',
+            'PACKAGE_DISTRIBUTION_NAME="hermes-agent"',
+            'MANAGED_CHECKOUT_DIR_NAME="$PACKAGE_DISTRIBUTION_NAME"',
             *env_lines,
             _extract_install_sh_home_selection_block(),
             'printf "HERMES_HOME=%s\\n" "$HERMES_HOME"',
@@ -134,7 +136,7 @@ def test_install_ps1_prefers_doppel_home_then_legacy_then_default() -> None:
 
     doppel_idx = text.find("if ($env:DOPPEL_HOME)")
     hermes_idx = text.find("} elseif ($env:HERMES_HOME) {")
-    legacy_idx = text.find('} elseif ((Test-Path (Join-Path $LegacyHermesHome "hermes-agent"))')
+    legacy_idx = text.find('} elseif ((Test-Path (Join-Path $LegacyHermesHome $ManagedCheckoutName))')
     default_idx = text.find("} else {\n        $HermesHome = $DefaultDoppelHome")
 
     assert -1 not in {doppel_idx, hermes_idx, legacy_idx, default_idx}
@@ -144,7 +146,9 @@ def test_install_ps1_prefers_doppel_home_then_legacy_then_default() -> None:
 def test_install_ps1_keeps_legacy_checkout_dir_name_for_in_place_upgrade() -> None:
     text = INSTALL_PS1.read_text(encoding="utf-8")
 
-    assert '$InstallDir = Join-Path $HermesHome "hermes-agent"' in text
+    assert '$PackageDistributionName = "hermes-agent"' in text
+    assert '$ManagedCheckoutName = $PackageDistributionName' in text
+    assert '$InstallDir = Join-Path $HermesHome $ManagedCheckoutName' in text
 
 
 def test_install_ps1_exports_both_home_env_vars() -> None:

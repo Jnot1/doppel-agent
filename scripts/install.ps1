@@ -76,8 +76,18 @@ try {
 # Configuration
 # ============================================================================
 
-$RepoUrlSsh = "git@github.com:Jnot1/doppel-agent.git"
-$RepoUrlHttps = "https://github.com/Jnot1/doppel-agent.git"
+$PreferredAgentName = "Doppel Agent"
+$PreferredVendorName = "Doppelme"
+$PreferredCliCommand = "doppel"
+$LegacyCliCommand = "hermes"
+$PackageDistributionName = "hermes-agent"
+$ManagedCheckoutName = $PackageDistributionName
+$ForkRepoSlug = "Jnot1/doppel-agent"
+$ForkRepoName = "doppel-agent"
+$ForkRepoWebUrl = "https://github.com/$ForkRepoSlug"
+$RepoUrlSsh = "git@github.com:${ForkRepoSlug}.git"
+$RepoUrlHttps = "${ForkRepoWebUrl}.git"
+$InstallScriptUrl = "https://raw.githubusercontent.com/$ForkRepoSlug/main/scripts/install.ps1"
 $PythonVersion = "3.11"
 $NodeVersion = "22"
 $DefaultDoppelHome = Join-Path $env:LOCALAPPDATA "doppel"
@@ -88,17 +98,18 @@ if (-not $PSBoundParameters.ContainsKey("HermesHome")) {
         $HermesHome = $env:DOPPEL_HOME
     } elseif ($env:HERMES_HOME) {
         $HermesHome = $env:HERMES_HOME
-    } elseif ((Test-Path (Join-Path $LegacyHermesHome "hermes-agent")) -or (Test-Path (Join-Path $LegacyHermesHome "config.yaml")) -or (Test-Path (Join-Path $LegacyHermesHome ".env"))) {
+    } elseif ((Test-Path (Join-Path $LegacyHermesHome $ManagedCheckoutName)) -or (Test-Path (Join-Path $LegacyHermesHome "config.yaml")) -or (Test-Path (Join-Path $LegacyHermesHome ".env"))) {
         $HermesHome = $LegacyHermesHome
     } else {
         $HermesHome = $DefaultDoppelHome
     }
 }
 if (-not $PSBoundParameters.ContainsKey("InstallDir")) {
-    $InstallDir = Join-Path $HermesHome "hermes-agent"
+    $InstallDir = Join-Path $HermesHome $ManagedCheckoutName
 }
 $env:DOPPEL_HOME = $HermesHome
 $env:HERMES_HOME = $HermesHome
+$env:PACKAGE_DISTRIBUTION_NAME = $PackageDistributionName
 
 # Stage-protocol version.  Bumped only for genuinely breaking changes to the
 # manifest schema, stage-name set semantics, or stdout JSON shape.  Adding a
@@ -112,9 +123,9 @@ $InstallStageProtocolVersion = 1
 function Write-Banner {
     Write-Host ""
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
-    Write-Host "|             * Doppel Agent Installer                    |" -ForegroundColor Magenta
+    Write-Host "|             * $PreferredAgentName Installer                    |" -ForegroundColor Magenta
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
-    Write-Host "|  Your Everyday Personal AI Assistant by Doppelme.       |" -ForegroundColor Magenta
+    Write-Host "|  Your Everyday Personal AI Assistant by $PreferredVendorName.       |" -ForegroundColor Magenta
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
     Write-Host ""
 }
@@ -576,7 +587,7 @@ function Install-Git {
         $gitVerTag = "$gitVer.windows.1"
 
         if ($arch -eq "32-bit-mingit") {
-            Write-Warn "32-bit Windows detected -- PortableGit is 64-bit only.  Installing MinGit 32-bit as a last resort; bash-dependent Hermes features (terminal tool, agent-browser) will not work on this machine."
+            Write-Warn "32-bit Windows detected -- PortableGit is 64-bit only.  Installing MinGit 32-bit as a last resort; bash-dependent Doppel features (terminal tool, agent-browser) will not work on this machine."
             $assetName    = "MinGit-$gitVer-32-bit.zip"
             $downloadIsZip = $true
         } elseif ($arch -eq "arm64") {
@@ -656,7 +667,7 @@ function Install-Git {
         Write-Err "Could not install portable Git: $_"
         Write-Info ""
         Write-Info "Fallback: install Git manually from https://git-scm.com/download/win"
-        Write-Info "then re-run this installer.  Hermes needs Git Bash on Windows to run"
+        Write-Info "then re-run this installer.  Doppel needs Git Bash on Windows to run"
         Write-Info "shell commands (same as Claude Code and other coding agents)."
         return $false
     }
@@ -710,7 +721,7 @@ function Set-GitBashEnvVar {
         }
     }
 
-    Write-Warn "Could not locate bash.exe -- Hermes may not find Git Bash."
+    Write-Warn "Could not locate bash.exe -- Doppel may not find Git Bash."
     Write-Info "If needed, set HERMES_GIT_BASH_PATH manually to your bash.exe path."
 }
 
@@ -729,7 +740,7 @@ function Test-Node {
     if (Test-Path $managedNode) {
         $version = & $managedNode --version
         $env:Path = "$HermesHome\node;$env:Path"
-        Write-Success "Node.js $version found (Hermes-managed)"
+        Write-Success "Node.js $version found (Doppel-managed)"
         $script:HasNode = $true
         return $true
     }
@@ -1081,17 +1092,17 @@ function Install-Repository {
                 # for.  GitHub supports archive URLs for commits, tags, and
                 # branches; we honour Commit > Tag > Branch.
                 if ($Commit) {
-                    $zipUrl = "https://github.com/Jnot1/doppel-agent/archive/$Commit.zip"
+                    $zipUrl = "$ForkRepoWebUrl/archive/$Commit.zip"
                     $zipLabel = $Commit
                 } elseif ($Tag) {
-                    $zipUrl = "https://github.com/Jnot1/doppel-agent/archive/refs/tags/$Tag.zip"
+                    $zipUrl = "$ForkRepoWebUrl/archive/refs/tags/$Tag.zip"
                     $zipLabel = $Tag
                 } else {
-                    $zipUrl = "https://github.com/Jnot1/doppel-agent/archive/refs/heads/$Branch.zip"
+                    $zipUrl = "$ForkRepoWebUrl/archive/refs/heads/$Branch.zip"
                     $zipLabel = $Branch
                 }
-                $zipPath = "$env:TEMP\hermes-agent-$zipLabel.zip"
-                $extractPath = "$env:TEMP\hermes-agent-extract"
+                $zipPath = "$env:TEMP\$ForkRepoName-$zipLabel.zip"
+                $extractPath = "$env:TEMP\$ForkRepoName-extract"
 
                 Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
                 if (Test-Path $extractPath) { Remove-Item -Recurse -Force $extractPath }
@@ -1277,14 +1288,16 @@ function Install-Dependencies {
     $allExtras = @()
     if (Test-Path $pythonExeForParse) {
         $parsed = & $pythonExeForParse -c @"
-import re, sys, tomllib
+import os, re, sys, tomllib
 try:
     with open('pyproject.toml', 'rb') as fh:
         data = tomllib.load(fh)
     specs = data['project']['optional-dependencies']['all']
     out = []
+    package_name = os.environ.get('PACKAGE_DISTRIBUTION_NAME', 'hermes-agent')
+    pattern = re.compile(rf"{re.escape(package_name)}\[([\w-]+)\]")
     for s in specs:
-        m = re.search(r'hermes-agent\[([\w-]+)\]', s)
+        m = pattern.search(s)
         if m: out.append(m.group(1))
     print(','.join(out))
 except Exception:
@@ -1322,7 +1335,7 @@ except Exception:
         }
     }
     if (-not $installed) {
-        throw "Failed to install hermes-agent package even with no extras. Inspect the uv pip install output above."
+        throw "Failed to install $PackageDistributionName even with no extras. Inspect the uv pip install output above."
     }
 
     # Baseline-import gate. Even if a tier reported success above, the
@@ -2011,7 +2024,7 @@ function Write-Completion {
     Write-Host "Start messaging gateway (Telegram, Discord, etc.)"
     Write-Host "   doppel update       " -NoNewline -ForegroundColor Green
     Write-Host "Update to latest version"
-    Write-Host "   hermes              " -NoNewline -ForegroundColor Green
+    Write-Host "   $LegacyCliCommand              " -NoNewline -ForegroundColor Green
     Write-Host "Legacy command alias (still supported)"
     Write-Host ""
     
@@ -2113,11 +2126,11 @@ $InstallStages = @(
     @{ Name = "git";              Title = "Installing Git";                       Category = "prereqs";      NeedsUserInput = $false; Worker = "Stage-Git" }
     @{ Name = "node";             Title = "Detecting Node.js";                    Category = "prereqs";      NeedsUserInput = $false; Worker = "Stage-Node" }
     @{ Name = "system-packages";  Title = "Installing ripgrep and ffmpeg";        Category = "prereqs";      NeedsUserInput = $false; Worker = "Stage-SystemPackages" }
-    @{ Name = "repository";       Title = "Cloning Hermes repository";            Category = "install";      NeedsUserInput = $false; Worker = "Stage-Repository" }
+    @{ Name = "repository";       Title = "Cloning Doppel Agent repository";      Category = "install";      NeedsUserInput = $false; Worker = "Stage-Repository" }
     @{ Name = "venv";             Title = "Creating Python virtual environment";  Category = "install";      NeedsUserInput = $false; Worker = "Stage-Venv" }
     @{ Name = "dependencies";     Title = "Installing Python dependencies";       Category = "install";      NeedsUserInput = $false; Worker = "Stage-Dependencies" }
     @{ Name = "node-deps";        Title = "Installing Node.js dependencies";      Category = "install";      NeedsUserInput = $false; Worker = "Stage-NodeDeps" }
-    @{ Name = "path";             Title = "Adding Hermes to PATH";                Category = "finalize";     NeedsUserInput = $false; Worker = "Stage-Path" }
+    @{ Name = "path";             Title = "Adding Doppel to PATH";                Category = "finalize";     NeedsUserInput = $false; Worker = "Stage-Path" }
     @{ Name = "config-templates"; Title = "Writing configuration templates";      Category = "finalize";     NeedsUserInput = $false; Worker = "Stage-ConfigTemplates" }
     @{ Name = "platform-sdks";    Title = "Installing messaging platform SDKs";   Category = "finalize";     NeedsUserInput = $false; Worker = "Stage-PlatformSdks" }
     # Interactive stages.  In non-interactive mode these become no-ops; the
@@ -2401,7 +2414,7 @@ try {
     Write-Err "Installation failed: $_"
     Write-Host ""
     Write-Info "If the error is unclear, try downloading and running the script directly:"
-    Write-Host "  Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1' -OutFile install.ps1" -ForegroundColor Yellow
+    Write-Host "  Invoke-WebRequest -Uri '$InstallScriptUrl' -OutFile install.ps1" -ForegroundColor Yellow
     Write-Host "  .\install.ps1" -ForegroundColor Yellow
     Write-Host ""
 }

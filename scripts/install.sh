@@ -43,8 +43,23 @@ NC='\033[0m' # No Color
 BOLD='\033[1m'
 
 # Configuration
-REPO_URL_SSH="git@github.com:Jnot1/doppel-agent.git"
-REPO_URL_HTTPS="https://github.com/Jnot1/doppel-agent.git"
+PREFERRED_AGENT_NAME="Doppel Agent"
+PREFERRED_VENDOR_NAME="Doppelme"
+PREFERRED_CLI_COMMAND="doppel"
+LEGACY_CLI_COMMAND="hermes"
+PACKAGE_DISTRIBUTION_NAME="hermes-agent"
+MANAGED_CHECKOUT_DIR_NAME="$PACKAGE_DISTRIBUTION_NAME"
+FORK_REPO_SLUG="Jnot1/doppel-agent"
+FORK_REPO_WEB_URL="https://github.com/$FORK_REPO_SLUG"
+REPO_URL_SSH="git@github.com:$FORK_REPO_SLUG.git"
+REPO_URL_HTTPS="$FORK_REPO_WEB_URL.git"
+INSTALLER_RAW_BASE_URL="https://raw.githubusercontent.com/$FORK_REPO_SLUG/main/scripts"
+INSTALL_SH_URL="$INSTALLER_RAW_BASE_URL/install.sh"
+INSTALL_PS1_URL="$INSTALLER_RAW_BASE_URL/install.ps1"
+ROOT_INSTALL_DIR="/usr/local/lib/$MANAGED_CHECKOUT_DIR_NAME"
+ROOT_COMMAND_LINK_DIR="/usr/local/bin"
+INSTALLER_TEMP_PREFIX="doppel"
+INSTALL_AUTOSTASH_PREFIX="doppel-install-autostash"
 DEFAULT_DOPPEL_HOME="$HOME/.doppel"
 LEGACY_HERMES_HOME_ROOT="$HOME/.hermes"
 DOPPEL_HOME="${DOPPEL_HOME:-}"
@@ -52,7 +67,7 @@ if [ -n "$DOPPEL_HOME" ]; then
     HERMES_HOME="$DOPPEL_HOME"
 elif [ -n "${HERMES_HOME:-}" ]; then
     HERMES_HOME="$HERMES_HOME"
-elif [ -d "$LEGACY_HERMES_HOME_ROOT/hermes-agent/.git" ] || [ -f "$LEGACY_HERMES_HOME_ROOT/config.yaml" ] || [ -f "$LEGACY_HERMES_HOME_ROOT/.env" ]; then
+elif [ -d "$LEGACY_HERMES_HOME_ROOT/$MANAGED_CHECKOUT_DIR_NAME/.git" ] || [ -f "$LEGACY_HERMES_HOME_ROOT/config.yaml" ] || [ -f "$LEGACY_HERMES_HOME_ROOT/.env" ]; then
     HERMES_HOME="$LEGACY_HERMES_HOME_ROOT"
 else
     HERMES_HOME="$DEFAULT_DOPPEL_HOME"
@@ -136,7 +151,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            echo "Doppel Agent Installer"
+            echo "$PREFERRED_AGENT_NAME Installer"
             echo ""
             echo "Usage: install.sh [OPTIONS]"
             echo ""
@@ -146,21 +161,22 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-browser Skip Playwright/Chromium install (browser tools won't work)"
             echo "  --branch NAME  Git branch to install (default: main)"
             echo "  --dir PATH     Installation directory"
-            echo "                   default (non-root):  ~/.doppel/hermes-agent"
-            echo "                   default (root, Linux): /usr/local/lib/hermes-agent"
+            echo "                   default (non-root):  ~/.doppel/$MANAGED_CHECKOUT_DIR_NAME"
+            echo "                   default (root, Linux): $ROOT_INSTALL_DIR"
             echo "  --doppel-home PATH  Data directory (default: ~/.doppel, or \$DOPPEL_HOME)"
             echo "  --hermes-home PATH  Legacy alias for --doppel-home"
             echo "  -h, --help     Show this help"
             echo ""
             echo "Notes:"
             echo "  When running as root on Linux, Doppel installs the code under"
-            echo "  /usr/local/lib/hermes-agent and links the command into"
-            echo "  /usr/local/bin/doppel (with a legacy /usr/local/bin/hermes alias)."
+            echo "  $ROOT_INSTALL_DIR and links the command into"
+            echo "  $ROOT_COMMAND_LINK_DIR/$PREFERRED_CLI_COMMAND (with a legacy $ROOT_COMMAND_LINK_DIR/$LEGACY_CLI_COMMAND alias)."
             echo "  Data, config, sessions, and logs still live in \$DOPPEL_HOME"
             echo "  (default /root/.doppel). The installer also exports \$HERMES_HOME"
             echo "  for compatibility with existing runtime internals."
-            echo "  small and ensures the command is on PATH for all shells."
-            echo "  Existing installs at ~/.hermes/hermes-agent are preserved in-place."
+            echo "  This keeps bind-mounted /root volumes small and ensures the"
+            echo "  command is on PATH for all shells."
+            echo "  Existing installs at ~/.hermes/$MANAGED_CHECKOUT_DIR_NAME are preserved in-place."
             echo "  --ensure DEPS  Install only specified deps (comma-separated)"
             echo "                   Supported: node, browser, ripgrep, ffmpeg"
             echo "                   Does NOT clone repo or create venv"
@@ -184,9 +200,9 @@ print_banner() {
     echo ""
     echo -e "${MAGENTA}${BOLD}"
     echo "┌─────────────────────────────────────────────────────────┐"
-    echo "│             ⚕ Doppel Agent Installer                   │"
+    echo "│             ⚕ $PREFERRED_AGENT_NAME Installer                   │"
     echo "├─────────────────────────────────────────────────────────┤"
-    echo "│  Your Everyday Personal AI Assistant by Doppelme.       │"
+    echo "│  Your Everyday Personal AI Assistant by $PREFERRED_VENDOR_NAME.       │"
     echo "└─────────────────────────────────────────────────────────┘"
     echo -e "${NC}"
 }
@@ -280,7 +296,7 @@ resolve_install_layout() {
 
     # Termux: package manager manages /data/data/..., keep code in HERMES_HOME.
     if is_termux; then
-        INSTALL_DIR="$HERMES_HOME/hermes-agent"
+        INSTALL_DIR="$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME"
         return 0
     fi
 
@@ -288,13 +304,13 @@ resolve_install_layout() {
     # macOS root installs keep the legacy layout because /usr/local/ on macOS
     # is Homebrew territory and we don't want to fight that.
     if [ "$OS" = "linux" ] && [ "$(id -u)" -eq 0 ]; then
-        if [ -d "$HERMES_HOME/hermes-agent/.git" ]; then
-            INSTALL_DIR="$HERMES_HOME/hermes-agent"
+        if [ -d "$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME/.git" ]; then
+            INSTALL_DIR="$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME"
             log_info "Existing install detected at $INSTALL_DIR — keeping legacy layout"
-            log_info "  (new root installs use /usr/local/lib/hermes-agent)"
+            log_info "  (new root installs use $ROOT_INSTALL_DIR)"
             return 0
         fi
-        INSTALL_DIR="/usr/local/lib/hermes-agent"
+        INSTALL_DIR="$ROOT_INSTALL_DIR"
         ROOT_FHS_LAYOUT=true
         # Place uv-managed Python under /usr/local/share so the venv interpreter
         # is world-readable.  Default uv paths land in /root/.local/share/uv,
@@ -305,21 +321,21 @@ resolve_install_layout() {
         export UV_PYTHON_BIN_DIR="${UV_PYTHON_BIN_DIR:-/usr/local/share/uv/bin}"
         log_info "Root install on Linux — using FHS layout"
         log_info "  Code:    $INSTALL_DIR"
-        log_info "  Command: /usr/local/bin/doppel"
+        log_info "  Command: $ROOT_COMMAND_LINK_DIR/$PREFERRED_CLI_COMMAND"
         log_info "  Data:    $HERMES_HOME (unchanged)"
         log_info "  uv Python: $UV_PYTHON_INSTALL_DIR (world-readable)"
         return 0
     fi
 
     # Default: non-root, non-Termux → legacy user-scoped layout.
-    INSTALL_DIR="$HERMES_HOME/hermes-agent"
+    INSTALL_DIR="$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME"
 }
 
 get_command_link_dir() {
     if is_termux && [ -n "${PREFIX:-}" ]; then
         echo "$PREFIX/bin"
     elif [ "$ROOT_FHS_LAYOUT" = true ]; then
-        echo "/usr/local/bin"
+        echo "$ROOT_COMMAND_LINK_DIR"
     else
         echo "$HOME/.local/bin"
     fi
@@ -329,7 +345,7 @@ get_command_link_display_dir() {
     if is_termux && [ -n "${PREFIX:-}" ]; then
         echo '$PREFIX/bin'
     elif [ "$ROOT_FHS_LAYOUT" = true ]; then
-        echo '/usr/local/bin'
+        echo "$ROOT_COMMAND_LINK_DIR"
     else
         echo '~/.local/bin'
     fi
@@ -375,7 +391,7 @@ detect_os() {
             OS="windows"
             DISTRO="windows"
             log_error "Windows detected. Please use the PowerShell installer:"
-            log_info "  iex (irm https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1)"
+            log_info "  iex (irm $INSTALL_PS1_URL)"
             exit 1
             ;;
         *)
@@ -436,8 +452,8 @@ install_uv() {
     # `curl | sh` masks curl failures (sh exits 0 on empty stdin)
     # and conflates network errors with installer errors.
     local _uv_install_log _uv_installer
-    _uv_install_log="$(mktemp 2>/dev/null || echo "/tmp/hermes-uv-install.$$.log")"
-    _uv_installer="$(mktemp 2>/dev/null || echo "/tmp/hermes-uv-installer.$$.sh")"
+    _uv_install_log="$(mktemp 2>/dev/null || echo "/tmp/$INSTALLER_TEMP_PREFIX-uv-install.$$.log")"
+    _uv_installer="$(mktemp 2>/dev/null || echo "/tmp/$INSTALLER_TEMP_PREFIX-uv-installer.$$.sh")"
     if ! curl -LsSf https://astral.sh/uv/install.sh -o "$_uv_installer" 2>"$_uv_install_log"; then
         log_error "Failed to download uv installer from https://astral.sh/uv/install.sh"
         log_info "curl output:"
@@ -632,7 +648,7 @@ check_node() {
     if [ -x "$HERMES_HOME/node/bin/node" ]; then
         export PATH="$HERMES_HOME/node/bin:$PATH"
         local found_ver=$("$HERMES_HOME/node/bin/node" --version)
-        log_success "Node.js $found_ver found (Hermes-managed)"
+        log_success "Node.js $found_ver found (Doppel-managed)"
         HAS_NODE=true
         return 0
     fi
@@ -784,7 +800,7 @@ check_network_prerequisites() {
         log_info "If mirrors are stale: termux-change-repo"
         log_info "Then test: curl -I https://pypi.org/simple/ && curl -I https://duckduckgo.com/"
     else
-        log_warn "Network checks failed. Hermes install may complete, but web search and dependency downloads can fail."
+        log_warn "Network checks failed. Doppel install may complete, but web search and dependency downloads can fail."
         log_info "Verify internet/DNS and retry if pip install fails."
     fi
 }
@@ -995,7 +1011,7 @@ clone_repo() {
             local autostash_ref=""
             if [ -n "$(git status --porcelain)" ]; then
                 local stash_name
-                stash_name="hermes-install-autostash-$(date -u +%Y%m%d-%H%M%S)"
+                stash_name="$INSTALL_AUTOSTASH_PREFIX-$(date -u +%Y%m%d-%H%M%S)"
                 log_info "Local changes detected, stashing before update..."
                 git stash push --include-untracked -m "$stash_name"
                 autostash_ref="stash@{0}"
@@ -1262,15 +1278,18 @@ install_deps() {
     # Falls back to a hand list if parse fails — defensive only.
     local _ALL_EXTRAS_CSV
     _ALL_EXTRAS_CSV="$(
-        "$PYTHON_PATH" - <<'PY' 2>/dev/null
+        PACKAGE_DISTRIBUTION_NAME="$PACKAGE_DISTRIBUTION_NAME" "$PYTHON_PATH" - <<'PY' 2>/dev/null
 import re, sys, tomllib
+import os
 try:
     with open("pyproject.toml", "rb") as fh:
         data = tomllib.load(fh)
     specs = data["project"]["optional-dependencies"]["all"]
     extras = []
+    package_name = os.environ.get("PACKAGE_DISTRIBUTION_NAME", "hermes-agent")
+    pattern = re.compile(rf"{re.escape(package_name)}\[([\w-]+)\]")
     for s in specs:
-        m = re.search(r"hermes-agent\[([\w-]+)\]", s)
+        m = pattern.search(s)
         if m:
             extras.append(m.group(1))
     print(",".join(extras))
@@ -1698,7 +1717,7 @@ install_node_deps() {
         DETECTED_BROWSER_EXECUTABLE="$(find_system_browser 2>/dev/null || true)"
         if [ -n "$DETECTED_BROWSER_EXECUTABLE" ]; then
             log_success "Found system Chrome/Chromium at $DETECTED_BROWSER_EXECUTABLE"
-            log_info "Skipping Playwright browser download; Hermes will use the system browser."
+            log_info "Skipping Playwright browser download; $PREFERRED_AGENT_NAME will use the system browser."
         else
             case "$DISTRO" in
                 ubuntu|debian|raspbian|pop|linuxmint|elementary|zorin|kali|parrot)
@@ -1946,7 +1965,7 @@ print_success() {
     echo -e "   ${GREEN}doppel config edit${NC} Open config in editor"
     echo -e "   ${GREEN}doppel gateway install${NC} Install gateway service (messaging + cron)"
     echo -e "   ${GREEN}doppel update${NC}      Update to latest version"
-    echo -e "   ${GREEN}hermes${NC}             Legacy command alias (still supported)"
+    echo -e "   ${GREEN}$LEGACY_CLI_COMMAND${NC}             Legacy command alias (still supported)"
     echo ""
 
     echo -e "${CYAN}─────────────────────────────────────────────────────────${NC}"

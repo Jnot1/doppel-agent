@@ -62,6 +62,32 @@ class TestCmdUpdatePip:
 
     @patch("shutil.which", return_value="/usr/bin/uv")
     @patch("subprocess.run")
+    def test_update_pip_uses_shared_distribution_name(
+        self, mock_run, _mock_which, mock_args, monkeypatch
+    ):
+        from hermes_cli import main as hm
+
+        mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+        monkeypatch.setattr(
+            "hermes_constants.get_distribution_package_name",
+            lambda: "doppel-agent-test",
+        )
+        monkeypatch.setattr(hm.sys, "prefix", "/usr")
+        monkeypatch.setattr(hm.sys, "base_prefix", "/usr")
+
+        hm._cmd_update_pip(mock_args)
+
+        assert mock_run.call_args.args[0] == [
+            "/usr/bin/uv",
+            "pip",
+            "install",
+            "--system",
+            "--upgrade",
+            "doppel-agent-test",
+        ]
+
+    @patch("shutil.which", return_value="/usr/bin/uv")
+    @patch("subprocess.run")
     def test_update_pip_does_not_export_virtualenv_for_system_python(
         self, mock_run, _mock_which, mock_args, monkeypatch
     ):
@@ -497,6 +523,40 @@ class TestCmdUpdateBranchFlag:
         out = capsys.readouterr().out
         assert "does not exist locally or on origin" in out
         assert "nonexistent" in out
+
+
+def test_is_fork_uses_shared_official_repo_urls(monkeypatch):
+    from hermes_cli import main as hm
+
+    monkeypatch.setattr(
+        "hermes_constants.get_official_repo_urls",
+        lambda: frozenset({"https://example.com/org/custom-agent"}),
+    )
+
+    assert hm._is_fork("https://example.com/org/custom-agent.git") is False
+    assert hm._is_fork("https://example.com/org/fork.git") is True
+
+
+@patch("subprocess.run")
+def test_add_upstream_remote_uses_shared_upstream_repo_url(mock_run, monkeypatch, tmp_path):
+    from hermes_cli import main as hm
+
+    mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+    monkeypatch.setattr(
+        "hermes_constants.get_official_upstream_repo_url",
+        lambda: "https://example.com/org/custom-agent.git",
+    )
+
+    ok = hm._add_upstream_remote(["git"], tmp_path)
+
+    assert ok is True
+    assert mock_run.call_args.args[0] == [
+        "git",
+        "remote",
+        "add",
+        "upstream",
+        "https://example.com/org/custom-agent.git",
+    ]
 
 
 class TestCmdUpdateCheckBranchFlag:

@@ -13,6 +13,7 @@ This module provides:
 """
 
 import copy
+import hermes_constants
 import logging
 import os
 import platform
@@ -273,7 +274,7 @@ def get_managed_update_command() -> Optional[str]:
     """Return the preferred upgrade command for a managed install."""
     managed_system = get_managed_system()
     if managed_system == "Homebrew":
-        return "brew upgrade hermes-agent"
+        return f"brew upgrade {hermes_constants.get_homebrew_formula_name()}"
     if managed_system == "NixOS":
         return _NIX_UPDATE_MSG
     return None
@@ -348,7 +349,8 @@ def is_uv_tool_install() -> bool:
     """
     def _has_uv_tool_marker(path: str) -> bool:
         norm = os.path.normpath(path).replace(os.sep, "/").lower()
-        return "/uv/tools/hermes-agent/" in norm + "/"
+        package_name = hermes_constants.get_distribution_package_name().lower()
+        return f"/uv/tools/{package_name}/" in norm + "/"
 
     if _has_uv_tool_marker(sys.prefix):
         return True
@@ -359,19 +361,20 @@ def is_uv_tool_install() -> bool:
 
 def recommended_update_command_for_method(method: str) -> str:
     """Return the update command or guidance for a given install method."""
+    package_name = hermes_constants.get_distribution_package_name()
     if method == "nixos":
         return _NIX_UPDATE_MSG
     if method == "homebrew":
-        return "brew upgrade hermes-agent"
+        return f"brew upgrade {hermes_constants.get_homebrew_formula_name()}"
     if method == "docker":
-        return "docker pull nousresearch/hermes-agent:latest"
+        return f"docker pull {hermes_constants.get_docker_image_name()}:latest"
     if method == "pip":
         if is_uv_tool_install():
-            return "uv tool upgrade hermes-agent"
+            return f"uv tool upgrade {package_name}"
         import shutil
         if shutil.which("uv"):
-            return "uv pip install --upgrade hermes-agent"
-        return "pip install --upgrade hermes-agent"
+            return f"uv pip install --upgrade {package_name}"
+        return f"pip install --upgrade {package_name}"
     return "hermes update"
 
 
@@ -399,41 +402,41 @@ def recommended_update_command() -> str:
 #   - The right action is ``docker pull`` + restart the container; this
 #     helper spells that out, with notes on tag pinning and config
 #     persistence so users don't get blindsided.
-_DOCKER_UPDATE_MESSAGE = """\
-✗ ``hermes update`` doesn't apply inside the Docker container.
-
-Hermes Agent runs as a published image (nousresearch/hermes-agent), not a
-git checkout — the container has no working tree to pull into.  Update by
-pulling a fresh image and restarting your container instead:
-
-  docker pull nousresearch/hermes-agent:latest
-  # then restart whatever started the container, e.g.:
-  docker compose up -d --force-recreate hermes-agent
-  # or, for ad-hoc runs, exit the current container and `docker run` again
-
-Verify the new version after restart:
-  docker run --rm nousresearch/hermes-agent:latest --version
-
-Notes:
-  • If you pinned a specific tag (e.g. ``:v0.14.0``) the ``:latest`` tag
-    won't move your container — pull the newer tag you actually want, or
-    switch to ``:latest`` / ``:main`` for rolling updates.  See available
-    tags at https://hub.docker.com/r/nousresearch/hermes-agent/tags
-  • Your config and session history live under ``$HERMES_HOME`` (``/opt/data``
-    in the container, typically bind-mounted from the host) and persist
-    across image upgrades — re-pulling doesn't lose any state.
-  • Running a fork?  Build your own image with this repo's ``Dockerfile``
-    and replace the ``docker pull`` step with your build/push pipeline."""
 
 
 def format_docker_update_message() -> str:
     """Return the user-facing message for ``hermes update`` inside Docker.
 
     Centralised so ``cmd_update`` (the apply path) and ``_cmd_update_check``
-    (the dry-run path) share the same wording.  See ``_DOCKER_UPDATE_MESSAGE``
-    above for the full rationale.
+    (the dry-run path) share the same wording.
     """
-    return _DOCKER_UPDATE_MESSAGE
+    image_name = hermes_constants.get_docker_image_name()
+    container_name = image_name.rsplit("/", 1)[-1]
+    return f"""\
+✗ ``hermes update`` doesn't apply inside the Docker container.
+
+Hermes Agent runs as a published image ({image_name}), not a
+git checkout — the container has no working tree to pull into.  Update by
+pulling a fresh image and restarting your container instead:
+
+  docker pull {image_name}:latest
+  # then restart whatever started the container, e.g.:
+  docker compose up -d --force-recreate {container_name}
+  # or, for ad-hoc runs, exit the current container and `docker run` again
+
+Verify the new version after restart:
+  docker run --rm {image_name}:latest --version
+
+Notes:
+  • If you pinned a specific tag (e.g. ``:v0.14.0``) the ``:latest`` tag
+    won't move your container — pull the newer tag you actually want, or
+    switch to ``:latest`` / ``:main`` for rolling updates.  See available
+    tags at https://hub.docker.com/r/{image_name}/tags
+  • Your config and session history live under ``$HERMES_HOME`` (``/opt/data``
+    in the container, typically bind-mounted from the host) and persist
+    across image upgrades — re-pulling doesn't lose any state.
+  • Running a fork?  Build your own image with this repo's ``Dockerfile``
+    and replace the ``docker pull`` step with your build/push pipeline."""
 
 
 def format_managed_message(action: str = "modify this Hermes installation") -> str:
@@ -456,7 +459,7 @@ def format_managed_message(action: str = "modify this Hermes installation") -> s
             f"Cannot {action}: this Hermes installation is managed by Homebrew "
             f"(HERMES_MANAGED={env_hint}).\n"
             "Use:\n"
-            "  brew upgrade hermes-agent"
+            f"  brew upgrade {hermes_constants.get_homebrew_formula_name()}"
         )
 
     return (

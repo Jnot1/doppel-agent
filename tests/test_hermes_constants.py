@@ -8,16 +8,25 @@ import pytest
 import hermes_constants
 from hermes_constants import (
     VALID_REASONING_EFFORTS,
+    get_distribution_package_name,
     get_default_hermes_root,
+    get_docker_image_name,
     get_gateway_launchd_label,
     get_gateway_launchd_plist_path,
     get_gateway_service_name,
     get_gateway_systemd_unit_path,
+    get_homebrew_formula_name,
     get_managed_checkout_names,
+    get_official_repo_urls,
+    get_official_upstream_repo_url,
     is_container,
     is_managed_checkout_name,
     parse_reasoning_effort,
     secure_parent_dir,
+    get_upstream_archive_filename,
+    get_upstream_archive_url,
+    get_upstream_extracted_dir_name,
+    get_upstream_install_script_url,
 )
 
 
@@ -85,6 +94,48 @@ class TestManagedCheckoutNames:
         assert is_managed_checkout_name("hermes-agent")
         assert is_managed_checkout_name("doppel-agent")
         assert not is_managed_checkout_name("hermes")
+
+
+class TestDistributionIdentity:
+    def test_package_distribution_name(self):
+        assert get_distribution_package_name() == "hermes-agent"
+
+    def test_homebrew_formula_name(self):
+        assert get_homebrew_formula_name() == "hermes-agent"
+
+    def test_docker_image_name(self):
+        assert get_docker_image_name() == "nousresearch/hermes-agent"
+
+
+class TestUpstreamIdentity:
+    def test_official_upstream_repo_url(self):
+        assert get_official_upstream_repo_url() == "https://github.com/NousResearch/hermes-agent.git"
+
+    def test_official_repo_urls(self):
+        assert get_official_repo_urls() == frozenset({
+            "https://github.com/NousResearch/hermes-agent.git",
+            "git@github.com:NousResearch/hermes-agent.git",
+            "https://github.com/NousResearch/hermes-agent",
+            "git@github.com:NousResearch/hermes-agent",
+        })
+
+    def test_upstream_archive_url(self):
+        assert (
+            get_upstream_archive_url("main")
+            == "https://github.com/NousResearch/hermes-agent/archive/refs/heads/main.zip"
+        )
+
+    def test_upstream_archive_filename(self):
+        assert get_upstream_archive_filename("main") == "hermes-agent-main.zip"
+
+    def test_upstream_extracted_dir_name(self):
+        assert get_upstream_extracted_dir_name("main") == "hermes-agent-main"
+
+    def test_upstream_install_script_url(self):
+        assert (
+            get_upstream_install_script_url()
+            == "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
+        )
 
 
 class TestGatewayNamingHelpers:
@@ -310,4 +361,3 @@ class TestSecureParentDir:
         secure_parent_dir(link_target)
         assert len(called_with) == 1
         assert called_with[0] == (str(real_dir), 0o700)
-

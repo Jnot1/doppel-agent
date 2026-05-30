@@ -7200,14 +7200,12 @@ def _update_via_zip(args):
             f"--branch {branch}`, or update against main with `hermes update`."
         )
         sys.exit(1)
-    zip_url = (
-        f"https://github.com/NousResearch/hermes-agent/archive/refs/heads/{branch}.zip"
-    )
+    zip_url = _upstream_archive_url(branch)
 
     print("→ Downloading latest version...")
     tmp_dir = tempfile.mkdtemp(prefix="hermes-update-")
     try:
-        zip_path = os.path.join(tmp_dir, f"hermes-agent-{branch}.zip")
+        zip_path = os.path.join(tmp_dir, _upstream_archive_filename(branch))
         urlretrieve(zip_url, zip_path)
 
         print("→ Extracting...")
@@ -7237,8 +7235,8 @@ def _update_via_zip(args):
                     )
             zf.extractall(tmp_dir)
 
-        # GitHub ZIPs extract to hermes-agent-<branch>/
-        extracted = os.path.join(tmp_dir, f"hermes-agent-{branch}")
+        # GitHub ZIPs extract to <package>-<branch>/
+        extracted = os.path.join(tmp_dir, _upstream_extracted_dir_name(branch))
         if not os.path.isdir(extracted):
             # Try to find it
             for d in os.listdir(tmp_dir):
@@ -7543,13 +7541,6 @@ def _restore_stashed_changes(
 # Fork detection and upstream management for `hermes update`
 # =========================================================================
 
-OFFICIAL_REPO_URLS = {
-    "https://github.com/NousResearch/hermes-agent.git",
-    "git@github.com:NousResearch/hermes-agent.git",
-    "https://github.com/NousResearch/hermes-agent",
-    "git@github.com:NousResearch/hermes-agent",
-}
-OFFICIAL_REPO_URL = "https://github.com/NousResearch/hermes-agent.git"
 SKIP_UPSTREAM_PROMPT_FILE = ".skip_upstream_prompt"
 
 
@@ -7560,6 +7551,54 @@ def _gateway_service_glob() -> str:
     except ImportError:
         return "hermes-gateway*"
     return get_gateway_service_glob()
+
+
+def _distribution_package_name() -> str:
+    from hermes_constants import get_distribution_package_name
+
+    return get_distribution_package_name()
+
+
+def _official_repo_urls() -> frozenset[str]:
+    from hermes_constants import get_official_repo_urls
+
+    return get_official_repo_urls()
+
+
+def _official_upstream_repo_url() -> str:
+    from hermes_constants import get_official_upstream_repo_url
+
+    return get_official_upstream_repo_url()
+
+
+def _official_upstream_repo_slug() -> str:
+    from hermes_constants import get_official_upstream_repo_slug
+
+    return get_official_upstream_repo_slug()
+
+
+def _upstream_archive_url(branch: str) -> str:
+    from hermes_constants import get_upstream_archive_url
+
+    return get_upstream_archive_url(branch)
+
+
+def _upstream_archive_filename(branch: str) -> str:
+    from hermes_constants import get_upstream_archive_filename
+
+    return get_upstream_archive_filename(branch)
+
+
+def _upstream_extracted_dir_name(branch: str) -> str:
+    from hermes_constants import get_upstream_extracted_dir_name
+
+    return get_upstream_extracted_dir_name(branch)
+
+
+def _upstream_install_script_url(ref: str = "main") -> str:
+    from hermes_constants import get_upstream_install_script_url
+
+    return get_upstream_install_script_url(ref)
 
 
 def _get_origin_url(git_cmd: list[str], cwd: Path) -> Optional[str]:
@@ -7586,7 +7625,7 @@ def _is_fork(origin_url: Optional[str]) -> bool:
     normalized = origin_url.rstrip("/")
     if normalized.endswith(".git"):
         normalized = normalized[:-4]
-    for official in OFFICIAL_REPO_URLS:
+    for official in _official_repo_urls():
         official_normalized = official.rstrip("/")
         if official_normalized.endswith(".git"):
             official_normalized = official_normalized[:-4]
@@ -7613,7 +7652,7 @@ def _add_upstream_remote(git_cmd: list[str], cwd: Path) -> bool:
     """Add the official repo as the 'upstream' remote. Returns True on success."""
     try:
         result = subprocess.run(
-            git_cmd + ["remote", "add", "upstream", OFFICIAL_REPO_URL],
+            git_cmd + ["remote", "add", "upstream", _official_upstream_repo_url()],
             cwd=cwd,
             capture_output=True,
             text=True,
@@ -7692,7 +7731,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
         # Ask user if they want to add upstream
         print()
         print("ℹ Your fork is not tracking the official Hermes repository.")
-        print("  This means you may miss updates from NousResearch/hermes-agent.")
+        print(f"  This means you may miss updates from {_official_upstream_repo_slug()}.")
         print()
         try:
             response = (
@@ -7705,16 +7744,14 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
         if response in {"", "y", "yes"}:
             print("→ Adding upstream remote...")
             if _add_upstream_remote(git_cmd, cwd):
-                print(
-                    "  ✓ Added upstream: https://github.com/NousResearch/hermes-agent.git"
-                )
+                print(f"  ✓ Added upstream: {_official_upstream_repo_url()}")
                 has_upstream = True
             else:
                 print("  ✗ Failed to add upstream remote. Skipping upstream sync.")
                 return
         else:
             print(
-                "  Skipped. Run 'git remote add upstream https://github.com/NousResearch/hermes-agent.git' to add later."
+                f"  Skipped. Run 'git remote add upstream {_official_upstream_repo_url()}' to add later."
             )
             _mark_skip_upstream_prompt()
             return
@@ -9021,18 +9058,19 @@ def _cmd_update_pip(args):
     # operate on a named environment and ignore VIRTUAL_ENV, so we don't
     # set it for them.
     export_virtualenv = False
+    package_name = _distribution_package_name()
 
     if is_uv_tool_install():
         if not uv:
             print("✗ Detected a uv-tool install but `uv` is not on PATH; install uv and retry.")
             sys.exit(1)
-        cmd = [uv, "tool", "upgrade", "hermes-agent"]
+        cmd = [uv, "tool", "upgrade", package_name]
     elif pipx_managed and pipx:
         # pipx owns its own venv; ``pipx upgrade`` is the only correct path.
         # Matches scripts/auto-update.sh, which already uses pipx upgrade.
-        cmd = [pipx, "upgrade", "hermes-agent"]
+        cmd = [pipx, "upgrade", package_name]
     elif uv:
-        cmd = [uv, "pip", "install", "--upgrade", "hermes-agent"]
+        cmd = [uv, "pip", "install", "--upgrade", package_name]
         if in_venv:
             # Launcher shim runs the venv interpreter but doesn't export
             # VIRTUAL_ENV; without it uv errors "No virtual environment found".
@@ -9042,7 +9080,7 @@ def _cmd_update_pip(args):
             # interpreter, matching pip's default behaviour.
             cmd.insert(3, "--system")
     else:
-        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "hermes-agent"]
+        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", package_name]
 
     print(f"→ Running: {' '.join(cmd)}")
     run_kwargs = {}
@@ -9102,7 +9140,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
                 return
             print("✗ Not a git repository. Please reinstall:")
             print(
-                "  curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash"
+                f"  curl -fsSL {_upstream_install_script_url()} | bash"
             )
             sys.exit(1)
 

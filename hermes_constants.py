@@ -26,13 +26,25 @@ PREFERRED_CLI_COMMAND = "doppel"
 LEGACY_CLI_COMMAND = "hermes"
 PREFERRED_HOME_ENV = "DOPPEL_HOME"
 LEGACY_HOME_ENV = "HERMES_HOME"
+PACKAGE_DISTRIBUTION_NAME = "hermes-agent"
+HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
+DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
 MANAGED_CHECKOUT_NAMES = ("hermes-agent", "doppel-agent")
 GATEWAY_SERVICE_BASE = "hermes-gateway"
 LAUNCHD_GATEWAY_LABEL_BASE = "ai.hermes.gateway"
-FORK_REPO_WEB_URL = "https://github.com/Jnot1/doppel-agent"
+FORK_REPO_SLUG = "Jnot1/doppel-agent"
+UPSTREAM_REPO_SLUG = "NousResearch/hermes-agent"
+FORK_REPO_WEB_URL = f"https://github.com/{FORK_REPO_SLUG}"
 FORK_REPO_URL = f"{FORK_REPO_WEB_URL}.git"
-UPSTREAM_REPO_WEB_URL = "https://github.com/NousResearch/hermes-agent"
+UPSTREAM_REPO_WEB_URL = f"https://github.com/{UPSTREAM_REPO_SLUG}"
 UPSTREAM_REPO_URL = f"{UPSTREAM_REPO_WEB_URL}.git"
+UPSTREAM_REPO_SSH_URL = f"git@github.com:{UPSTREAM_REPO_SLUG}"
+UPSTREAM_REPO_GIT_URLS = frozenset({
+    UPSTREAM_REPO_URL,
+    f"{UPSTREAM_REPO_SSH_URL}.git",
+    UPSTREAM_REPO_WEB_URL,
+    UPSTREAM_REPO_SSH_URL,
+})
 
 
 def get_cli_prog_name(argv0: str | None = None) -> str:
@@ -44,6 +56,59 @@ def get_cli_prog_name(argv0: str | None = None) -> str:
     if stem in {"doppel", "doppel-agent"}:
         return PREFERRED_CLI_COMMAND
     return PREFERRED_CLI_COMMAND
+
+
+def get_distribution_package_name() -> str:
+    """Return the Python package distribution name used for upgrades."""
+    return PACKAGE_DISTRIBUTION_NAME
+
+
+def get_homebrew_formula_name() -> str:
+    """Return the Homebrew formula name for this distribution."""
+    return HOMEBREW_FORMULA_NAME
+
+
+def get_docker_image_name() -> str:
+    """Return the published Docker image name for this distribution."""
+    return DOCKER_IMAGE_NAME
+
+
+def get_official_upstream_repo_slug() -> str:
+    """Return the canonical upstream GitHub slug."""
+    return UPSTREAM_REPO_SLUG
+
+
+def get_official_upstream_repo_url() -> str:
+    """Return the canonical upstream git remote URL."""
+    return UPSTREAM_REPO_URL
+
+
+def get_official_repo_urls() -> frozenset[str]:
+    """Return normalized official upstream remote URL variants."""
+    return UPSTREAM_REPO_GIT_URLS
+
+
+def get_upstream_extracted_dir_name(branch: str) -> str:
+    """Return the extracted top-level directory name for an upstream ZIP."""
+    return f"{get_distribution_package_name()}-{branch}"
+
+
+def get_upstream_archive_filename(branch: str) -> str:
+    """Return the downloaded ZIP filename for an upstream branch archive."""
+    return f"{get_upstream_extracted_dir_name(branch)}.zip"
+
+
+def get_upstream_archive_url(branch: str) -> str:
+    """Return the GitHub archive URL for an upstream branch."""
+    return f"{UPSTREAM_REPO_WEB_URL}/archive/refs/heads/{branch}.zip"
+
+
+def get_upstream_install_script_url(ref: str = "main") -> str:
+    """Return the raw install-script URL for the official upstream repo."""
+    return (
+        f"https://raw.githubusercontent.com/"
+        f"{get_official_upstream_repo_slug()}/{ref}/scripts/install.sh"
+    )
 
 
 def get_managed_checkout_names() -> tuple[str, ...]:

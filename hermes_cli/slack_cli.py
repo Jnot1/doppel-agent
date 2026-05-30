@@ -44,7 +44,7 @@ def _build_full_manifest(bot_name: str, bot_description: str) -> dict:
         },
         "display_information": {
             "name": bot_name[:35],
-            "description": (bot_description or "Your Hermes agent on Slack")[:140],
+            "description": (bot_description or "Your Doppel agent on Slack")[:140],
             "background_color": "#1a1a2e",
         },
         "features": {
@@ -59,7 +59,7 @@ def _build_full_manifest(bot_name: str, bot_description: str) -> dict:
             },
             "slash_commands": slashes,
             "assistant_view": {
-                "assistant_description": "Chat with Hermes in threads and DMs.",
+                "assistant_description": "Chat with Doppel in threads and DMs.",
             },
         },
         "oauth_config": {

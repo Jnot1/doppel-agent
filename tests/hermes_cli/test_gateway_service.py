@@ -2229,7 +2229,8 @@ class TestLegacyHermesUnitDetection:
 
         assert "Legacy" in out
         assert "hermes.service" in out
-        assert "hermes gateway migrate-legacy" in out
+        assert "doppel gateway migrate-legacy" in out
+        assert "doppel-gateway service" in out
 
     def test_handles_unreadable_unit_file_gracefully(self, tmp_path, monkeypatch):
         """A permission error reading a unit file must not crash detection."""
@@ -2333,7 +2334,7 @@ class TestRemoveLegacyHermesUnits:
         assert remaining == [legacy]
         assert legacy.exists()  # Not removed — requires sudo
         out = capsys.readouterr().out
-        assert "sudo hermes gateway migrate-legacy" in out
+        assert "sudo doppel gateway migrate-legacy" in out
 
     def test_system_scope_with_root_removes(self, tmp_path, monkeypatch, capsys):
         _, system_dir, calls = self._setup(tmp_path, monkeypatch, as_root=True)
@@ -2433,6 +2434,22 @@ class TestMigrateLegacyCommand:
         assert result.returncode == 0
         assert "migrate-legacy" in result.stdout
 
+    def test_migrate_legacy_help_mentions_launchd_and_doppel_examples(self):
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, "-m", "hermes_cli.main", "gateway", "migrate-legacy", "--help"],
+            cwd=str(gateway_cli.PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+
+        assert result.returncode == 0
+        assert "launchd" in result.stdout
+        assert "Current Doppel profile units" in result.stdout
+
     def test_gateway_command_migrate_legacy_dispatches(
         self, tmp_path, monkeypatch, capsys
     ):
@@ -2505,7 +2522,7 @@ class TestGatewayStatusParser:
         gateway_cli.gateway_command(args)
 
         out = capsys.readouterr().out
-        assert "only applies to systemd" in out
+        assert "systemd-based Linux hosts or macOS launchd agents" in out
 
     def test_gateway_command_migrate_legacy_dispatches_to_launchd_cleanup_on_macos(
         self, monkeypatch

@@ -9,7 +9,13 @@ import hermes_constants
 from hermes_constants import (
     VALID_REASONING_EFFORTS,
     get_default_hermes_root,
+    get_gateway_launchd_label,
+    get_gateway_launchd_plist_path,
+    get_gateway_service_name,
+    get_gateway_systemd_unit_path,
+    get_managed_checkout_names,
     is_container,
+    is_managed_checkout_name,
     parse_reasoning_effort,
     secure_parent_dir,
 )
@@ -67,6 +73,49 @@ class TestGetDefaultHermesRoot:
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(profile))
         assert get_default_hermes_root() == docker_root
+
+
+class TestManagedCheckoutNames:
+    def test_includes_legacy_and_rebrand_checkout_names(self):
+        """Managed installs should recognize both legacy and rebrand dirs."""
+        assert get_managed_checkout_names() == ("hermes-agent", "doppel-agent")
+
+    def test_name_match_accepts_both_checkout_dirs(self):
+        """Both managed checkout names are valid while migration is in progress."""
+        assert is_managed_checkout_name("hermes-agent")
+        assert is_managed_checkout_name("doppel-agent")
+        assert not is_managed_checkout_name("hermes")
+
+
+class TestGatewayNamingHelpers:
+    def test_gateway_service_name_default_profile(self):
+        assert get_gateway_service_name() == "hermes-gateway"
+
+    def test_gateway_service_name_profile_suffix(self):
+        assert get_gateway_service_name("coder") == "hermes-gateway-coder"
+
+    def test_gateway_systemd_unit_path_user_scope(self, tmp_path):
+        user_home = tmp_path / "alice"
+        assert get_gateway_systemd_unit_path("coder", user_home=user_home) == (
+            user_home / ".config" / "systemd" / "user" / "hermes-gateway-coder.service"
+        )
+
+    def test_gateway_systemd_unit_path_system_scope(self):
+        assert get_gateway_systemd_unit_path("coder", system=True) == Path(
+            "/etc/systemd/system/hermes-gateway-coder.service"
+        )
+
+    def test_gateway_launchd_label_default_profile(self):
+        assert get_gateway_launchd_label() == "ai.hermes.gateway"
+
+    def test_gateway_launchd_label_profile_suffix(self):
+        assert get_gateway_launchd_label("coder") == "ai.hermes.gateway-coder"
+
+    def test_gateway_launchd_plist_path(self, tmp_path):
+        user_home = tmp_path / "alice"
+        assert get_gateway_launchd_plist_path("coder", user_home=user_home) == (
+            user_home / "Library" / "LaunchAgents" / "ai.hermes.gateway-coder.plist"
+        )
 
 
 class TestIsContainer:
@@ -261,5 +310,4 @@ class TestSecureParentDir:
         secure_parent_dir(link_target)
         assert len(called_with) == 1
         assert called_with[0] == (str(real_dir), 0o700)
-
 

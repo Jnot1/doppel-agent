@@ -84,7 +84,7 @@ def _get_service_pids() -> set:
         for scope_args in [["systemctl", "--user"], ["systemctl"]]:
             try:
                 result = subprocess.run(
-                    scope_args + ["list-units", "hermes-gateway*",
+                    scope_args + ["list-units", _gateway_service_glob(),
                                   "--plain", "--no-legend", "--no-pager"],
                     capture_output=True, text=True, timeout=5,
                 )
@@ -1343,17 +1343,35 @@ def get_service_name() -> str:
     Any other HERMES_HOME appends a short hash for uniqueness.
     """
     suffix = _profile_suffix()
-    if not suffix:
-        return _SERVICE_BASE
-    return f"{_SERVICE_BASE}-{suffix}"
+    try:
+        from hermes_constants import get_gateway_service_name
+    except ImportError:
+        if not suffix:
+            return _SERVICE_BASE
+        return f"{_SERVICE_BASE}-{suffix}"
+    return get_gateway_service_name(suffix)
+
+
+def _gateway_service_glob() -> str:
+    """Return the glob used to discover default + profile gateway units."""
+    try:
+        from hermes_constants import get_gateway_service_glob
+    except ImportError:
+        return f"{_SERVICE_BASE}*"
+    return get_gateway_service_glob()
 
 
 
 def get_systemd_unit_path(system: bool = False) -> Path:
-    name = get_service_name()
-    if system:
-        return Path("/etc/systemd/system") / f"{name}.service"
-    return Path.home() / ".config" / "systemd" / "user" / f"{name}.service"
+    suffix = _profile_suffix()
+    try:
+        from hermes_constants import get_gateway_systemd_unit_path
+    except ImportError:
+        name = get_service_name()
+        if system:
+            return Path("/etc/systemd/system") / f"{name}.service"
+        return Path.home() / ".config" / "systemd" / "user" / f"{name}.service"
+    return get_gateway_systemd_unit_path(suffix, system=system, user_home=Path.home())
 
 
 class UserSystemdUnavailableError(RuntimeError):
@@ -1620,7 +1638,7 @@ def _legacy_unit_search_paths() -> list[tuple[bool, Path]]:
     real filesystem paths.
     """
     return [
-        (False, Path.home() / ".config" / "systemd" / "user"),
+        (False, get_systemd_unit_path(system=False).parent),
         (True, Path("/etc/systemd/system")),
     ]
 
@@ -1972,8 +1990,12 @@ def get_launchd_plist_path() -> Path:
     Profile ``~/.hermes/profiles/coder`` → ``ai.hermes.gateway-coder.plist``.
     """
     suffix = _profile_suffix()
-    name = f"ai.hermes.gateway-{suffix}" if suffix else "ai.hermes.gateway"
-    return _launchd_user_home() / "Library" / "LaunchAgents" / f"{name}.plist"
+    try:
+        from hermes_constants import get_gateway_launchd_plist_path
+    except ImportError:
+        name = f"ai.hermes.gateway-{suffix}" if suffix else "ai.hermes.gateway"
+        return _launchd_user_home() / "Library" / "LaunchAgents" / f"{name}.plist"
+    return get_gateway_launchd_plist_path(suffix, user_home=_launchd_user_home())
 
 def _detect_venv_dir() -> Path | None:
     """Detect the active virtualenv directory.
@@ -2826,7 +2848,11 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
 def get_launchd_label() -> str:
     """Return the launchd service label, scoped per profile."""
     suffix = _profile_suffix()
-    return f"ai.hermes.gateway-{suffix}" if suffix else "ai.hermes.gateway"
+    try:
+        from hermes_constants import get_gateway_launchd_label
+    except ImportError:
+        return f"ai.hermes.gateway-{suffix}" if suffix else "ai.hermes.gateway"
+    return get_gateway_launchd_label(suffix)
 
 
 def _launchd_domain() -> str:

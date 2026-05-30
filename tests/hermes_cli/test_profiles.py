@@ -242,7 +242,7 @@ class TestCreateProfile:
         assert not (profile_dir / "profiles").exists()
 
     def test_clone_all_excludes_default_infrastructure(self, profile_env):
-        """--clone-all from default profile excludes hermes-agent, .worktrees,
+        """--clone-all from default profile excludes managed checkout dirs, .worktrees,
         bin, node_modules at root, plus __pycache__/*.pyc/*.pyo/*.sock/*.tmp
         at any depth.  Profile data (config, env, skills, sessions, logs,
         state.db) must be preserved — clone-all means "complete snapshot
@@ -251,9 +251,10 @@ class TestCreateProfile:
         tmp_path = profile_env
         default_home = tmp_path / ".hermes"
         # Simulate infrastructure dirs that only the default profile has
-        (default_home / "hermes-agent" / ".git").mkdir(parents=True)
-        (default_home / "hermes-agent" / "venv" / "bin").mkdir(parents=True)
-        (default_home / "hermes-agent" / "README.md").write_text("repo")
+        for checkout_name in ("hermes-agent", "doppel-agent"):
+            (default_home / checkout_name / ".git").mkdir(parents=True)
+            (default_home / checkout_name / "venv" / "bin").mkdir(parents=True)
+            (default_home / checkout_name / "README.md").write_text("repo")
         (default_home / ".worktrees" / "some-tree").mkdir(parents=True)
         (default_home / "profiles" / "other").mkdir(parents=True)
         (default_home / "profiles" / "other" / "config.yaml").write_text("x")
@@ -281,6 +282,7 @@ class TestCreateProfile:
 
         # Infrastructure must be excluded
         assert not (profile_dir / "hermes-agent").exists()
+        assert not (profile_dir / "doppel-agent").exists()
         assert not (profile_dir / ".worktrees").exists()
         assert not (profile_dir / "profiles").exists()
         assert not (profile_dir / "bin").exists()
@@ -987,7 +989,7 @@ class TestExportImport:
         (default_dir / "config.yaml").write_text("ok")
 
         # Create dirs/files that should be excluded
-        for d in ("hermes-agent", ".worktrees", "profiles", "bin",
+        for d in ("hermes-agent", "doppel-agent", ".worktrees", "profiles", "bin",
                   "image_cache", "logs", "sandboxes", "checkpoints"):
             sub = default_dir / d
             sub.mkdir(exist_ok=True)
@@ -1010,7 +1012,8 @@ class TestExportImport:
 
         # Infrastructure excluded
         excluded_prefixes = [
-            "default/hermes-agent", "default/.worktrees", "default/profiles",
+            "default/hermes-agent", "default/doppel-agent",
+            "default/.worktrees", "default/profiles",
             "default/bin", "default/image_cache", "default/logs",
             "default/sandboxes", "default/checkpoints",
         ]

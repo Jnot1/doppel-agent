@@ -7553,6 +7553,15 @@ OFFICIAL_REPO_URL = "https://github.com/NousResearch/hermes-agent.git"
 SKIP_UPSTREAM_PROMPT_FILE = ".skip_upstream_prompt"
 
 
+def _gateway_service_glob() -> str:
+    """Return the systemd glob used to discover gateway units."""
+    try:
+        from hermes_constants import get_gateway_service_glob
+    except ImportError:
+        return "hermes-gateway*"
+    return get_gateway_service_glob()
+
+
 def _get_origin_url(git_cmd: list[str], cwd: Path) -> Optional[str]:
     """Get the URL of the origin remote, or None if not set."""
     try:
@@ -9855,7 +9864,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
                             scope_cmd
                             + [
                                 "list-units",
-                                "hermes-gateway*",
+                                _gateway_service_glob(),
                                 "--plain",
                                 "--no-legend",
                                 "--no-pager",
@@ -12688,7 +12697,7 @@ Examples:
         "backup",
         help="Back up Doppel home directory to a zip file",
         description="Create a zip archive of your entire Doppel configuration, "
-        "skills, sessions, and data (excludes the hermes-agent codebase). "
+        "skills, sessions, and data (excludes the managed agent codebase). "
         "Use --quick for a fast snapshot of just critical state files.",
     )
     backup_parser.add_argument(

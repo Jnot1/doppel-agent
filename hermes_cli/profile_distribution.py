@@ -71,6 +71,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from agent.skill_utils import is_excluded_skill_path
+from hermes_constants import get_managed_checkout_names
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +114,7 @@ USER_OWNED_EXCLUDE: frozenset = frozenset({
     "browser_screenshots", "checkpoints", "sandboxes",
     "backups", "cache",
     # Infrastructure
-    "hermes-agent", ".worktrees", "profiles", "bin", "node_modules",
+    *get_managed_checkout_names(), ".worktrees", "profiles", "bin", "node_modules",
     # User customization namespace
     "local",
 })

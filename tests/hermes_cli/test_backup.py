@@ -49,11 +49,12 @@ def _make_hermes_tree(root: Path) -> None:
     (root / "profiles" / "coder" / "config.yaml").write_text("model:\n  provider: anthropic\n")
     (root / "profiles" / "coder" / ".env").write_text("ANTHROPIC_API_KEY=sk-ant-123\n")
 
-    # hermes-agent repo (should be EXCLUDED)
-    (root / "hermes-agent").mkdir(exist_ok=True)
-    (root / "hermes-agent" / "run_agent.py").write_text("# big file\n")
-    (root / "hermes-agent" / ".git").mkdir()
-    (root / "hermes-agent" / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+    # Managed checkout dirs (should be EXCLUDED)
+    for checkout_name in ("hermes-agent", "doppel-agent"):
+        (root / checkout_name).mkdir(exist_ok=True)
+        (root / checkout_name / "run_agent.py").write_text("# big file\n")
+        (root / checkout_name / ".git").mkdir()
+        (root / checkout_name / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
 
     # __pycache__ (should be EXCLUDED)
     (root / "plugins").mkdir(exist_ok=True)
@@ -84,6 +85,11 @@ class TestShouldExclude:
         from hermes_cli.backup import _should_exclude
         assert _should_exclude(Path("hermes-agent/run_agent.py"))
         assert _should_exclude(Path("hermes-agent/.git/HEAD"))
+
+    def test_excludes_doppel_agent(self):
+        from hermes_cli.backup import _should_exclude
+        assert _should_exclude(Path("doppel-agent/run_agent.py"))
+        assert _should_exclude(Path("doppel-agent/.git/HEAD"))
 
     def test_excludes_pycache(self):
         from hermes_cli.backup import _should_exclude
@@ -205,6 +211,26 @@ class TestBackup:
             names = zf.namelist()
             agent_files = [n for n in names if "hermes-agent" in n]
             assert agent_files == [], f"hermes-agent files leaked into backup: {agent_files}"
+
+    def test_excludes_doppel_agent(self, tmp_path, monkeypatch):
+        """Backup does NOT include doppel-agent/ directory."""
+        hermes_home = tmp_path / ".hermes"
+        hermes_home.mkdir()
+        _make_hermes_tree(hermes_home)
+
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        out_zip = tmp_path / "backup.zip"
+        args = Namespace(output=str(out_zip))
+
+        from hermes_cli.backup import run_backup
+        run_backup(args)
+
+        with zipfile.ZipFile(out_zip, "r") as zf:
+            names = zf.namelist()
+            agent_files = [n for n in names if "doppel-agent" in n]
+            assert agent_files == [], f"doppel-agent files leaked into backup: {agent_files}"
 
     def test_excludes_pycache(self, tmp_path, monkeypatch):
         """Backup does NOT include __pycache__ dirs."""
@@ -566,8 +592,9 @@ class TestRoundTrip:
         assert (dst_home / "sessions" / "abc123.json").exists()
         assert (dst_home / "logs" / "agent.log").exists()
 
-        # hermes-agent should NOT be present
+        # Managed checkout dirs should NOT be present
         assert not (dst_home / "hermes-agent").exists()
+        assert not (dst_home / "doppel-agent").exists()
         # __pycache__ should NOT be present
         assert not (dst_home / "plugins" / "__pycache__").exists()
         # PID files should NOT be present
@@ -1336,8 +1363,9 @@ class TestPreUpdateBackup:
         assert "sessions/abc123.json" in names
         assert "skills/my-skill/SKILL.md" in names
         assert "profiles/coder/config.yaml" in names
-        # hermes-agent repo excluded
+        # managed checkout dirs excluded
         assert not any(n.startswith("hermes-agent/") for n in names)
+        assert not any(n.startswith("doppel-agent/") for n in names)
         # __pycache__ excluded
         assert not any("__pycache__" in n for n in names)
         # pid files excluded
@@ -1493,7 +1521,7 @@ class TestRunPreUpdateBackup:
         assert "Creating pre-update backup" in out
         assert "Saved:" in out
         assert "Restore:" in out
-        assert "hermes import" in out
+        assert "doppel import" in out
         assert "Disable:" in out
         # Actual backup was created
         backups = list((hermes_home / "backups").glob("pre-update-*.zip"))

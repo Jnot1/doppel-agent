@@ -21,7 +21,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from hermes_constants import get_default_hermes_root, get_hermes_home, display_hermes_home
+from hermes_constants import (
+    display_hermes_home,
+    find_managed_checkout_dir,
+    get_cli_prog_name,
+    get_default_hermes_root,
+    get_hermes_home,
+    get_managed_checkout_names,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 # Directory names to skip entirely (matched against each path component)
 _EXCLUDED_DIRS = {
-    "hermes-agent",     # the codebase repo — re-clone instead
+    *get_managed_checkout_names(),  # managed checkout(s) — re-clone instead
     "__pycache__",      # bytecode caches — regenerated on import
     ".git",             # nested git dirs (profiles shouldn't have these, but safety)
     "node_modules",     # js deps if website/ somehow leaks in
@@ -255,7 +262,7 @@ def run_backup(args) -> None:
         if len(errors) > 10:
             print(f"  ... and {len(errors) - 10} more")
 
-    print(f"\nRestore with: hermes import {out_path.name}")
+    print(f"\nRestore with: {get_cli_prog_name()} import {out_path.name}")
 
 
 # ---------------------------------------------------------------------------
@@ -455,19 +462,20 @@ def run_import(args) -> None:
                 # hermes_cli.profiles might not be available (fresh install)
                 if any(profiles_dir.iterdir()):
                     print(f"\n  Profiles detected but aliases could not be created.")
-                    print(f"  Run: hermes profile list  (after installing hermes)")
+                    cli = get_cli_prog_name()
+                    print(f"  Run: {cli} profile list  (after installing {cli})")
 
         # Guidance
         print()
-        if not (hermes_root / "hermes-agent").is_dir():
-            print("Note: The hermes-agent codebase was not included in the backup.")
-            print("  If this is a fresh install, run: hermes update")
+        if find_managed_checkout_dir(hermes_root) is None:
+            print("Note: The managed agent codebase was not included in the backup.")
+            print(f"  If this is a fresh install, run: {get_cli_prog_name()} update")
 
         if restored_profiles:
             gw_profiles = [n for n, _ in restored_profiles]
             print("\nTo re-enable gateway services for profiles:")
             for pname in gw_profiles:
-                print(f"  hermes -p {pname} gateway install")
+                print(f"  {get_cli_prog_name()} -p {pname} gateway install")
 
         print("Done. Your Hermes configuration has been restored.")
 

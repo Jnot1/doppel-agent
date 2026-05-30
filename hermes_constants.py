@@ -26,6 +26,9 @@ PREFERRED_CLI_COMMAND = "doppel"
 LEGACY_CLI_COMMAND = "hermes"
 PREFERRED_HOME_ENV = "DOPPEL_HOME"
 LEGACY_HOME_ENV = "HERMES_HOME"
+MANAGED_CHECKOUT_NAMES = ("hermes-agent", "doppel-agent")
+GATEWAY_SERVICE_BASE = "hermes-gateway"
+LAUNCHD_GATEWAY_LABEL_BASE = "ai.hermes.gateway"
 FORK_REPO_WEB_URL = "https://github.com/Jnot1/doppel-agent"
 FORK_REPO_URL = f"{FORK_REPO_WEB_URL}.git"
 UPSTREAM_REPO_WEB_URL = "https://github.com/NousResearch/hermes-agent"
@@ -41,6 +44,92 @@ def get_cli_prog_name(argv0: str | None = None) -> str:
     if stem in {"doppel", "doppel-agent"}:
         return PREFERRED_CLI_COMMAND
     return PREFERRED_CLI_COMMAND
+
+
+def get_managed_checkout_names() -> tuple[str, ...]:
+    """Return managed checkout directory names recognized during migration.
+
+    Order matters: the current on-disk default stays first until the managed
+    checkout rename is explicitly migrated in a later phase.
+    """
+    return MANAGED_CHECKOUT_NAMES
+
+
+def is_managed_checkout_name(name: str) -> bool:
+    """Return True when *name* is a recognized managed checkout directory."""
+    return name in MANAGED_CHECKOUT_NAMES
+
+
+def get_managed_checkout_dir(root: str | Path | None = None) -> Path:
+    """Return the canonical managed checkout path for the current phase."""
+    base = Path(root) if root is not None else get_default_hermes_root()
+    return base / MANAGED_CHECKOUT_NAMES[0]
+
+
+def get_managed_checkout_candidates(root: str | Path | None = None) -> tuple[Path, ...]:
+    """Return every managed checkout path accepted during migration."""
+    base = Path(root) if root is not None else get_default_hermes_root()
+    return tuple(base / name for name in MANAGED_CHECKOUT_NAMES)
+
+
+def find_managed_checkout_dir(root: str | Path | None = None) -> Path | None:
+    """Return the first existing managed checkout dir under *root*, if any."""
+    for candidate in get_managed_checkout_candidates(root):
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def get_gateway_service_name(profile_suffix: str = "") -> str:
+    """Return the gateway service name for the default profile or a suffix."""
+    suffix = str(profile_suffix).strip()
+    return f"{GATEWAY_SERVICE_BASE}-{suffix}" if suffix else GATEWAY_SERVICE_BASE
+
+
+def get_gateway_service_glob() -> str:
+    """Return the systemd unit glob used to discover gateway services."""
+    return f"{GATEWAY_SERVICE_BASE}*"
+
+
+def get_gateway_systemd_unit_path(
+    profile_suffix: str = "",
+    *,
+    system: bool = False,
+    user_home: str | Path | None = None,
+) -> Path:
+    """Return the systemd unit path for the gateway service."""
+    name = get_gateway_service_name(profile_suffix)
+    if system:
+        return Path("/etc/systemd/system") / f"{name}.service"
+    home = Path(user_home) if user_home is not None else Path.home()
+    return home / ".config" / "systemd" / "user" / f"{name}.service"
+
+
+def get_gateway_launchd_label(profile_suffix: str = "") -> str:
+    """Return the launchd label for the default profile or a suffix."""
+    suffix = str(profile_suffix).strip()
+    return (
+        f"{LAUNCHD_GATEWAY_LABEL_BASE}-{suffix}"
+        if suffix
+        else LAUNCHD_GATEWAY_LABEL_BASE
+    )
+
+
+def _get_launchd_user_home() -> Path:
+    """Return the real OS account home for launchd agents."""
+    import pwd
+
+    return Path(pwd.getpwuid(os.getuid()).pw_dir)
+
+
+def get_gateway_launchd_plist_path(
+    profile_suffix: str = "",
+    *,
+    user_home: str | Path | None = None,
+) -> Path:
+    """Return the launchd plist path for the gateway service."""
+    home = Path(user_home) if user_home is not None else _get_launchd_user_home()
+    return home / "Library" / "LaunchAgents" / f"{get_gateway_launchd_label(profile_suffix)}.plist"
 
 
 def set_hermes_home_override(path: str | Path | None) -> Token:

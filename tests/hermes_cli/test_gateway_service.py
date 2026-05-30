@@ -1644,7 +1644,7 @@ class TestProfileArg:
 
         plist_path = gateway_cli.get_launchd_plist_path()
 
-        assert plist_path == machine_home / "Library" / "LaunchAgents" / "ai.hermes.gateway-orcha.plist"
+        assert plist_path == machine_home / "Library" / "LaunchAgents" / "ai.doppel.gateway-orcha.plist"
 
 
 class TestRemapPathForUser:
@@ -1741,6 +1741,74 @@ class TestDockerAwareGateway:
         assert result.returncode == 0
         assert len(calls) == 1
         assert "status" in calls[0]
+
+
+class TestInstalledSystemdScopeDetection:
+    def test_detects_current_doppel_gateway_unit(self, tmp_path, monkeypatch):
+        user_unit = tmp_path / "user" / "doppel-gateway.service"
+        user_unit.parent.mkdir(parents=True)
+        user_unit.write_text("[Unit]\n", encoding="utf-8")
+
+        def fake_get_unit_path(system: bool = False):
+            return (tmp_path / "system" / "doppel-gateway.service") if system else user_unit
+
+        monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", fake_get_unit_path)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_gateway_systemd_unit_paths",
+            lambda system=False: [tmp_path / ("system" if system else "user") / "hermes-gateway.service"],
+        )
+
+        assert gateway_cli.get_installed_systemd_scopes() == ["user"]
+
+    def test_detects_legacy_hermes_gateway_unit_when_current_unit_missing(self, tmp_path, monkeypatch):
+        legacy_user_unit = tmp_path / "user" / "hermes-gateway.service"
+        legacy_user_unit.parent.mkdir(parents=True)
+        legacy_user_unit.write_text("[Unit]\n", encoding="utf-8")
+
+        def fake_get_unit_path(system: bool = False):
+            return (tmp_path / "system" / "doppel-gateway.service") if system else (tmp_path / "user" / "doppel-gateway.service")
+
+        monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", fake_get_unit_path)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_gateway_systemd_unit_paths",
+            lambda system=False: [tmp_path / ("system" if system else "user") / "hermes-gateway.service"],
+        )
+
+        assert gateway_cli.get_installed_systemd_scopes() == ["user"]
+
+
+class TestLegacyGatewayServiceRouting:
+    def test_systemd_start_falls_back_to_legacy_hermes_gateway_service(self, tmp_path, monkeypatch):
+        legacy_user_unit = tmp_path / "user" / "hermes-gateway.service"
+        legacy_user_unit.parent.mkdir(parents=True)
+        legacy_user_unit.write_text("[Unit]\n", encoding="utf-8")
+
+        monkeypatch.setattr(gateway_cli, "_select_systemd_scope", lambda system=False: False)
+        monkeypatch.setattr(gateway_cli, "_preflight_user_systemd", lambda: None)
+        monkeypatch.setattr(gateway_cli, "refresh_systemd_unit_if_needed", lambda system=False: None)
+        monkeypatch.setattr(
+            gateway_cli,
+            "get_systemd_unit_path",
+            lambda system=False: tmp_path / ("system" if system else "user") / "doppel-gateway.service",
+        )
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_gateway_systemd_unit_paths",
+            lambda system=False: [tmp_path / ("system" if system else "user") / "hermes-gateway.service"],
+        )
+
+        calls = []
+        monkeypatch.setattr(
+            gateway_cli,
+            "_run_systemctl",
+            lambda args, **kwargs: calls.append(args) or SimpleNamespace(returncode=0, stdout="", stderr=""),
+        )
+
+        gateway_cli.systemd_start()
+
+        assert calls == [["start", "hermes-gateway"]]
 
     def test_install_in_container_prints_docker_guidance(self, monkeypatch, capsys):
         """'hermes gateway install' inside Docker exits 0 with container guidance."""

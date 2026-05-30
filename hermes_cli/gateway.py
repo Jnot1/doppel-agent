@@ -1276,8 +1276,8 @@ def _windows_gateway_should_absorb_console_controls() -> bool:
 # Service Configuration
 # =============================================================================
 
-_SERVICE_BASE = "hermes-gateway"
-SERVICE_DESCRIPTION = "Hermes Agent Gateway - Messaging Platform Integration"
+_SERVICE_BASE = "doppel-gateway"
+SERVICE_DESCRIPTION = "Doppel Agent Gateway - Messaging Platform Integration"
 
 
 def _profile_suffix() -> str:
@@ -1338,8 +1338,8 @@ def _profile_arg(hermes_home: str | None = None) -> str:
 def get_service_name() -> str:
     """Derive a systemd service name scoped to this HERMES_HOME.
 
-    Default ``~/.hermes`` returns ``hermes-gateway`` (backward compatible).
-    Profile ``~/.hermes/profiles/coder`` returns ``hermes-gateway-coder``.
+    Default ``~/.hermes`` returns ``doppel-gateway``.
+    Profile ``~/.hermes/profiles/coder`` returns ``doppel-gateway-coder``.
     Any other HERMES_HOME appends a short hash for uniqueness.
     """
     suffix = _profile_suffix()
@@ -1359,6 +1359,28 @@ def _gateway_service_glob() -> str:
     except ImportError:
         return f"{_SERVICE_BASE}*"
     return get_gateway_service_glob()
+
+
+def _legacy_gateway_service_names() -> tuple[str, ...]:
+    """Return legacy service names accepted for the current profile suffix."""
+    suffix = _profile_suffix()
+    try:
+        from hermes_constants import get_gateway_service_names
+    except ImportError:
+        legacy = f"hermes-gateway-{suffix}" if suffix else "hermes-gateway"
+        return (legacy,)
+    names = get_gateway_service_names(suffix)
+    current = get_service_name()
+    return tuple(name for name in names if name != current)
+
+
+def _legacy_gateway_systemd_unit_paths(system: bool = False) -> list[Path]:
+    """Return legacy systemd unit paths accepted for the current profile."""
+    if system:
+        base = Path("/etc/systemd/system")
+    else:
+        base = Path.home() / ".config" / "systemd" / "user"
+    return [base / f"{name}.service" for name in _legacy_gateway_service_names()]
 
 
 
@@ -1601,12 +1623,14 @@ def get_installed_systemd_scopes() -> list[str]:
     scopes = []
     seen_paths: set[Path] = set()
     for system, label in ((False, "user"), (True, "system")):
-        unit_path = get_systemd_unit_path(system=system)
-        if unit_path in seen_paths:
-            continue
-        if unit_path.exists():
-            scopes.append(label)
-            seen_paths.add(unit_path)
+        candidate_paths = [get_systemd_unit_path(system=system), *_legacy_gateway_systemd_unit_paths(system=system)]
+        for unit_path in candidate_paths:
+            if unit_path in seen_paths:
+                continue
+            if unit_path.exists():
+                scopes.append(label)
+                seen_paths.add(unit_path)
+                break
     return scopes
 
 
@@ -1986,14 +2010,14 @@ def _launchd_user_home() -> Path:
 def get_launchd_plist_path() -> Path:
     """Return the launchd plist path, scoped per profile.
 
-    Default ``~/.hermes`` → ``ai.hermes.gateway.plist`` (backward compatible).
-    Profile ``~/.hermes/profiles/coder`` → ``ai.hermes.gateway-coder.plist``.
+    Default ``~/.hermes`` → ``ai.doppel.gateway.plist``.
+    Profile ``~/.hermes/profiles/coder`` → ``ai.doppel.gateway-coder.plist``.
     """
     suffix = _profile_suffix()
     try:
         from hermes_constants import get_gateway_launchd_plist_path
     except ImportError:
-        name = f"ai.hermes.gateway-{suffix}" if suffix else "ai.hermes.gateway"
+        name = f"ai.doppel.gateway-{suffix}" if suffix else "ai.doppel.gateway"
         return _launchd_user_home() / "Library" / "LaunchAgents" / f"{name}.plist"
     return get_gateway_launchd_plist_path(suffix, user_home=_launchd_user_home())
 
@@ -2583,10 +2607,11 @@ def systemd_uninstall(system: bool = False):
     if system:
         _require_root_for_system_service("uninstall")
 
-    _run_systemctl(["stop", get_service_name()], system=system, check=False, timeout=90)
-    _run_systemctl(["disable", get_service_name()], system=system, check=False, timeout=30)
+    svc = _existing_systemd_service_name(system=system) or get_service_name()
+    _run_systemctl(["stop", svc], system=system, check=False, timeout=90)
+    _run_systemctl(["disable", svc], system=system, check=False, timeout=30)
 
-    unit_path = get_systemd_unit_path(system=system)
+    unit_path = _existing_systemd_unit_path(system=system) or get_systemd_unit_path(system=system)
     if unit_path.exists():
         unit_path.unlink()
         print(f"✓ Removed {unit_path}")
@@ -2595,13 +2620,39 @@ def systemd_uninstall(system: bool = False):
     print(f"✓ {_service_scope_label(system).capitalize()} service uninstalled")
 
 
-def _require_service_installed(action: str, system: bool = False) -> None:
-    unit_path = get_systemd_unit_path(system=system)
-    if not unit_path.exists():
+def _existing_systemd_service_name(system: bool = False) -> str | None:
+    """Return the current or legacy installed systemd service name, if any."""
+    candidates = [(get_service_name(), get_systemd_unit_path(system=system))]
+    candidates.extend(
+        (unit_path.stem, unit_path)
+        for unit_path in _legacy_gateway_systemd_unit_paths(system=system)
+    )
+    for service_name, unit_path in candidates:
+        if unit_path.exists():
+            return service_name
+    return None
+
+
+def _existing_systemd_unit_path(system: bool = False) -> Path | None:
+    """Return the current or legacy installed systemd unit path, if any."""
+    current = get_systemd_unit_path(system=system)
+    if current.exists():
+        return current
+    for unit_path in _legacy_gateway_systemd_unit_paths(system=system):
+        if unit_path.exists():
+            return unit_path
+    return None
+
+
+def _require_service_installed(action: str, system: bool = False) -> tuple[str, Path]:
+    svc = _existing_systemd_service_name(system=system)
+    unit_path = _existing_systemd_unit_path(system=system)
+    if svc is None or unit_path is None:
         scope_flag = " --system" if system else ""
         print(f"✗ Gateway service is not installed")
         print(f"  Run: {'sudo ' if system else ''}hermes gateway install{scope_flag}")
         sys.exit(1)
+    return svc, unit_path
 
 
 def systemd_start(system: bool = False):
@@ -2613,9 +2664,9 @@ def systemd_start(system: bool = False):
         # reachable (common on fresh RHEL/Debian SSH sessions without linger).
         # Raises UserSystemdUnavailableError with a remediation message.
         _preflight_user_systemd()
-    _require_service_installed("start", system=system)
+    svc, _ = _require_service_installed("start", system=system)
     refresh_systemd_unit_if_needed(system=system)
-    _run_systemctl(["start", get_service_name()], system=system, check=True, timeout=30)
+    _run_systemctl(["start", svc], system=system, check=True, timeout=30)
     print(f"✓ {_service_scope_label(system).capitalize()} service started")
 
 
@@ -2624,7 +2675,7 @@ def systemd_stop(system: bool = False):
     system = _select_systemd_scope(system)
     if system:
         _require_root_for_system_service("stop")
-    _require_service_installed("stop", system=system)
+    svc, _ = _require_service_installed("stop", system=system)
     _sync_hermes_home_from_systemd_unit(system=system)
     try:
         from gateway.status import get_running_pid, write_planned_stop_marker
@@ -2634,7 +2685,7 @@ def systemd_stop(system: bool = False):
     except Exception:
         pass
     try:
-        _run_systemctl(["stop", get_service_name()], system=system, check=True, timeout=90)
+        _run_systemctl(["stop", svc], system=system, check=True, timeout=90)
     except subprocess.TimeoutExpired:
         label = _service_scope_label(system)
         print(
@@ -2652,7 +2703,7 @@ def systemd_restart(system: bool = False):
         _require_root_for_system_service("restart")
     else:
         _preflight_user_systemd()
-    _require_service_installed("restart", system=system)
+    svc, _ = _require_service_installed("restart", system=system)
     refresh_systemd_unit_if_needed(system=system)
     _sync_hermes_home_from_systemd_unit(system=system)
     from gateway.status import get_running_pid
@@ -2660,7 +2711,6 @@ def systemd_restart(system: bool = False):
     pid = get_running_pid() or _systemd_main_pid(system=system)
     if pid is not None:
         scope_label = _service_scope_label(system).capitalize()
-        svc = get_service_name()
         drain_timeout = _get_restart_drain_timeout()
 
         print(f"⏳ {scope_label} service restarting gracefully (PID {pid})...")
@@ -2717,13 +2767,13 @@ def systemd_restart(system: bool = False):
         return
 
     _run_systemctl(
-        ["reset-failed", get_service_name()],
+        ["reset-failed", svc],
         system=system,
         check=False,
         timeout=30,
     )
     try:
-        _run_systemctl(["restart", get_service_name()], system=system, check=True, timeout=90)
+        _run_systemctl(["restart", svc], system=system, check=True, timeout=90)
     except subprocess.CalledProcessError as exc:
         if _systemd_error_indicates_start_limit(exc) or _systemd_service_is_start_limited(system=system):
             _print_systemd_start_limit_wait(system=system)
@@ -2742,10 +2792,11 @@ def systemd_restart(system: bool = False):
 
 def systemd_status(deep: bool = False, system: bool = False, full: bool = False):
     system = _select_systemd_scope(system)
-    unit_path = get_systemd_unit_path(system=system)
+    svc = _existing_systemd_service_name(system=system)
+    unit_path = _existing_systemd_unit_path(system=system)
     scope_flag = " --system" if system else ""
 
-    if not unit_path.exists():
+    if svc is None or unit_path is None:
         print("✗ Gateway service is not installed")
         print(f"  Run: {'sudo ' if system else ''}hermes gateway install{scope_flag}")
         return
@@ -2765,7 +2816,7 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
         print(f"  Run: {'sudo ' if system else ''}hermes gateway restart{scope_flag}  # auto-refreshes the unit")
         print()
 
-    status_cmd = ["status", get_service_name(), "--no-pager"]
+    status_cmd = ["status", svc, "--no-pager"]
     if full:
         status_cmd.append("-l")
 
@@ -2777,7 +2828,7 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
     )
 
     result = _run_systemctl(
-        ["is-active", get_service_name()],
+        ["is-active", svc],
         system=system,
         capture_output=True,
         text=True,
@@ -2813,10 +2864,10 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
     elif _systemd_unit_is_start_limited(unit_props):
         print("  ⏳ Restart pending: systemd is temporarily rate-limiting starts")
         print(f"  Run after the start-limit window expires: {'sudo ' if system else ''}hermes gateway restart{scope_flag}")
-        print(f"  Or clear it manually: systemctl {'--user ' if not system else ''}reset-failed {get_service_name()}")
+        print(f"  Or clear it manually: systemctl {'--user ' if not system else ''}reset-failed {svc}")
     elif active_state == "failed" and exec_main_status == str(GATEWAY_SERVICE_RESTART_EXIT_CODE):
         print("  ⚠ Planned restart is stuck in systemd failed state (exit 75)")
-        print(f"  Run: systemctl {'--user ' if not system else ''}reset-failed {get_service_name()} && {'sudo ' if system else ''}hermes gateway start{scope_flag}")
+        print(f"  Run: systemctl {'--user ' if not system else ''}reset-failed {svc} && {'sudo ' if system else ''}hermes gateway start{scope_flag}")
     elif active_state == "failed" and result_code:
         print(f"  ⚠ Systemd unit result: {result_code}")
 
@@ -2835,7 +2886,7 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
     if deep:
         print()
         print("Recent logs:")
-        log_cmd = _journalctl_cmd(system) + ["-u", get_service_name(), "-n", "20", "--no-pager"]
+        log_cmd = _journalctl_cmd(system) + ["-u", svc, "-n", "20", "--no-pager"]
         if full:
             log_cmd.append("-l")
         subprocess.run(log_cmd, timeout=10)
@@ -2851,7 +2902,7 @@ def get_launchd_label() -> str:
     try:
         from hermes_constants import get_gateway_launchd_label
     except ImportError:
-        return f"ai.hermes.gateway-{suffix}" if suffix else "ai.hermes.gateway"
+        return f"ai.doppel.gateway-{suffix}" if suffix else "ai.doppel.gateway"
     return get_gateway_launchd_label(suffix)
 
 

@@ -81,7 +81,8 @@ $PreferredVendorName = "Doppelme"
 $PreferredCliCommand = "doppel"
 $LegacyCliCommand = "hermes"
 $PackageDistributionName = "hermes-agent"
-$ManagedCheckoutName = $PackageDistributionName
+$ManagedCheckoutName = "doppel-agent"
+$LegacyManagedCheckoutName = $PackageDistributionName
 $ForkRepoSlug = "Jnot1/doppel-agent"
 $ForkRepoName = "doppel-agent"
 $ForkRepoWebUrl = "https://github.com/$ForkRepoSlug"
@@ -98,14 +99,22 @@ if (-not $PSBoundParameters.ContainsKey("HermesHome")) {
         $HermesHome = $env:DOPPEL_HOME
     } elseif ($env:HERMES_HOME) {
         $HermesHome = $env:HERMES_HOME
-    } elseif ((Test-Path (Join-Path $LegacyHermesHome $ManagedCheckoutName)) -or (Test-Path (Join-Path $LegacyHermesHome "config.yaml")) -or (Test-Path (Join-Path $LegacyHermesHome ".env"))) {
+    } elseif ((Test-Path (Join-Path $LegacyHermesHome $ManagedCheckoutName)) -or (Test-Path (Join-Path $LegacyHermesHome $LegacyManagedCheckoutName)) -or (Test-Path (Join-Path $LegacyHermesHome "config.yaml")) -or (Test-Path (Join-Path $LegacyHermesHome ".env"))) {
         $HermesHome = $LegacyHermesHome
     } else {
         $HermesHome = $DefaultDoppelHome
     }
 }
 if (-not $PSBoundParameters.ContainsKey("InstallDir")) {
-    $InstallDir = Join-Path $HermesHome $ManagedCheckoutName
+    $preferredCheckoutDir = Join-Path $HermesHome $ManagedCheckoutName
+    $legacyCheckoutDir = Join-Path $HermesHome $LegacyManagedCheckoutName
+    if (Test-Path $preferredCheckoutDir) {
+        $InstallDir = $preferredCheckoutDir
+    } elseif (Test-Path $legacyCheckoutDir) {
+        $InstallDir = $legacyCheckoutDir
+    } else {
+        $InstallDir = $preferredCheckoutDir
+    }
 }
 $env:DOPPEL_HOME = $HermesHome
 $env:HERMES_HOME = $HermesHome

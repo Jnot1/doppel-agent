@@ -48,7 +48,8 @@ PREFERRED_VENDOR_NAME="Doppelme"
 PREFERRED_CLI_COMMAND="doppel"
 LEGACY_CLI_COMMAND="hermes"
 PACKAGE_DISTRIBUTION_NAME="hermes-agent"
-MANAGED_CHECKOUT_DIR_NAME="$PACKAGE_DISTRIBUTION_NAME"
+MANAGED_CHECKOUT_DIR_NAME="doppel-agent"
+LEGACY_MANAGED_CHECKOUT_DIR_NAME="$PACKAGE_DISTRIBUTION_NAME"
 FORK_REPO_SLUG="Jnot1/doppel-agent"
 FORK_REPO_WEB_URL="https://github.com/$FORK_REPO_SLUG"
 REPO_URL_SSH="git@github.com:$FORK_REPO_SLUG.git"
@@ -67,7 +68,7 @@ if [ -n "$DOPPEL_HOME" ]; then
     HERMES_HOME="$DOPPEL_HOME"
 elif [ -n "${HERMES_HOME:-}" ]; then
     HERMES_HOME="$HERMES_HOME"
-elif [ -d "$LEGACY_HERMES_HOME_ROOT/$MANAGED_CHECKOUT_DIR_NAME/.git" ] || [ -f "$LEGACY_HERMES_HOME_ROOT/config.yaml" ] || [ -f "$LEGACY_HERMES_HOME_ROOT/.env" ]; then
+elif [ -d "$LEGACY_HERMES_HOME_ROOT/$MANAGED_CHECKOUT_DIR_NAME/.git" ] || [ -d "$LEGACY_HERMES_HOME_ROOT/$LEGACY_MANAGED_CHECKOUT_DIR_NAME/.git" ] || [ -f "$LEGACY_HERMES_HOME_ROOT/config.yaml" ] || [ -f "$LEGACY_HERMES_HOME_ROOT/.env" ]; then
     HERMES_HOME="$LEGACY_HERMES_HOME_ROOT"
 else
     HERMES_HOME="$DEFAULT_DOPPEL_HOME"
@@ -294,9 +295,16 @@ resolve_install_layout() {
         return 0
     fi
 
+    local existing_checkout=""
+    if [ -d "$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME/.git" ]; then
+        existing_checkout="$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME"
+    elif [ -d "$HERMES_HOME/$LEGACY_MANAGED_CHECKOUT_DIR_NAME/.git" ]; then
+        existing_checkout="$HERMES_HOME/$LEGACY_MANAGED_CHECKOUT_DIR_NAME"
+    fi
+
     # Termux: package manager manages /data/data/..., keep code in HERMES_HOME.
     if is_termux; then
-        INSTALL_DIR="$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME"
+        INSTALL_DIR="${existing_checkout:-$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME}"
         return 0
     fi
 
@@ -304,8 +312,8 @@ resolve_install_layout() {
     # macOS root installs keep the legacy layout because /usr/local/ on macOS
     # is Homebrew territory and we don't want to fight that.
     if [ "$OS" = "linux" ] && [ "$(id -u)" -eq 0 ]; then
-        if [ -d "$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME/.git" ]; then
-            INSTALL_DIR="$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME"
+        if [ -n "$existing_checkout" ]; then
+            INSTALL_DIR="$existing_checkout"
             log_info "Existing install detected at $INSTALL_DIR — keeping legacy layout"
             log_info "  (new root installs use $ROOT_INSTALL_DIR)"
             return 0
@@ -328,7 +336,7 @@ resolve_install_layout() {
     fi
 
     # Default: non-root, non-Termux → legacy user-scoped layout.
-    INSTALL_DIR="$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME"
+    INSTALL_DIR="${existing_checkout:-$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME}"
 }
 
 get_command_link_dir() {

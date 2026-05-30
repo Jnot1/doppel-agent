@@ -277,11 +277,13 @@ class TestCmdUpdateBranchFallback:
                 "(no capture_output) so postinstall progress is visible"
             )
 
-    def test_update_non_interactive_runs_safe_config_migrations(self, mock_args, capsys):
+    @patch("shutil.which", return_value=None)
+    @patch("subprocess.run")
+    def test_update_non_interactive_runs_safe_config_migrations(
+        self, mock_run, _mock_which, mock_args, capsys
+    ):
         """Dashboard/web updates apply non-interactive migrations before restart."""
-        with patch("shutil.which", return_value=None), patch(
-            "subprocess.run"
-        ) as mock_run, patch("builtins.input") as mock_input, patch(
+        with patch("builtins.input") as mock_input, patch(
             "hermes_cli.config.get_missing_env_vars", return_value=["MISSING_KEY"]
         ), patch(
             "hermes_cli.config.get_missing_config_fields",
@@ -305,6 +307,15 @@ class TestCmdUpdateBranchFallback:
             captured = capsys.readouterr()
             assert "applying safe config migrations" in captured.out
             assert "API keys require manual entry" in captured.out
+
+
+class TestGatewayServiceGlobs:
+    def test_includes_current_and_legacy_gateway_patterns(self):
+        from hermes_cli import main as hm
+
+        globs = hm._gateway_service_globs()
+
+        assert globs == ("doppel-gateway*", "hermes-gateway*")
 
 
 class TestCmdUpdateProfileSkillSync:

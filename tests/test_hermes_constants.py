@@ -16,9 +16,11 @@ from hermes_constants import (
     get_gateway_service_name,
     get_gateway_systemd_unit_path,
     get_homebrew_formula_name,
+    get_managed_checkout_dir,
     get_managed_checkout_names,
     get_official_repo_urls,
     get_official_upstream_repo_url,
+    find_managed_checkout_dir,
     is_container,
     is_managed_checkout_name,
     parse_reasoning_effort,
@@ -87,13 +89,30 @@ class TestGetDefaultHermesRoot:
 class TestManagedCheckoutNames:
     def test_includes_legacy_and_rebrand_checkout_names(self):
         """Managed installs should recognize both legacy and rebrand dirs."""
-        assert get_managed_checkout_names() == ("hermes-agent", "doppel-agent")
+        assert get_managed_checkout_names() == ("doppel-agent", "hermes-agent")
 
     def test_name_match_accepts_both_checkout_dirs(self):
         """Both managed checkout names are valid while migration is in progress."""
         assert is_managed_checkout_name("hermes-agent")
         assert is_managed_checkout_name("doppel-agent")
         assert not is_managed_checkout_name("hermes")
+
+    def test_canonical_checkout_dir_uses_rebrand_name(self, tmp_path):
+        assert get_managed_checkout_dir(tmp_path) == tmp_path / "doppel-agent"
+
+    def test_find_managed_checkout_dir_prefers_rebrand_dir(self, tmp_path):
+        legacy = tmp_path / "hermes-agent"
+        current = tmp_path / "doppel-agent"
+        legacy.mkdir()
+        current.mkdir()
+
+        assert find_managed_checkout_dir(tmp_path) == current
+
+    def test_find_managed_checkout_dir_falls_back_to_legacy_dir(self, tmp_path):
+        legacy = tmp_path / "hermes-agent"
+        legacy.mkdir()
+
+        assert find_managed_checkout_dir(tmp_path) == legacy
 
 
 class TestDistributionIdentity:
@@ -140,32 +159,48 @@ class TestUpstreamIdentity:
 
 class TestGatewayNamingHelpers:
     def test_gateway_service_name_default_profile(self):
-        assert get_gateway_service_name() == "hermes-gateway"
+        assert get_gateway_service_name() == "doppel-gateway"
 
     def test_gateway_service_name_profile_suffix(self):
-        assert get_gateway_service_name("coder") == "hermes-gateway-coder"
+        assert get_gateway_service_name("coder") == "doppel-gateway-coder"
+
+    def test_gateway_service_names_include_legacy_alias(self):
+        names_fn = getattr(hermes_constants, "get_gateway_service_names", None)
+        assert callable(names_fn)
+        assert names_fn("coder") == (
+            "doppel-gateway-coder",
+            "hermes-gateway-coder",
+        )
 
     def test_gateway_systemd_unit_path_user_scope(self, tmp_path):
         user_home = tmp_path / "alice"
         assert get_gateway_systemd_unit_path("coder", user_home=user_home) == (
-            user_home / ".config" / "systemd" / "user" / "hermes-gateway-coder.service"
+            user_home / ".config" / "systemd" / "user" / "doppel-gateway-coder.service"
         )
 
     def test_gateway_systemd_unit_path_system_scope(self):
         assert get_gateway_systemd_unit_path("coder", system=True) == Path(
-            "/etc/systemd/system/hermes-gateway-coder.service"
+            "/etc/systemd/system/doppel-gateway-coder.service"
         )
 
     def test_gateway_launchd_label_default_profile(self):
-        assert get_gateway_launchd_label() == "ai.hermes.gateway"
+        assert get_gateway_launchd_label() == "ai.doppel.gateway"
 
     def test_gateway_launchd_label_profile_suffix(self):
-        assert get_gateway_launchd_label("coder") == "ai.hermes.gateway-coder"
+        assert get_gateway_launchd_label("coder") == "ai.doppel.gateway-coder"
+
+    def test_gateway_launchd_labels_include_legacy_alias(self):
+        labels_fn = getattr(hermes_constants, "get_gateway_launchd_labels", None)
+        assert callable(labels_fn)
+        assert labels_fn("coder") == (
+            "ai.doppel.gateway-coder",
+            "ai.hermes.gateway-coder",
+        )
 
     def test_gateway_launchd_plist_path(self, tmp_path):
         user_home = tmp_path / "alice"
         assert get_gateway_launchd_plist_path("coder", user_home=user_home) == (
-            user_home / "Library" / "LaunchAgents" / "ai.hermes.gateway-coder.plist"
+            user_home / "Library" / "LaunchAgents" / "ai.doppel.gateway-coder.plist"
         )
 
 

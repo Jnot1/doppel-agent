@@ -66,7 +66,8 @@ def _run_install_sh_home_selection(
             "set -e",
             f'export HOME="{home}"',
             'PACKAGE_DISTRIBUTION_NAME="hermes-agent"',
-            'MANAGED_CHECKOUT_DIR_NAME="$PACKAGE_DISTRIBUTION_NAME"',
+            'MANAGED_CHECKOUT_DIR_NAME="doppel-agent"',
+            'LEGACY_MANAGED_CHECKOUT_DIR_NAME="$PACKAGE_DISTRIBUTION_NAME"',
             *env_lines,
             _extract_install_sh_home_selection_block(),
             'printf "HERMES_HOME=%s\\n" "$HERMES_HOME"',
@@ -147,8 +148,16 @@ def test_install_ps1_keeps_legacy_checkout_dir_name_for_in_place_upgrade() -> No
     text = INSTALL_PS1.read_text(encoding="utf-8")
 
     assert '$PackageDistributionName = "hermes-agent"' in text
-    assert '$ManagedCheckoutName = $PackageDistributionName' in text
-    assert '$InstallDir = Join-Path $HermesHome $ManagedCheckoutName' in text
+    assert '$ManagedCheckoutName = "doppel-agent"' in text
+    assert '$LegacyManagedCheckoutName = $PackageDistributionName' in text
+    assert '$preferredCheckoutDir = Join-Path $HermesHome $ManagedCheckoutName' in text
+    assert '$legacyCheckoutDir = Join-Path $HermesHome $LegacyManagedCheckoutName' in text
+
+
+def test_install_sh_uses_doppel_checkout_name_for_fresh_installs() -> None:
+    text = INSTALL_SH.read_text(encoding="utf-8")
+
+    assert 'MANAGED_CHECKOUT_DIR_NAME="doppel-agent"' in text
 
 
 def test_install_ps1_exports_both_home_env_vars() -> None:

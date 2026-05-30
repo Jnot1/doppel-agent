@@ -29,9 +29,11 @@ LEGACY_HOME_ENV = "HERMES_HOME"
 PACKAGE_DISTRIBUTION_NAME = "hermes-agent"
 HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
 DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
-MANAGED_CHECKOUT_NAMES = ("hermes-agent", "doppel-agent")
-GATEWAY_SERVICE_BASE = "hermes-gateway"
-LAUNCHD_GATEWAY_LABEL_BASE = "ai.hermes.gateway"
+MANAGED_CHECKOUT_NAMES = ("doppel-agent", "hermes-agent")
+GATEWAY_SERVICE_BASE = "doppel-gateway"
+LEGACY_GATEWAY_SERVICE_BASES = ("hermes-gateway",)
+LAUNCHD_GATEWAY_LABEL_BASE = "ai.doppel.gateway"
+LEGACY_LAUNCHD_GATEWAY_LABEL_BASES = ("ai.hermes.gateway",)
 FORK_REPO_SLUG = "Jnot1/doppel-agent"
 UPSTREAM_REPO_SLUG = "NousResearch/hermes-agent"
 FORK_REPO_WEB_URL = f"https://github.com/{FORK_REPO_SLUG}"
@@ -151,6 +153,15 @@ def get_gateway_service_name(profile_suffix: str = "") -> str:
     return f"{GATEWAY_SERVICE_BASE}-{suffix}" if suffix else GATEWAY_SERVICE_BASE
 
 
+def get_gateway_service_names(profile_suffix: str = "") -> tuple[str, ...]:
+    """Return current + legacy gateway service names for a profile suffix."""
+    suffix = str(profile_suffix).strip()
+    names = [get_gateway_service_name(suffix)]
+    for base in LEGACY_GATEWAY_SERVICE_BASES:
+        names.append(f"{base}-{suffix}" if suffix else base)
+    return tuple(dict.fromkeys(names))
+
+
 def get_gateway_service_glob() -> str:
     """Return the systemd unit glob used to discover gateway services."""
     return f"{GATEWAY_SERVICE_BASE}*"
@@ -178,6 +189,15 @@ def get_gateway_launchd_label(profile_suffix: str = "") -> str:
         if suffix
         else LAUNCHD_GATEWAY_LABEL_BASE
     )
+
+
+def get_gateway_launchd_labels(profile_suffix: str = "") -> tuple[str, ...]:
+    """Return current + legacy gateway launchd labels for a profile suffix."""
+    suffix = str(profile_suffix).strip()
+    labels = [get_gateway_launchd_label(suffix)]
+    for base in LEGACY_LAUNCHD_GATEWAY_LABEL_BASES:
+        labels.append(f"{base}-{suffix}" if suffix else base)
+    return tuple(dict.fromkeys(labels))
 
 
 def _get_launchd_user_home() -> Path:

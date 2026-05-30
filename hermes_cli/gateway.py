@@ -1867,6 +1867,60 @@ def remove_legacy_hermes_units(
     return removed, remaining
 
 
+def remove_legacy_launchd_plists(
+    interactive: bool = True,
+    dry_run: bool = False,
+) -> tuple[int, list[Path]]:
+    """Remove legacy Hermes launchd plist files from older macOS installs."""
+    legacy = [(label, path) for label, path in _legacy_launchd_candidates() if path.exists()]
+    if not legacy:
+        print("No legacy Hermes launchd plists found.")
+        return 0, []
+
+    print()
+    print("Legacy Hermes launchd plist(s) found:")
+    for label, path in legacy:
+        print(f"  {path}  (label: {label})")
+    print()
+
+    if dry_run:
+        print("(dry-run — nothing removed)")
+        return 0, [path for _, path in legacy]
+
+    if interactive and not prompt_yes_no("Remove these legacy launchd plists?", True):
+        print("Skipped. Run again with: hermes gateway migrate-legacy")
+        return 0, [path for _, path in legacy]
+
+    removed = 0
+    remaining: list[Path] = []
+
+    for label, path in legacy:
+        try:
+            subprocess.run(
+                ["launchctl", "bootout", f"{_launchd_domain()}/{label}"],
+                check=False,
+                timeout=90,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
+        try:
+            path.unlink(missing_ok=True)
+            print(f"  ✓ Removed {path}")
+            removed += 1
+        except OSError as e:
+            print(f"  ⚠ Could not remove {path}: {e}")
+            remaining.append(path)
+
+    print()
+    if remaining:
+        print_warning(f"{len(remaining)} legacy plist(s) still present — see messages above.")
+    else:
+        print_success(f"Removed {removed} legacy plist(s).")
+
+    return removed, remaining
+
+
 def print_systemd_scope_conflict_warning() -> None:
     scopes = get_installed_systemd_scopes()
     if len(scopes) < 2:
@@ -5964,12 +6018,16 @@ def _gateway_command_inner(args):
         _gateway_list()
 
     elif subcmd == "migrate-legacy":
-        # Stop, disable, and remove legacy Hermes gateway unit files from
-        # pre-rename installs (e.g. hermes.service). Profile units and
-        # unrelated third-party services are never touched.
+        # Remove legacy gateway service artifacts from pre-rename installs.
+        # Linux/systemd cleans up hermes.service; macOS/launchd cleans up
+        # ai.hermes.gateway*.plist leftovers. Profile units and unrelated
+        # third-party services are never touched.
         dry_run = getattr(args, 'dry_run', False)
         yes = getattr(args, 'yes', False)
-        if not supports_systemd_services() and not is_macos():
-            print("Legacy unit migration only applies to systemd-based Linux hosts.")
+        if supports_systemd_services():
+            remove_legacy_hermes_units(interactive=not yes, dry_run=dry_run)
+        elif is_macos():
+            remove_legacy_launchd_plists(interactive=not yes, dry_run=dry_run)
+        else:
+            print("Legacy unit migration only applies to systemd-based Linux hosts or macOS launchd agents.")
             return
-        remove_legacy_hermes_units(interactive=not yes, dry_run=dry_run)

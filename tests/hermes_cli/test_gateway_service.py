@@ -2507,6 +2507,81 @@ class TestGatewayStatusParser:
         out = capsys.readouterr().out
         assert "only applies to systemd" in out
 
+    def test_gateway_command_migrate_legacy_dispatches_to_launchd_cleanup_on_macos(
+        self, monkeypatch
+    ):
+        called = {}
+
+        def fake_remove(interactive=True, dry_run=False):
+            called["interactive"] = interactive
+            called["dry_run"] = dry_run
+            return 0, []
+
+        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_macos", lambda: True)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_launchd_plists", fake_remove, raising=False)
+
+        args = SimpleNamespace(
+            gateway_command="migrate-legacy", dry_run=False, yes=True
+        )
+        gateway_cli.gateway_command(args)
+
+        assert called == {"interactive": False, "dry_run": False}
+
+
+class TestLegacyLaunchdPlistCleanup:
+    def test_remove_legacy_launchd_plists_dry_run_lists_targets(
+        self, tmp_path, monkeypatch
+    ):
+        legacy_plist = tmp_path / "ai.hermes.gateway.plist"
+        legacy_plist.write_text("<plist>legacy</plist>", encoding="utf-8")
+
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_candidates",
+            lambda: [("ai.hermes.gateway", legacy_plist)],
+        )
+
+        removed, remaining = gateway_cli.remove_legacy_launchd_plists(
+            interactive=False,
+            dry_run=True,
+        )
+
+        assert removed == 0
+        assert remaining == [legacy_plist]
+        assert legacy_plist.exists()
+
+    def test_remove_legacy_launchd_plists_removes_legacy_plist_on_macos(
+        self, tmp_path, monkeypatch
+    ):
+        legacy_plist = tmp_path / "ai.hermes.gateway.plist"
+        legacy_plist.write_text("<plist>legacy</plist>", encoding="utf-8")
+
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_candidates",
+            lambda: [("ai.hermes.gateway", legacy_plist)],
+        )
+        monkeypatch.setattr(gateway_cli, "_launchd_domain", lambda: "gui/501")
+
+        calls = []
+
+        def fake_run(cmd, check=False, **kwargs):
+            calls.append(cmd)
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr(gateway_cli.subprocess, "run", fake_run)
+
+        removed, remaining = gateway_cli.remove_legacy_launchd_plists(
+            interactive=False,
+            dry_run=False,
+        )
+
+        assert removed == 1
+        assert remaining == []
+        assert not legacy_plist.exists()
+        assert calls == [["launchctl", "bootout", "gui/501/ai.hermes.gateway"]]
+
 
 class TestSystemdInstallOffersLegacyRemoval:
     """Verify that systemd_install prompts to remove legacy units first."""

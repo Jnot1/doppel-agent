@@ -973,8 +973,41 @@ function Install-SystemPackages {
 # Installation
 # ============================================================================
 
+function Migrate-ManagedCheckoutDir {
+    $preferredCheckoutDir = Join-Path $HermesHome $ManagedCheckoutName
+    $legacyCheckoutDir = Join-Path $HermesHome $LegacyManagedCheckoutName
+
+    if ($PSBoundParameters.ContainsKey("InstallDir") -or $ManagedCheckoutName -eq $LegacyManagedCheckoutName) {
+        return
+    }
+
+    if (-not (Test-Path "$legacyCheckoutDir\.git")) {
+        if (Test-Path "$preferredCheckoutDir\.git") {
+            $InstallDir = $preferredCheckoutDir
+        }
+        return
+    }
+
+    if (Test-Path $preferredCheckoutDir) {
+        $InstallDir = $preferredCheckoutDir
+        return
+    }
+
+    Write-Info "Migrating managed checkout to $preferredCheckoutDir..."
+    try {
+        Move-Item $legacyCheckoutDir $preferredCheckoutDir -Force
+        $InstallDir = $preferredCheckoutDir
+        Write-Success "Managed checkout migrated to $InstallDir"
+    } catch {
+        Write-Warn "Could not migrate managed checkout to $preferredCheckoutDir -- continuing with legacy path."
+        $InstallDir = $legacyCheckoutDir
+    }
+}
+
 function Install-Repository {
     Write-Info "Installing to $InstallDir..."
+
+    Migrate-ManagedCheckoutDir
 
     $didUpdate = $false
 

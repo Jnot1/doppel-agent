@@ -339,6 +339,32 @@ resolve_install_layout() {
     INSTALL_DIR="${existing_checkout:-$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME}"
 }
 
+migrate_managed_checkout_dir() {
+    local preferred_checkout="$HERMES_HOME/$MANAGED_CHECKOUT_DIR_NAME"
+    local legacy_checkout="$HERMES_HOME/$LEGACY_MANAGED_CHECKOUT_DIR_NAME"
+
+    if [ "$INSTALL_DIR_EXPLICIT" = true ] || [ "$MANAGED_CHECKOUT_DIR_NAME" = "$LEGACY_MANAGED_CHECKOUT_DIR_NAME" ]; then
+        return 0
+    fi
+
+    if [ ! -d "$legacy_checkout/.git" ] || [ -e "$preferred_checkout" ]; then
+        if [ -d "$preferred_checkout/.git" ]; then
+            INSTALL_DIR="$preferred_checkout"
+        fi
+        return 0
+    fi
+
+    log_info "Migrating managed checkout to $preferred_checkout"
+    if mv "$legacy_checkout" "$preferred_checkout"; then
+        INSTALL_DIR="$preferred_checkout"
+        log_info "Managed checkout migrated to $INSTALL_DIR"
+        return 0
+    fi
+
+    log_warn "Could not migrate managed checkout to $preferred_checkout; continuing with legacy path"
+    INSTALL_DIR="$legacy_checkout"
+}
+
 get_command_link_dir() {
     if is_termux && [ -n "${PREFIX:-}" ]; then
         echo "$PREFIX/bin"
@@ -2164,6 +2190,7 @@ main() {
 
     detect_os
     resolve_install_layout
+    migrate_managed_checkout_dir
     install_uv
     check_python
     check_git

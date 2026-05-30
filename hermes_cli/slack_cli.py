@@ -108,14 +108,14 @@ def slack_manifest_command(args) -> int:
 
     Flags (all parsed in ``hermes_cli/main.py``):
       --write [PATH]  Write to file instead of stdout (default path:
-                      ``$HERMES_HOME/slack-manifest.json``)
-      --name NAME     Override the bot display name (default: "Hermes")
+                      ``<active home>/slack-manifest.json``)
+      --name NAME     Override the bot display name (default: "Doppel")
       --description DESC  Override the bot description
       --slashes-only  Emit only the ``features.slash_commands`` array (for
                       merging into an existing manifest manually)
     """
-    name = getattr(args, "name", None) or "Hermes"
-    description = getattr(args, "description", None) or "Your Hermes agent on Slack"
+    name = getattr(args, "name", None) or "Doppel"
+    description = getattr(args, "description", None) or "Your Doppel agent on Slack"
 
     if getattr(args, "slashes_only", False):
         from hermes_cli.commands import slack_app_manifest
@@ -143,7 +143,7 @@ def slack_manifest_command(args) -> int:
         print(f"Slack manifest written to: {target}", file=sys.stderr)
         print(
             "\nNext steps:\n"
-            "  1. Open https://api.slack.com/apps and pick your Hermes app\n"
+            "  1. Open https://api.slack.com/apps and pick your Doppel app\n"
             "     (or create a new one: Create New App → From an app manifest).\n"
             f"  2. Features → App Manifest → paste the contents of\n"
             f"     {target}\n"
@@ -151,7 +151,7 @@ def slack_manifest_command(args) -> int:
             "     slash commands changed.\n"
             "  4. Make sure Socket Mode is enabled and you have a bot token\n"
             "     (xoxb-...) and app token (xapp-...) configured via\n"
-            "     `hermes setup`.\n",
+            "     `doppel setup`.\n",
             file=sys.stderr,
         )
     else:

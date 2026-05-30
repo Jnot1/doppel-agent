@@ -1,10 +1,11 @@
-"""Shared constants for Hermes Agent.
+"""Shared constants for Doppel Agent.
 
 Import-safe module with no dependencies — can be imported from anywhere
 without risk of circular imports.
 """
 
 import os
+import sys
 import sysconfig
 from contextvars import ContextVar, Token
 from pathlib import Path
@@ -15,6 +16,31 @@ _UNSET = object()
 _HERMES_HOME_OVERRIDE: ContextVar[str | object] = ContextVar(
     "_HERMES_HOME_OVERRIDE", default=_UNSET
 )
+
+
+PREFERRED_AGENT_NAME = "Doppel Agent"
+LEGACY_AGENT_NAME = "Hermes Agent"
+PREFERRED_SHORT_NAME = "Doppel"
+LEGACY_SHORT_NAME = "Hermes"
+PREFERRED_CLI_COMMAND = "doppel"
+LEGACY_CLI_COMMAND = "hermes"
+PREFERRED_HOME_ENV = "DOPPEL_HOME"
+LEGACY_HOME_ENV = "HERMES_HOME"
+FORK_REPO_WEB_URL = "https://github.com/Jnot1/doppel-agent"
+FORK_REPO_URL = f"{FORK_REPO_WEB_URL}.git"
+UPSTREAM_REPO_WEB_URL = "https://github.com/NousResearch/hermes-agent"
+UPSTREAM_REPO_URL = f"{UPSTREAM_REPO_WEB_URL}.git"
+
+
+def get_cli_prog_name(argv0: str | None = None) -> str:
+    """Return the user-facing CLI command name for the current invocation."""
+    raw = argv0 if argv0 is not None else (sys.argv[0] if sys.argv else "")
+    stem = Path(raw).stem.lower()
+    if stem in {"hermes", "hermes-agent"}:
+        return LEGACY_CLI_COMMAND
+    if stem in {"doppel", "doppel-agent"}:
+        return PREFERRED_CLI_COMMAND
+    return PREFERRED_CLI_COMMAND
 
 
 def set_hermes_home_override(path: str | Path | None) -> Token:
@@ -43,7 +69,8 @@ def get_hermes_home_override() -> str | None:
 def get_hermes_home() -> Path:
     """Return the Hermes home directory (default: ~/.hermes).
 
-    Reads HERMES_HOME env var, falls back to ~/.hermes.
+    Reads ``DOPPEL_HOME`` first, then ``HERMES_HOME``, and finally falls back
+    to ``~/.hermes`` for legacy installs.
     This is the single source of truth — all other copies should import this.
 
     When ``HERMES_HOME`` is unset but an ``active_profile`` file indicates
@@ -60,7 +87,10 @@ def get_hermes_home() -> Path:
     if override:
         return Path(override)
 
-    val = os.environ.get("HERMES_HOME", "").strip()
+    val = (
+        os.environ.get(PREFERRED_HOME_ENV, "").strip()
+        or os.environ.get(LEGACY_HOME_ENV, "").strip()
+    )
     if val:
         return Path(val)
 
@@ -118,7 +148,10 @@ def get_default_hermes_root() -> Path:
     Import-safe — no dependencies beyond stdlib.
     """
     native_home = Path.home() / ".hermes"
-    env_home = os.environ.get("HERMES_HOME", "")
+    env_home = (
+        os.environ.get(PREFERRED_HOME_ENV, "").strip()
+        or os.environ.get(LEGACY_HOME_ENV, "").strip()
+    )
     if not env_home:
         return native_home
     env_path = Path(env_home)
@@ -291,7 +324,11 @@ def get_subprocess_home() -> str | None:
     Activation is directory-based: if the ``home/`` subdirectory doesn't
     exist, returns ``None`` and behavior is unchanged.
     """
-    hermes_home = get_hermes_home_override() or os.getenv("HERMES_HOME")
+    hermes_home = (
+        get_hermes_home_override()
+        or os.getenv(PREFERRED_HOME_ENV)
+        or os.getenv(LEGACY_HOME_ENV)
+    )
     if not hermes_home:
         return None
     profile_home = os.path.join(hermes_home, "home")

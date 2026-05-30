@@ -1,5 +1,5 @@
 """
-Interactive setup wizard for Hermes Agent.
+Interactive setup wizard for Doppel Agent.
 
 Modular wizard with independently-runnable sections:
   1. Model & Provider — choose your AI provider and model
@@ -176,19 +176,19 @@ def is_interactive_stdin() -> bool:
 def print_noninteractive_setup_guidance(reason: str | None = None) -> None:
     """Print guidance for headless/non-interactive setup flows."""
     print()
-    print(color("⚕ Hermes Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
+    print(color("⚕ Doppel Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
     print()
     if reason:
         print_info(reason)
     print_info("The interactive wizard cannot be used here.")
     print()
-    print_info("Configure Hermes using environment variables or config commands:")
-    print_info("  hermes config set model.provider custom")
-    print_info("  hermes config set model.base_url http://localhost:8080/v1")
-    print_info("  hermes config set model.default your-model-name")
+    print_info("Configure Doppel using environment variables or config commands:")
+    print_info("  doppel config set model.provider custom")
+    print_info("  doppel config set model.base_url http://localhost:8080/v1")
+    print_info("  doppel config set model.default your-model-name")
     print()
     print_info("Or set OPENROUTER_API_KEY / OPENAI_API_KEY in your environment.")
-    print_info("Run 'hermes setup' in an interactive terminal to use the full wizard.")
+    print_info("Run 'doppel setup' in an interactive terminal to use the full wizard.")
     print()
 
 
@@ -350,7 +350,7 @@ def _prompt_api_key(var: dict):
         save_env_value(var["name"], value)
         print_success("  ✓ Saved")
     else:
-        print_warning("  Skipped (configure later with 'hermes setup')")
+        print_warning("  Skipped (configure later with 'doppel setup')")
 
 
 def _print_setup_summary(config: dict, hermes_home):
@@ -373,7 +373,7 @@ def _print_setup_summary(config: dict, hermes_home):
     if _vision_backends:
         tool_status.append(("Vision (image analysis)", True, None))
     else:
-        tool_status.append(("Vision (image analysis)", False, "run 'hermes setup' to configure"))
+        tool_status.append(("Vision (image analysis)", False, "run 'doppel setup' to configure"))
 
     # Mixture of Agents — requires OpenRouter specifically (calls multiple models)
     if get_env_value("OPENROUTER_API_KEY"):
@@ -498,7 +498,7 @@ def _print_setup_summary(config: dict, hermes_home):
         if neutts_ok:
             tool_status.append(("Text-to-Speech (NeuTTS local)", True, None))
         else:
-            tool_status.append(("Text-to-Speech (NeuTTS — not installed)", False, "run 'hermes setup tts'"))
+            tool_status.append(("Text-to-Speech (NeuTTS — not installed)", False, "run 'doppel setup tts'"))
     elif tts_provider == "kittentts":
         try:
             import importlib.util
@@ -508,7 +508,7 @@ def _print_setup_summary(config: dict, hermes_home):
         if kittentts_ok:
             tool_status.append(("Text-to-Speech (KittenTTS local)", True, None))
         else:
-            tool_status.append(("Text-to-Speech (KittenTTS — not installed)", False, "run 'hermes setup tts'"))
+            tool_status.append(("Text-to-Speech (KittenTTS — not installed)", False, "run 'doppel setup tts'"))
     else:
         tool_status.append(("Text-to-Speech (Edge TTS)", True, None))
 
@@ -518,7 +518,7 @@ def _print_setup_summary(config: dict, hermes_home):
         if subscription_features.modal.direct_override:
             tool_status.append(("Modal Execution (direct Modal)", True, None))
         else:
-            tool_status.append(("Modal Execution", False, "run 'hermes setup terminal'"))
+            tool_status.append(("Modal Execution", False, "run 'doppel setup terminal'"))
     elif managed_nous_tools_enabled() and subscription_features.nous_auth_present:
         tool_status.append(("Modal Execution (optional via Nous subscription)", True, None))
 
@@ -570,7 +570,7 @@ def _print_setup_summary(config: dict, hermes_home):
     disabled_tools = [(name, var) for name, avail, var in tool_status if not avail]
     if disabled_tools:
         print_warning(
-            "Some tools are disabled. Run 'hermes setup tools' to configure them,"
+            "Some tools are disabled. Run 'doppel setup tools' to configure them,"
         )
         from hermes_constants import display_hermes_home as _dhh
         print_warning(f"or edit {_dhh()}/.env directly to add the missing API keys.")
@@ -610,17 +610,17 @@ def _print_setup_summary(config: dict, hermes_home):
     print()
     print(color("📝 To edit your configuration:", Colors.CYAN, Colors.BOLD))
     print()
-    print(f"   {color('hermes setup', Colors.GREEN)}          Re-run the full wizard")
-    print(f"   {color('hermes setup model', Colors.GREEN)}    Change model/provider")
-    print(f"   {color('hermes setup terminal', Colors.GREEN)} Change terminal backend")
-    print(f"   {color('hermes setup gateway', Colors.GREEN)}  Configure messaging")
-    print(f"   {color('hermes setup tools', Colors.GREEN)}    Configure tool providers")
+    print(f"   {color('doppel setup', Colors.GREEN)}          Re-run the full wizard")
+    print(f"   {color('doppel setup model', Colors.GREEN)}    Change model/provider")
+    print(f"   {color('doppel setup terminal', Colors.GREEN)} Change terminal backend")
+    print(f"   {color('doppel setup gateway', Colors.GREEN)}  Configure messaging")
+    print(f"   {color('doppel setup tools', Colors.GREEN)}    Configure tool providers")
     print()
-    print(f"   {color('hermes config', Colors.GREEN)}         View current settings")
+    print(f"   {color('doppel config', Colors.GREEN)}         View current settings")
     print(
-        f"   {color('hermes config edit', Colors.GREEN)}    Open config in your editor"
+        f"   {color('doppel config edit', Colors.GREEN)}    Open config in your editor"
     )
-    print(f"   {color('hermes config set <key> <value>', Colors.GREEN)}")
+    print(f"   {color('doppel config set <key> <value>', Colors.GREEN)}")
     print("                          Set a specific value")
     print()
     print("   Or edit the files directly:")
@@ -632,9 +632,9 @@ def _print_setup_summary(config: dict, hermes_home):
     print()
     print(color("🚀 Ready to go!", Colors.CYAN, Colors.BOLD))
     print()
-    print(f"   {color('hermes', Colors.GREEN)}              Start chatting")
-    print(f"   {color('hermes gateway', Colors.GREEN)}      Start messaging gateway")
-    print(f"   {color('hermes doctor', Colors.GREEN)}       Check for issues")
+    print(f"   {color('doppel', Colors.GREEN)}              Start chatting")
+    print(f"   {color('doppel gateway', Colors.GREEN)}      Start messaging gateway")
+    print(f"   {color('doppel doctor', Colors.GREEN)}       Check for issues")
     print()
 
 
@@ -719,7 +719,7 @@ def setup_model_provider(config: dict, *, quick: bool = False):
     except Exception as exc:
         logger.debug("select_provider_and_model error during setup: %s", exc)
         print_warning(f"Provider setup encountered an error: {exc}")
-        print_info("You can try again later with: hermes model")
+        print_info("You can try again later with: doppel model")
 
     # Re-sync the wizard's config dict from what cmd_model saved to disk.
     # This is critical: cmd_model writes to disk via its own load/save cycle,
@@ -752,7 +752,7 @@ def setup_model_provider(config: dict, *, quick: bool = False):
             print()
             print_header("Same-Provider Fallback & Rotation")
             print_info(
-                "Hermes can keep multiple credentials for one provider and rotate between"
+                "Doppel can keep multiple credentials for one provider and rotate between"
             )
             print_info(
                 "them when a credential is exhausted or rate-limited. This preserves"
@@ -847,7 +847,7 @@ def setup_model_provider(config: dict, *, quick: bool = False):
         print()
         print_header("Vision & Image Analysis (optional)")
         print_info(f"Vision uses a separate multimodal backend. {_prov_display}")
-        print_info("doesn't currently provide one Hermes can auto-use for vision,")
+        print_info("doesn't currently provide one Doppel can auto-use for vision,")
         print_info("so choose a backend now or skip and configure later.")
         print()
 
@@ -897,7 +897,7 @@ def setup_model_provider(config: dict, *, quick: bool = False):
             else:
                 print_info("Skipped — vision won't be available")
         else:
-            print_info("Skipped — add later with 'hermes setup' or configure AUXILIARY_VISION_* settings")
+            print_info("Skipped — add later with 'doppel setup' or configure AUXILIARY_VISION_* settings")
 
 
     # Tool Gateway prompt is already shown by _model_flow_nous() above.
@@ -1197,7 +1197,7 @@ def _setup_tts_provider(config: dict):
                     from hermes_constants import display_hermes_home as _dhh
                     print_warning(
                         "No xAI API key provided for TTS. Configure XAI_API_KEY "
-                        f"via hermes setup model or {_dhh()}/.env to use xAI TTS. "
+                        f"via doppel setup model or {_dhh()}/.env to use xAI TTS. "
                         "Falling back to Edge TTS."
                     )
                     selected = "edge"
@@ -1282,7 +1282,7 @@ def _setup_tts_provider(config: dict):
 
 
 def setup_tts(config: dict):
-    """Standalone TTS setup (for 'hermes setup tts')."""
+    """Standalone TTS setup (for 'doppel setup tts')."""
     _setup_tts_provider(config)
 
 
@@ -1295,7 +1295,7 @@ def setup_terminal_backend(config: dict):
     """Configure the terminal execution backend."""
     import platform as _platform
     print_header("Terminal Backend")
-    print_info("Choose where Hermes runs shell commands and code.")
+    print_info("Choose where Doppel runs shell commands and code.")
     print_info("This affects tool execution, file access, and isolation.")
     print_info(f"   Guide: {_DOCS_BASE}/developer-guide/environments")
     print()
@@ -1649,7 +1649,7 @@ def _apply_default_agent_settings(config: dict):
     print_info("  Tool progress: all")
     print_info("  Compression threshold: 0.50")
     print_info("  Session reset: inactivity (1440 min) + daily (4:00)")
-    print_info("  Run `hermes setup agent` later to customize.")
+    print_info("  Run `doppel setup agent` later to customize.")
 
 
 def setup_agent_settings(config: dict):
@@ -1880,7 +1880,7 @@ def _setup_telegram():
         print_info("⚠️  No allowlist set - anyone who finds your bot can use it!")
 
     print()
-    print_info("📬 Home Channel: where Hermes delivers cron job results,")
+    print_info("📬 Home Channel: where Doppel delivers cron job results,")
     print_info("   cross-platform messages, and notifications.")
     print_info("   For Telegram DMs, this is your user ID (same as above).")
 
@@ -1911,7 +1911,7 @@ def _setup_slack():
             # new commands (e.g. /btw, /stop, ...) get registered in Slack.
             if prompt_yes_no(
                 "Regenerate the Slack app manifest with the latest command "
-                "list? (recommended after `hermes update`)",
+                "list? (recommended after `doppel update`)",
                 True,
             ):
                 _write_slack_manifest_and_instruct()
@@ -1958,7 +1958,7 @@ def _setup_slack():
         print_info("   Set SLACK_ALLOW_ALL_USERS=true or GATEWAY_ALLOW_ALL_USERS=true only if you intentionally want open workspace access.")
 
     print()
-    print_info("📬 Home Channel: where Hermes delivers cron job results,")
+    print_info("📬 Home Channel: where Doppel delivers cron job results,")
     print_info("   cross-platform messages, and notifications.")
     print_info("   To get a channel ID: open the channel in Slack, then right-click")
     print_info("   the channel name → Copy link — the ID starts with C (e.g. C01ABC2DE3F).")
@@ -1983,8 +1983,8 @@ def _write_slack_manifest_and_instruct():
         from hermes_constants import get_hermes_home
 
         manifest = _build_full_manifest(
-            bot_name="Hermes",
-            bot_description="Your Hermes agent on Slack",
+            bot_name="Doppel",
+            bot_description="Your Doppel agent on Slack",
         )
         target = Path(get_hermes_home()) / "slack-manifest.json"
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -2000,14 +2000,14 @@ def _write_slack_manifest_and_instruct():
             "reinstall if scopes or slash commands changed."
         )
         print_info(
-            "   Re-run `hermes slack manifest --write` anytime to refresh after "
-            "Hermes adds new commands."
+            "   Re-run `doppel slack manifest --write` anytime to refresh after "
+            "Doppel adds new commands."
         )
     except Exception as exc:  # pragma: no cover - best-effort UX helper
         print_warning(f"Couldn't write Slack manifest: {exc}")
         print_info(
             "   You can generate it manually later with: "
-            "hermes slack manifest --write"
+            "doppel slack manifest --write"
         )
 
 
@@ -2119,7 +2119,7 @@ def _setup_matrix():
             print_info("⚠️  No allowlist set - anyone who can message the bot can use it!")
 
         print()
-        print_info("📬 Home Room: where Hermes delivers cron job results and notifications.")
+        print_info("📬 Home Room: where Doppel delivers cron job results and notifications.")
         print_info("   Room IDs look like !abc123:server (shown in Element room settings)")
         print_info("   You can also set this later by typing /set-home in a Matrix room.")
         home_room = prompt("Home room ID (leave empty to set later with /set-home)")
@@ -2136,7 +2136,7 @@ def _setup_bluebubbles():
         if not prompt_yes_no("Reconfigure BlueBubbles?", False):
             return
 
-    print_info("Connects Hermes to iMessage via BlueBubbles — a free, open-source")
+    print_info("Connects Doppel to iMessage via BlueBubbles — a free, open-source")
     print_info("macOS server that bridges iMessage to any device.")
     print_info("   Requires a Mac running BlueBubbles Server v1.0.0+")
     print_info("   Download: https://bluebubbles.app/")
@@ -2241,8 +2241,8 @@ def _setup_webhooks():
     print_info("   Route configuration guide:")
     print_info("   https://hermes-agent.nousresearch.com/docs/user-guide/messaging/webhooks/#configuring-routes")
     print()
-    print_info("   Open config in your editor:  hermes config edit")
-    print_info("   Open config in your editor:  hermes config edit")
+    print_info("   Open config in your editor:  doppel config edit")
+    print_info("   Open config in your editor:  doppel config edit")
 
 
 def setup_gateway(config: dict):
@@ -2250,7 +2250,7 @@ def setup_gateway(config: dict):
     from hermes_cli.gateway import _all_platforms, _platform_status, _configure_platform
 
     print_header("Messaging Platforms")
-    print_info("Connect to messaging platforms to chat with Hermes from anywhere.")
+    print_info("Connect to messaging platforms to chat with Doppel from anywhere.")
     print_info("Toggle with Space, confirm with Enter.")
     print()
 
@@ -2268,7 +2268,7 @@ def setup_gateway(config: dict):
     selected = prompt_checklist("Select platforms to configure:", items, pre_selected)
 
     if not selected:
-        print_info("No platforms selected. Run 'hermes setup gateway' later to configure.")
+        print_info("No platforms selected. Run 'doppel setup gateway' later to configure.")
         return
 
     for idx in selected:
@@ -2321,7 +2321,7 @@ def setup_gateway(config: dict):
             print_info("   Set one later with /set-home in your chat, or:")
             for plat in missing_home:
                 print_info(
-                    f"     hermes config set {plat.upper()}_HOME_CHANNEL <channel_id>"
+                    f"     doppel config set {plat.upper()}_HOME_CHANNEL <channel_id>"
                 )
 
         # Offer to install the gateway as a system service
@@ -2458,24 +2458,24 @@ def setup_gateway(config: dict):
                             print_error(f"  Start failed: {e}")
                 except Exception as e:
                     print_error(f"  Install failed: {e}")
-                    print_info("  You can try manually: hermes gateway install")
+                    print_info("  You can try manually: doppel gateway install")
             else:
-                print_info("  You can install later: hermes gateway install")
+                print_info("  You can install later: doppel gateway install")
                 if supports_systemd:
-                    print_info("  Or as a boot-time service: sudo hermes gateway install --system")
-                print_info("  Or run in foreground:  hermes gateway")
+                    print_info("  Or as a boot-time service: sudo doppel gateway install --system")
+                print_info("  Or run in foreground:  doppel gateway")
         else:
             from hermes_constants import is_container
             if is_container():
                 print_info("Start the gateway to bring your bots online:")
-                print_info("   hermes gateway run          # Run as container main process")
+                print_info("   doppel gateway run         # Run as container main process")
                 print_info("")
                 print_info("For automatic restarts, use a Docker restart policy:")
                 print_info("   docker run --restart unless-stopped ...")
                 print_info("   docker restart <container>  # Manual restart")
             else:
                 print_info("Start the gateway to bring your bots online:")
-                print_info("   hermes gateway              # Run in foreground")
+                print_info("   doppel gateway             # Run in foreground")
 
         print_info("━" * 50)
 
@@ -2783,12 +2783,12 @@ def _offer_openclaw_migration(hermes_home: Path) -> bool:
     print()
     print_header("OpenClaw Installation Detected")
     print_info(f"Found OpenClaw data at {openclaw_dir}")
-    print_info("Hermes can preview what would be imported before making any changes.")
+    print_info("Doppel can preview what would be imported before making any changes.")
     print()
 
     if not prompt_yes_no("Would you like to see what can be imported?", default=True):
         print_info(
-            "Skipping migration. You can run it later with: hermes claw migrate --dry-run"
+            "Skipping migration. You can run it later with: doppel claw migrate --dry-run"
         )
         return False
 
@@ -2846,7 +2846,7 @@ def _offer_openclaw_migration(hermes_home: Path) -> bool:
     # ── Phase 2: Confirm and execute ──
     if not prompt_yes_no("Proceed with migration?", default=False):
         print_info(
-            "Migration cancelled. You can run it later with: hermes claw migrate"
+            "Migration cancelled. You can run it later with: doppel claw migrate"
         )
         print_info(
             "Use --dry-run to preview again, or --preset minimal for a lighter import."
@@ -2884,7 +2884,7 @@ def _offer_openclaw_migration(hermes_home: Path) -> bool:
     if migrated:
         print_success(f"Imported {migrated} item(s) from OpenClaw.")
     if conflicts:
-        print_info(f"Skipped {conflicts} item(s) that already exist in Hermes (use hermes claw migrate --overwrite to force).")
+        print_info(f"Skipped {conflicts} item(s) that already exist in Doppel (use doppel claw migrate --overwrite to force).")
     if skipped:
         print_info(f"Skipped {skipped} item(s) (not found or unchanged).")
     if errors:
@@ -2915,9 +2915,9 @@ SETUP_SECTIONS = [
 def _run_portal_one_shot(config: dict) -> None:
     """One-shot Nous Portal setup — OAuth + provider switch + Tool Gateway.
 
-    Wired into ``hermes setup --portal``. Does NOT prompt for anything
+    Wired into ``doppel setup --portal``. Does NOT prompt for anything
     besides what the underlying OAuth + Tool Gateway prompts already need.
-    Designed to be shareable as a single command (``hermes setup --portal``)
+    Designed to be shareable as a single command (``doppel setup --portal``)
     that gets a brand-new user from zero to a fully working Hermes session
     with web/image/tts/browser tools all routed via their Portal sub.
     """
@@ -2935,7 +2935,7 @@ def _run_portal_one_shot(config: dict) -> None:
             Colors.MAGENTA,
         )
     )
-    print(color("│     ⚕ Hermes Setup — Nous Portal (one-shot)             │", Colors.MAGENTA))
+    print(color("│     ⚕ Doppel Setup — Nous Portal (one-shot)             │", Colors.MAGENTA))
     print(
         color(
             "└─────────────────────────────────────────────────────────┘",
@@ -2951,7 +2951,7 @@ def _run_portal_one_shot(config: dict) -> None:
     print()
 
     # Skip OAuth if already logged in (don't re-prompt every time the user
-    # runs `hermes setup --portal` after a successful first run).
+    # runs `doppel setup --portal` after a successful first run).
     already_logged_in = False
     try:
         already_logged_in = bool((get_nous_auth_status() or {}).get("logged_in"))
@@ -2983,7 +2983,7 @@ def _run_portal_one_shot(config: dict) -> None:
         except SystemExit as e:
             print()
             print_error(f"  Nous Portal login failed (exit {e.code}).")
-            print_info("  You can retry later with `hermes auth add nous --type oauth`.")
+            print_info("  You can retry later with `doppel auth add nous --type oauth`.")
             return
         except (KeyboardInterrupt, EOFError):
             print()
@@ -2992,7 +2992,7 @@ def _run_portal_one_shot(config: dict) -> None:
         except Exception as exc:
             print()
             print_error(f"  Nous Portal login failed: {exc}")
-            print_info("  You can retry later with `hermes auth add nous --type oauth`.")
+            print_info("  You can retry later with `doppel auth add nous --type oauth`.")
             return
 
     # Set provider → nous so the model picker, status surfaces, and
@@ -3020,21 +3020,21 @@ def _run_portal_one_shot(config: dict) -> None:
 
     print()
     print_success("Portal setup complete.")
-    print_info("  Run `hermes portal status` to inspect routing.")
-    print_info("  Run `hermes` to start chatting.")
+    print_info("  Run `doppel portal status` to inspect routing.")
+    print_info("  Run `doppel` to start chatting.")
 
 
 def run_setup_wizard(args):
     """Run the interactive setup wizard.
 
     Supports full, quick, and section-specific setup:
-      hermes setup           — full or quick (auto-detected)
-      hermes setup model     — just model/provider
-      hermes setup tts       — just text-to-speech
-      hermes setup terminal  — just terminal backend
-      hermes setup gateway   — just messaging platforms
-      hermes setup tools     — just tool configuration
-      hermes setup agent     — just agent settings
+      doppel setup           — full or quick (auto-detected)
+      doppel setup model     — just model/provider
+      doppel setup tts       — just text-to-speech
+      doppel setup terminal  — just terminal backend
+      doppel setup gateway   — just messaging platforms
+      doppel setup tools     — just tool configuration
+      doppel setup agent     — just agent settings
     """
     from hermes_cli.config import is_managed, managed_error
     if is_managed():
@@ -3096,7 +3096,7 @@ def run_setup_wizard(args):
                         Colors.MAGENTA,
                     )
                 )
-                print(color(f"│     ⚕ Hermes Setup — {label:<34s} │", Colors.MAGENTA))
+                print(color(f"│     ⚕ Doppel Setup — {label:<34s} │", Colors.MAGENTA))
                 print(
                     color(
                         "└─────────────────────────────────────────────────────────┘",
@@ -3132,7 +3132,7 @@ def run_setup_wizard(args):
     )
     print(
         color(
-            "│             ⚕ Hermes Agent Setup Wizard                │", Colors.MAGENTA
+            "│             ⚕ Doppel Agent Setup Wizard                │", Colors.MAGENTA
         )
     )
     print(
@@ -3143,7 +3143,7 @@ def run_setup_wizard(args):
     )
     print(
         color(
-            "│  Let's configure your Hermes Agent installation.       │", Colors.MAGENTA
+            "│  Let's configure your Doppel Agent installation.       │", Colors.MAGENTA
         )
     )
     print(
@@ -3172,11 +3172,11 @@ def run_setup_wizard(args):
 
         print()
         print_header("Reconfigure")
-        print_success("You already have Hermes configured.")
+        print_success("You already have Doppel configured.")
         print_info("Running the full wizard — each prompt shows your current value.")
         print_info("Press Enter to keep it, or type a new value to change it.")
         print_info("")
-        print_info("Tip: jump straight to a section with 'hermes setup model|terminal|")
+        print_info("Tip: jump straight to a section with 'doppel setup model|terminal|")
         print_info("     gateway|tools|agent', or fill only missing items with --quick.")
         # Fall through to the "Full Setup — run all sections" block below.
         # --reconfigure is now the default on existing installs; the flag
@@ -3196,7 +3196,7 @@ def run_setup_wizard(args):
         if migration_ran:
             config = load_config()
 
-        setup_mode = prompt_choice("How would you like to set up Hermes?", [
+        setup_mode = prompt_choice("How would you like to set up Doppel?", [
             "Quick setup — provider, model & messaging (recommended)",
             "Full setup — configure everything",
         ], 0)
@@ -3212,7 +3212,7 @@ def run_setup_wizard(args):
     print_info(f"Data folder:  {hermes_home}")
     print_info(f"Install dir:  {PROJECT_ROOT}")
     print()
-    print_info("You can edit these files directly or use 'hermes config edit'")
+    print_info("You can edit these files directly or use 'doppel config edit'")
 
     if migration_ran:
         print()
@@ -3272,7 +3272,7 @@ def _run_first_time_quick_setup(config: dict, hermes_home, is_existing: bool):
         "Connect a messaging platform? (Telegram, Discord, etc.)",
         [
             "Set up messaging now (recommended)",
-            "Skip — set up later with 'hermes setup gateway'",
+            "Skip — set up later with 'doppel setup gateway'",
         ],
         0,
     )
@@ -3284,9 +3284,9 @@ def _run_first_time_quick_setup(config: dict, hermes_home, is_existing: bool):
     print()
     print_success("Setup complete! You're ready to go.")
     print()
-    print_info("  Configure all settings:    hermes setup")
+    print_info("  Configure all settings:    doppel setup")
     if gateway_choice != 0:
-        print_info("  Connect Telegram/Discord:  hermes setup gateway")
+        print_info("  Connect Telegram/Discord:  doppel setup gateway")
     print()
 
     _print_setup_summary(config, hermes_home)
@@ -3323,7 +3323,7 @@ def _run_quick_setup(config: dict, hermes_home):
     if not has_anything_missing:
         print_success("Everything is configured! Nothing to do.")
         print()
-        print_info("Run 'hermes setup' and choose 'Full Setup' to reconfigure,")
+        print_info("Run 'doppel setup' and choose 'Full Setup' to reconfigure,")
         print_info("or pick a specific section from the menu.")
         return
 
@@ -3385,8 +3385,8 @@ def _run_quick_setup(config: dict, hermes_home):
     if missing_messaging:
         print()
         print_header("Messaging Platforms")
-        print_info("Connect Hermes to messaging apps to chat from anywhere.")
-        print_info("You can configure these later with 'hermes setup gateway'.")
+        print_info("Connect Doppel to messaging apps to chat from anywhere.")
+        print_info("You can configure these later with 'doppel setup gateway'.")
 
         # Group by platform (preserving order)
         platform_order = []

@@ -1,7 +1,7 @@
 """
-Status command for hermes CLI.
+Status command for Doppel CLI.
 
-Shows the status of all Hermes Agent components.
+Shows the status of all Doppel Agent components.
 """
 
 import os
@@ -90,13 +90,13 @@ from hermes_constants import is_termux as _is_termux
 
 
 def show_status(args):
-    """Show status of all Hermes Agent components."""
+    """Show status of all Doppel Agent components."""
     show_all = getattr(args, 'all', False)
     deep = getattr(args, 'deep', False)
 
     print()
     print(color("┌─────────────────────────────────────────────────────────┐", Colors.CYAN))
-    print(color("│                 ⚕ Hermes Agent Status                  │", Colors.CYAN))
+    print(color("│                 ⚕ Doppel Agent Status                  │", Colors.CYAN))
     print(color("└─────────────────────────────────────────────────────────┘", Colors.CYAN))
 
     # =========================================================================
@@ -581,6 +581,6 @@ def show_status(args):
 
     print()
     print(color("─" * 60, Colors.DIM))
-    print(color("  Run 'hermes doctor' for detailed diagnostics", Colors.DIM))
-    print(color("  Run 'hermes setup' to configure", Colors.DIM))
+    print(color("  Run 'doppel doctor' for detailed diagnostics", Colors.DIM))
+    print(color("  Run 'doppel setup' to configure", Colors.DIM))
     print()

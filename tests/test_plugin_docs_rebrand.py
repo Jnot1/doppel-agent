@@ -96,6 +96,8 @@ EN_FALLBACK_PROVIDERS_DOC = (
 EN_CREDENTIAL_POOLS_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "credential-pools.md"
 )
+EN_CRON_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "cron.md"
+EN_BROWSER_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "browser.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -220,6 +222,28 @@ ZH_CREDENTIAL_POOLS_DOC = (
     / "user-guide"
     / "features"
     / "credential-pools.md"
+)
+ZH_CRON_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "cron.md"
+)
+ZH_BROWSER_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "browser.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -1255,3 +1279,124 @@ def test_credential_pool_docs_prefer_doppel_surfaces_and_keep_runtime_literals()
     assert "hermes auth add openrouter" not in zh
     assert "hermes auth list" not in zh
     assert "hermes model" not in zh
+
+
+def test_cron_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_CRON_DOC.read_text(encoding="utf-8")
+    zh = ZH_CRON_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent exposes cron management" in en
+    assert "Doppel Agent 通过单一 `cronjob` 工具暴露 cron 管理能力" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel setup --portal" in en
+    assert "doppel setup --portal" in zh
+    assert "doppel cron create" in en
+    assert "doppel cron create" in zh
+    assert "doppel cron list" in en
+    assert "doppel cron list" in zh
+    assert "doppel gateway install" in en
+    assert "doppel gateway install" in zh
+    assert "doppel tools" in en
+    assert "doppel tools" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/cron/jobs.json" in en
+    assert "~/.doppel/cron/jobs.json" in zh
+    assert "~/.doppel/scripts/" in en
+    assert "~/.doppel/scripts/" in zh
+    assert "~/.hermes/cron/" in en
+    assert "~/.hermes/cron/" in zh
+    assert "~/.hermes/state.db" in en
+    assert "~/.hermes/state.db" in zh
+
+    for fixed in ("HERMES_HOME", "HERMES_CRON_SCRIPT_TIMEOUT", "cronjob", "wakeAgent"):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Hermes exposes cron management" not in en
+    assert "Hermes 通过单一 `cronjob` 工具暴露 cron 管理能力" not in zh
+    assert "hermes cron" not in en
+    assert "hermes cron" not in zh
+    assert "hermes gateway install" not in en
+    assert "hermes gateway install" not in zh
+    assert "hermes setup --portal" not in en
+    assert "hermes setup --portal" not in zh
+    assert "hermes tools" not in en
+    assert "hermes tools" not in zh
+
+
+def test_browser_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_BROWSER_DOC.read_text(encoding="utf-8")
+    zh = ZH_BROWSER_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent includes a full browser automation toolset" in en
+    assert "Doppel Agent 内置完整的浏览器自动化工具集" in zh
+    assert "doppel setup --portal" in en
+    assert "doppel setup --portal" in zh
+    assert "doppel setup tools" in en
+    assert "doppel setup tools" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel tools" in en
+    assert "doppel tools" in zh
+    assert "doppel chat" in en
+    assert "doppel chat" in zh
+    assert "doppel config set toolsets '[\"hermes-cli\", \"browser\"]'" in en
+    assert "doppel config set toolsets '[\"hermes-cli\", \"browser\"]'" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/browser_auth/camofox/" in en
+    assert "~/.doppel/browser_auth/camofox/" in zh
+    assert "~/.doppel/browser_recordings/" in en
+    assert "~/.doppel/browser_recordings/" in zh
+    assert "~/.doppel/cache/screenshots/" in en
+    assert "~/.doppel/cache/screenshots/" in zh
+    assert "$HOME/.doppel/chrome-debug" in en
+    assert "$HOME/.doppel/chrome-debug" in zh
+    assert "Use MCP with Doppel Agent" in en
+    assert "在 Doppel Agent 中使用 MCP" in zh
+
+    for fixed in (
+        "HERMES_HOME",
+        "CAMOFOX_USER_ID",
+        "CAMOFOX_SESSION_KEY",
+        "CAMOFOX_ADOPT_EXISTING_TAB",
+        "CAMOFOX_URL",
+        "/browser connect",
+        "browser_navigate",
+        "browser_snapshot",
+        "browser_click",
+        "browser_type",
+        "browser_cdp",
+        "browser_dialog",
+        "GET /tabs?userId=<user_id>",
+        "DELETE /sessions/<user_id>",
+        "REQUEST_RELEASE",
+        "MEDIA:",
+        "~/.hermes/browser_auth/camofox/",
+        "~/.hermes/browser_recordings/",
+        "~/.hermes/cache/screenshots/",
+        "hermes-cli",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Hermes Agent includes a full browser automation toolset" not in en
+    assert "Hermes Agent 内置完整的浏览器自动化工具集" not in zh
+    assert "hermes setup --portal" not in en
+    assert "hermes setup --portal" not in zh
+    assert "hermes setup tools" not in en
+    assert "hermes setup tools" not in zh
+    assert "hermes model" not in en
+    assert "hermes model" not in zh
+    assert "hermes tools" not in en
+    assert "hermes tools" not in zh
+    assert "hermes chat" not in en
+    assert "hermes chat" not in zh
+    assert "hermes config set toolsets" not in en
+    assert "hermes config set toolsets" not in zh
+    assert 'Type "hermes agent" into the search field @e3' not in en
+    assert 'Type "hermes agent" into the search field @e3' not in zh

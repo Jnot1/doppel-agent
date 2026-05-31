@@ -114,6 +114,7 @@ EN_HONCHO_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "ho
 EN_MEMORY_PROVIDERS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "memory-providers.md"
 EN_LSP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "lsp.md"
 EN_CODE_EXECUTION_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "code-execution.md"
+EN_KANBAN_WORKER_LANES_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "kanban-worker-lanes.md"
 EN_COMPUTER_USE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "computer-use.md"
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
@@ -423,6 +424,17 @@ ZH_CODE_EXECUTION_DOC = (
     / "user-guide"
     / "features"
     / "code-execution.md"
+)
+ZH_KANBAN_WORKER_LANES_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "kanban-worker-lanes.md"
 )
 ZH_COMPUTER_USE_DOC = (
     REPO_ROOT
@@ -2413,6 +2425,76 @@ def test_code_execution_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "仅在 **Linux 和 macOS** 上可用。在 Windows 上会自动禁用" not in zh
     assert "[output truncated at 50KB]" not in en
     assert "[output truncated at 50KB]" not in zh
+
+
+def test_kanban_worker_lane_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_KANBAN_WORKER_LANES_DOC.read_text(encoding="utf-8")
+    zh = ZH_KANBAN_WORKER_LANES_DOC.read_text(encoding="utf-8")
+
+    assert "non-Doppel service that pulls tasks via the API" in en
+    assert "非 Doppel 服务" in zh
+    assert "Doppel Kanban =  canonical task lifecycle + audit trail" in en
+    assert "Doppel Kanban =  规范的任务生命周期 + 审计追踪" in zh
+    assert "`doppel kanban show`" in en
+    assert "`doppel kanban show`" in zh
+    assert "`doppel kanban tail <task_id>`" in en
+    assert "`doppel kanban tail <task_id>`" in zh
+    assert "`doppel kanban runs <task_id>`" in en
+    assert "`doppel kanban runs <task_id>`" in zh
+    assert "### Doppel profile lane (default)" in en
+    assert "### Doppel profile 通道（默认）" in zh
+    assert "`doppel -p <profile>`" in en
+    assert "`doppel -p <profile>`" in zh
+    assert "`doppel -p <assignee> chat -q <prompt>`" in en
+    assert "`doppel -p <assignee> chat -q <prompt>`" in zh
+    assert "`doppel profile list`" in en
+    assert "`doppel profile list`" in zh
+    assert "`doppel kanban diagnostics`" in en
+    assert "`doppel kanban diagnostics`" in zh
+
+    for fixed in (
+        "HERMES_KANBAN_TASK",
+        "HERMES_KANBAN_DB",
+        "HERMES_KANBAN_BOARD",
+        "HERMES_KANBAN_WORKSPACES_ROOT",
+        "HERMES_KANBAN_WORKSPACE",
+        "HERMES_KANBAN_RUN_ID",
+        "HERMES_KANBAN_CLAIM_LOCK",
+        "HERMES_PROFILE",
+        "HERMES_TENANT",
+        "kanban_complete",
+        "kanban_block",
+        "kanban_unblock",
+        "kanban_show",
+        "KANBAN_GUIDANCE",
+        "review-required",
+        "dispatch_once",
+        "DEFAULT_CLAIM_TTL_SECONDS",
+        "[#19931]",
+        "PR [#19924]",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "non-Hermes service that pulls tasks via the API" not in en
+    assert "非 Hermes 服务" not in zh
+    assert "Hermes Kanban  =  canonical task lifecycle + audit trail" not in en
+    assert "Hermes Kanban  =  规范的任务生命周期 + 审计追踪" not in zh
+    assert "`hermes kanban show`" not in en
+    assert "`hermes kanban show`" not in zh
+    assert "`hermes kanban tail <task_id>`" not in en
+    assert "`hermes kanban tail <task_id>`" not in zh
+    assert "`hermes kanban runs <task_id>`" not in en
+    assert "`hermes kanban runs <task_id>`" not in zh
+    assert "### Hermes profile lane (default)" not in en
+    assert "### Hermes profile 通道（默认）" not in zh
+    assert "`hermes -p <profile>`" not in en
+    assert "`hermes -p <profile>`" not in zh
+    assert "`hermes -p <assignee> chat -q <prompt>`" not in en
+    assert "`hermes -p <assignee> chat -q <prompt>`" not in zh
+    assert "`hermes profile list`" not in en
+    assert "`hermes profile list`" not in zh
+    assert "`hermes kanban diagnostics`" not in en
+    assert "`hermes kanban diagnostics`" not in zh
 
 
 def test_computer_use_docs_prefer_doppel_surfaces_and_keep_runtime_literals():

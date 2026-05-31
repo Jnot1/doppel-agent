@@ -1,12 +1,12 @@
 ---
 sidebar_position: 2
 title: "环境变量"
-description: "Hermes Agent 使用的所有环境变量完整参考"
+description: "Doppel Agent 使用的所有环境变量完整参考"
 ---
 
 # 环境变量参考
 
-所有变量均写入 `~/.hermes/.env`。也可以使用 `hermes config set VAR value` 进行设置。
+所有变量均写入 `~/.doppel/.env`。也可以使用 `doppel config set VAR value` 进行设置。
 
 ## LLM 提供商
 
@@ -92,11 +92,11 @@ description: "Hermes Agent 使用的所有环境变量完整参考"
 | `OPENCODE_GO_API_KEY` | OpenCode Go API 密钥——$10/月订阅开源模型（[opencode.ai](https://opencode.ai/auth)） |
 | `OPENCODE_GO_BASE_URL` | 覆盖 OpenCode Go base URL |
 | `CLAUDE_CODE_OAUTH_TOKEN` | 手动导出时的显式 Claude Code token 覆盖 |
-| `HERMES_MODEL` | 在进程级别覆盖模型名称（供 cron 调度器使用；正常使用请优先在 `config.yaml` 中配置） |
+| `DOPPEL_MODEL` | 在进程级别覆盖模型名称（供 cron 调度器使用；正常使用请优先在 `config.yaml` 中配置） |
 | `VOICE_TOOLS_OPENAI_KEY` | OpenAI 语音转文字和文字转语音提供商的首选 OpenAI 密钥 |
 | `HERMES_LOCAL_STT_COMMAND` | 可选的本地语音转文字命令模板。支持 `{input_path}`、`{output_dir}`、`{language}` 和 `{model}` 占位符 |
 | `HERMES_LOCAL_STT_LANGUAGE` | 传递给 `HERMES_LOCAL_STT_COMMAND` 或自动检测的本地 `whisper` CLI 回退的默认语言（默认：`en`） |
-| `HERMES_HOME` | 覆盖 Hermes 配置目录（默认：`~/.hermes`）。同时限定 gateway PID 文件和 systemd 服务名称，允许多个安装并发运行 |
+| `DOPPEL_HOME` | 覆盖 Doppel 配置目录（默认：`~/.doppel`）。同时限定 gateway PID 文件和 systemd 服务名称，允许多个安装并发运行 |
 | `HERMES_GIT_BASH_PATH` | **仅 Windows。** 覆盖终端工具的 `bash.exe` 发现路径。可指向任意 bash——完整 Git-for-Windows 安装、通过符号链接的 WSL bash、MSYS2、Cygwin。安装程序会自动将其设置为所配置的 PortableGit。参见 [Windows（原生）指南](../user-guide/windows-native.md#how-hermes-runs-shell-commands-on-windows) |
 | `HERMES_DISABLE_WINDOWS_UTF8` | **仅 Windows。** 设为 `1` 可禁用 UTF-8 stdio shim（`configure_windows_stdio()`），回退到控制台的本地代码页。用于排查编码问题；正常操作中极少需要 |
 | `HERMES_KANBAN_HOME` | 覆盖锚定 kanban 看板（数据库 + 工作区 + 工作日志）的共享 Hermes 根目录。回退到 `get_default_hermes_root()`（任意活动 profile 的父目录）。适用于测试和非常规部署 |
@@ -528,19 +528,19 @@ Graph 事件（Teams 会议、日历、聊天等）的入站变更通知监听�
 
 | 变量 | 描述 |
 |----------|-------------|
-| `DOPPEL_MAX_ITERATIONS` | 首选的每次对话最大工具调用迭代次数环境变量（默认：90）。旧版 `HERMES_MAX_ITERATIONS` 仍然可用。 |
-| `DOPPEL_INFERENCE_MODEL` | 首选的进程级模型覆盖环境变量（优先于本次会话的 `config.yaml`）。也可通过 `-m`/`--model` 标志设置。旧版 `HERMES_INFERENCE_MODEL` 仍然可用。 |
-| `DOPPEL_YOLO_MODE` | 首选的 `1`/`0` 环境变量，用于绕过危险命令审批提示。等同于 `--yolo`。旧版 `HERMES_YOLO_MODE` 仍然可用。 |
-| `DOPPEL_ACCEPT_HOOKS` | 首选的环境变量，用于无需 TTY 提示自动批准 `config.yaml` 中声明的任何未见过的 shell hook。等同于 `--accept-hooks` 或 `hooks_auto_accept: true`。旧版 `HERMES_ACCEPT_HOOKS` 仍然可用。 |
-| `DOPPEL_IGNORE_USER_CONFIG` | 首选的环境变量，用于跳过 `~/.doppel/config.yaml` 并使用内置默认值（`.env` 中的凭证仍会加载）。等同于 `--ignore-user-config`。旧版 `HERMES_IGNORE_USER_CONFIG` 仍然可用。 |
-| `DOPPEL_IGNORE_RULES` | 首选的环境变量，用于跳过 `AGENTS.md`、`SOUL.md`、`.cursorrules`、记忆和预加载技能的自动注入。等同于 `--ignore-rules`。旧版 `HERMES_IGNORE_RULES` 仍然可用。 |
+| `DOPPEL_MAX_ITERATIONS` | 每次对话最大工具调用迭代次数环境变量（默认：90）。 |
+| `DOPPEL_INFERENCE_MODEL` | 进程级模型覆盖环境变量（优先于本次会话的 `config.yaml`）。也可通过 `-m`/`--model` 标志设置。 |
+| `DOPPEL_YOLO_MODE` | `1`/`0` 环境变量，用于绕过危险命令审批提示。等同于 `--yolo`。 |
+| `DOPPEL_ACCEPT_HOOKS` | 环境变量，用于无需 TTY 提示自动批准 `config.yaml` 中声明的任何未见过的 shell hook。等同于 `--accept-hooks` 或 `hooks_auto_accept: true`。 |
+| `DOPPEL_IGNORE_USER_CONFIG` | 环境变量，用于跳过 `~/.doppel/config.yaml` 并使用内置默认值（`.env` 中的凭证仍会加载）。等同于 `--ignore-user-config`。 |
+| `DOPPEL_IGNORE_RULES` | 环境变量，用于跳过 `AGENTS.md`、`SOUL.md`、`.cursorrules`、记忆和预加载技能的自动注入。等同于 `--ignore-rules`。 |
 | `HERMES_MD_NAMES` | 自动注入的规则文件名逗号分隔列表（默认：`AGENTS.md,CLAUDE.md,.cursorrules,SOUL.md`）。 |
 | `HERMES_TOOL_PROGRESS` | 工具进度显示的已弃用兼容变量。优先使用 `config.yaml` 中的 `display.tool_progress`。 |
 | `HERMES_TOOL_PROGRESS_MODE` | 工具进度模式的已弃用兼容变量。优先使用 `config.yaml` 中的 `display.tool_progress`。 |
 | `HERMES_HUMAN_DELAY_MODE` | 响应节奏：`off`/`natural`/`custom` |
 | `HERMES_HUMAN_DELAY_MIN_MS` | 自定义延迟范围最小值（毫秒） |
 | `HERMES_HUMAN_DELAY_MAX_MS` | 自定义延迟范围最大值（毫秒） |
-| `DOPPEL_QUIET` | 首选的环境变量，用于抑制非必要输出（`true`/`false`）。旧版 `HERMES_QUIET` 仍然可用。 |
+| `DOPPEL_QUIET` | 环境变量，用于抑制非必要输出（`true`/`false`）。 |
 | `CODEX_HOME` | 启用 [Codex 应用服务器运行时](../user-guide/features/codex-app-server-runtime)时，覆盖 Codex CLI 读取其配置 + 认证的目录（默认：`~/.codex`）。Hermes 的迁移将托管块写入 `<CODEX_HOME>/config.toml`。 |
 | `HERMES_KANBAN_TASK` | kanban 调度器生成工作进程时设置（任务 UUID）。工作进程和生成的 `hermes-tools` MCP 子进程继承它，以便 kanban 工具正确门控。请勿手动设置。 |
 | `HERMES_API_TIMEOUT` | LLM API 调用超时（秒，默认：`1800`） |
@@ -556,10 +556,10 @@ Graph 事件（Teams 会议、日历、聊天等）的入站变更通知监听�
 | `HERMES_ENABLE_PROJECT_PLUGINS` | 为 agent 加载器和仪表板 Web 服务器启用从 `./.hermes/plugins/` 自动发现仓库本地插件。接受标准真值集：`1`/`true`/`yes`/`on`（不区分大小写）。其他所有值——包括 `0`、`false`、`no`、`off` 和空字符串——均视为**禁用**（默认）。注意：自 GHSA-5qr3-c538-wm9j（#29156）起，即使启用此变量，仪表板 Web 服务器也拒绝自动导入项目插件的 Python `api` 文件——项目插件可通过静态 JS/CSS 扩展 UI，但其后端路由仅在移至 `~/.hermes/plugins/` 后才会加载。 |
 | `HERMES_PLUGINS_DEBUG` | `1`/`true` 可在 stderr 上输出详细的插件发现日志——扫描的目录、解析的 manifest、跳过原因以及解析或 `register()` 失败时的完整回溯。面向插件作者。 |
 | `HERMES_BACKGROUND_NOTIFICATIONS` | gateway 中后台进程通知模式：`all`（默认）、`result`、`error`、`off` |
-| `DOPPEL_EPHEMERAL_SYSTEM_PROMPT` | 首选的环境变量，用于在 API 调用时注入临时系统 prompt（永不持久化到会话）。旧版 `HERMES_EPHEMERAL_SYSTEM_PROMPT` 仍然可用。 |
+| `DOPPEL_EPHEMERAL_SYSTEM_PROMPT` | 环境变量，用于在 API 调用时注入临时系统 prompt（永不持久化到会话）。 |
 | `HERMES_PREFILL_MESSAGES_FILE` | 包含在 API 调用时注入的临时预填消息的 JSON 文件路径。 |
 | `HERMES_ALLOW_PRIVATE_URLS` | `true`/`false`——允许工具获取 localhost/私有网络 URL。gateway 模式下默认关闭。 |
-| `DOPPEL_REDACT_SECRETS` | 首选的 `true`/`false` 环境变量，用于控制工具输出、日志和聊天响应中的密钥脱敏（默认：`true`）。旧版 `HERMES_REDACT_SECRETS` 仍然可用。 |
+| `DOPPEL_REDACT_SECRETS` | `true`/`false` 环境变量，用于控制工具输出、日志和聊天响应中的密钥脱敏（默认：`true`）。 |
 | `HERMES_WRITE_SAFE_ROOT` | 可选目录前缀，限制 `write_file`/`patch` 写入；超出范围的路径需要审批。 |
 | `HERMES_DISABLE_FILE_STATE_GUARD` | 设为 `1` 可关闭 `patch`/`write_file` 上的"文件自上次读取后已更改"保护。 |
 | `HERMES_CORE_TOOLS` | 规范核心工具列表的逗号分隔覆盖（高级；极少需要）。 |
@@ -578,11 +578,11 @@ Graph 事件（Teams 会议、日历、聊天等）的入站变更通知监听�
 
 | 变量 | 描述 |
 |----------|-------------|
-| `DOPPEL_TUI` | 首选的环境变量；设为 `1` 时启动 [TUI](../user-guide/tui.md) 而非经典 CLI。等同于传入 `--tui`。旧版 `HERMES_TUI` 仍然可用。 |
-| `DOPPEL_TUI_DIR` | 首选的环境变量，用于指定预构建 `ui-tui/` 目录的路径（必须包含 `dist/entry.js` 和已填充的 `node_modules`）。供发行版和 Nix 使用以跳过首次启动时的 `npm install`。旧版 `HERMES_TUI_DIR` 仍然可用。 |
-| `DOPPEL_TUI_RESUME` | 首选的环境变量，用于在启动时按 ID 恢复特定 TUI 会话。设置后，`doppel --tui` 跳过创建新会话并接续指定会话——适用于断开连接或终端崩溃后重新连接。旧版 `HERMES_TUI_RESUME` 仍然可用。 |
-| `DOPPEL_TUI_THEME` | 首选的环境变量，用于强制 TUI 颜色主题：`light`、`dark` 或原始 6 字符背景十六进制（例如 `ffffff` 或 `1a1a2e`）。未设置时，Doppel 使用 `COLORFGBG` 和终端背景查询自动检测；此变量覆盖不设置 `COLORFGBG` 的终端（Ghostty、Warp、iTerm2 等）上的检测。旧版 `HERMES_TUI_THEME` 仍然可用。 |
-| `DOPPEL_INFERENCE_MODEL` | 首选的环境变量，用于为 `doppel -z` / `doppel chat` 强制指定模型而不修改 `config.yaml`。与 `--provider` 标志配合使用。适用于需要每次运行覆盖默认模型的脚本调用者（sweeper、CI、批量运行器）。旧版 `HERMES_INFERENCE_MODEL` 仍然可用。 |
+| `DOPPEL_TUI` | 环境变量；设为 `1` 时启动 [TUI](../user-guide/tui.md) 而非经典 CLI。等同于传入 `--tui`。 |
+| `DOPPEL_TUI_DIR` | 环境变量，用于指定预构建 `ui-tui/` 目录的路径（必须包含 `dist/entry.js` 和已填充的 `node_modules`）。供发行版和 Nix 使用以跳过首次启动时的 `npm install`。 |
+| `DOPPEL_TUI_RESUME` | 环境变量，用于在启动时按 ID 恢复特定 TUI 会话。设置后，`doppel --tui` 跳过创建新会话并接续指定会话——适用于断开连接或终端崩溃后重新连接。 |
+| `DOPPEL_TUI_THEME` | 环境变量，用于强制 TUI 颜色主题：`light`、`dark` 或原始 6 字符背景十六进制（例如 `ffffff` 或 `1a1a2e`）。未设置时，Doppel 使用 `COLORFGBG` 和终端背景查询自动检测；此变量覆盖不设置 `COLORFGBG` 的终端（Ghostty、Warp、iTerm2 等）上的检测。 |
+| `DOPPEL_INFERENCE_MODEL` | 环境变量，用于为 `doppel -z` / `doppel chat` 强制指定模型而不修改 `config.yaml`。与 `--provider` 标志配合使用。适用于需要每次运行覆盖默认模型的脚本调用者（sweeper、CI、批量运行器）。 |
 
 ## 会话设置
 

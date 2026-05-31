@@ -222,8 +222,7 @@ def _add_accept_hooks_flag(parser) -> None:
         default=argparse.SUPPRESS,
         help=(
             "Auto-approve unseen shell hooks without a TTY prompt "
-            "(equivalent to DOPPEL_ACCEPT_HOOKS=1 / legacy "
-            "HERMES_ACCEPT_HOOKS=1 / hooks_auto_accept: true)."
+            "(equivalent to DOPPEL_ACCEPT_HOOKS=1 / hooks_auto_accept: true)."
         ),
     )
 
@@ -1429,8 +1428,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
         print(
             f"Error: --dev is incompatible with DOPPEL_TUI_DIR={ext_dir}\n"
             f"The prebuilt TUI has no source code to hot-reload.\n"
-            "Unset DOPPEL_TUI_DIR (legacy HERMES_TUI_DIR also works) "
-            "to use --dev from a checkout.",
+            "Unset DOPPEL_TUI_DIR to use --dev from a checkout.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -1609,6 +1607,7 @@ def _launch_tui(
         env["TERMINAL_CWD"] = wt_info["path"]
 
     if model:
+        env["DOPPEL_MODEL"] = model
         env["HERMES_MODEL"] = model
         env["HERMES_INFERENCE_MODEL"] = model
     if provider:

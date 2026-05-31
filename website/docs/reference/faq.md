@@ -298,7 +298,7 @@ Make sure the key matches the provider. An OpenAI key won't work with OpenRouter
 doppel model
 
 # Set a valid model
-doppel config set HERMES_MODEL anthropic/claude-opus-4.7
+doppel config set DOPPEL_MODEL anthropic/claude-opus-4.7
 
 # Or specify per-session
 doppel chat --model openrouter/meta-llama/llama-3.1-70b-instruct
@@ -626,9 +626,9 @@ If an MCP server crashes mid-request, Doppel will report a timeout. Check the se
 
 ## Profiles
 
-### How do profiles differ from just setting `DOPPEL_HOME` or `HERMES_HOME`?
+### How do profiles differ from just setting `DOPPEL_HOME`?
 
-Profiles are a managed layer on top of the agent home environment. You *could* manually set `DOPPEL_HOME=/some/path` (or the legacy `HERMES_HOME`) before every command, but profiles handle the plumbing for you: creating the directory structure, tracking the active profile, and syncing skill updates across all profiles automatically. Fresh installs default to `~/.doppel/active_profile`; legacy installs may still use `~/.hermes/active_profile`. Profiles also integrate with tab completion so you don't have to remember paths.
+Profiles are a managed layer on top of the agent home environment. You *could* manually set `DOPPEL_HOME=/some/path` before every command, but profiles handle the plumbing for you: creating the directory structure, tracking the active profile, and syncing skill updates across all profiles automatically. Fresh installs default to `~/.doppel/active_profile`; older installs may still use the legacy home layout. Profiles also integrate with tab completion so you don't have to remember paths.
 
 ### Can two profiles share the same bot token?
 

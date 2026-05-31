@@ -29,7 +29,7 @@ doppel [global-options] <command> [subcommand/options]
 | `--pass-session-id` | 在 agent 的 system prompt（系统提示词）中包含会话 ID。 |
 | `--ignore-user-config` | 忽略 `~/.doppel/config.yaml`，回退到内置默认值。`.env` 中的凭据仍会加载。 |
 | `--ignore-rules` | 跳过 `AGENTS.md`、`SOUL.md`、`.cursorrules`、memory（记忆）和预加载 skill 的自动注入。 |
-| `--tui` | 启动 [TUI](../user-guide/tui.md) 而非经典 CLI。等同于 `DOPPEL_TUI=1`（旧版 `HERMES_TUI=1` 也可用）。 |
+| `--tui` | 启动 [TUI](../user-guide/tui.md) 而非经典 CLI。等同于 `DOPPEL_TUI=1`。 |
 | `--dev` | 与 `--tui` 配合使用：通过 `tsx` 直接运行 TypeScript 源码而非预构建包（供 TUI 贡献者使用）。 |
 
 ## 顶级命令
@@ -83,7 +83,7 @@ doppel [global-options] <command> [subcommand/options]
 | `doppel profile` | 管理 profile——多个隔离的 Doppel 实例。 |
 | `doppel completion` | 打印 shell 补全脚本（bash/zsh/fish）。 |
 | `doppel version` | 显示版本信息。 |
-| `doppel update` | 拉取最新代码并重新安装依赖（git 安装），或检查 PyPI 并执行 `pip install --upgrade`（pip 安装）。`--check` 仅预览；`--backup` 会在拉取前为 agent home 创建快照（首选 `DOPPEL_HOME`，同时仍兼容旧版 `HERMES_HOME`）。 |
+| `doppel update` | 拉取最新代码并重新安装依赖（git 安装），或检查 PyPI 并执行 `pip install --upgrade`（pip 安装）。`--check` 仅预览；`--backup` 会在拉取前为当前智能体主目录创建快照。 |
 | `doppel uninstall` | 从系统中删除 Doppel 安装。 |
 
 ## `doppel chat`
@@ -142,7 +142,7 @@ answer=$(doppel -z "summarize this" < /path/to/file.txt)
 
 | 标志 | 等效环境变量 | 用途 |
 |---|---|---|
-| `-m` / `--model <model>` | `DOPPEL_INFERENCE_MODEL` | 覆盖本次运行的模型（旧版 `HERMES_INFERENCE_MODEL` 也可用） |
+| `-m` / `--model <model>` | `DOPPEL_INFERENCE_MODEL` | 覆盖本次运行的模型 |
 | `--provider <provider>` | _(无)_ | 覆盖本次运行的 provider |
 
 ```bash
@@ -227,7 +227,7 @@ doppel gateway <subcommand>
 
 | 选项 | 说明 |
 |--------|-------------|
-| `--all` | 在 `start` / `restart` / `stop` 时：对**每个 profile** 的 gateway 执行操作，而不仅限于活跃的 `DOPPEL_HOME`（同时仍兼容旧版 `HERMES_HOME`）。当你并行运行多个 profile 并希望在 `doppel update` 后全部重启时很有用。 |
+| `--all` | 在 `start` / `restart` / `stop` 时：对**每个 profile** 的 gateway 执行操作，而不仅限于当前智能体主目录。当你并行运行多个 profile 并希望在 `doppel update` 后全部重启时很有用。 |
 | `--no-supervise` | 在 `run` 时：在 s6-overlay Docker 镜像内部，跳过 s6 自动监管，退回到 pre-s6 前台语义——gateway 作为容器主进程运行，无自动重启。在 s6 镜像之外为空操作。等同于设置 `HERMES_GATEWAY_NO_SUPERVISE=1`。 |
 
 :::tip WSL 用户
@@ -323,7 +323,7 @@ doppel slack manifest --slashes-only  # 仅输出 features.slash_commands 数组
 
 | 标志 | 默认值 | 用途 |
 |------|---------|---------|
-| `--write [PATH]` | stdout | 写入文件而非 stdout。裸 `--write` 写入 `$DOPPEL_HOME/slack-manifest.json`（同时仍兼容旧版 `$HERMES_HOME`）。 |
+| `--write [PATH]` | stdout | 写入文件而非 stdout。裸 `--write` 写入 `$DOPPEL_HOME/slack-manifest.json`。 |
 | `--name NAME` | `Doppel` | Slack 中的机器人显示名称。 |
 | `--description DESC` | 默认简介 | Slack app 目录中显示的机器人描述。 |
 | `--slashes-only` | 关闭 | 仅输出 `features.slash_commands`，用于合并到手动维护的 manifest 中。 |
@@ -1284,7 +1284,7 @@ doppel update [--gateway] [--check] [--no-backup] [--backup] [--yes]
 | `--gateway` | 由消息 `/update` 命令使用的内部模式。使用基于文件的 IPC 处理提示和进度流，而不是从终端 stdin 读取。不是 gateway 重启开关。 |
 | `--check` | 仅检查是否有更新，不拉取、不安装依赖，也不重启任何内容。 |
 | `--no-backup` | 即使 `config.yaml` 中启用了 `updates.pre_update_backup`，本次也跳过预更新备份。 |
-| `--backup` | 在拉取前为活跃的 agent home 创建带标签的预更新快照（首选 `DOPPEL_HOME`，同时仍兼容旧版 `HERMES_HOME`）。包含 config、auth、会话、skill 和配对数据。默认**关闭**——之前始终备份的行为会让大型主目录上的每次更新都增加数分钟。可通过 `config.yaml` 中的 `updates.pre_update_backup: true` 永久开启。 |
+| `--backup` | 在拉取前为当前智能体主目录创建带标签的预更新快照。包含 config、auth、会话、skill 和配对数据。默认**关闭**——之前始终备份的行为会让大型主目录上的每次更新都增加数分钟。可通过 `config.yaml` 中的 `updates.pre_update_backup: true` 永久开启。 |
 | `--yes`, `-y` | 对 config 迁移和 stash 恢复等交互提示默认回答“是”。会跳过 API key 输入；需要时请单独运行 `doppel config migrate`。 |
 
 附加行为：

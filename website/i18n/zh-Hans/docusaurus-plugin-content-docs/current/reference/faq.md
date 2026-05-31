@@ -298,7 +298,7 @@ doppel config set OPENROUTER_API_KEY sk-or-v1-xxxxxxxxxxxx
 doppel model
 
 # 设置有效的模型
-doppel config set HERMES_MODEL anthropic/claude-opus-4.7
+doppel config set DOPPEL_MODEL anthropic/claude-opus-4.7
 
 # 或按会话指定
 doppel chat --model openrouter/meta-llama/llama-3.1-70b-instruct
@@ -626,9 +626,9 @@ doppel chat
 
 ## Profiles（配置文件）
 
-### Profiles 与直接设置 `DOPPEL_HOME` 或 `HERMES_HOME` 有何不同？
+### Profiles 与直接设置 `DOPPEL_HOME` 有何不同？
 
-Profiles 是构建在智能体主目录环境变量之上的托管层。您*可以*在每次命令前手动设置 `DOPPEL_HOME=/some/path`（或旧版兼容的 `HERMES_HOME`），但 profiles 会替您处理底层工作：创建目录结构、跟踪当前 profile，并自动跨所有 profiles 同步技能更新。新安装默认使用 `~/.doppel/active_profile`；旧安装仍可能使用 `~/.hermes/active_profile`。它们还与 tab 补全集成，让您无需记忆路径。
+Profiles 是构建在智能体主目录环境变量之上的托管层。您*可以*在每次命令前手动设置 `DOPPEL_HOME=/some/path`，但 profiles 会替您处理底层工作：创建目录结构、跟踪当前 profile，并自动跨所有 profiles 同步技能更新。新安装默认使用 `~/.doppel/active_profile`；旧安装仍可能使用旧版主目录布局。它们还与 tab 补全集成，让您无需记忆路径。
 
 ### 两个 profiles 可以共享同一个 bot token 吗？
 

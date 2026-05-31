@@ -1179,6 +1179,7 @@ def _apply_model_switch(sid: str, session: dict, raw_input: str) -> dict:
         _restart_slash_worker(session)
         _emit("session.info", sid, _session_info(agent))
 
+    os.environ["DOPPEL_MODEL"] = result.new_model
     os.environ["HERMES_MODEL"] = result.new_model
     os.environ["HERMES_INFERENCE_MODEL"] = result.new_model
     # Keep the process-level provider env vars in sync with the user's

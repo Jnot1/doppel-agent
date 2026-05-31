@@ -159,6 +159,7 @@ EN_MCP_CONFIG_REFERENCE_DOC = (
     / "reference"
     / "mcp-config-reference.md"
 )
+EN_REFERENCE_FAQ_DOC = REPO_ROOT / "website" / "docs" / "reference" / "faq.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
@@ -215,6 +216,16 @@ ZH_SECURITY_DOC = (
     / "current"
     / "user-guide"
     / "security.md"
+)
+ZH_REFERENCE_FAQ_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "reference"
+    / "faq.md"
 )
 ZH_ENVIRONMENT_VARIABLES_DOC = (
     REPO_ROOT
@@ -2928,7 +2939,7 @@ def test_zh_reference_cli_commands_rebrand_gateway_setup_and_portal_cluster():
     section = zh_cli_commands.split("## `doppel gateway`", 1)[1].split("## `doppel whatsapp`", 1)[0]
 
     assert "doppel gateway <subcommand>" in section
-    assert "活跃的 `DOPPEL_HOME`（同时仍兼容旧版 `HERMES_HOME`）" in section
+    assert "而不仅限于当前智能体主目录" in section
     assert "在 `doppel update` 后全部重启" in section
     assert "使用 `doppel gateway run` 而非 `doppel gateway start`" in section
     assert "tmux new -s doppel 'doppel gateway run'" in section
@@ -2969,7 +2980,6 @@ def test_zh_reference_cli_commands_rebrand_whatsapp_auth_and_cron_cluster():
     assert "doppel slack manifest --write" in section
     assert "~/.doppel/slack-manifest.json" in section
     assert "$DOPPEL_HOME/slack-manifest.json" in section
-    assert "同时仍兼容旧版 `$HERMES_HOME`" in section
     assert "| `--name NAME` | `Doppel` |" in section
     assert "`doppel update` 后重新运行 `doppel slack manifest --write`" in section
     assert "## `doppel login` / `doppel logout` *（已弃用）*" in section
@@ -3940,10 +3950,26 @@ def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surf
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
     zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
 
+    assert "All variables go in `~/.doppel/.env`." in en
+    assert "You can also set them with `doppel config set VAR value`." in en
+    assert "所有变量均写入 `~/.doppel/.env`。" in zh
+    assert "也可以使用 `doppel config set VAR value` 进行设置。" in zh
+
+    en_provider = en.split("## LLM Providers", 1)[1].split("## Provider Auth (OAuth)", 1)[0]
+    zh_provider = zh.split("## LLM 提供商", 1)[1].split("## 提供商认证（OAuth）", 1)[0]
     en_agent = en.split("## Agent Behavior", 1)[1].split("## Interface", 1)[0]
     zh_agent = zh.split("## Agent 行为", 1)[1].split("## 界面", 1)[0]
     en_interface = en.split("## Interface", 1)[1].split("## Session Settings", 1)[0]
     zh_interface = zh.split("## 界面", 1)[1].split("## 会话设置", 1)[0]
+
+    assert "`DOPPEL_MODEL`" in en_provider
+    assert "`DOPPEL_MODEL`" in zh_provider
+    assert "`DOPPEL_HOME`" in en_provider
+    assert "`DOPPEL_HOME`" in zh_provider
+    assert "| `HERMES_MODEL` |" not in en_provider
+    assert "| `HERMES_MODEL` |" not in zh_provider
+    assert "| `HERMES_HOME` |" not in en_provider
+    assert "| `HERMES_HOME` |" not in zh_provider
 
     for preferred in (
         "`DOPPEL_MAX_ITERATIONS`",
@@ -3982,6 +4008,11 @@ def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surf
         assert preferred in en_interface
         assert preferred in zh_interface
 
+    assert "legacy `HERMES_" not in en_agent
+    assert "Legacy `HERMES_" not in en_interface
+    assert "旧版 `HERMES_" not in zh_agent
+    assert "旧版 `HERMES_" not in zh_interface
+
     for legacy_row in (
         "| `HERMES_TUI` |",
         "| `HERMES_TUI_DIR` |",
@@ -3990,3 +4021,80 @@ def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surf
     ):
         assert legacy_row not in en_interface
         assert legacy_row not in zh_interface
+
+
+def test_reference_faq_uses_doppel_model_name_only():
+    en = EN_REFERENCE_FAQ_DOC.read_text(encoding="utf-8")
+    zh = ZH_REFERENCE_FAQ_DOC.read_text(encoding="utf-8")
+
+    assert "doppel config set DOPPEL_MODEL anthropic/claude-opus-4.7" in en
+    assert "doppel config set DOPPEL_MODEL anthropic/claude-opus-4.7" in zh
+    assert "HERMES_MODEL" not in en
+    assert "HERMES_MODEL" not in zh
+
+
+def test_reference_faq_profiles_section_prefers_doppel_home_wording():
+    en = EN_REFERENCE_FAQ_DOC.read_text(encoding="utf-8")
+    zh = ZH_REFERENCE_FAQ_DOC.read_text(encoding="utf-8")
+
+    en_profiles = en.split("## Profiles", 1)[1].split("## Workflows & Patterns", 1)[0]
+    zh_profiles = zh.split("## Profiles（配置文件）", 1)[1].split("## 工作流与模式", 1)[0]
+
+    assert "How do profiles differ from just setting `DOPPEL_HOME`?" in en_profiles
+    assert "You *could* manually set `DOPPEL_HOME=/some/path` before every command" in en_profiles
+    assert "older installs may still use the legacy home layout" in en_profiles
+    assert "How do profiles differ from just setting `DOPPEL_HOME` or `HERMES_HOME`?" not in en_profiles
+    assert "legacy `HERMES_HOME`" not in en_profiles
+    assert "~/.hermes/active_profile" not in en_profiles
+
+    assert "Profiles 与直接设置 `DOPPEL_HOME` 有何不同？" in zh_profiles
+    assert "您*可以*在每次命令前手动设置 `DOPPEL_HOME=/some/path`" in zh_profiles
+    assert "旧安装仍可能使用旧版主目录布局" in zh_profiles
+    assert "Profiles 与直接设置 `DOPPEL_HOME` 或 `HERMES_HOME` 有何不同？" not in zh_profiles
+    assert "旧版兼容的 `HERMES_HOME`" not in zh_profiles
+    assert "~/.hermes/active_profile" not in zh_profiles
+
+
+def test_reference_cli_commands_active_home_examples_stay_doppel_first():
+    en = (REPO_ROOT / "website" / "docs" / "reference" / "cli-commands.md").read_text(
+        encoding="utf-8"
+    )
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    en_top = en.split("## `doppel chat`", 1)[0]
+    zh_top = zh.split("## `doppel chat`", 1)[0]
+    en_gateway = en.split("## `doppel gateway`", 1)[1].split("## `doppel lsp`", 1)[0]
+    zh_gateway = zh.split("## `doppel gateway`", 1)[1].split("## `doppel lsp`", 1)[0]
+    en_slack = en.split("## `doppel slack`", 1)[1].split("## `doppel login`", 1)[0]
+    zh_slack = zh.split("## `doppel slack`", 1)[1].split("## `doppel login`", 1)[0]
+    en_update = en.split("## `doppel update`", 1)[1].split("## Maintenance commands", 1)[0]
+    zh_update = zh.split("## `doppel update`", 1)[1].split("## 维护命令", 1)[0]
+
+    assert "takes a pre-pull snapshot of the active agent home" in en_top
+    assert "为当前智能体主目录创建快照" in zh_top
+    assert "legacy `HERMES_HOME`" not in en_top
+    assert "旧版 `HERMES_HOME`" not in zh_top
+
+    assert "not just the active agent home" in en_gateway
+    assert "而不仅限于当前智能体主目录" in zh_gateway
+    assert "legacy `HERMES_HOME` still works" not in en_gateway
+    assert "兼容旧版 `HERMES_HOME`" not in zh_gateway
+
+    assert "Bare `--write` writes `$DOPPEL_HOME/slack-manifest.json`." in en_slack
+    assert "裸 `--write` 写入 `$DOPPEL_HOME/slack-manifest.json`。" in zh_slack
+    assert "legacy `$HERMES_HOME`" not in en_slack
+    assert "旧版 `$HERMES_HOME`" not in zh_slack
+
+    assert "Create a labeled pre-update snapshot of the active agent home before pulling." in en_update
+    assert "在拉取前为当前智能体主目录创建带标签的预更新快照" in zh_update
+    assert "with legacy `HERMES_HOME` still honored" not in en_update
+    assert "兼容旧版 `HERMES_HOME`" not in zh_update

@@ -192,7 +192,7 @@ class TestDoppelFirstEnvHelp:
         help_text = parser.format_help()
 
         assert "DOPPEL_INFERENCE_MODEL" in help_text
-        assert "legacy HERMES_INFERENCE_MODEL" in help_text
+        assert "HERMES_INFERENCE_MODEL" not in help_text
 
     def test_accept_hooks_help_mentions_preferred_env_alias(self):
         from hermes_cli._parser import build_top_level_parser
@@ -202,4 +202,6 @@ class TestDoppelFirstEnvHelp:
         chat_help = chat_parser.format_help()
 
         assert "DOPPEL_ACCEPT_HOOKS=1" in top_help
-        assert "DOPPEL_ACCEPT_HOOKS / HERMES_ACCEPT_HOOKS" in chat_help
+        assert "HERMES_ACCEPT_HOOKS" not in top_help
+        assert "DOPPEL_ACCEPT_HOOKS" in chat_help
+        assert "HERMES_ACCEPT_HOOKS" not in chat_help

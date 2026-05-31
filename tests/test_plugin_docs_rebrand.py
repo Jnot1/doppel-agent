@@ -98,6 +98,9 @@ EN_CREDENTIAL_POOLS_DOC = (
 )
 EN_CRON_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "cron.md"
 EN_BROWSER_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "browser.md"
+EN_CODEX_RUNTIME_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "codex-app-server-runtime.md"
+)
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -245,6 +248,17 @@ ZH_BROWSER_DOC = (
     / "user-guide"
     / "features"
     / "browser.md"
+)
+ZH_CODEX_RUNTIME_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "codex-app-server-runtime.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1471,3 +1485,51 @@ def test_hooks_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "hermes logs --follow --level INFO | grep boot-md" not in zh
     assert "hermes hooks list" not in en
     assert "hermes hooks list" not in zh
+
+
+def test_codex_runtime_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_CODEX_RUNTIME_DOC.read_text(encoding="utf-8")
+    zh = ZH_CODEX_RUNTIME_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent can optionally hand" in en
+    assert "Doppel Agent 可以选择将" in zh
+    assert "Default Doppel Agent behavior is unchanged" in en
+    assert "否则 Doppel Agent 的默认行为不变" in zh
+    assert "doppel setup --portal" in en
+    assert "doppel auth login codex" in en
+    assert "doppel auth login codex" in zh
+    assert "doppel logs --since 5m" in en
+    assert "doppel logs --since 5m" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/auth.json" in en
+    assert "~/.doppel/auth.json" in zh
+    assert "Doppel Agent shell" in en
+    assert "Doppel Agent shell" in zh
+
+    assert "Nous Portal" in en
+
+    for fixed in (
+        "HERMES_KANBAN_TASK",
+        "HERMES_KANBAN_WORKSPACES_ROOT",
+        "HERMES_HOME",
+        "~/.hermes/config.yaml",
+        "~/.hermes/auth.json",
+        "hermes_tools_mcp_server",
+        "hermes-tools",
+        "# managed by hermes-agent",
+        "model_tools.handle_function_call()",
+        "_import_codex_cli_tokens",
+        "https://github.com/NousResearch/hermes-agent/issues",
+        "https://github.com/NousResearch/hermes-agent/pull/24182",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "hermes setup --portal" not in en
+    assert "hermes auth login codex" not in en
+    assert "hermes auth login codex" not in zh
+    assert "hermes logs --since 5m" not in en
+    assert "hermes logs --since 5m" not in zh
+    assert "Hermes Agent 2026.5" not in en
+    assert "Hermes Agent 2026.5" not in zh

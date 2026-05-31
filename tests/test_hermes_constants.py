@@ -9,6 +9,9 @@ import hermes_constants
 from hermes_constants import (
     VALID_REASONING_EFFORTS,
     display_hermes_home,
+    get_api_server_model_owner,
+    get_api_server_platform_id,
+    get_default_api_server_model_name,
     get_distribution_package_name,
     get_default_hermes_root,
     get_docker_image_name,
@@ -193,6 +196,15 @@ class TestManagedCheckoutNames:
 
 
 class TestDistributionIdentity:
+    def test_api_server_default_model_name(self):
+        assert get_default_api_server_model_name() == "doppel-agent"
+
+    def test_api_server_platform_id(self):
+        assert get_api_server_platform_id() == "doppel-agent"
+
+    def test_api_server_model_owner(self):
+        assert get_api_server_model_owner() == "doppel"
+
     def test_package_distribution_name(self):
         assert get_distribution_package_name() == "hermes-agent"
 

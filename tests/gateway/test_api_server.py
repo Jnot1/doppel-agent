@@ -34,6 +34,11 @@ from gateway.platforms.api_server import (
     cors_middleware,
     security_headers_middleware,
 )
+from hermes_constants import (
+    get_api_server_model_owner,
+    get_api_server_platform_id,
+    get_default_api_server_model_name,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -495,7 +500,7 @@ class TestHealthEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["status"] == "ok"
-            assert data["platform"] == "hermes-agent"
+            assert data["platform"] == get_api_server_platform_id()
 
     @pytest.mark.asyncio
     async def test_v1_health_alias_returns_ok(self, adapter):
@@ -506,7 +511,7 @@ class TestHealthEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["status"] == "ok"
-            assert data["platform"] == "hermes-agent"
+            assert data["platform"] == get_api_server_platform_id()
 
 
 # ---------------------------------------------------------------------------
@@ -531,7 +536,7 @@ class TestHealthDetailedEndpoint:
                 assert resp.status == 200
                 data = await resp.json()
                 assert data["status"] == "ok"
-                assert data["platform"] == "hermes-agent"
+                assert data["platform"] == get_api_server_platform_id()
                 assert data["gateway_state"] == "running"
                 assert data["platforms"] == {"telegram": {"state": "connected"}}
                 assert data["active_agents"] == 2
@@ -576,8 +581,8 @@ class TestModelsEndpoint:
             data = await resp.json()
             assert data["object"] == "list"
             assert len(data["data"]) == 1
-            assert data["data"][0]["id"] == "hermes-agent"
-            assert data["data"][0]["owned_by"] == "hermes"
+            assert data["data"][0]["id"] == get_default_api_server_model_name()
+            assert data["data"][0]["owned_by"] == get_api_server_model_owner()
 
     @pytest.mark.asyncio
     async def test_models_returns_profile_name(self):
@@ -604,9 +609,9 @@ class TestModelsEndpoint:
         assert APIServerAdapter._resolve_model_name("my-bot") == "my-bot"
 
     def test_resolve_model_name_default_profile(self):
-        """Default profile falls back to 'hermes-agent'."""
+        """Default profile falls back to the Doppel model id."""
         with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
-            assert APIServerAdapter._resolve_model_name("") == "hermes-agent"
+            assert APIServerAdapter._resolve_model_name("") == get_default_api_server_model_name()
 
     def test_resolve_model_name_named_profile(self):
         """Named profile uses the profile name as model name."""
@@ -645,8 +650,8 @@ class TestCapabilitiesEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["object"] == "hermes.api_server.capabilities"
-            assert data["platform"] == "hermes-agent"
-            assert data["model"] == "hermes-agent"
+            assert data["platform"] == get_api_server_platform_id()
+            assert data["model"] == get_default_api_server_model_name()
             assert data["auth"]["type"] == "bearer"
             assert data["auth"]["required"] is False
             assert data["runtime"]["mode"] == "server_agent"

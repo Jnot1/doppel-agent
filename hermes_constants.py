@@ -28,6 +28,9 @@ PREFERRED_HOME_ENV = "DOPPEL_HOME"
 LEGACY_HOME_ENV = "HERMES_HOME"
 PREFERRED_NATIVE_HOME_DIR = ".doppel"
 LEGACY_NATIVE_HOME_DIR = ".hermes"
+DEFAULT_API_SERVER_MODEL_NAME = "doppel-agent"
+API_SERVER_PLATFORM_ID = DEFAULT_API_SERVER_MODEL_NAME
+API_SERVER_MODEL_OWNER = "doppel"
 PACKAGE_DISTRIBUTION_NAME = "hermes-agent"
 HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
 DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
@@ -68,6 +71,21 @@ def get_cli_prog_name(argv0: str | None = None) -> str:
 def get_distribution_package_name() -> str:
     """Return the Python package distribution name used for upgrades."""
     return PACKAGE_DISTRIBUTION_NAME
+
+
+def get_default_api_server_model_name() -> str:
+    """Return the default model id advertised by the API server."""
+    return DEFAULT_API_SERVER_MODEL_NAME
+
+
+def get_api_server_platform_id() -> str:
+    """Return the API platform id exposed by health/capabilities endpoints."""
+    return API_SERVER_PLATFORM_ID
+
+
+def get_api_server_model_owner() -> str:
+    """Return the provider slug exposed in the OpenAI model listing."""
+    return API_SERVER_MODEL_OWNER
 
 
 def get_homebrew_formula_name() -> str:

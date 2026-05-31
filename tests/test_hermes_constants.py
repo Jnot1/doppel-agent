@@ -203,6 +203,24 @@ class TestGatewayNamingHelpers:
             user_home / "Library" / "LaunchAgents" / "ai.doppel.gateway-coder.plist"
         )
 
+    def test_gateway_task_name_default_profile(self):
+        name_fn = getattr(hermes_constants, "get_gateway_task_name", None)
+        assert callable(name_fn)
+        assert name_fn() == "Doppel_Gateway"
+
+    def test_gateway_task_name_profile_suffix(self):
+        name_fn = getattr(hermes_constants, "get_gateway_task_name", None)
+        assert callable(name_fn)
+        assert name_fn("coder") == "Doppel_Gateway_coder"
+
+    def test_gateway_task_names_include_legacy_alias(self):
+        names_fn = getattr(hermes_constants, "get_gateway_task_names", None)
+        assert callable(names_fn)
+        assert names_fn("coder") == (
+            "Doppel_Gateway_coder",
+            "Hermes_Gateway_coder",
+        )
+
 
 class TestIsContainer:
     """Tests for is_container() — Docker/Podman detection."""

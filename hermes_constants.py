@@ -34,6 +34,9 @@ GATEWAY_SERVICE_BASE = "doppel-gateway"
 LEGACY_GATEWAY_SERVICE_BASES = ("hermes-gateway",)
 LAUNCHD_GATEWAY_LABEL_BASE = "ai.doppel.gateway"
 LEGACY_LAUNCHD_GATEWAY_LABEL_BASES = ("ai.hermes.gateway",)
+WINDOWS_GATEWAY_TASK_BASE = "Doppel_Gateway"
+LEGACY_WINDOWS_GATEWAY_TASK_BASES = ("Hermes_Gateway",)
+WINDOWS_GATEWAY_TASK_DESCRIPTION = f"{PREFERRED_AGENT_NAME} Gateway - Messaging Platform Integration"
 FORK_REPO_SLUG = "Jnot1/doppel-agent"
 UPSTREAM_REPO_SLUG = "NousResearch/hermes-agent"
 FORK_REPO_WEB_URL = f"https://github.com/{FORK_REPO_SLUG}"
@@ -198,6 +201,25 @@ def get_gateway_launchd_labels(profile_suffix: str = "") -> tuple[str, ...]:
     for base in LEGACY_LAUNCHD_GATEWAY_LABEL_BASES:
         labels.append(f"{base}-{suffix}" if suffix else base)
     return tuple(dict.fromkeys(labels))
+
+
+def get_gateway_task_name(profile_suffix: str = "") -> str:
+    """Return the Windows Scheduled Task name for a gateway profile."""
+    suffix = str(profile_suffix).strip()
+    return (
+        f"{WINDOWS_GATEWAY_TASK_BASE}_{suffix}"
+        if suffix
+        else WINDOWS_GATEWAY_TASK_BASE
+    )
+
+
+def get_gateway_task_names(profile_suffix: str = "") -> tuple[str, ...]:
+    """Return current + legacy Windows task names for a profile suffix."""
+    suffix = str(profile_suffix).strip()
+    names = [get_gateway_task_name(suffix)]
+    for base in LEGACY_WINDOWS_GATEWAY_TASK_BASES:
+        names.append(f"{base}_{suffix}" if suffix else base)
+    return tuple(dict.fromkeys(names))
 
 
 def _get_launchd_user_home() -> Path:

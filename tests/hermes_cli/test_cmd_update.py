@@ -103,6 +103,23 @@ class TestCmdUpdatePip:
         assert mock_run.call_count == 1
         assert "env" not in mock_run.call_args.kwargs
 
+    @patch("shutil.which", return_value="/usr/bin/uv")
+    @patch("subprocess.run")
+    def test_update_pip_completion_banner_is_doppel_first(
+        self, mock_run, _mock_which, mock_args, capsys, monkeypatch
+    ):
+        from hermes_cli import main as hm
+
+        mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+        monkeypatch.setattr(hm.sys, "prefix", "/usr")
+        monkeypatch.setattr(hm.sys, "base_prefix", "/usr")
+
+        hm._cmd_update_pip(mock_args)
+
+        out = capsys.readouterr().out
+        assert "Restart doppel to use the new version." in out
+        assert "Restart hermes" not in out
+
 
 class TestCmdUpdateBranchFallback:
     """cmd_update falls back to main when current branch has no remote counterpart."""
@@ -732,6 +749,8 @@ class TestCmdUpdateZipBranchRefusal:
         out = capsys.readouterr().out
         assert "bb/gui" in out
         assert "not supported" in out
+        assert "rerun `doppel update --branch bb/gui`" in out
+        assert "update against main with `doppel update`" in out
         # No actual download attempted.
         assert "Downloading latest version" not in out
 

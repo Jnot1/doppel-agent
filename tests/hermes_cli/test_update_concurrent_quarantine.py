@@ -444,6 +444,7 @@ def test_quarantine_actionable_warning_when_everything_fails(
     # and tells the user what to do.
     assert "another process" in captured.lower()
     assert "Hermes Desktop" in captured or "gateway" in captured.lower()
+    assert "re-run `doppel update`" in captured
 
 
 # ---------------------------------------------------------------------------

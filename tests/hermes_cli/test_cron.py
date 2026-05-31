@@ -17,6 +17,13 @@ def tmp_cron_dir(tmp_path, monkeypatch):
 
 
 class TestCronCommandLifecycle:
+    def test_list_empty_hint_is_doppel_first(self, tmp_cron_dir, capsys):
+        cron_command(Namespace(cron_command="list", all=False))
+        out = capsys.readouterr().out
+        assert "No scheduled jobs." in out
+        assert "doppel cron create" in out
+        assert "hermes cron create" not in out
+
     def test_pause_resume_run(self, tmp_cron_dir, capsys):
         job = create_job(prompt="Check server status", schedule="every 1h")
 

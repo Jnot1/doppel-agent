@@ -4860,3 +4860,52 @@ def test_operate_teams_meeting_pipeline_guides_prefer_doppel_and_real_plugin_ena
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_cron_script_only_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "cron-script-only.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "cron-script-only.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Doppel Agent calls this **no-agent mode**." in en
+    assert "Doppel Agent 将此称为**无 agent 模式**。" in zh
+    assert "~/.doppel/scripts/" in en
+    assert "~/.doppel/scripts/" in zh
+    assert "doppel cron create" in en
+    assert "doppel cron create" in zh
+    assert "doppel cron list" in en
+    assert "doppel cron list" in zh
+    assert "doppel cron run <job_id>" in en
+    assert "doppel cron run <job_id>" in zh
+    assert "~/.doppel/cron/output/" in en
+    assert "~/.doppel/cron/output/" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "Doppel webhook subscription" in en
+    assert "Doppel webhook 订阅" in zh
+
+    for stale in (
+        "Hermes calls this **no-agent mode**.",
+        "Hermes 将此称为**无 agent 模式**。",
+        "~/.hermes/scripts/",
+        "hermes cron create",
+        "hermes cron list",
+        "hermes cron run <job_id>",
+        "hermes cron resume abc123",
+        "~/.hermes/cron/output/",
+        "~/.hermes/.env",
+        "Hermes webhook subscription",
+        "Hermes webhook 订阅",
+    ):
+        assert stale not in en
+        assert stale not in zh

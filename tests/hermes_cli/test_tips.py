@@ -31,6 +31,13 @@ class TestTipsCorpus:
         for i, tip in enumerate(TIPS):
             assert tip == tip.strip(), f"Tip {i} has leading/trailing whitespace"
 
+    def test_cron_tip_is_doppel_first(self):
+        assert (
+            'Cron jobs can attach skills: doppel cron add --skill blogwatcher "Check for new posts".'
+            in TIPS
+        )
+        assert not any("hermes cron add --skill blogwatcher" in tip for tip in TIPS)
+
 
 class TestGetRandomTip:
     """Validate the get_random_tip() function."""

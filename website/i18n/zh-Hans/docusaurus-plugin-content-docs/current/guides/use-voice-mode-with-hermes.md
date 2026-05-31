@@ -1,5 +1,6 @@
 ---
 sidebar_position: 8
+slug: /guides/use-voice-mode-with-doppel-agent
 title: "在 Doppel Agent 中使用语音模式"
 description: "在 CLI、Telegram、Discord 及 Discord 语音频道中设置和使用 Doppel Agent 语音模式的实用指南"
 ---
@@ -124,7 +125,7 @@ Doppel Agent 同时支持本地和云端语音处理方案。
 
 ### 环境变量文件示例
 
-添加到 `~/.doppel/.env`（旧安装仍兼容 `~/.hermes/.env`）：
+添加到 `~/.doppel/.env`：
 
 ```bash
 # 云端 STT 选项（本地无需密钥）

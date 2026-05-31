@@ -681,7 +681,7 @@ Doppel Agent 支持 Discord 语音消息：
 
 完整的设置和操作指南，请参阅：
 - [语音模式](/user-guide/features/voice-mode)
-- [与 Doppel 使用语音模式](/guides/use-voice-mode-with-hermes)
+- [在 Doppel Agent 中使用语音模式](/guides/use-voice-mode-with-doppel-agent)
 
 ## 论坛频道
 

@@ -681,7 +681,7 @@ Doppel Agent supports Discord voice messages:
 
 For the full setup and operational guide, see:
 - [Voice Mode](/user-guide/features/voice-mode)
-- [Use Voice Mode with Doppel](/guides/use-voice-mode-with-hermes)
+- [Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-doppel-agent)
 
 ## Forum Channels
 

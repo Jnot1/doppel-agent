@@ -2215,6 +2215,8 @@ def test_voice_guide_route_graph_uses_doppel_slug_and_legacy_redirects():
     linked_docs = [
         REPO_ROOT / "website" / "docs" / "index.mdx",
         REPO_ROOT / "website" / "docs" / "getting-started" / "learning-path.md",
+        REPO_ROOT / "website" / "docs" / "user-guide" / "messaging" / "index.md",
+        REPO_ROOT / "website" / "docs" / "user-guide" / "messaging" / "discord.md",
         REPO_ROOT
         / "website"
         / "i18n"
@@ -2222,6 +2224,24 @@ def test_voice_guide_route_graph_uses_doppel_slug_and_legacy_redirects():
         / "docusaurus-plugin-content-docs"
         / "current"
         / "index.mdx",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "messaging"
+        / "index.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "messaging"
+        / "discord.md",
         REPO_ROOT
         / "website"
         / "i18n"
@@ -2254,9 +2274,24 @@ def test_voice_guide_route_graph_uses_doppel_slug_and_legacy_redirects():
         assert "/guides/use-voice-mode-with-hermes" not in text
 
     en_learning_path = linked_docs[1].read_text(encoding="utf-8")
-    zh_learning_path = linked_docs[3].read_text(encoding="utf-8")
+    en_messaging_index = linked_docs[2].read_text(encoding="utf-8")
+    zh_messaging_index = linked_docs[5].read_text(encoding="utf-8")
+    zh_discord = linked_docs[6].read_text(encoding="utf-8")
+    zh_learning_path = linked_docs[7].read_text(encoding="utf-8")
     assert "[Use Voice Mode with Doppel](/guides/use-voice-mode-with-doppel)" not in en_learning_path
     assert "[在 Hermes 中使用语音模式](/guides/use-voice-mode-with-hermes)" not in zh_learning_path
+    assert (
+        "[Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-doppel-agent)"
+        in en_messaging_index
+    )
+    assert (
+        "[在 Doppel Agent 中使用语音模式](/guides/use-voice-mode-with-doppel-agent)"
+        in zh_messaging_index
+    )
+    assert (
+        "[在 Doppel Agent 中使用语音模式](/guides/use-voice-mode-with-doppel-agent)"
+        in zh_discord
+    )
 
 
 def test_goals_feature_docs_prefer_doppel_surfaces_and_keep_goal_literals():

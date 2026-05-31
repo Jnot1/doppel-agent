@@ -81,6 +81,10 @@ const config: Config = {
             from: '/guides/use-soul-with-hermes',
             to: '/guides/use-soul-with-doppel-agent',
           },
+          {
+            from: ['/guides/use-voice-mode-with-hermes', '/guides/use-voice-mode-with-doppel'],
+            to: '/guides/use-voice-mode-with-doppel-agent',
+          },
         ],
       },
     ],

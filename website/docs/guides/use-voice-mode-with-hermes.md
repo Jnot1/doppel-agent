@@ -1,5 +1,6 @@
 ---
 sidebar_position: 8
+slug: /guides/use-voice-mode-with-doppel-agent
 title: "Use Voice Mode with Doppel Agent"
 description: "A practical guide to setting up and using Doppel Agent voice mode across CLI, Telegram, Discord, and Discord voice channels"
 ---
@@ -124,7 +125,7 @@ This is usually the best place to start.
 
 ### Environment file example
 
-Add to `~/.doppel/.env` on fresh installs. Legacy `~/.hermes/.env` still works:
+Add to `~/.doppel/.env`:
 
 ```bash
 # Cloud STT options (local needs no key)

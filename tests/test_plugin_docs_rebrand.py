@@ -6033,3 +6033,65 @@ def test_oauth_over_ssh_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_python_library_guides_prefer_doppel_customer_facing_surfaces():
+    en = (REPO_ROOT / "website" / "docs" / "guides" / "python-library.md").read_text(
+        encoding="utf-8"
+    )
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "python-library.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Using Doppel Agent as a Python Library" in en
+    assert "将 Doppel Agent 作为 Python 库使用" in zh
+    assert "Doppel Agent isn't just a CLI tool." in en
+    assert "Doppel Agent 不仅仅是一个 CLI 工具。" in zh
+    assert "Install Doppel Agent directly from the repository" in en
+    assert "直接从仓库安装 Doppel Agent" in zh
+    assert "git+https://github.com/Jnot1/doppel-agent.git" in en
+    assert "git+https://github.com/Jnot1/doppel-agent.git" in zh
+    assert "doppel-agent @ git+https://github.com/Jnot1/doppel-agent.git" in en
+    assert "doppel-agent @ git+https://github.com/Jnot1/doppel-agent.git" in zh
+    assert "using Doppel Agent as a library" in en
+    assert "将 Doppel Agent 作为库使用时" in zh
+    assert "The simplest way to use Doppel Agent is the `chat()` method" in en
+    assert "使用 Doppel Agent 最简单的方式是 `chat()` 方法" in zh
+    assert "embedding Doppel Agent in your own code" in en
+    assert "将 Doppel Agent 嵌入自己的代码时" in zh
+    assert "Doppel Agent includes `batch_runner.py`" in en
+    assert "Doppel Agent 提供了 `batch_runner.py`" in zh
+    assert 'message.content.startswith("!doppel ")' in en
+    assert 'message.content.startswith("!doppel ")' in zh
+    assert "resolved from your Doppel config at runtime" in en
+    assert "运行时从 Doppel 配置中解析" in zh
+
+    for stale in (
+        "Using Hermes as a Python Library",
+        "将 Hermes 作为 Python 库使用",
+        "Hermes isn't just a CLI tool.",
+        "Hermes 不仅仅是一个 CLI 工具。",
+        "Install Hermes directly from the repository",
+        "直接从仓库安装 Hermes",
+        "git+https://github.com/NousResearch/hermes-agent.git",
+        "hermes-agent @ git+https://github.com/NousResearch/hermes-agent.git",
+        "using Hermes as a library",
+        "将 Hermes 作为库使用时",
+        "The simplest way to use Hermes is the `chat()` method",
+        "使用 Hermes 最简单的方式是 `chat()` 方法",
+        "embedding Hermes in your own code",
+        "将 Hermes 嵌入自己的代码时",
+        "Hermes includes `batch_runner.py`",
+        "Hermes 提供了 `batch_runner.py`",
+        'message.content.startswith("!hermes ")',
+        "resolved from your hermes config at runtime",
+    ):
+        assert stale not in en
+        assert stale not in zh

@@ -13,6 +13,10 @@ There are two distinct ways Docker intersects with Doppel Agent:
 
 This page covers option 1. The container stores all user data (config, API keys, sessions, skills, memories) in a single directory mounted from the host at `/opt/data`. The image itself is stateless and can be upgraded by pulling a new version without losing any configuration.
 
+:::note Current published image name
+During this rebrand phase, the published Docker image still uses the upstream image name `nousresearch/hermes-agent`. The commands on this page keep that image name intentionally until a Doppel-branded image is actually published.
+:::
+
 ## Quick start
 
 If this is your first time running Doppel Agent, create a data directory on the host and start the container interactively to run the setup wizard:
@@ -565,7 +569,7 @@ From inside the Doppel container, the sidecar is reachable at `http://my-tool:<p
 
 ### Broadly useful tools — open an issue or pull request
 
-If a tool is likely to be useful to most Doppel Agent users, consider contributing it upstream rather than carrying it in a private derived image. Open an issue or pull request on the [hermes-agent repository](https://github.com/NousResearch/hermes-agent) describing the tool and its use case. Tools that get bundled into the official image benefit every user and avoid the maintenance overhead of a downstream fork.
+If a tool is likely to be useful to most Doppel Agent users, consider contributing it rather than carrying it in a private derived image. Open an issue or pull request on the [doppel-agent repository](https://github.com/Jnot1/doppel-agent) describing the tool and its use case. Tools that get bundled into the official image benefit every user and avoid the maintenance overhead of a downstream fork.
 
 ## Connecting to local inference servers (vLLM, Ollama, etc.)
 

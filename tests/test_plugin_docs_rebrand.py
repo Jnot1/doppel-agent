@@ -2044,6 +2044,52 @@ def test_zh_reference_cli_commands_rebrand_checkpoints_promptsize_and_skills_clu
     assert "与 `hermes model` 相同的选择器" not in section
 
 
+def test_zh_reference_cli_commands_rebrand_hooks_mcp_and_sessions_cluster():
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    section = zh_cli_commands.split("## `doppel hooks`", 1)[1].split("## `hermes insights`", 1)[0]
+
+    assert "doppel hooks <subcommand>" in section
+    assert "~/.doppel/config.yaml" in section
+    assert "~/.doppel/shell-hooks-allowlist.json" in section
+    assert "doppel memory <subcommand>" in section
+    assert "`doppel honcho`" in section
+    assert "运行 `doppel --help`" in section
+    assert "doppel acp" in section
+    assert "将 Doppel 作为 ACP" in section
+    assert "hermes-acp" in section
+    assert "doppel mcp <subcommand>" in section
+    assert "doppel mcp install n8n" in section
+    assert "[在 Doppel 中使用 MCP](../guides/use-mcp-with-hermes.md)" in section
+    assert "doppel plugins [subcommand]" in section
+    assert "[构建 Doppel Plugin](../guides/build-a-hermes-plugin.md)" in section
+    assert "doppel tools [--summary]" in section
+    assert "doppel computer-use <subcommand>" in section
+    assert "`doppel computer-use install`" in section
+    assert "`doppel tools`" in section
+    assert "`doppel update`" in section
+    assert "doppel sessions <subcommand>" in section
+    assert "`rename <session-id> <title>`" in section
+    assert "## `hermes hooks`" not in section
+    assert "## `hermes memory`" not in section
+    assert "## `hermes acp`" not in section
+    assert "## `hermes mcp`" not in section
+    assert "## `hermes plugins`" not in section
+    assert "## `hermes tools`" not in section
+    assert "## `hermes computer-use`" not in section
+    assert "## `hermes sessions`" not in section
+    assert "运行 `hermes --help`" not in section
+
+
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     en = EN_FEATURE_ACP_DOC.read_text(encoding="utf-8")
     zh = ZH_FEATURE_ACP_DOC.read_text(encoding="utf-8")

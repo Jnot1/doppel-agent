@@ -958,13 +958,13 @@ doppel fallback <subcommand>
 
 参见 [Fallback Providers](../user-guide/features/fallback-providers.md)。
 
-## `hermes hooks`
+## `doppel hooks`
 
 ```bash
-hermes hooks <subcommand>
+doppel hooks <subcommand>
 ```
 
-检查 `~/.hermes/config.yaml` 中声明的 shell 脚本 hook，针对合成 payload 测试它们，并管理 `~/.hermes/shell-hooks-allowlist.json` 处的首次使用同意许可名单。
+检查 `~/.doppel/config.yaml` 中声明的 shell 脚本 hook，针对合成 payload 测试它们，并管理 `~/.doppel/shell-hooks-allowlist.json` 处的首次使用同意许可名单。
 
 | 子命令 | 说明 |
 |------------|-------------|
@@ -975,10 +975,10 @@ hermes hooks <subcommand>
 
 事件签名和 payload 格式请参阅 [Hooks](../user-guide/features/hooks.md)。
 
-## `hermes memory`
+## `doppel memory`
 
 ```bash
-hermes memory <subcommand>
+doppel memory <subcommand>
 ```
 
 设置和管理外部 memory provider plugin。可用 provider：honcho、openviking、mem0、hindsight、holographic、retaindb、byterover、supermemory。同一时间只能有一个外部 provider 处于活跃状态。内置 memory（MEMORY.md/USER.md）始终处于活跃状态。
@@ -992,16 +992,16 @@ hermes memory <subcommand>
 | `off` | 禁用外部 provider（仅使用内置）。 |
 
 :::info Provider 特定子命令
-当外部 memory provider 处于活跃状态时，它可能会注册自己的顶级 `hermes <provider>` 命令用于 provider 特定管理（例如 Honcho 激活时的 `hermes honcho`）。未激活的 provider 不暴露其子命令。运行 `hermes --help` 查看当前已连接的命令。
+当外部 memory provider 处于活跃状态时，它可能会注册自己的顶级 `doppel <provider>` 命令用于 provider 特定管理（例如 Honcho 激活时的 `doppel honcho`）。未激活的 provider 不暴露其子命令。运行 `doppel --help` 查看当前已连接的命令。
 :::
 
-## `hermes acp`
+## `doppel acp`
 
 ```bash
-hermes acp
+doppel acp
 ```
 
-将 Hermes 作为 ACP（Agent Client Protocol）stdio 服务器启动，用于编辑器集成。
+将 Doppel 作为 ACP（Agent Client Protocol）stdio 服务器启动，用于编辑器集成。
 
 相关入口：
 
@@ -1018,33 +1018,36 @@ pip install -e '.[acp]'
 
 参见 [ACP 编辑器集成](../user-guide/features/acp.md) 和 [ACP 内部原理](../developer-guide/acp-internals.md)。
 
-## `hermes mcp`
+## `doppel mcp`
 
 ```bash
-hermes mcp <subcommand>
+doppel mcp <subcommand>
 ```
 
-管理 MCP（Model Context Protocol）服务器配置，并将 Hermes 作为 MCP 服务器运行。
+管理 MCP（Model Context Protocol）服务器配置，并将 Doppel 作为 MCP 服务器运行。
 
 | 子命令 | 说明 |
 |------------|-------------|
-| `serve [-v\|--verbose]` | 将 Hermes 作为 MCP 服务器运行——向其他 agent 暴露对话。 |
-| `add <name> [--url URL] [--command CMD] [--args ...] [--auth oauth\|header]` | 添加 MCP 服务器并自动发现工具。 |
+| *（无）* 或 `picker` | 交互式目录选择器——浏览 Nous 审核通过的 MCP，并安装/启用/禁用。 |
+| `catalog` | 列出 Nous 审核通过的 MCP（纯文本，可脚本化）。 |
+| `install <name>` | 安装某个目录条目（例如 `doppel mcp install n8n`）。 |
+| `serve [-v\|--verbose]` | 将 Doppel 作为 MCP 服务器运行——向其他 agent 暴露对话。 |
+| `add <name> [--url URL] [--command CMD] [--args ...] [--auth oauth\|header]` | 添加自定义 MCP 服务器，并自动发现工具。 |
 | `remove <name>`（别名：`rm`） | 从 config 中删除 MCP 服务器。 |
 | `list`（别名：`ls`） | 列出已配置的 MCP 服务器。 |
 | `test <name>` | 测试与 MCP 服务器的连接。 |
 | `configure <name>`（别名：`config`） | 切换服务器的工具选择。 |
 | `login <name>` | 强制重新认证基于 OAuth 的 MCP 服务器。 |
 
-参见 [MCP 配置参考](./mcp-config-reference.md)、[在 Hermes 中使用 MCP](../guides/use-mcp-with-hermes.md) 和 [MCP 服务器模式](../user-guide/features/mcp.md#running-hermes-as-an-mcp-server)。
+参见 [MCP 配置参考](./mcp-config-reference.md)、[在 Doppel 中使用 MCP](../guides/use-mcp-with-hermes.md) 和 [MCP 服务器模式](../user-guide/features/mcp.md#running-hermes-as-an-mcp-server)。
 
-## `hermes plugins`
+## `doppel plugins`
 
 ```bash
-hermes plugins [subcommand]
+doppel plugins [subcommand]
 ```
 
-统一的 plugin 管理——通用 plugin、memory provider 和 context engine 集于一处。不带子命令运行 `hermes plugins` 会打开包含两个部分的复合交互界面：
+统一的 plugin 管理——通用 plugin、memory provider 和 context engine 集于一处。不带子命令运行 `doppel plugins` 会打开包含两个部分的复合交互界面：
 
 - **General Plugins** — 多选复选框，用于启用/禁用已安装的 plugin
 - **Provider Plugins** — 单选配置，用于 Memory Provider 和 Context Engine。在某个类别上按 ENTER 打开单选选择器。
@@ -1065,12 +1068,12 @@ Provider plugin 选择保存到 `config.yaml`：
 
 通用 plugin 禁用列表存储在 `config.yaml` 的 `plugins.disabled` 下。
 
-参见 [Plugins](../user-guide/features/plugins.md) 和 [构建 Hermes Plugin](../guides/build-a-hermes-plugin.md)。
+参见 [Plugins](../user-guide/features/plugins.md) 和 [构建 Doppel Plugin](../guides/build-a-hermes-plugin.md)。
 
-## `hermes tools`
+## `doppel tools`
 
 ```bash
-hermes tools [--summary]
+doppel tools [--summary]
 ```
 
 | 选项 | 说明 |
@@ -1079,10 +1082,10 @@ hermes tools [--summary]
 
 不带 `--summary` 时，启动交互式按平台工具配置界面。
 
-## `hermes computer-use`
+## `doppel computer-use`
 
 ```bash
-hermes computer-use <subcommand>
+doppel computer-use <subcommand>
 ```
 
 子命令：
@@ -1093,14 +1096,14 @@ hermes computer-use <subcommand>
 | `install --upgrade` | 即使 cua-driver 已在 PATH 中也重新运行安装程序。上游脚本始终拉取最新版本，因此这会执行原地升级。 |
 | `status` | 打印 `cua-driver` 是否在 `$PATH` 中以及已安装的版本。 |
 
-`hermes computer-use install` 是安装 `computer_use` toolset 使用的 [cua-driver](https://github.com/trycua/cua) 二进制文件的稳定入口。它运行与首次启用 Computer Use 时 `hermes tools` 调用的相同上游安装程序，因此如果 toolset 切换未触发安装（例如在已配置用户的设置中），可以安全地用于重新运行安装。
+`doppel computer-use install` 是安装 `computer_use` toolset 使用的 [cua-driver](https://github.com/trycua/cua) 二进制文件的稳定入口。它运行与首次启用 Computer Use 时 `doppel tools` 调用的相同上游安装程序，因此如果 toolset 切换未触发安装（例如在已配置用户的设置中），可以安全地用于重新运行安装。
 
-`hermes update` 在更新结束时，如果 cua-driver 在 PATH 中，会自动重新运行上游安装程序，因此大多数用户不需要手动调用 `--upgrade`。当上游发布了你现在就想要的修复，而不想等待下次 Hermes 更新时，使用此选项。
+`doppel update` 在更新结束时，如果 cua-driver 在 PATH 中，会自动重新运行上游安装程序，因此大多数用户不需要手动调用 `--upgrade`。当上游发布了你现在就想要的修复，而不想等待下次 Doppel 更新时，使用此选项。
 
-## `hermes sessions`
+## `doppel sessions`
 
 ```bash
-hermes sessions <subcommand>
+doppel sessions <subcommand>
 ```
 
 子命令：

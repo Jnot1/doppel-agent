@@ -112,6 +112,9 @@ EN_WEB_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" /
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
 )
+EN_WEB_DASHBOARD_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "web-dashboard.md"
+)
 EN_SKINS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "skins.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
@@ -370,6 +373,17 @@ ZH_EXTENDING_DASHBOARD_DOC = (
     / "user-guide"
     / "features"
     / "extending-the-dashboard.md"
+)
+ZH_WEB_DASHBOARD_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "web-dashboard.md"
 )
 ZH_SKINS_DOC = (
     REPO_ROOT
@@ -2072,6 +2086,52 @@ def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_litera
     assert "重启 `hermes dashboard`" not in zh
     assert "~/.hermes/logs/errors.log" not in en
     assert "~/.hermes/logs/errors.log" not in zh
+
+
+def test_web_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_WEB_DASHBOARD_DOC.read_text(encoding="utf-8")
+    zh = ZH_WEB_DASHBOARD_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent installation" in en
+    assert "Doppel Agent 安装" in zh
+    assert "`doppel setup --portal`" in en
+    assert "doppel dashboard" in en
+    assert "doppel dashboard" in zh
+    assert "doppel --tui" in en
+    assert "doppel --tui" in zh
+    assert "`doppel config set`" in en
+    assert "`doppel config set`" in zh
+    assert "~/.doppel/skills/" in en
+    assert "~/.doppel/skills/" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "Doppel Teal" in en
+    assert "Doppel Teal" in zh
+
+    for fixed in (
+        "hermes-agent[web,pty]",
+        "hermes-agent[all]",
+        "HERMES_DASHBOARD_TUI",
+        "HERMES_DASHBOARD_OAUTH_CLIENT_ID",
+        "HERMES_DASHBOARD_PORTAL_URL",
+        "HERMES_DASHBOARD_PUBLIC_URL",
+        "https://portal.nousresearch.com",
+        "hermes_session_at",
+        "hermes_session_pkce",
+        "hermes_session_rt",
+        "hermes_cli/web_dist/",
+        "~/.hermes/skills/",
+        "~/.hermes/.env",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "Hermes Agent installation" not in en
+    assert "Hermes Agent 安装" not in zh
+    assert "`hermes setup --portal`" not in en
+    assert "hermes dashboard --host 0.0.0.0" not in en
+    assert "hermes dashboard --host 0.0.0.0" not in zh
+    assert "Hermes Teal" not in en
+    assert "Hermes Teal" not in zh
 
 
 def test_skins_docs_prefer_doppel_surfaces_and_match_runtime_defaults():

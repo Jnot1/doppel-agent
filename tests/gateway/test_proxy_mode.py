@@ -8,6 +8,7 @@ from gateway.config import Platform, StreamingConfig
 from gateway.platforms.base import resolve_proxy_url
 from gateway.run import GatewayRunner
 from gateway.session import SessionSource
+from hermes_constants import API_SERVER_SESSION_ID_HEADER
 
 
 def _make_runner(proxy_url=None):
@@ -265,7 +266,7 @@ class TestRunAgentViaProxy:
         assert session.captured_headers["Authorization"] == "Bearer test-key-123"
 
         # Verify session ID header
-        assert session.captured_headers["X-Hermes-Session-Id"] == "session-abc"
+        assert session.captured_headers[API_SERVER_SESSION_ID_HEADER] == "session-abc"
 
         # Verify messages include system, history, and current message
         messages = session.captured_json["messages"]

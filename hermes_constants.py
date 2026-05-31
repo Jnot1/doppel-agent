@@ -31,6 +31,18 @@ LEGACY_NATIVE_HOME_DIR = ".hermes"
 DEFAULT_API_SERVER_MODEL_NAME = "doppel-agent"
 API_SERVER_PLATFORM_ID = DEFAULT_API_SERVER_MODEL_NAME
 API_SERVER_MODEL_OWNER = "doppel"
+# Active wire-compatibility literals kept for external clients. Centralize
+# them here so future aliasing or permanent-preservation decisions happen from
+# one seam instead of scattered string literals across runtime code and tests.
+API_SERVER_SESSION_ID_HEADER = "X-Hermes-Session-Id"
+API_SERVER_SESSION_KEY_HEADER = "X-Hermes-Session-Key"
+API_SERVER_CAPABILITIES_OBJECT = "hermes.api_server.capabilities"
+API_SERVER_SESSION_OBJECT = "hermes.session"
+API_SERVER_SESSION_DELETED_OBJECT = "hermes.session.deleted"
+API_SERVER_SESSION_CHAT_COMPLETION_OBJECT = "hermes.session.chat.completion"
+API_SERVER_RUN_OBJECT = "hermes.run"
+API_SERVER_RUN_APPROVAL_RESPONSE_OBJECT = "hermes.run.approval_response"
+API_SERVER_TOOL_PROGRESS_EVENT = "hermes.tool.progress"
 PACKAGE_DISTRIBUTION_NAME = "hermes-agent"
 HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
 DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"

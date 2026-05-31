@@ -59,6 +59,15 @@ from gateway.platforms.base import (
     is_network_accessible,
 )
 from hermes_constants import (
+    API_SERVER_CAPABILITIES_OBJECT,
+    API_SERVER_RUN_APPROVAL_RESPONSE_OBJECT,
+    API_SERVER_RUN_OBJECT,
+    API_SERVER_SESSION_CHAT_COMPLETION_OBJECT,
+    API_SERVER_SESSION_DELETED_OBJECT,
+    API_SERVER_SESSION_ID_HEADER,
+    API_SERVER_SESSION_KEY_HEADER,
+    API_SERVER_SESSION_OBJECT,
+    API_SERVER_TOOL_PROGRESS_EVENT,
     PREFERRED_AGENT_NAME,
     get_api_server_model_owner,
     get_api_server_platform_id,
@@ -904,7 +913,7 @@ class APIServerAdapter(BasePlatformAdapter):
         unauthenticated client on a local-only server can't inject itself
         into another user's long-term memory scope by guessing a key.
         """
-        raw = request.headers.get("X-Hermes-Session-Key", "").strip()
+        raw = request.headers.get(API_SERVER_SESSION_KEY_HEADER, "").strip()
         if not raw:
             return None, None
 
@@ -1084,7 +1093,7 @@ class APIServerAdapter(BasePlatformAdapter):
             return auth_err
 
         return web.json_response({
-            "object": "hermes.api_server.capabilities",
+            "object": API_SERVER_CAPABILITIES_OBJECT,
             "platform": get_api_server_platform_id(),
             "model": self._model_name,
             "auth": {
@@ -1123,8 +1132,8 @@ class APIServerAdapter(BasePlatformAdapter):
                 "skills_api": True,
                 "audio_api": False,
                 "realtime_voice": False,
-                "session_continuity_header": "X-Hermes-Session-Id",
-                "session_key_header": "X-Hermes-Session-Key",
+                "session_continuity_header": API_SERVER_SESSION_ID_HEADER,
+                "session_key_header": API_SERVER_SESSION_KEY_HEADER,
                 "cors": bool(self._cors_origins),
             },
             "endpoints": {
@@ -1372,7 +1381,7 @@ class APIServerAdapter(BasePlatformAdapter):
                 db.delete_session(session_id)
                 return web.json_response(_openai_error(str(exc), code="invalid_title"), status=400)
         session = db.get_session(session_id) or {"id": session_id, "source": "api_server", "model": model, "title": title}
-        return web.json_response({"object": "hermes.session", "session": self._session_response(session)}, status=201)
+        return web.json_response({"object": API_SERVER_SESSION_OBJECT, "session": self._session_response(session)}, status=201)
 
     async def _handle_get_session(self, request: "web.Request") -> "web.Response":
         """GET /api/sessions/{session_id}."""
@@ -1382,7 +1391,7 @@ class APIServerAdapter(BasePlatformAdapter):
         session, err = self._get_existing_session_or_404(request.match_info["session_id"])
         if err:
             return err
-        return web.json_response({"object": "hermes.session", "session": self._session_response(session)})
+        return web.json_response({"object": API_SERVER_SESSION_OBJECT, "session": self._session_response(session)})
 
     async def _handle_patch_session(self, request: "web.Request") -> "web.Response":
         """PATCH /api/sessions/{session_id} — update client-safe session metadata."""
@@ -1410,7 +1419,7 @@ class APIServerAdapter(BasePlatformAdapter):
         if body.get("end_reason"):
             db.end_session(session_id, str(body["end_reason"]))
         session = db.get_session(session_id) or session
-        return web.json_response({"object": "hermes.session", "session": self._session_response(session)})
+        return web.json_response({"object": API_SERVER_SESSION_OBJECT, "session": self._session_response(session)})
 
     async def _handle_delete_session(self, request: "web.Request") -> "web.Response":
         """DELETE /api/sessions/{session_id}."""
@@ -1423,7 +1432,7 @@ class APIServerAdapter(BasePlatformAdapter):
             return err
         db = self._ensure_session_db()
         deleted = db.delete_session(session_id)
-        return web.json_response({"object": "hermes.session.deleted", "id": session_id, "deleted": bool(deleted)})
+        return web.json_response({"object": API_SERVER_SESSION_DELETED_OBJECT, "id": session_id, "deleted": bool(deleted)})
 
     async def _handle_session_messages(self, request: "web.Request") -> "web.Response":
         """GET /api/sessions/{session_id}/messages."""
@@ -1487,7 +1496,7 @@ class APIServerAdapter(BasePlatformAdapter):
         except ValueError as exc:
             return web.json_response(_openai_error(str(exc), code="invalid_title"), status=400)
         fork = db.get_session(fork_id) or {"id": fork_id, "parent_session_id": source_id}
-        return web.json_response({"object": "hermes.session", "session": self._session_response(fork)}, status=201)
+        return web.json_response({"object": API_SERVER_SESSION_OBJECT, "session": self._session_response(fork)}, status=201)
 
     async def _handle_session_chat(self, request: "web.Request") -> "web.Response":
         """POST /api/sessions/{session_id}/chat — one synchronous agent turn."""
@@ -1520,12 +1529,12 @@ class APIServerAdapter(BasePlatformAdapter):
         )
         effective_session_id = result.get("session_id") if isinstance(result, dict) else session_id
         final_response = result.get("final_response", "") if isinstance(result, dict) else ""
-        headers = {"X-Hermes-Session-Id": effective_session_id or session_id}
+        headers = {API_SERVER_SESSION_ID_HEADER: effective_session_id or session_id}
         if gateway_session_key:
-            headers["X-Hermes-Session-Key"] = gateway_session_key
+            headers[API_SERVER_SESSION_KEY_HEADER] = gateway_session_key
         return web.json_response(
             {
-                "object": "hermes.session.chat.completion",
+                "object": API_SERVER_SESSION_CHAT_COMPLETION_OBJECT,
                 "session_id": effective_session_id or session_id,
                 "message": {"role": "assistant", "content": final_response},
                 "usage": usage,
@@ -1646,10 +1655,10 @@ class APIServerAdapter(BasePlatformAdapter):
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
-            "X-Hermes-Session-Id": session_id,
+            API_SERVER_SESSION_ID_HEADER: session_id,
         }
         if gateway_session_key:
-            headers["X-Hermes-Session-Key"] = gateway_session_key
+            headers[API_SERVER_SESSION_KEY_HEADER] = gateway_session_key
         response = web.StreamResponse(status=200, headers=headers)
         await response.prepare(request)
         last_write = time.monotonic()
@@ -1746,7 +1755,7 @@ class APIServerAdapter(BasePlatformAdapter):
         # only allowed when the API key is configured and the request is
         # authenticated.  Without this gate, any unauthenticated client could
         # read arbitrary session history by guessing/enumerating session IDs.
-        provided_session_id = request.headers.get("X-Hermes-Session-Id", "").strip()
+        provided_session_id = request.headers.get(API_SERVER_SESSION_ID_HEADER, "").strip()
         if provided_session_id:
             if not self._api_key:
                 logger.warning(
@@ -1933,10 +1942,10 @@ class APIServerAdapter(BasePlatformAdapter):
             finish_reason = "stop"
 
         response_headers = {
-            "X-Hermes-Session-Id": result.get("session_id", session_id),
+            API_SERVER_SESSION_ID_HEADER: result.get("session_id", session_id),
         }
         if gateway_session_key:
-            response_headers["X-Hermes-Session-Key"] = gateway_session_key
+            response_headers[API_SERVER_SESSION_KEY_HEADER] = gateway_session_key
 
         # Hard-fail path: no usable assistant text AND a real failure → 5xx
         # with OpenAI-style error envelope so SDK clients raise instead of
@@ -2020,9 +2029,9 @@ class APIServerAdapter(BasePlatformAdapter):
         if cors:
             sse_headers.update(cors)
         if session_id:
-            sse_headers["X-Hermes-Session-Id"] = session_id
+            sse_headers[API_SERVER_SESSION_ID_HEADER] = session_id
         if gateway_session_key:
-            sse_headers["X-Hermes-Session-Key"] = gateway_session_key
+            sse_headers[API_SERVER_SESSION_KEY_HEADER] = gateway_session_key
         response = web.StreamResponse(status=200, headers=sse_headers)
         await response.prepare(request)
 
@@ -2052,7 +2061,7 @@ class APIServerAdapter(BasePlatformAdapter):
                 if isinstance(item, tuple) and len(item) == 2 and item[0] == "__tool_progress__":
                     event_data = json.dumps(item[1])
                     await response.write(
-                        f"event: hermes.tool.progress\ndata: {event_data}\n\n".encode()
+                        f"event: {API_SERVER_TOOL_PROGRESS_EVENT}\ndata: {event_data}\n\n".encode()
                     )
                 else:
                     content_chunk = {
@@ -2204,9 +2213,9 @@ class APIServerAdapter(BasePlatformAdapter):
         if cors:
             sse_headers.update(cors)
         if session_id:
-            sse_headers["X-Hermes-Session-Id"] = session_id
+            sse_headers[API_SERVER_SESSION_ID_HEADER] = session_id
         if gateway_session_key:
-            sse_headers["X-Hermes-Session-Key"] = gateway_session_key
+            sse_headers[API_SERVER_SESSION_KEY_HEADER] = gateway_session_key
         response = web.StreamResponse(status=200, headers=sse_headers)
         await response.prepare(request)
 
@@ -3018,9 +3027,9 @@ class APIServerAdapter(BasePlatformAdapter):
             if conversation:
                 self._response_store.set_conversation(conversation, response_id)
 
-        response_headers = {"X-Hermes-Session-Id": session_id}
+        response_headers = {API_SERVER_SESSION_ID_HEADER: session_id}
         if gateway_session_key:
-            response_headers["X-Hermes-Session-Key"] = gateway_session_key
+            response_headers[API_SERVER_SESSION_KEY_HEADER] = gateway_session_key
         return web.json_response(response_data, headers=response_headers)
 
     # ------------------------------------------------------------------
@@ -3501,7 +3510,7 @@ class APIServerAdapter(BasePlatformAdapter):
         now = time.time()
         current = self._run_statuses.get(run_id, {})
         current.update({
-            "object": "hermes.run",
+            "object": API_SERVER_RUN_OBJECT,
             "run_id": run_id,
             "status": status,
             "updated_at": now,
@@ -3845,7 +3854,7 @@ class APIServerAdapter(BasePlatformAdapter):
             task.add_done_callback(self._background_tasks.discard)
 
         response_headers = (
-            {"X-Hermes-Session-Key": gateway_session_key} if gateway_session_key else {}
+            {API_SERVER_SESSION_KEY_HEADER: gateway_session_key} if gateway_session_key else {}
         )
         return web.json_response(
             {"run_id": run_id, "status": "started"},
@@ -4000,7 +4009,7 @@ class APIServerAdapter(BasePlatformAdapter):
                 pass
 
         return web.json_response({
-            "object": "hermes.run.approval_response",
+            "object": API_SERVER_RUN_APPROVAL_RESPONSE_OBJECT,
             "run_id": run_id,
             "choice": choice,
             "resolved": resolved,

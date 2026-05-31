@@ -55,6 +55,7 @@ from agent.async_utils import safe_schedule_threadsafe
 from agent.i18n import t
 from hermes_cli.config import cfg_get
 from hermes_cli.fallback_config import get_fallback_chain
+from hermes_constants import API_SERVER_SESSION_ID_HEADER
 
 # --- Agent cache tuning ---------------------------------------------------
 # Bounds the per-session AIAgent cache to prevent unbounded growth in
@@ -16015,7 +16016,7 @@ class GatewayRunner:
         if proxy_key:
             headers["Authorization"] = f"Bearer {proxy_key}"
         if session_id:
-            headers["X-Hermes-Session-Id"] = session_id
+            headers[API_SERVER_SESSION_ID_HEADER] = session_id
 
         body = {
             "model": "hermes-agent",

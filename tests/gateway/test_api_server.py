@@ -35,6 +35,10 @@ from gateway.platforms.api_server import (
     security_headers_middleware,
 )
 from hermes_constants import (
+    API_SERVER_CAPABILITIES_OBJECT,
+    API_SERVER_SESSION_ID_HEADER,
+    API_SERVER_SESSION_KEY_HEADER,
+    API_SERVER_TOOL_PROGRESS_EVENT,
     get_api_server_model_owner,
     get_api_server_platform_id,
     get_default_api_server_model_name,
@@ -649,7 +653,7 @@ class TestCapabilitiesEndpoint:
             resp = await cli.get("/v1/capabilities")
             assert resp.status == 200
             data = await resp.json()
-            assert data["object"] == "hermes.api_server.capabilities"
+            assert data["object"] == API_SERVER_CAPABILITIES_OBJECT
             assert data["platform"] == get_api_server_platform_id()
             assert data["model"] == get_default_api_server_model_name()
             assert data["auth"]["type"] == "bearer"
@@ -661,7 +665,7 @@ class TestCapabilitiesEndpoint:
             assert data["features"]["chat_completions"] is True
             assert data["features"]["run_status"] is True
             assert data["features"]["run_events_sse"] is True
-            assert data["features"]["session_continuity_header"] == "X-Hermes-Session-Id"
+            assert data["features"]["session_continuity_header"] == API_SERVER_SESSION_ID_HEADER
             assert data["endpoints"]["run_status"]["path"] == "/v1/runs/{run_id}"
             assert data["endpoints"]["skills"] == {"method": "GET", "path": "/v1/skills"}
             assert data["endpoints"]["toolsets"] == {"method": "GET", "path": "/v1/toolsets"}
@@ -1101,7 +1105,7 @@ class TestChatCompletionsEndpoint:
                 # Tool progress must appear as a custom SSE event, not in
                 # delta.content — prevents model from learning to imitate
                 # markers instead of calling tools (#6972).
-                assert "event: hermes.tool.progress" in body
+                assert f"event: {API_SERVER_TOOL_PROGRESS_EVENT}" in body
                 assert '"tool": "terminal"' in body
                 # ``label`` is now derived by ``build_tool_preview`` from the
                 # tool args rather than passed by the caller, so we assert
@@ -1160,7 +1164,7 @@ class TestChatCompletionsEndpoint:
                 assert "some internal state" not in body
                 assert "call_internal_1" not in body
                 # Real tool progress should appear as custom SSE event
-                assert "event: hermes.tool.progress" in body
+                assert f"event: {API_SERVER_TOOL_PROGRESS_EVENT}" in body
                 assert '"tool": "web_search"' in body
                 # Label is derived from the args dict by build_tool_preview;
                 # asserting on the structural fact (label exists, call id
@@ -1227,7 +1231,7 @@ class TestChatCompletionsEndpoint:
             pairs: list[tuple[str | None, str | None]] = []
             lines = body.splitlines()
             for i, line in enumerate(lines):
-                if line.strip() != "event: hermes.tool.progress":
+                if line.strip() != f"event: {API_SERVER_TOOL_PROGRESS_EVENT}":
                     continue
                 for follow in lines[i + 1: i + 4]:
                     if follow.startswith("data: "):
@@ -3233,7 +3237,7 @@ class TestSessionIdHeader:
                     json={"model": "hermes-agent", "messages": [{"role": "user", "content": "Hi"}]},
                 )
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Id") is not None
+            assert resp.headers.get(API_SERVER_SESSION_ID_HEADER) is not None
 
     @pytest.mark.asyncio
     async def test_provided_session_id_is_used_and_echoed(self, auth_adapter):
@@ -3252,12 +3256,12 @@ class TestSessionIdHeader:
 
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    headers={"X-Hermes-Session-Id": "my-session-123", "Authorization": "Bearer sk-secret"},
+                    headers={API_SERVER_SESSION_ID_HEADER: "my-session-123", "Authorization": "Bearer sk-secret"},
                     json={"model": "hermes-agent", "messages": [{"role": "user", "content": "Continue"}]},
                 )
 
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Id") == "my-session-123"
+            assert resp.headers.get(API_SERVER_SESSION_ID_HEADER) == "my-session-123"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["session_id"] == "my-session-123"
 
@@ -3279,7 +3283,7 @@ class TestSessionIdHeader:
 
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    headers={"X-Hermes-Session-Id": "existing-session", "Authorization": "Bearer sk-secret"},
+                    headers={API_SERVER_SESSION_ID_HEADER: "existing-session", "Authorization": "Bearer sk-secret"},
                     # Request body has different history — should be ignored
                     json={
                         "model": "hermes-agent",
@@ -3311,7 +3315,7 @@ class TestSessionIdHeader:
 
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    headers={"X-Hermes-Session-Id": "some-session", "Authorization": "Bearer sk-secret"},
+                    headers={API_SERVER_SESSION_ID_HEADER: "some-session", "Authorization": "Bearer sk-secret"},
                     json={"model": "hermes-agent", "messages": [{"role": "user", "content": "Hi"}]},
                 )
 
@@ -3345,13 +3349,13 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     headers={
-                        "X-Hermes-Session-Key": "webui:user-42",
+                        API_SERVER_SESSION_KEY_HEADER: "webui:user-42",
                         "Authorization": "Bearer sk-secret",
                     },
                     json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Key") == "webui:user-42"
+            assert resp.headers.get(API_SERVER_SESSION_KEY_HEADER) == "webui:user-42"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] == "webui:user-42"
 
@@ -3369,15 +3373,15 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     headers={
-                        "X-Hermes-Session-Key": "channel-abc",
-                        "X-Hermes-Session-Id": "transcript-xyz",
+                        API_SERVER_SESSION_KEY_HEADER: "channel-abc",
+                        API_SERVER_SESSION_ID_HEADER: "transcript-xyz",
                         "Authorization": "Bearer sk-secret",
                     },
                     json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Key") == "channel-abc"
-            assert resp.headers.get("X-Hermes-Session-Id") == "transcript-xyz"
+            assert resp.headers.get(API_SERVER_SESSION_KEY_HEADER) == "channel-abc"
+            assert resp.headers.get(API_SERVER_SESSION_ID_HEADER) == "transcript-xyz"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] == "channel-abc"
             assert call_kwargs["session_id"] == "transcript-xyz"
@@ -3396,7 +3400,7 @@ class TestSessionKeyHeader:
                     json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
-            assert "X-Hermes-Session-Key" not in resp.headers
+            assert API_SERVER_SESSION_KEY_HEADER not in resp.headers
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] is None
 
@@ -3407,7 +3411,7 @@ class TestSessionKeyHeader:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/chat/completions",
-                headers={"X-Hermes-Session-Key": "whatever"},
+                headers={API_SERVER_SESSION_KEY_HEADER: "whatever"},
                 json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
             )
             assert resp.status == 403
@@ -3423,7 +3427,7 @@ class TestSessionKeyHeader:
         validation.
         """
         mock_request = MagicMock()
-        mock_request.headers = {"X-Hermes-Session-Key": "bad\rvalue"}
+        mock_request.headers = {API_SERVER_SESSION_KEY_HEADER: "bad\rvalue"}
         key, err = auth_adapter._parse_session_key_header(mock_request)
         assert key is None
         assert err is not None
@@ -3436,7 +3440,7 @@ class TestSessionKeyHeader:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/chat/completions",
-                headers={"X-Hermes-Session-Key": "x" * 1000, "Authorization": "Bearer sk-secret"},
+                headers={API_SERVER_SESSION_KEY_HEADER: "x" * 1000, "Authorization": "Bearer sk-secret"},
                 json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
             )
             assert resp.status == 400
@@ -3461,7 +3465,7 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     headers={
-                        "X-Hermes-Session-Key": "agent:main:webui:dm:user-7",
+                        API_SERVER_SESSION_KEY_HEADER: "agent:main:webui:dm:user-7",
                         "Authorization": "Bearer sk-secret",
                     },
                     json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
@@ -3481,13 +3485,13 @@ class TestSessionKeyHeader:
                 resp = await cli.post(
                     "/v1/responses",
                     headers={
-                        "X-Hermes-Session-Key": "webui:chan-1",
+                        API_SERVER_SESSION_KEY_HEADER: "webui:chan-1",
                         "Authorization": "Bearer sk-secret",
                     },
                     json={"model": "hermes-agent", "input": "hello", "store": False},
                 )
             assert resp.status == 200
-            assert resp.headers.get("X-Hermes-Session-Key") == "webui:chan-1"
+            assert resp.headers.get(API_SERVER_SESSION_KEY_HEADER) == "webui:chan-1"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] == "webui:chan-1"
 
@@ -3499,4 +3503,4 @@ class TestSessionKeyHeader:
             resp = await cli.get("/v1/capabilities")
             assert resp.status == 200
             data = await resp.json()
-            assert data["features"]["session_key_header"] == "X-Hermes-Session-Key"
+            assert data["features"]["session_key_header"] == API_SERVER_SESSION_KEY_HEADER

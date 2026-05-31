@@ -104,6 +104,7 @@ EN_CODEX_RUNTIME_DOC = (
 EN_MCP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "mcp.md"
 EN_KANBAN_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "kanban.md"
 EN_FEATURE_SKILLS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "skills.md"
+EN_FEATURE_ACP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "acp.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -295,6 +296,17 @@ ZH_FEATURE_SKILLS_DOC = (
     / "user-guide"
     / "features"
     / "skills.md"
+)
+ZH_FEATURE_ACP_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "acp.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1716,3 +1728,63 @@ def test_feature_skills_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "hermes skills install" not in zh
     assert "my-org/hermes-skills" not in en
     assert "my-org/hermes-skills" not in zh
+
+
+def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
+    en = EN_FEATURE_ACP_DOC.read_text(encoding="utf-8")
+    zh = ZH_FEATURE_ACP_DOC.read_text(encoding="utf-8")
+
+    assert "Use Doppel Agent inside ACP-compatible editors" in en
+    assert "在 VS Code、Zed 和 JetBrains 等兼容 ACP 的编辑器中使用 Doppel Agent" in zh
+    assert "Doppel Agent can run as an ACP server" in en
+    assert "Doppel Agent 可作为 ACP 服务器运行" in zh
+    assert "What Doppel Agent exposes in ACP mode" in en
+    assert "Doppel Agent 在 ACP 模式下暴露的内容" in zh
+    assert "doppel acp" in en
+    assert "doppel acp" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel doctor" in en
+    assert "doppel doctor" in zh
+    assert "doppel status" in en
+    assert "doppel status" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/node/" in en
+    assert "~/.doppel/node/" in zh
+    assert '"Doppel Agent": {' in en
+    assert '"doppel-agent": {' in en
+    assert '"Doppel Agent": {' in zh
+    assert '"doppel-agent": {' in zh
+
+    for fixed in (
+        "hermes-acp",
+        "hermes-agent[acp]",
+        "acp_registry/agent.json",
+        "agentclientprotocol/registry",
+        "~/.hermes/",
+        "Hermes Agent",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Use Hermes Agent inside ACP-compatible editors" not in en
+    assert "在 VS Code、Zed 和 JetBrains 等兼容 ACP 的编辑器中使用 Hermes Agent" not in zh
+    assert "Hermes Agent can run as an ACP server" not in en
+    assert "Hermes Agent 可作为 ACP 服务器运行" not in zh
+    assert "What Hermes exposes in ACP mode" not in en
+    assert "Hermes 在 ACP 模式下暴露的内容" not in zh
+    assert "hermes acp --version" not in en
+    assert "hermes acp --version" not in zh
+    assert "hermes acp --check" not in en
+    assert "hermes acp --check" not in zh
+    assert "hermes model" not in en
+    assert "hermes model" not in zh
+    assert "hermes doctor" not in en
+    assert "hermes doctor" not in zh
+    assert "hermes status" not in en
+    assert "hermes status" not in zh
+    assert '"command": "hermes"' not in en
+    assert '"command": "hermes"' not in zh

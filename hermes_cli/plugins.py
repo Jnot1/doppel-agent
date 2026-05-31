@@ -166,7 +166,17 @@ VALID_HOOKS: Set[str] = {
     "post_approval_response",
 }
 
-ENTRY_POINTS_GROUP = "hermes_agent.plugins"
+PREFERRED_ENTRY_POINTS_GROUP = "doppel_agent.plugins"
+LEGACY_ENTRY_POINTS_GROUP = "hermes_agent.plugins"
+ENTRY_POINTS_GROUP = PREFERRED_ENTRY_POINTS_GROUP
+ENTRY_POINTS_GROUP_SCAN_ORDER = (
+    LEGACY_ENTRY_POINTS_GROUP,
+    PREFERRED_ENTRY_POINTS_GROUP,
+)
+ENTRY_POINTS_GROUP_LOAD_ORDER = (
+    PREFERRED_ENTRY_POINTS_GROUP,
+    LEGACY_ENTRY_POINTS_GROUP,
+)
 
 _NS_PARENT = "hermes_plugins"
 
@@ -174,6 +184,15 @@ _NS_PARENT = "hermes_plugins"
 def _env_enabled(name: str) -> bool:
     """Return True when an env var is set to a truthy opt-in value."""
     return env_var_enabled(name)
+
+
+def _select_entry_points_for_group(entry_points_obj: Any, group: str) -> list[Any]:
+    """Return entry points for one group across importlib.metadata variants."""
+    if hasattr(entry_points_obj, "select"):
+        return list(entry_points_obj.select(group=group))
+    if isinstance(entry_points_obj, dict):
+        return list(entry_points_obj.get(group, []))
+    return [ep for ep in entry_points_obj if ep.group == group]
 
 
 def _get_disabled_plugins() -> set:
@@ -1175,7 +1194,7 @@ class PluginManager:
             if not is_enabled:
                 loaded = LoadedPlugin(manifest=manifest, enabled=False)
                 loaded.error = (
-                    "not enabled in config (run `hermes plugins enable {}` to activate)"
+                    "not enabled in config (run `doppel plugins enable {}` to activate)"
                     .format(lookup_key)
                 )
                 self._plugins[lookup_key] = loaded
@@ -1377,22 +1396,15 @@ class PluginManager:
         manifests: List[PluginManifest] = []
         try:
             eps = importlib.metadata.entry_points()
-            # Python 3.12+ returns a SelectableGroups; earlier returns dict
-            if hasattr(eps, "select"):
-                group_eps = eps.select(group=ENTRY_POINTS_GROUP)
-            elif isinstance(eps, dict):
-                group_eps = eps.get(ENTRY_POINTS_GROUP, [])
-            else:
-                group_eps = [ep for ep in eps if ep.group == ENTRY_POINTS_GROUP]
-
-            for ep in group_eps:
-                manifest = PluginManifest(
-                    name=ep.name,
-                    source="entrypoint",
-                    path=ep.value,
-                    key=ep.name,
-                )
-                manifests.append(manifest)
+            for group in ENTRY_POINTS_GROUP_SCAN_ORDER:
+                for ep in _select_entry_points_for_group(eps, group):
+                    manifest = PluginManifest(
+                        name=ep.name,
+                        source="entrypoint",
+                        path=ep.value,
+                        key=ep.name,
+                    )
+                    manifests.append(manifest)
         except Exception as exc:
             logger.debug("Entry-point scan failed: %s", exc)
 
@@ -1512,19 +1524,15 @@ class PluginManager:
     def _load_entrypoint_module(self, manifest: PluginManifest) -> types.ModuleType:
         """Load a pip-installed plugin via its entry-point reference."""
         eps = importlib.metadata.entry_points()
-        if hasattr(eps, "select"):
-            group_eps = eps.select(group=ENTRY_POINTS_GROUP)
-        elif isinstance(eps, dict):
-            group_eps = eps.get(ENTRY_POINTS_GROUP, [])
-        else:
-            group_eps = [ep for ep in eps if ep.group == ENTRY_POINTS_GROUP]
-
-        for ep in group_eps:
-            if ep.name == manifest.name:
-                return ep.load()
+        for group in ENTRY_POINTS_GROUP_LOAD_ORDER:
+            for ep in _select_entry_points_for_group(eps, group):
+                if ep.name == manifest.name:
+                    return ep.load()
 
         raise ImportError(
-            f"Entry point '{manifest.name}' not found in group '{ENTRY_POINTS_GROUP}'"
+            f"Entry point '{manifest.name}' not found in preferred group "
+            f"'{PREFERRED_ENTRY_POINTS_GROUP}' or legacy compatibility group "
+            f"'{LEGACY_ENTRY_POINTS_GROUP}'"
         )
 
     # -----------------------------------------------------------------------

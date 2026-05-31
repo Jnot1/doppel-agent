@@ -748,6 +748,48 @@ def test_zh_plugin_docs_prefer_doppel_branding_and_commands():
     assert "hermes skills tap add myorg/skills-repo" not in guide
 
 
+def test_build_plugin_guide_pair_prefer_doppel_paths_commands_and_package_surfaces():
+    en = EN_BUILD_GUIDE.read_text(encoding="utf-8")
+    zh = ZH_BUILD_GUIDE.read_text(encoding="utf-8")
+
+    for text in (en, zh):
+        assert "~/.doppel/plugins/calculator" in text
+        assert "~/.doppel/plugins/my-plugin/" in text
+        assert "`~/.doppel/logs/agent.log`" in text
+        assert "`~/.doppel/skills/`" in text
+        assert "`~/.doppel/config.yaml`" in text
+        assert "~/.doppel/hooks/long-task-alert/" in text
+        assert '[project.entry-points."doppel_agent.plugins"]' in text
+        assert "pip install doppel-plugin-calculator" in text
+        assert "Last project: doppel-agent" in text
+
+    assert "`doppel name` in a terminal" in en
+    assert "终端中的 `doppel name`" in zh
+    assert "`doppel gateway status`" in en
+    assert "`doppel gateway status`" in zh
+    assert "next doppel startup" in en
+    assert "下次 doppel 启动时自动发现插件" in zh
+
+    for stale in (
+        "~/.hermes/plugins/calculator",
+        "~/.hermes/plugins/my-plugin/",
+        "`~/.hermes/logs/agent.log`",
+        "`~/.hermes/skills/`",
+        "`~/.hermes/config.yaml`",
+        "~/.hermes/hooks/long-task-alert/",
+        '[project.entry-points."hermes_agent.plugins"]',
+        "pip install hermes-plugin-calculator",
+        "Last project: hermes-agent",
+        "`hermes name` in a terminal",
+        "终端中的 `hermes name`",
+        "`hermes gateway status`",
+        "next hermes startup",
+        "下次 hermes 启动时自动发现插件",
+    ):
+        assert stale not in en
+        assert stale not in zh
+
+
 def test_local_ollama_guides_prefer_doppel_branding_and_keep_runtime_literals():
     en = EN_LOCAL_OLLAMA_GUIDE.read_text(encoding="utf-8")
     zh = ZH_LOCAL_OLLAMA_GUIDE.read_text(encoding="utf-8")

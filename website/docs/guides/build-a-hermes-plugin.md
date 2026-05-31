@@ -24,7 +24,7 @@ Doppel has several distinct pluggable interfaces — some use Python `register_*
 | A **TTS backend** (any CLI — Piper, VoxCPM, Kokoro, voice cloning, …) | [TTS custom command providers](/user-guide/features/tts#custom-command-providers) — config-driven, no Python needed |
 | An **STT backend** (custom whisper / ASR CLI) | [Voice Message Transcription](/user-guide/features/tts#voice-message-transcription-stt) — set `DOPPEL_LOCAL_STT_COMMAND` to a shell template (legacy `HERMES_LOCAL_STT_COMMAND` still works) |
 | **External tools via MCP** (filesystem, GitHub, Linear, any MCP server) | [MCP](/user-guide/features/mcp) — declare `mcp_servers.<name>` in `config.yaml` |
-| **Gateway event hooks** (fire on startup, session events, commands) | [Event Hooks](/user-guide/features/hooks#gateway-event-hooks) — drop `HOOK.yaml` + `handler.py` into `~/.hermes/hooks/<name>/` |
+| **Gateway event hooks** (fire on startup, session events, commands) | [Event Hooks](/user-guide/features/hooks#gateway-event-hooks) — drop `HOOK.yaml` + `handler.py` into `~/.doppel/hooks/<name>/` |
 | **Shell hooks** (run a shell command on events) | [Shell Hooks](/user-guide/features/hooks#shell-hooks) — declare under `hooks:` in `config.yaml` |
 | **Additional skill sources** (custom GitHub repos, private skill indexes) | [Skills](/user-guide/features/skills) — `doppel skills tap add <repo>` · [Publishing a tap](/user-guide/features/skills#publishing-a-custom-skill-tap) |
 | A first-class **core** inference provider (not a plugin) | [Adding Providers](/developer-guide/adding-providers) |
@@ -43,8 +43,8 @@ Plus a hook that logs every tool call, and a bundled skill file.
 ## Step 1: Create the plugin directory
 
 ```bash
-mkdir -p ~/.hermes/plugins/calculator
-cd ~/.hermes/plugins/calculator
+mkdir -p ~/.doppel/plugins/calculator
+cd ~/.doppel/plugins/calculator
 ```
 
 ## Step 2: Write the manifest
@@ -329,7 +329,7 @@ You'll see, for every plugin source (bundled, user, project, entry-points):
 - on parse failure: a full traceback for the exception (YAML scanner errors, etc.)
 - on `register()` failure: a full traceback pointing at the line in your `__init__.py` that raised
 
-The same logs are always written to `~/.hermes/logs/agent.log` at WARNING level (failures only) and DEBUG level (everything) when the env var is set. So if you can't run with the env var (e.g. from inside the gateway), tail the log file instead:
+The same logs are always written to `~/.doppel/logs/agent.log` at WARNING level (failures only) and DEBUG level (everything) when the env var is set. So if you can't run with the env var (e.g. from inside the gateway), tail the log file instead:
 
 ```bash
 doppel logs --level WARNING | grep -i plugin
@@ -338,14 +338,14 @@ doppel logs --level WARNING | grep -i plugin
 Common reasons a plugin doesn't appear:
 
 - **Not enabled in config** — plugins are opt-in. Run `doppel plugins enable <name>` (the name comes from the `plugins list` output, which can be `<category>/<plugin>` for nested layouts).
-- **Wrong directory layout** — must be `~/.hermes/plugins/<plugin-name>/plugin.yaml` (flat) or `~/.hermes/plugins/<category>/<plugin-name>/plugin.yaml` (one level of category nesting, max). Anything deeper is ignored.
+- **Wrong directory layout** — must be `~/.doppel/plugins/<plugin-name>/plugin.yaml` (flat) or `~/.doppel/plugins/<category>/<plugin-name>/plugin.yaml` (one level of category nesting, max). Anything deeper is ignored.
 - **Missing `__init__.py`** — the plugin directory needs both `plugin.yaml` and `__init__.py` with a `register(ctx)` function.
 - **Wrong `kind`** — gateway adapters need `kind: platform` in their manifest. Memory providers are auto-detected as `kind: exclusive` and routed through the `memory.provider` config instead of `plugins.enabled`.
 
 ## Your plugin's final structure
 
 ```
-~/.hermes/plugins/calculator/
+~/.doppel/plugins/calculator/
 ├── plugin.yaml      # "I'm calculator, I provide tools and hooks"
 ├── __init__.py      # Wiring: schemas → handlers, register hooks
 ├── schemas.py       # What the LLM reads (descriptions + parameter specs)
@@ -380,7 +380,7 @@ with open(_DATA_FILE) as f:
 Plugins can ship skill files that the agent loads via `skill_view("plugin:skill")`. Register them in your `__init__.py`:
 
 ```
-~/.hermes/plugins/my-plugin/
+~/.doppel/plugins/my-plugin/
 ├── __init__.py
 ├── plugin.yaml
 └── skills/
@@ -409,13 +409,13 @@ skill_view("my-workflow")              # → built-in version (unchanged)
 ```
 
 **Key properties:**
-- Plugin skills are **read-only** — they don't enter `~/.hermes/skills/` and can't be edited via `skill_manage`.
+- Plugin skills are **read-only** — they don't enter `~/.doppel/skills/` and can't be edited via `skill_manage`.
 - Plugin skills are **not** listed in the system prompt's `<available_skills>` index — they're opt-in explicit loads.
 - Bare skill names are unaffected — the namespace prevents collisions with built-in skills.
 - When the agent loads a plugin skill, a bundle context banner is prepended listing sibling skills from the same plugin.
 
 :::tip Legacy pattern
-The old `shutil.copy2` pattern (copying a skill into `~/.hermes/skills/`) still works but creates name collision risk with built-in skills. Prefer `ctx.register_skill()` for new plugins.
+The old `shutil.copy2` pattern (copying a skill into `~/.doppel/skills/`) still works but creates name collision risk with built-in skills. Prefer `ctx.register_skill()` for new plugins.
 :::
 
 ### Gate on environment variables
@@ -516,7 +516,7 @@ def register(ctx):
 Without `override=True`, the registry rejects any registration that would
 shadow an existing tool from a different toolset — this prevents
 accidental overwrites. The override is logged at INFO level so it's
-auditable in `~/.hermes/logs/agent.log`. Plugins load after built-in
+auditable in `~/.doppel/logs/agent.log`. Plugins load after built-in
 tools, so the registration order is correct: your handler replaces the
 built-in one.
 
@@ -558,7 +558,7 @@ This is the only hook whose return value matters. When a `pre_llm_call` callback
 
 ```python
 # Dict with context key
-return {"context": "Recalled memories:\n- User prefers dark mode\n- Last project: hermes-agent"}
+return {"context": "Recalled memories:\n- User prefers dark mode\n- Last project: doppel-agent"}
 
 # Plain string (equivalent to the dict form above)
 return "Recalled memories:\n- User prefers dark mode"
@@ -718,7 +718,7 @@ After registration, users can type `/mystatus` in any session. The command appea
 
 | | `register_command()` | `register_cli_command()` |
 |---|---|---|
-| Invoked as | `/name` in a session | `hermes name` in a terminal |
+| Invoked as | `/name` in a session | `doppel name` in a terminal |
 | Where it works | CLI sessions, Telegram, Discord, etc. | Terminal only |
 | Handler receives | Raw args string | argparse `Namespace` |
 | Use case | Diagnostics, status, quick actions | Complex subcommand trees, setup wizards |
@@ -781,7 +781,7 @@ This guide covers **general plugins** (tools, hooks, slash commands, CLI command
 
 ## Specialized plugin types
 
-Doppel has five specialized plugin types beyond the general surface. Each ships as a directory under `plugins/<category>/<name>/` (bundled) or `~/.hermes/plugins/<category>/<name>/` (user). The contract differs by category — pick the one you need, then read its full guide.
+Doppel has five specialized plugin types beyond the general surface. Each ships as a directory under `plugins/<category>/<name>/` (bundled) or `~/.doppel/plugins/<category>/<name>/` (user). The contract differs by category — pick the one you need, then read its full guide.
 
 ### Model provider plugins — add an LLM backend
 
@@ -848,7 +848,7 @@ def register(ctx):
         check_fn=check_requirements,
         required_env=["MYPLATFORM_TOKEN"],
         # Auto-populate PlatformConfig.extra from env so env-only setups
-        # show up in `hermes gateway status` without SDK instantiation.
+        # show up in `doppel gateway status` without SDK instantiation.
         env_enablement_fn=_env_enablement,
         # Opt in to cron delivery: `deliver=myplatform` routes to this var.
         cron_deliver_env_var="MYPLATFORM_HOME_CHANNEL",
@@ -970,7 +970,7 @@ Doppel also accepts extensions that aren't Python plugins at all. These are show
 
 ### MCP servers — register external tools
 
-Model Context Protocol (MCP) servers register their own tools into Doppel without any Python plugin. Declare them in `~/.hermes/config.yaml`:
+Model Context Protocol (MCP) servers register their own tools into Doppel without any Python plugin. Declare them in `~/.doppel/config.yaml`:
 
 ```yaml
 mcp_servers:
@@ -989,10 +989,10 @@ Doppel connects to each server at startup, lists its tools, and registers them a
 
 ### Gateway event hooks — fire on lifecycle events
 
-Drop a manifest + handler into `~/.hermes/hooks/<name>/`:
+Drop a manifest + handler into `~/.doppel/hooks/<name>/`:
 
 ```yaml
-# ~/.hermes/hooks/long-task-alert/HOOK.yaml
+# ~/.doppel/hooks/long-task-alert/HOOK.yaml
 name: long-task-alert
 description: Send a push notification when a long task finishes
 events:
@@ -1000,7 +1000,7 @@ events:
 ```
 
 ```python
-# ~/.hermes/hooks/long-task-alert/handler.py
+# ~/.doppel/hooks/long-task-alert/handler.py
 async def handle(event_type: str, context: dict) -> None:
     if context.get("duration_seconds", 0) > 120:
         # send notification …
@@ -1066,13 +1066,13 @@ For sharing plugins publicly, add an entry point to your Python package:
 
 ```toml
 # pyproject.toml
-[project.entry-points."hermes_agent.plugins"]
+[project.entry-points."doppel_agent.plugins"]
 my-plugin = "my_plugin_package"
 ```
 
 ```bash
-pip install hermes-plugin-calculator
-# Plugin auto-discovered on next hermes startup
+pip install doppel-plugin-calculator
+# Plugin auto-discovered on next doppel startup
 ```
 
 ## Distribute for NixOS

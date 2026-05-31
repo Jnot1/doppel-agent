@@ -77,6 +77,7 @@ EN_TRAJECTORY_DOC = EN_DEV_GUIDE_DIR / "trajectory-format.md"
 EN_CONTEXT_FILES_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "context-files.md"
 EN_PERSONALITY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "personality.md"
 EN_GOALS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "goals.md"
+EN_SECURITY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "security.md"
 EN_PROVIDER_ROUTING_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "provider-routing.md"
 )
@@ -189,6 +190,16 @@ ZH_GOALS_DOC = (
     / "user-guide"
     / "features"
     / "goals.md"
+)
+ZH_SECURITY_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "security.md"
 )
 ZH_PROVIDER_ROUTING_DOC = (
     REPO_ROOT
@@ -3418,3 +3429,58 @@ def test_curator_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "hermes curator pin <name>" not in zh
     assert "hermes curator restore <name>" not in en
     assert "hermes curator restore <name>" not in zh
+
+
+def test_security_docs_prefer_doppel_customer_facing_wording_and_preserve_runtime_literals():
+    en = EN_SECURITY_DOC.read_text(encoding="utf-8")
+    zh = ZH_SECURITY_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent is designed with a defense-in-depth security model." in en
+    assert "Doppel Agent 采用纵深防御安全模型" in zh
+    assert "Hermes Agent 采用纵深防御安全模型" not in zh
+
+    assert "doppel --yolo" in en
+    assert "doppel --yolo" in zh
+    assert "doppel pairing approve" in en
+    assert "doppel pairing approve" in zh
+    assert "doppel doctor" in en
+    assert "doppel doctor" in zh
+    assert "doppel update" in en
+    assert "doppel update" in zh
+
+    assert "hermes --yolo" not in en
+    assert "hermes --yolo" not in zh
+    assert "hermes pairing approve" not in en
+    assert "hermes pairing approve" not in zh
+    assert "hermes doctor" not in en
+    assert "hermes doctor" not in zh
+    assert "hermes update" not in en
+    assert "hermes update" not in zh
+
+    for fixed in (
+        "approvals.mode",
+        "HERMES_YOLO_MODE=1",
+        "HERMES_EXEC_ASK=1",
+        "HERMES_HOME",
+        "tools/approval.py::UNRECOVERABLE_BLOCKLIST",
+        "tools/credential_files.py",
+        "/etc/hermes/blocked-sites.txt",
+        "hermes_cli/security_advisories.py",
+        "tools/lazy_deps.py",
+        "config.security.acked_advisories",
+        "~/.hermes/.env",
+        "~/.hermes/config.yaml",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/.env" in en
+    assert "legacy `~/.hermes/config.yaml`" in en
+    assert "legacy `~/.hermes/.env`" in en
+
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/pairing/" in zh
+    assert "~/.doppel/logs/" in zh
+    assert "doppel config edit" in zh

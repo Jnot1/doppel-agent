@@ -89,6 +89,7 @@ EN_TOOL_GATEWAY_DOC = (
 EN_SUBSCRIPTION_PROXY_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "subscription-proxy.md"
 )
+EN_TOOLS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tools.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -180,6 +181,17 @@ ZH_SUBSCRIPTION_PROXY_DOC = (
     / "user-guide"
     / "features"
     / "subscription-proxy.md"
+)
+ZH_TOOLS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "tools.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -1086,3 +1098,56 @@ def test_subscription_proxy_docs_prefer_doppel_surfaces_and_keep_runtime_literal
     assert "hermes auth add nous" not in en
     assert "hermes proxy start" not in en
     assert "Hermes proxy upstream adapters" not in en
+
+
+def test_tools_feature_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_TOOLS_DOC.read_text(encoding="utf-8")
+    zh = ZH_TOOLS_DOC.read_text(encoding="utf-8")
+
+    assert "Overview of Doppel Agent's tools" in en
+    assert "Doppel Agent ships with a broad built-in tool registry" in en
+    assert "doppel model" in en
+    assert "doppel tools" in en
+    assert 'doppel chat --toolsets "web,terminal"' in en
+    assert "doppel config set terminal.backend singularity" in en
+    assert "doppel config set terminal.backend modal" in en
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/.env" in en
+    assert "~/.hermes/config.yaml" in en
+    assert "~/.hermes/.env" in en
+
+    assert "Doppel Agent 工具概览" in zh
+    assert "Doppel Agent 内置了丰富的工具注册表" in zh
+    assert "doppel model" in zh
+    assert "doppel tools" in zh
+    assert 'doppel chat --toolsets "web,terminal"' in zh
+    assert "doppel config set terminal.backend singularity" in zh
+    assert "doppel config set terminal.backend modal" in zh
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/.env" in zh
+    assert "~/.hermes/config.yaml" in zh
+    assert "~/.hermes/.env" in zh
+
+    for fixed in (
+        "hermes-cli",
+        "hermes-telegram",
+        "XAI_API_KEY",
+        "TERMINAL_SSH_HOST",
+        "TERMINAL_SSH_USER",
+        "TERMINAL_SSH_KEY",
+        "SUDO_PASSWORD",
+        "container_persistent",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Overview of Hermes Agent's tools" not in en
+    assert "Hermes ships with a broad built-in tool registry" not in en
+    assert 'hermes chat --toolsets "web,terminal"' not in en
+    assert "hermes tools" not in en
+    assert "hermes model" not in en
+    assert "Hermes Agent 工具概览" not in zh
+    assert "Hermes 内置了丰富的工具注册表" not in zh
+    assert 'hermes chat --toolsets "web,terminal"' not in zh
+    assert "hermes tools" not in zh
+    assert "hermes model" not in zh

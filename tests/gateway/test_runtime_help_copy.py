@@ -10,3 +10,23 @@ def test_gateway_runtime_kanban_recovery_hints_are_doppel_first():
     assert "doppel kanban list --status ready" in runtime
     assert "hermes kanban init" not in runtime
     assert "hermes kanban list --status ready" not in runtime
+
+
+def test_gateway_runtime_lifecycle_copy_is_doppel_first():
+    runtime = Path("gateway/run.py").read_text(encoding="utf-8")
+
+    assert "to retry, or `doppel gateway restart` to restart the gateway." in runtime
+    assert "Could not locate doppel binary for detached /restart" in runtime
+    assert 'logger.info("Starting Doppel Gateway...")' in runtime
+    assert 'thread_name = f"Doppel — {cli_title}"' in runtime
+    assert "DOPPEL_HOME=%s" in runtime
+    assert "Use 'doppel gateway restart' to replace it, or 'doppel gateway stop' first." in runtime
+    assert "Or use 'doppel gateway run --replace' to auto-replace." in runtime
+
+    assert "to retry, or `hermes gateway restart` to restart the gateway." not in runtime
+    assert "Could not locate hermes binary for detached /restart" not in runtime
+    assert 'logger.info("Starting Hermes Gateway...")' not in runtime
+    assert 'thread_name = f"Hermes — {cli_title}"' not in runtime
+    assert "HERMES_HOME=%s" not in runtime
+    assert "Use 'hermes gateway restart' to replace it, or 'hermes gateway stop' first." not in runtime
+    assert "Or use 'hermes gateway run --replace' to auto-replace." not in runtime

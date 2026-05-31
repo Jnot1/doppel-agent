@@ -2862,7 +2862,7 @@ class GatewayRunner:
         logger.warning(
             "%s paused after %d consecutive failures (%s) — "
             "fix the underlying issue then run `/platform resume %s` "
-            "to retry, or `hermes gateway restart` to restart the gateway.",
+            "to retry, or `doppel gateway restart` to restart the gateway.",
             platform.value, info.get("attempts", 0),
             info["pause_reason"], platform.value,
         )
@@ -3801,7 +3801,7 @@ class GatewayRunner:
 
         hermes_cmd = _resolve_hermes_bin()
         if not hermes_cmd:
-            logger.error("Could not locate hermes binary for detached /restart")
+            logger.error("Could not locate doppel binary for detached /restart")
             return
 
         current_pid = os.getpid()
@@ -3994,7 +3994,7 @@ class GatewayRunner:
         
         Returns True if at least one adapter connected successfully.
         """
-        logger.info("Starting Hermes Gateway...")
+        logger.info("Starting Doppel Gateway...")
         try:
             self._gateway_loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -4617,7 +4617,7 @@ class GatewayRunner:
         # (no permission, topics-mode off, parent is a DM, etc.). When
         # None we fall through to using the home channel directly — the
         # synthetic turn still lands; just without thread isolation.
-        thread_name = f"Hermes — {cli_title}"
+        thread_name = f"Doppel — {cli_title}"
         try:
             new_thread_id = await adapter.create_handoff_thread(
                 str(home.chat_id), thread_name,
@@ -18883,15 +18883,15 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         else:
             hermes_home = str(get_hermes_home())
             logger.error(
-                "Another gateway instance is already running (PID %d, HERMES_HOME=%s). "
-                "Use 'hermes gateway restart' to replace it, or 'hermes gateway stop' first.",
+                "Another gateway instance is already running (PID %d, DOPPEL_HOME=%s). "
+                "Use 'doppel gateway restart' to replace it, or 'doppel gateway stop' first.",
                 existing_pid, hermes_home,
             )
             print(
                 f"\n❌ Gateway already running (PID {existing_pid}).\n"
-                f"   Use 'hermes gateway restart' to replace it,\n"
-                f"   or 'hermes gateway stop' to kill it first.\n"
-                f"   Or use 'hermes gateway run --replace' to auto-replace.\n"
+                f"   Use 'doppel gateway restart' to replace it,\n"
+                f"   or 'doppel gateway stop' to kill it first.\n"
+                f"   Or use 'doppel gateway run --replace' to auto-replace.\n"
             )
             return False
 

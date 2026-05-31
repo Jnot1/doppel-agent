@@ -51,11 +51,11 @@ Pick the row that matches your goal:
 **Option A — pip (simplest):**
 
 ```bash
-pip install hermes-agent
+pip install doppel-agent
 doppel postinstall     # optional: installs Node.js, browser, ripgrep, ffmpeg + runs setup
 ```
 
-PyPI releases track tagged versions (major/minor releases), not every commit on `main`. The package name remains `hermes-agent` in this first rebrand pass; the installed CLI command is `doppel`. For bleeding-edge, use Option B.
+PyPI releases track tagged versions (major/minor releases), not every commit on `main`. The published package name and installed CLI are now both Doppel-first. For bleeding-edge, use Option B.
 
 **Option B — git installer (tracks main branch):**
 
@@ -271,8 +271,8 @@ doppel config set terminal.backend ssh       # Remote server
 
 ```bash
 # From the Doppel install directory (the curl installer placed it at
-# ~/.doppel/hermes-agent on Linux/macOS or %LOCALAPPDATA%\doppel\hermes-agent on Windows):
-cd ~/.doppel/hermes-agent
+# ~/.doppel/doppel-agent on Linux/macOS or %LOCALAPPDATA%\doppel\doppel-agent on Windows):
+cd ~/.doppel/doppel-agent
 uv pip install -e ".[voice]"
 # Includes faster-whisper for free local speech-to-text
 ```
@@ -308,7 +308,7 @@ ACP support ships with the standard `[all]` extras, so the curl installer alread
 doppel acp
 ```
 
-(If you installed without `[all]`, run `cd ~/.doppel/hermes-agent && uv pip install -e ".[acp]"` first.)
+(If you installed without `[all]`, run `cd ~/.doppel/doppel-agent && uv pip install -e ".[acp]"` first.)
 
 See [ACP Editor Integration](../user-guide/features/acp.md).
 

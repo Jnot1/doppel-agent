@@ -22,7 +22,7 @@ Key implementation files:
 ## Boot flow
 
 ```text
-hermes acp / hermes-acp / python -m acp_adapter
+doppel acp / doppel-acp / python -m acp_adapter
   -> acp_adapter.entry.main()
   -> parse --version / --check / --setup before server startup
   -> load ~/.hermes/.env
@@ -31,7 +31,7 @@ hermes acp / hermes-acp / python -m acp_adapter
   -> acp.run_agent(agent, use_unstable_protocol=True)
 ```
 
-The Zed ACP Registry path launches the same Doppel ACP adapter through `uvx --from 'hermes-agent[acp]==<version>' hermes-acp`, pointed at the `hermes-agent` PyPI release.
+The Zed ACP Registry path launches the same Doppel ACP adapter through `uvx --from 'doppel-agent[acp]==<version>' doppel-acp`, pointed at the `doppel-agent` PyPI release.
 
 Stdout is reserved for ACP JSON-RPC transport. Human-readable logs go to stderr.
 
@@ -116,7 +116,7 @@ Examples:
 ```text
 new_session(cwd)
   -> create SessionState
-  -> create AIAgent(platform="acp", enabled_toolsets=["hermes-acp"])
+  -> create AIAgent(platform="acp", enabled_toolsets=["doppel-acp"])
   -> bind task_id/session_id to cwd override
 
 prompt(..., session_id)
@@ -149,7 +149,7 @@ Instead it reuses Doppel Agent's runtime resolver:
 - `acp_adapter/auth.py`
 - `hermes_cli/runtime_provider.py`
 
-So ACP advertises and uses the currently configured Doppel provider/credentials. It also always advertises a terminal setup auth method (`hermes-setup`, args `--setup`) so first-run registry clients can open Doppel Agent's interactive model/provider configuration before starting a normal ACP session.
+So ACP advertises and uses the currently configured Doppel provider/credentials. It also always advertises a terminal setup auth method (`doppel-setup`, args `--setup`) so first-run registry clients can open Doppel Agent's interactive model/provider configuration before starting a normal ACP session.
 
 ## Working directory binding
 
@@ -179,6 +179,6 @@ ACP temporarily installs an approval callback on the terminal tool during prompt
 ## Related files
 
 - `tests/acp/` — ACP test suite
-- `toolsets.py` — `hermes-acp` toolset definition
-- `hermes_cli/main.py` — `hermes acp` CLI subcommand
-- `pyproject.toml` — `[acp]` optional dependency + `hermes-acp` script
+- `toolsets.py` — `doppel-acp` toolset definition
+- `hermes_cli/main.py` — `doppel acp` CLI subcommand
+- `pyproject.toml` — `[acp]` optional dependency + `doppel-acp` script

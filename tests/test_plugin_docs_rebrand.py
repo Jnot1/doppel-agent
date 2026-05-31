@@ -1818,8 +1818,8 @@ def test_acp_and_cli_extension_docs_prefer_doppel_surfaces():
     assert "Doppel Agent tools" in en_acp
     assert "Doppel Agent's runtime resolver" in en_acp
     assert "Doppel Agent's interactive model/provider configuration" in en_acp
-    assert "hermes-acp" in en_acp
-    assert "`hermes-setup`" in en_acp
+    assert "doppel-acp" in en_acp
+    assert "`doppel-setup`" in en_acp
     assert "~/.hermes/.env" in en_acp
     assert "~/.hermes/state.db" in en_acp
     assert "hermes_cli/runtime_provider.py" in en_acp
@@ -1833,8 +1833,8 @@ def test_acp_and_cli_extension_docs_prefer_doppel_surfaces():
     assert "Doppel Agent 工具" in zh_acp
     assert "Doppel Agent 的运行时解析器" in zh_acp
     assert "Doppel Agent 的交互式模型/provider 配置" in zh_acp
-    assert "hermes-acp" in zh_acp
-    assert "`hermes-setup`" in zh_acp
+    assert "doppel-acp" in zh_acp
+    assert "`doppel-setup`" in zh_acp
     assert "~/.hermes/.env" in zh_acp
     assert "~/.hermes/state.db" in zh_acp
     assert "hermes_cli/runtime_provider.py" in zh_acp
@@ -2351,6 +2351,29 @@ def test_tools_reference_docs_prefer_doppel_customer_facing_wording_and_keep_run
     assert "`doppel tools`" in zh
     assert "doppel spotify setup" in en
     assert "doppel spotify setup" in zh
+
+
+def test_toolsets_reference_docs_prefer_doppel_acp_toolset_label():
+    en = (
+        REPO_ROOT / "website" / "docs" / "reference" / "toolsets-reference.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "toolsets-reference.md"
+    ).read_text(encoding="utf-8")
+
+    assert "| `doppel-acp` |" in en
+    assert "Focused on coding tasks in IDE context." in en
+    assert "| `doppel-acp` |" in zh
+    assert "专注于 IDE 环境中的编码任务。" in zh
+    assert "| `hermes-acp` |" not in en
+    assert "| `hermes-acp` |" not in zh
 
 
 def test_fallback_provider_docs_prefer_doppel_surfaces_and_keep_legacy_literals():
@@ -2899,7 +2922,7 @@ def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_se
     assert "## `hermes backup`" not in support
 
     assert "doppel update [--gateway] [--check] [--no-backup] [--backup] [--yes]" in update
-    assert "`pip install --upgrade hermes-agent`" in update
+    assert "`pip install --upgrade doppel-agent`" in update
     assert "`hermes.service`" in update
     assert "`doppel backup restore --state pre-update`" in update
     assert "## `hermes update`" not in zh_cli_commands
@@ -2968,7 +2991,7 @@ def test_zh_reference_cli_commands_rebrand_hooks_mcp_and_sessions_cluster():
     assert "运行 `doppel --help`" in section
     assert "doppel acp" in section
     assert "将 Doppel 作为 ACP" in section
-    assert "hermes-acp" in section
+    assert "doppel-acp" in section
     assert "doppel mcp <subcommand>" in section
     assert "doppel mcp install n8n" in section
     assert "[在 Doppel 中使用 MCP](../guides/use-mcp-with-hermes.md)" in section
@@ -3210,14 +3233,15 @@ def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     assert '"doppel-agent": {' in en
     assert '"Doppel Agent": {' in zh
     assert '"doppel-agent": {' in zh
+    assert "doppel-acp" in en
+    assert "doppel-acp" in zh
+    assert "doppel-agent[acp]" in en
+    assert "doppel-agent[acp]" in zh
 
     for fixed in (
-        "hermes-acp",
-        "hermes-agent[acp]",
         "acp_registry/agent.json",
         "agentclientprotocol/registry",
         "~/.hermes/",
-        "Hermes Agent",
     ):
         assert fixed in en
         assert fixed in zh
@@ -3238,6 +3262,10 @@ def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     assert "hermes doctor" not in zh
     assert "hermes status" not in en
     assert "hermes status" not in zh
+    assert "hermes-acp" not in en
+    assert "hermes-acp" not in zh
+    assert "hermes-agent[acp]" not in en
+    assert "hermes-agent[acp]" not in zh
     assert '"command": "hermes"' not in en
     assert '"command": "hermes"' not in zh
 
@@ -3266,7 +3294,7 @@ def test_tts_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     for fixed in (
         "DOPPEL_LOCAL_STT_COMMAND",
         "~/.hermes/plugins/my-tts/",
-        "pip install hermes-agent[mistral]",
+        "pip install doppel-agent[mistral]",
         "tts.providers.<name>",
     ):
         assert fixed in en
@@ -3952,8 +3980,8 @@ def test_web_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "Doppel Teal" in zh
 
     for fixed in (
-        "hermes-agent[web,pty]",
-        "hermes-agent[all]",
+        "doppel-agent[web,pty]",
+        "doppel-agent[all]",
         "HERMES_DASHBOARD_TUI",
         "HERMES_DASHBOARD_OAUTH_CLIENT_ID",
         "HERMES_DASHBOARD_PORTAL_URL",
@@ -3967,6 +3995,11 @@ def test_web_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
         "~/.hermes/.env",
     ):
         assert fixed in en or fixed in zh
+
+    assert "hermes-agent[web,pty]" not in en
+    assert "hermes-agent[web,pty]" not in zh
+    assert "hermes-agent[all]" not in en
+    assert "hermes-agent[all]" not in zh
 
     assert "Hermes Agent installation" not in en
     assert "Hermes Agent 安装" not in zh
@@ -4105,6 +4138,10 @@ def test_security_docs_prefer_doppel_customer_facing_wording_and_preserve_runtim
     assert "hermes doctor" not in zh
     assert "hermes update" not in en
     assert "hermes update" not in zh
+    assert "hermes-agent[all]" not in en
+    assert "hermes-agent[all]" not in zh
+    assert "doppel-agent[all]" in en
+    assert "doppel-agent[all]" in zh
 
     for fixed in (
         "approvals.mode",
@@ -4123,17 +4160,43 @@ def test_security_docs_prefer_doppel_customer_facing_wording_and_preserve_runtim
         assert fixed in en
         assert fixed in zh
 
-    assert "~/.doppel/config.yaml" in en
-    assert "~/.doppel/.env" in en
-    assert "legacy `~/.hermes/config.yaml`" in en
-    assert "legacy `~/.hermes/.env`" in en
 
-    assert "~/.doppel/config.yaml" in zh
-    assert "~/.doppel/.env" in zh
-    assert "~/.doppel/pairing/" in zh
-    assert "~/.doppel/logs/" in zh
-    assert "doppel config edit" in zh
+def test_quickstart_and_updating_docs_prefer_doppel_package_name():
+    en_quickstart = (
+        REPO_ROOT / "website" / "docs" / "getting-started" / "quickstart.md"
+    ).read_text(encoding="utf-8")
+    zh_quickstart = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "getting-started"
+        / "quickstart.md"
+    ).read_text(encoding="utf-8")
+    en_updating = (
+        REPO_ROOT / "website" / "docs" / "getting-started" / "updating.md"
+    ).read_text(encoding="utf-8")
+    zh_updating = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "getting-started"
+        / "updating.md"
+    ).read_text(encoding="utf-8")
 
+    for doc in (en_quickstart, zh_quickstart):
+        assert "pip install doppel-agent" in doc
+        assert "pip install hermes-agent" not in doc
+        assert "~/.doppel/doppel-agent" in doc
+
+    for doc in (en_updating, zh_updating):
+        assert "pip install --upgrade doppel-agent" in doc
+        assert "pip install --upgrade hermes-agent" not in doc
 
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

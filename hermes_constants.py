@@ -44,17 +44,18 @@ API_SERVER_SESSION_CHAT_COMPLETION_OBJECT = "hermes.session.chat.completion"
 API_SERVER_RUN_OBJECT = "hermes.run"
 API_SERVER_RUN_APPROVAL_RESPONSE_OBJECT = "hermes.run.approval_response"
 API_SERVER_TOOL_PROGRESS_EVENT = "hermes.tool.progress"
-PACKAGE_DISTRIBUTION_NAME = "hermes-agent"
+PACKAGE_DISTRIBUTION_NAME = "doppel-agent"
 PREFERRED_HOMEBREW_FORMULA_NAME = "doppel-agent"
-HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
+HOMEBREW_FORMULA_NAME = "hermes-agent"
 HOMEBREW_FORMULA_NAMES = (
     PREFERRED_HOMEBREW_FORMULA_NAME,
     HOMEBREW_FORMULA_NAME,
 )
 PREFERRED_NIX_PACKAGE_NAME = "doppel-agent"
+LEGACY_NIX_PACKAGE_NAME = "hermes-agent"
 NIX_PACKAGE_NAMES = (
     PREFERRED_NIX_PACKAGE_NAME,
-    PACKAGE_DISTRIBUTION_NAME,
+    LEGACY_NIX_PACKAGE_NAME,
 )
 DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
 DOCKER_IMAGE_TAGS_URL = f"https://hub.docker.com/r/{DOCKER_IMAGE_NAME}/tags"
@@ -99,6 +100,7 @@ UPSTREAM_REPO_GIT_URLS = frozenset({
     UPSTREAM_REPO_WEB_URL,
     UPSTREAM_REPO_SSH_URL,
 })
+UPSTREAM_ARCHIVE_BASENAME = "hermes-agent"
 MODEL_CATALOG_URL = f"{DOCS_SITE_BASE_URL}/api/model-catalog.json"
 MODEL_CATALOG_DOCS_URL = f"{DOCS_SITE_BASE_URL}/reference/model-catalog"
 MODEL_CATALOG_FALLBACK_URLS = (
@@ -344,7 +346,7 @@ def get_official_repo_urls() -> frozenset[str]:
 
 def get_upstream_extracted_dir_name(branch: str) -> str:
     """Return the extracted top-level directory name for an upstream ZIP."""
-    return f"{get_distribution_package_name()}-{branch}"
+    return f"{UPSTREAM_ARCHIVE_BASENAME}-{branch}"
 
 
 def get_upstream_archive_filename(branch: str) -> str:

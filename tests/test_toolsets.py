@@ -61,6 +61,9 @@ class TestResolveToolset:
         assert "web_search" in tools
         assert "web_extract" in tools
 
+    def test_doppel_acp_alias_resolves_to_legacy_acp_toolset(self):
+        assert resolve_toolset("doppel-acp") == resolve_toolset("hermes-acp")
+
     def test_cycle_detection(self):
         # Create a cycle: A includes B, B includes A
         TOOLSETS["_cycle_a"] = {"description": "test", "tools": ["t1"], "includes": ["_cycle_b"]}

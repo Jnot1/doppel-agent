@@ -37,31 +37,31 @@ description: "与 Hermes Agent 的第一次对话——从安装到开始聊天�
 | 目标 | 先做这步 | 再做这步 |
 |---|---|---|
 | 只想让 Hermes 在本机跑起来 | `hermes setup` | 运行一次真实对话并验证有响应 |
-| 已知道要用哪个 provider | `hermes model` | 保存配置，然后开始聊天 |
-| 想搭建机器人或长期运行的服务 | CLI 正常后运行 `hermes gateway setup` | 接入 Telegram、Discord、Slack 或其他平台 |
-| 想使用本地或自托管模型 | `hermes model` → 自定义 endpoint | 验证 endpoint、模型名称和上下文长度 |
-| 想要多 provider 故障转移 | 先运行 `hermes model` | 基础对话正常后再添加路由和故障转移 |
+| 已知道要用哪个 provider | `doppel model` | 保存配置，然后开始聊天 |
+| 想搭建机器人或长期运行的服务 | CLI 正常后运行 `doppel gateway setup` | 接入 Telegram、Discord、Slack 或其他平台 |
+| 想使用本地或自托管模型 | `doppel model` → 自定义 endpoint | 验证 endpoint、模型名称和上下文长度 |
+| 想要多 provider 故障转移 | 先运行 `doppel model` | 基础对话正常后再添加路由和故障转移 |
 
-**经验法则：** 如果 Hermes 无法完成一次正常对话，暂时不要添加更多功能。先让一次完整对话跑通，再逐步叠加 gateway、cron、skills、语音或路由。
+**经验法则：** 如果 Doppel 无法完成一次正常对话，暂时不要添加更多功能。先让一次完整对话跑通，再逐步叠加 gateway、cron、skills、语音或路由。
 
 ---
 
-## 1. 安装 Hermes Agent
+## 1. 安装 Doppel Agent
 
 **方式 A — pip（最简单）：**
 
 ```bash
-pip install hermes-agent
-hermes postinstall     # 可选：安装 Node.js、浏览器、ripgrep、ffmpeg 并运行 setup
+pip install doppel-agent
+doppel postinstall     # 可选：安装 Node.js、浏览器、ripgrep、ffmpeg 并运行 setup
 ```
 
-PyPI 发布版本跟踪带标签的版本（主/次版本发布），而非 `main` 分支上的每次提交。如需最新代码，请使用方式 B。
+PyPI 发布版本跟踪带标签的版本（主/次版本发布），而非 `main` 分支上的每次提交。已发布包名和 CLI 都采用 Doppel 优先命名。如需最新代码，请使用方式 B。
 
 **方式 B — git 安装器（跟踪 main 分支）：**
 
 ```bash
 # Linux / macOS / WSL2 / Android (Termux)
-curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.sh | bash
 ```
 
 :::tip Android / Termux
@@ -256,9 +256,9 @@ hermes config set terminal.backend ssh       # 远程服务器
 ### 语音模式
 
 ```bash
-# 在 Hermes 安装目录下运行（curl 安装器在 Linux/macOS 上将其放置于
-# ~/.hermes/hermes-agent，在 Windows 上为 %LOCALAPPDATA%\hermes\hermes-agent）：
-cd ~/.hermes/hermes-agent
+# 在 Doppel 安装目录下运行（curl 安装器在 Linux/macOS 上将其放置于
+# ~/.doppel/doppel-agent，在 Windows 上为 %LOCALAPPDATA%\doppel\doppel-agent）：
+cd ~/.doppel/doppel-agent
 uv pip install -e ".[voice]"
 # 包含 faster-whisper，用于免费的本地语音转文字
 ```
@@ -268,8 +268,8 @@ uv pip install -e ".[voice]"
 ### Skills
 
 ```bash
-hermes skills search kubernetes
-hermes skills install openai/skills/k8s
+doppel skills search kubernetes
+doppel skills install openai/skills/k8s
 ```
 
 或在聊天会话中使用 `/skills`。
@@ -277,7 +277,7 @@ hermes skills install openai/skills/k8s
 ### MCP 服务器
 
 ```yaml
-# 添加到 ~/.hermes/config.yaml
+# 添加到 ~/.doppel/config.yaml
 mcp_servers:
   github:
     command: npx
@@ -291,10 +291,10 @@ mcp_servers:
 ACP 支持已包含在标准 `[all]` 扩展中，因此 curl 安装器已默认包含。直接运行：
 
 ```bash
-hermes acp
+doppel acp
 ```
 
-（如果安装时未包含 `[all]`，请先运行 `cd ~/.hermes/hermes-agent && uv pip install -e ".[acp]"`。）
+（如果安装时未包含 `[all]`，请先运行 `cd ~/.doppel/doppel-agent && uv pip install -e ".[acp]"`。）
 
 参阅 [ACP 编辑器集成](../user-guide/features/acp.md)。
 

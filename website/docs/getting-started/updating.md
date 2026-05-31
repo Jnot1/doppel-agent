@@ -24,13 +24,13 @@ PyPI releases track **tagged versions** (major and minor releases), not every co
 
 ```bash
 doppel update --check    # see if a newer release is on PyPI
-doppel update            # runs pip install --upgrade hermes-agent
+doppel update            # runs pip install --upgrade doppel-agent
 ```
 
 Or manually:
 
 ```bash
-pip install --upgrade hermes-agent    # or: uv pip install --upgrade hermes-agent
+pip install --upgrade doppel-agent    # or: uv pip install --upgrade doppel-agent
 ```
 
 :::tip

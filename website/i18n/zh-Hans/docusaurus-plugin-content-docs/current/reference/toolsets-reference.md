@@ -92,7 +92,7 @@ hermes tools                            # curses UI to enable/disable per platfo
 | 工具集 | 与 `hermes-cli` 的差异 |
 |--------|------------------------|
 | `hermes-cli` | 完整工具集——交互式 CLI 会话的默认配置。包含 file、terminal、web、browser、memory、skills、vision、image_gen、todo、tts、delegation、code_execution、cronjob、session_search、clarify 和 `safe`（只读）套件，以及标准消息工具。 |
-| `hermes-acp` | 移除了 `clarify`、`cronjob`、`image_generate`、`send_message`、`text_to_speech` 以及全部四个 Home Assistant 工具。专注于 IDE 环境中的编码任务。 |
+| `doppel-acp` | 移除了 `clarify`、`cronjob`、`image_generate`、`send_message`、`text_to_speech` 以及全部四个 Home Assistant 工具。专注于 IDE 环境中的编码任务。 |
 | `hermes-api-server` | 移除了 `clarify`、`send_message` 和 `text_to_speech`。保留其他所有工具——适用于无法进行用户交互的程序化访问场景。 |
 | `hermes-cron` | 与 `hermes-cli` 相同。 |
 | `hermes-telegram` | 与 `hermes-cli` 相同。 |

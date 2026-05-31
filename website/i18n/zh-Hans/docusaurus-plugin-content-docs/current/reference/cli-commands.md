@@ -605,7 +605,7 @@ doppel debug share --local      # 在终端打印报告（不上传）
 doppel backup [options]
 ```
 
-创建 Doppel 配置、skill、会话和数据的 zip 归档。备份不包含受管的 `hermes-agent` 代码检出本身。
+创建 Doppel 配置、skill、会话和数据的 zip 归档。备份不包含受管的 `doppel-agent` 代码检出本身。
 
 | 选项 | 说明 |
 |--------|-------------|
@@ -619,7 +619,7 @@ doppel backup [options]
 
 - `*.db-wal`、`*.db-shm`、`*.db-journal` — SQLite 的 WAL/共享内存/日志附属文件。`*.db` 文件已通过 `sqlite3.backup()` 获得一致快照；将活跃附属文件一并打包会导致恢复时看到半提交状态。
 - `checkpoints/` — 每会话轨迹缓存。以 hash 为键，每次会话重新生成；无论如何都无法干净地移植到其他安装。
-- 受管的 `hermes-agent` 代码检出本身（这是用户数据备份，不是仓库快照）。
+- 受管的 `doppel-agent` 代码检出本身（这是用户数据备份，不是仓库快照）。
 
 ### 示例
 
@@ -1006,7 +1006,7 @@ doppel acp
 相关入口：
 
 ```bash
-hermes-acp
+doppel-acp
 python -m acp_adapter
 ```
 
@@ -1186,14 +1186,14 @@ doppel claw migrate --source /home/user/old-openclaw
 doppel dashboard [options]
 ```
 
-启动 Web 控制台——基于浏览器的界面，用于管理配置、API 密钥和监控会话。需要 `pip install hermes-agent[web]`（FastAPI + Uvicorn）。内嵌浏览器 Chat 标签页需要 `--tui` 加上 `pty` extra。完整文档请参阅 [Web 控制台](/user-guide/features/web-dashboard)。
+启动 Web 控制台——基于浏览器的界面，用于管理配置、API 密钥和监控会话。需要 `pip install doppel-agent[web]`（FastAPI + Uvicorn）。内嵌浏览器 Chat 标签页需要 `--tui` 加上 `pty` extra。完整文档请参阅 [Web 控制台](/user-guide/features/web-dashboard)。
 
 | 选项 | 默认值 | 说明 |
 |--------|---------|-------------|
 | `--port` | `9119` | Web 服务器运行端口 |
 | `--host` | `127.0.0.1` | 绑定地址 |
 | `--no-open` | — | 不自动打开浏览器 |
-| `--tui` | 关闭 | 通过 PTY/WebSocket 桥接在后台运行 `doppel --tui`，启用浏览器内 Chat 标签页。需要 `pip install 'hermes-agent[web,pty]'` 以及 Linux、macOS 或 WSL2 等 POSIX PTY 环境。 |
+| `--tui` | 关闭 | 通过 PTY/WebSocket 桥接在后台运行 `doppel --tui`，启用浏览器内 Chat 标签页。需要 `pip install 'doppel-agent[web,pty]'` 以及 Linux、macOS 或 WSL2 等 POSIX PTY 环境。 |
 | `--insecure` | 关闭 | 允许绑定到非 localhost 主机。会在网络上暴露控制台凭据；仅在受信任的网络控制下使用。 |
 | `--stop` | — | 停止正在运行的 `doppel dashboard` 进程并退出。 |
 | `--status` | — | 列出正在运行的 `doppel dashboard` 进程并退出。 |
@@ -1275,7 +1275,7 @@ doppel update [--gateway] [--check] [--no-backup] [--backup] [--yes]
 
 拉取最新的受管 Doppel 代码检出并在 venv 中重新安装依赖，然后重新运行安装后 hook（MCP 服务器、skill 同步、补全安装）。可在运行中的安装上安全执行。
 
-**pip 安装：** `doppel update` 会自动检测基于 pip 的安装——查询 PyPI 获取最新版本并运行 `pip install --upgrade hermes-agent`，而非 `git pull`。PyPI 发布跟踪标记版本（主要/次要版本），而非 `main` 上的每个 commit。在这个阶段，包名仍保持为 `hermes-agent`，即使命令行已经是 `doppel`。使用 `--check` 可在不安装的情况下查看是否有更新的 PyPI 版本。
+**pip 安装：** `doppel update` 会自动检测基于 pip 的安装——查询 PyPI 获取最新版本并运行 `pip install --upgrade doppel-agent`，而非 `git pull`。PyPI 发布跟踪标记版本（主要/次要版本），而非 `main` 上的每个 commit。使用 `--check` 可在不安装的情况下查看是否有更新的 PyPI 版本。
 
 | 选项 | 说明 |
 |--------|-------------|
@@ -1298,7 +1298,7 @@ doppel update [--gateway] [--check] [--no-backup] [--backup] [--yes]
 |---------|-------------|
 | `doppel version` | 打印版本信息。 |
 | `doppel update` | 拉取最新变更并重新安装依赖。 |
-| `doppel postinstall` | 内部 bootstrap。会在 `pip install hermes-agent` 后（或基于 pip 的安装执行 `doppel update` 后）运行一次，用于安装 pip 无法提供的非 Python 依赖——Node.js 运行时、headless 浏览器、ripgrep、ffmpeg——然后在 profile 尚未完成配置时触发 `doppel setup`。可安全重复运行。 |
+| `doppel postinstall` | 内部 bootstrap。会在 `pip install doppel-agent` 后（或基于 pip 的安装执行 `doppel update` 后）运行一次，用于安装 pip 无法提供的非 Python 依赖——Node.js 运行时、headless 浏览器、ripgrep、ffmpeg——然后在 profile 尚未完成配置时触发 `doppel setup`。可安全重复运行。 |
 | `doppel uninstall [--full] [--yes]` | 删除 Doppel，可选择删除所有 config/数据。 |
 
 ## 另请参阅

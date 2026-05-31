@@ -359,8 +359,8 @@ def stamp_install_method(method: str) -> None:
 def is_uv_tool_install() -> bool:
     """Return True when the *running* Hermes lives in a ``uv tool`` layout.
 
-    ``uv tool install hermes-agent`` places the install at
-    ``.../uv/tools/hermes-agent/...`` (default ``~/.local/share/uv/tools``,
+    ``uv tool install doppel-agent`` places the install at
+    ``.../uv/tools/doppel-agent/...`` (default ``~/.local/share/uv/tools``,
     or ``$UV_TOOL_DIR/...``). Such installs live outside any virtualenv, so
     ``uv pip install`` fails with ``No virtual environment found`` and the
     update path must use ``uv tool upgrade`` instead.
@@ -368,7 +368,7 @@ def is_uv_tool_install() -> bool:
     Detection is intentionally restricted to properties of the running
     interpreter (``sys.prefix`` / ``sys.executable``). We deliberately do
     NOT consult ``uv tool list``: it would also return True when
-    ``hermes-agent`` happens to be uv-tool-installed on the machine while
+        ``doppel-agent`` happens to be uv-tool-installed on the machine while
     the *active* Hermes is a regular pip/venv install, causing
     ``hermes update`` to upgrade the wrong copy. It would also block on a
     subprocess call (~seconds) just to compute a recommendation string.

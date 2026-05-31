@@ -24,13 +24,13 @@ PyPI 发布版本跟踪**带标签的版本**（主版本和次版本发布）�
 
 ```bash
 doppel update --check    # 查看 PyPI 上是否有更新的版本
-doppel update            # 执行 pip install --upgrade hermes-agent
+doppel update            # 执行 pip install --upgrade doppel-agent
 ```
 
 或手动执行：
 
 ```bash
-pip install --upgrade hermes-agent    # 或：uv pip install --upgrade hermes-agent
+pip install --upgrade doppel-agent    # 或：uv pip install --upgrade doppel-agent
 ```
 
 :::tip

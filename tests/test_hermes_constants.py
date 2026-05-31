@@ -340,7 +340,7 @@ class TestDistributionIdentity:
         assert get_api_server_model_owner() == "doppel"
 
     def test_package_distribution_name(self):
-        assert get_distribution_package_name() == "hermes-agent"
+        assert get_distribution_package_name() == "doppel-agent"
 
     def test_homebrew_formula_name(self):
         assert get_homebrew_formula_name() == "hermes-agent"

@@ -14,7 +14,7 @@ Doppel Agent 支持在 CLI 和消息平台上进行完整的语音交互。通�
 
 使用语音功能前，请确保已完成以下准备：
 
-1. **已安装 Doppel Agent** — 当前发布的包名仍为 `hermes-agent`，因此请使用 `pip install hermes-agent` 安装（参见 [安装](/getting-started/installation)）
+1. **已安装 Doppel Agent** — 请使用 `pip install doppel-agent` 安装（参见 [安装](/getting-started/installation)）
 2. **已配置 LLM 提供商** — 运行 `doppel model`，或在 `~/.doppel/.env` 中设置首选提供商的凭据（legacy 安装仍可能将同样的文件保留在 `~/.hermes/.env` 下）
 3. **基础设置正常** — 运行 `doppel` 验证 Agent 能够响应文字消息，再启用语音功能
 

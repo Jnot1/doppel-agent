@@ -19,7 +19,7 @@ ACP is a good fit when you want Doppel Agent to behave like an editor-native cod
 
 ## What Doppel Agent exposes in ACP mode
 
-Doppel Agent runs with a curated `hermes-acp` toolset designed for editor workflows. It includes:
+Doppel Agent runs with a curated `doppel-acp` toolset designed for editor workflows. It includes:
 
 - file tools: `read_file`, `write_file`, `patch`, `search_files`
 - terminal tools: `terminal`, `process`
@@ -42,13 +42,13 @@ pip install -e '.[acp]'
 This installs the `agent-client-protocol` dependency and enables:
 
 - `doppel acp`
-- `hermes-acp`
+- `doppel-acp`
 - `python -m acp_adapter`
 
 For Zed registry installs, Zed currently launches Doppel Agent through the official ACP Registry entry. That entry still uses a `uvx` distribution that runs:
 
 ```bash
-uvx --from 'hermes-agent[acp]==<version>' hermes-acp
+uvx --from 'doppel-agent[acp]==<version>' doppel-acp
 ```
 
 Make sure `uv` is available on `PATH` before using the registry install path.
@@ -59,13 +59,6 @@ Any of the following starts Doppel Agent in ACP mode:
 
 ```bash
 doppel acp
-```
-
-```bash
-hermes-acp
-```
-
-```bash
 python -m acp_adapter
 ```
 
@@ -111,7 +104,7 @@ To connect:
 2. Select the ACP agent entry for Doppel Agent.
 3. Connect and start chatting.
 
-If your ACP client still shows the legacy built-in label, look for **Hermes Agent**. To define Doppel Agent manually, add it through VS Code settings under `acp.agents`:
+To define Doppel Agent manually, add it through VS Code settings under `acp.agents`:
 
 ```json
 {
@@ -130,13 +123,13 @@ Zed v0.221.x and newer installs external agents through the official ACP Registr
 
 1. Open the Agent Panel.
 2. Click **Add Agent**, or run the `zed: acp registry` command.
-3. Search for **Hermes Agent** (the current ACP Registry entry name).
+3. Search for **Doppel Agent**.
 4. Install it and start a new Doppel Agent external-agent thread.
 
 Prerequisites:
 
 - Configure Doppel Agent provider credentials first with `doppel model`, or set them in `~/.doppel/.env` / `~/.doppel/config.yaml`.
-- Install `uv` so the registry launcher can run `uvx --from 'hermes-agent[acp]==<version>' hermes-acp`.
+- Install `uv` so the registry launcher can run `uvx --from 'doppel-agent[acp]==<version>' doppel-acp`.
 
 For local development before the registry entry is available, use a custom agent server in Zed settings:
 
@@ -169,12 +162,12 @@ acp_registry/agent.json
 acp_registry/icon.svg
 ```
 
-The upstream registry PR currently copies those files into the top-level legacy `hermes-agent/` directory in `agentclientprotocol/registry`.
+The upstream registry PR currently copies those files into `agentclientprotocol/registry`.
 
-The registry entry currently uses a `uvx` distribution that points directly at the legacy `hermes-agent` PyPI release:
+The registry entry currently uses a `uvx` distribution that points directly at the Doppel ACP package:
 
 ```text
-uvx --from 'hermes-agent[acp]==<version>' hermes-acp
+uvx --from 'doppel-agent[acp]==<version>' doppel-acp
 ```
 
 The registry CI verifies that the pinned version exists on PyPI, so the manifest's `version` and uvx `package` pin must always match `pyproject.toml`. `scripts/release.py` keeps them in lockstep automatically.

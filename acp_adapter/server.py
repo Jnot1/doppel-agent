@@ -1,4 +1,4 @@
-"""ACP agent server — exposes Hermes Agent via the Agent Client Protocol."""
+"""ACP agent server — exposes Doppel Agent via the Agent Client Protocol."""
 
 from __future__ import annotations
 
@@ -151,7 +151,7 @@ def _path_from_file_uri(uri: str) -> Path | None:
 
     Zed may send POSIX file URIs from Linux/WSL workspaces or Windows-ish paths
     when launched through wsl.exe. Translate the common Windows drive form to
-    /mnt/<drive>/... so Hermes running in WSL can read it.
+    /mnt/<drive>/... so Doppel running in WSL can read it.
     """
     raw = (uri or "").strip()
     if not raw:
@@ -232,7 +232,7 @@ def _resource_link_to_parts(block: ResourceContentBlock) -> list[dict[str, Any]]
                 uri=uri,
                 name=name,
                 title=title,
-                body="[Resource link only; Hermes cannot read non-file ACP resource URIs directly.]",
+                body="[Resource link only; Doppel cannot read non-file ACP resource URIs directly.]",
             ),
         }]
 
@@ -788,7 +788,7 @@ class HermesACPAgent(acp.Agent):
             from model_tools import get_tool_definitions
 
             enabled_toolsets = _expand_acp_enabled_toolsets(
-                getattr(state.agent, "enabled_toolsets", None) or ["hermes-acp"],
+                getattr(state.agent, "enabled_toolsets", None) or ["doppel-acp"],
                 mcp_server_names=[server.name for server in mcp_servers],
             )
             state.agent.enabled_toolsets = enabled_toolsets
@@ -839,7 +839,7 @@ class HermesACPAgent(acp.Agent):
 
         return InitializeResponse(
             protocol_version=acp.PROTOCOL_VERSION,
-            agent_info=Implementation(name="hermes-agent", version=HERMES_VERSION),
+            agent_info=Implementation(name="doppel-agent", version=HERMES_VERSION),
             agent_capabilities=AgentCapabilities(
                 load_session=True,
                 prompt_capabilities=PromptCapabilities(image=True),
@@ -1690,7 +1690,7 @@ class HermesACPAgent(acp.Agent):
         try:
             from model_tools import get_tool_definitions
             toolsets = _expand_acp_enabled_toolsets(
-                getattr(state.agent, "enabled_toolsets", None) or ["hermes-acp"]
+                getattr(state.agent, "enabled_toolsets", None) or ["doppel-acp"]
             )
             tools = get_tool_definitions(enabled_toolsets=toolsets, quiet_mode=True)
             if not tools:
@@ -1875,7 +1875,7 @@ class HermesACPAgent(acp.Agent):
         return f"Queued for the next turn. ({depth} queued)"
 
     def _cmd_version(self, args: str, state: SessionState) -> str:
-        return f"Hermes Agent v{HERMES_VERSION}"
+        return f"Doppel Agent v{HERMES_VERSION}"
 
     # ---- Model switching (ACP protocol method) -------------------------------
 

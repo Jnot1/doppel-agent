@@ -14,7 +14,7 @@ If you want a practical setup walkthrough with recommended configurations and re
 
 Before using voice features, make sure you have:
 
-1. **Doppel Agent installed** — the current published package is still `hermes-agent`, so install with `pip install hermes-agent` (see [Installation](/getting-started/installation))
+1. **Doppel Agent installed** — install with `pip install doppel-agent` (see [Installation](/getting-started/installation))
 2. **An LLM provider configured** — run `doppel model` or set your preferred provider credentials in `~/.doppel/.env` (legacy installs may still keep the same file in `~/.hermes/.env`)
 3. **A working base setup** — run `doppel` to verify the agent responds to text before enabling voice
 

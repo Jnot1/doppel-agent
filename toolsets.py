@@ -344,6 +344,12 @@ TOOLSETS = {
     # which is gated on gateway running via its check_fn).
     # ==========================================================================
 
+    "doppel-acp": {
+        "description": "Editor integration (VS Code, Zed, JetBrains) — coding-focused tools without messaging, audio, or clarify UI",
+        "tools": [],
+        "includes": ["hermes-acp"],
+    },
+
     "hermes-acp": {
         "description": "Editor integration (VS Code, Zed, JetBrains) — coding-focused tools without messaging, audio, or clarify UI",
         "tools": [

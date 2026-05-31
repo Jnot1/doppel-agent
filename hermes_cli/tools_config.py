@@ -1297,6 +1297,7 @@ def _get_platform_tools(
         claimed.update(resolve_toolset(ts_key))
     skip = configurable_keys | plugin_ts_keys | platform_default_keys
     skip |= {k for k in TOOLSETS if k.startswith("hermes-")}
+    skip |= {"doppel-acp"}
     skip |= set(_DEFAULT_OFF_TOOLSETS) - {platform}
     for ts_key, ts_def in TOOLSETS.items():
         if ts_key in skip:

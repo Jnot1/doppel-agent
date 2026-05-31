@@ -19,7 +19,7 @@ Doppel Agent 可作为 ACP 服务器运行，让兼容 ACP 的编辑器通过 st
 
 ## Doppel Agent 在 ACP 模式下暴露的内容
 
-Doppel Agent 使用专为编辑器工作流设计的精选 `hermes-acp` 工具集运行，包括：
+Doppel Agent 使用专为编辑器工作流设计的精选 `doppel-acp` 工具集运行，包括：
 
 - 文件工具：`read_file`、`write_file`、`patch`、`search_files`
 - 终端工具：`terminal`、`process`
@@ -42,13 +42,13 @@ pip install -e '.[acp]'
 这将安装 `agent-client-protocol` 依赖并启用：
 
 - `doppel acp`
-- `hermes-acp`
+- `doppel-acp`
 - `python -m acp_adapter`
 
 对于 Zed registry 安装，Zed 当前通过官方 ACP Registry 条目启动 Doppel Agent。该条目仍使用 `uvx` 发行版运行：
 
 ```bash
-uvx --from 'hermes-agent[acp]==<version>' hermes-acp
+uvx --from 'doppel-agent[acp]==<version>' doppel-acp
 ```
 
 使用 registry 安装路径前，请确保 `uv` 已在 `PATH` 中可用。
@@ -59,13 +59,6 @@ uvx --from 'hermes-agent[acp]==<version>' hermes-acp
 
 ```bash
 doppel acp
-```
-
-```bash
-hermes-acp
-```
-
-```bash
 python -m acp_adapter
 ```
 
@@ -109,7 +102,7 @@ doppel acp --setup-browser --yes     # 非交互式接受下载
 2. 选择 Doppel Agent 的 ACP agent 条目。
 3. 连接并开始聊天。
 
-如果你的 ACP 客户端仍显示旧的内置标签，请查找 **Hermes Agent**。如需手动定义 Doppel Agent，通过 VS Code 设置在 `acp.agents` 下添加：
+如需手动定义 Doppel Agent，通过 VS Code 设置在 `acp.agents` 下添加：
 
 ```json
 {
@@ -128,13 +121,13 @@ Zed v0.221.x 及更新版本通过官方 ACP Registry 安装外部 agent。
 
 1. 打开 Agent 面板。
 2. 点击 **Add Agent**，或运行 `zed: acp registry` 命令。
-3. 搜索 **Hermes Agent**（当前 ACP Registry 条目名称）。
+3. 搜索 **Doppel Agent**。
 4. 安装后启动新的 Doppel Agent 外部 agent 线程。
 
 前提条件：
 
 - 先通过 `doppel model` 配置 Doppel Agent provider 凭据，或在 `~/.doppel/.env` / `~/.doppel/config.yaml` 中设置。
-- 安装 `uv`，以便 registry 启动器可以运行 `uvx --from 'hermes-agent[acp]==<version>' hermes-acp`。
+- 安装 `uv`，以便 registry 启动器可以运行 `uvx --from 'doppel-agent[acp]==<version>' doppel-acp`。
 
 在 registry 条目可用之前进行本地开发时，在 Zed 设置中使用自定义 agent 服务器：
 
@@ -167,12 +160,12 @@ acp_registry/agent.json
 acp_registry/icon.svg
 ```
 
-上游 registry PR 当前将这些文件复制到 `agentclientprotocol/registry` 中带有旧命名的顶层 `hermes-agent/` 目录。
+上游 registry PR 当前将这些文件复制到 `agentclientprotocol/registry` 中。
 
-Registry 条目当前使用直接指向旧版 `hermes-agent` PyPI 发行版的 `uvx` 发行版：
+Registry 条目当前使用直接指向 Doppel ACP 包的 `uvx` 发行版：
 
 ```text
-uvx --from 'hermes-agent[acp]==<version>' hermes-acp
+uvx --from 'doppel-agent[acp]==<version>' doppel-acp
 ```
 
 Registry CI 会验证固定版本是否存在于 PyPI，因此清单的 `version` 和 uvx `package` 固定版本必须始终与 `pyproject.toml` 匹配。`scripts/release.py` 会自动保持它们同步。

@@ -36,7 +36,7 @@ def test_recommended_update_command_pip():
     cmd = recommended_update_command_for_method("pip")
     assert "pip install" in cmd or "uv pip install" in cmd
     assert "--upgrade" in cmd
-    assert "hermes-agent" in cmd
+    assert "doppel-agent" in cmd
 
 
 def test_recommended_update_command_pip_uses_shared_distribution_name(monkeypatch):

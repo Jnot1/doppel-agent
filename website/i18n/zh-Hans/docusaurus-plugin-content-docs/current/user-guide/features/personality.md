@@ -21,22 +21,10 @@ Doppel Agent 现在会自动在以下位置生成默认的 `SOUL.md`：
 ~/.doppel/SOUL.md
 ```
 
-已经部署在 `~/.hermes/` 下的 legacy 安装会继续使用：
-
-```text
-~/.hermes/SOUL.md
-```
-
 更准确地说，它使用当前实例解析后的 home 根目录，因此如果你以自定义主目录运行 Doppel Agent，它将使用：
 
 ```text
 $DOPPEL_HOME/SOUL.md
-```
-
-legacy `HERMES_HOME` 也仍然可用：
-
-```text
-$HERMES_HOME/SOUL.md
 ```
 
 ### 重要行为
@@ -44,7 +32,7 @@ $HERMES_HOME/SOUL.md
 - **SOUL.md 是 Agent 的主要身份标识。** 它占据系统提示词的第 1 个槽位，替代硬编码的默认身份。
 - 如果 `SOUL.md` 尚不存在，Doppel Agent 会自动创建一个初始文件
 - 已有的用户 `SOUL.md` 文件不会被覆盖
-- Doppel Agent 仅从解析后的 home 根目录加载 `SOUL.md`，优先使用 `DOPPEL_HOME`，同时保留 legacy `HERMES_HOME` 支持
+- Doppel Agent 仅从解析后的 home 根目录加载 `SOUL.md`
 - Doppel Agent 不会在当前工作目录中查找 `SOUL.md`
 - 如果 `SOUL.md` 存在但为空，或无法加载，Doppel Agent 将回退到内置的默认身份
 - 如果 `SOUL.md` 有内容，该内容在经过安全扫描和截断处理后将原样注入
@@ -60,7 +48,6 @@ $HERMES_HOME/SOUL.md
 
 这也让用户更容易理解：
 - "编辑 `~/.doppel/SOUL.md` 来更改 Doppel Agent 的默认个性。"
-- "legacy 安装仍可能解析到 `~/.hermes/SOUL.md`。"
 
 ## 编辑位置
 
@@ -74,18 +61,6 @@ $HERMES_HOME/SOUL.md
 
 ```bash
 $DOPPEL_HOME/SOUL.md
-```
-
-legacy 安装仍可能解析到：
-
-```bash
-~/.hermes/SOUL.md
-```
-
-legacy 自定义主目录仍可能解析到：
-
-```bash
-$HERMES_HOME/SOUL.md
 ```
 
 ## SOUL.md 应该写什么？
@@ -236,7 +211,7 @@ Doppel Agent 内置了多种个性，可通过 `/personality` 切换。
 
 ## 在配置中定义自定义个性
 
-你也可以在 `~/.doppel/config.yaml` 的 `agent.personalities` 下定义命名的自定义个性。legacy 安装仍可能使用 `~/.hermes/config.yaml`。
+你也可以在 `~/.doppel/config.yaml` 的 `agent.personalities` 下定义命名的自定义个性。
 
 ```yaml
 agent:

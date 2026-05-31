@@ -21,22 +21,10 @@ Doppel Agent now seeds a default `SOUL.md` automatically in:
 ~/.doppel/SOUL.md
 ```
 
-Legacy installs that already live under `~/.hermes/` keep using:
-
-```text
-~/.hermes/SOUL.md
-```
-
 More precisely, it uses the current instance's resolved home root, so if you run Doppel Agent with a custom home directory, it will use:
 
 ```text
 $DOPPEL_HOME/SOUL.md
-```
-
-Legacy `HERMES_HOME` also continues to work:
-
-```text
-$HERMES_HOME/SOUL.md
 ```
 
 ### Important behavior
@@ -44,7 +32,7 @@ $HERMES_HOME/SOUL.md
 - **SOUL.md is the agent's primary identity.** It occupies slot #1 in the system prompt, replacing the hardcoded default identity.
 - Doppel Agent creates a starter `SOUL.md` automatically if one does not exist yet
 - Existing user `SOUL.md` files are never overwritten
-- Doppel Agent loads `SOUL.md` only from its resolved home root, preferring `DOPPEL_HOME` while keeping legacy `HERMES_HOME` support
+- Doppel Agent loads `SOUL.md` only from its resolved home root
 - Doppel Agent does not look in the current working directory for `SOUL.md`
 - If `SOUL.md` exists but is empty, or cannot be loaded, Doppel Agent falls back to a built-in default identity
 - If `SOUL.md` has content, that content is injected verbatim after security scanning and truncation
@@ -60,7 +48,6 @@ If Doppel Agent loaded `SOUL.md` from whatever directory you happened to launch 
 
 That also makes it easier to teach users:
 - "Edit `~/.doppel/SOUL.md` to change Doppel Agent's default personality."
-- "Legacy installs may still resolve to `~/.hermes/SOUL.md`."
 
 ## Where to edit it
 
@@ -74,18 +61,6 @@ If you use a custom home:
 
 ```bash
 $DOPPEL_HOME/SOUL.md
-```
-
-Legacy installs can still resolve to:
-
-```bash
-~/.hermes/SOUL.md
-```
-
-Legacy custom homes can still resolve to:
-
-```bash
-$HERMES_HOME/SOUL.md
 ```
 
 ## What should go in SOUL.md?
@@ -236,7 +211,7 @@ These are convenient overlays, but your global `SOUL.md` still gives Doppel Agen
 
 ## Custom personalities in config
 
-You can also define named custom personalities in `~/.doppel/config.yaml` under `agent.personalities`. Legacy installs may still use `~/.hermes/config.yaml`.
+You can also define named custom personalities in `~/.doppel/config.yaml` under `agent.personalities`.
 
 ```yaml
 agent:

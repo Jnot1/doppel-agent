@@ -2170,8 +2170,10 @@ def test_context_files_and_soul_guide_prefer_doppel_surfaces_but_keep_literals()
     assert "~/.doppel/SOUL.md" in zh_context
     assert "DOPPEL_HOME" in en_context
     assert "DOPPEL_HOME" in zh_context
-    assert "HERMES_HOME" in en_context
-    assert "HERMES_HOME" in zh_context
+    assert "~/.hermes/SOUL.md" not in en_context
+    assert "~/.hermes/SOUL.md" not in zh_context
+    assert "HERMES_HOME" not in en_context
+    assert "HERMES_HOME" not in zh_context
     assert ".hermes.md" in en_context
     assert ".hermes.md" in zh_context
     assert "HERMES.md" in en_context
@@ -2224,7 +2226,7 @@ def test_context_files_and_soul_guide_prefer_doppel_surfaces_but_keep_literals()
     assert "$HERMES_HOME/SOUL.md" not in zh_soul
 
 
-def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
+def test_personality_feature_docs_prefer_doppel_surfaces():
     en = EN_PERSONALITY_DOC.read_text(encoding="utf-8")
     zh = ZH_PERSONALITY_DOC.read_text(encoding="utf-8")
 
@@ -2245,7 +2247,6 @@ def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
     assert "affect how Doppel Agent speaks" in en
     assert "影响 Doppel Agent 的说话方式" in zh
 
-    assert "HERMES_HOME" in en and "HERMES_HOME" in zh
     assert "/guides/use-soul-with-doppel-agent" in en
     assert "/guides/use-soul-with-doppel-agent" in zh
     assert "/guides/use-soul-with-hermes" not in en
@@ -2253,8 +2254,14 @@ def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
     assert "/personality" in en and "/personality" in zh
     assert "You are Doppel Agent, an intelligent AI assistant created by Nous Research..." in en
     assert "You are Doppel Agent, an intelligent AI assistant created by Nous Research..." in zh
-    assert "~/.hermes/config.yaml" in en
-    assert "~/.hermes/config.yaml" in zh
+    assert "~/.hermes/SOUL.md" not in en
+    assert "~/.hermes/SOUL.md" not in zh
+    assert "$HERMES_HOME/SOUL.md" not in en
+    assert "$HERMES_HOME/SOUL.md" not in zh
+    assert "HERMES_HOME" not in en
+    assert "HERMES_HOME" not in zh
+    assert "~/.hermes/config.yaml" not in en
+    assert "~/.hermes/config.yaml" not in zh
     assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." not in en
     assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." not in zh
 

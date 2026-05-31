@@ -6,7 +6,7 @@ description: "Project context files — .hermes.md, AGENTS.md, CLAUDE.md, global
 
 # Context Files
 
-Doppel Agent automatically discovers and loads context files that shape how it behaves. Some are project-local and discovered from your working directory. `SOUL.md` is now global to the current Doppel Agent instance and is loaded only from the resolved home root, preferring `DOPPEL_HOME` while keeping legacy `HERMES_HOME` support.
+Doppel Agent automatically discovers and loads context files that shape how it behaves. Some are project-local and discovered from your working directory. `SOUL.md` is now global to the current Doppel Agent instance and is loaded only from the resolved home root.
 
 ## Supported Context Files
 
@@ -15,7 +15,7 @@ Doppel Agent automatically discovers and loads context files that shape how it b
 | **.hermes.md** / **HERMES.md** | Project instructions (highest priority) | Walks to git root |
 | **AGENTS.md** | Project instructions, conventions, architecture | CWD at startup + subdirectories progressively |
 | **CLAUDE.md** | Claude Code context files (also detected) | CWD at startup + subdirectories progressively |
-| **SOUL.md** | Global personality and tone customization for this Doppel Agent instance | Resolved home root only (`DOPPEL_HOME` / legacy `HERMES_HOME`) |
+| **SOUL.md** | Global personality and tone customization for this Doppel Agent instance | Resolved home root only (`~/.doppel/` by default or `$DOPPEL_HOME`) |
 | **.cursorrules** | Cursor IDE coding conventions | CWD only |
 | **.cursor/rules/*.mdc** | Cursor IDE rule modules | CWD only |
 
@@ -84,13 +84,12 @@ This is a Next.js 14 web application with a Python FastAPI backend.
 **Location:**
 
 - `~/.doppel/SOUL.md` (preferred default)
-- `~/.hermes/SOUL.md` (legacy installs preserved in place)
-- or `$DOPPEL_HOME/SOUL.md` / legacy `$HERMES_HOME/SOUL.md` if you run Doppel Agent with a custom home directory
+- or `$DOPPEL_HOME/SOUL.md` if you run Doppel Agent with a custom home directory
 
 Important details:
 
 - Doppel Agent seeds a default `SOUL.md` automatically if one does not exist yet
-- Doppel Agent loads `SOUL.md` only from the resolved home root (`DOPPEL_HOME` first, legacy `HERMES_HOME` still works)
+- Doppel Agent loads `SOUL.md` only from the resolved home root
 - Doppel Agent does not probe the working directory for `SOUL.md`
 - If the file is empty, nothing from `SOUL.md` is added to the prompt
 - If the file has content, the content is injected verbatim after scanning and truncation

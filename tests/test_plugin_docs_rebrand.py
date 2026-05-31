@@ -3383,6 +3383,47 @@ def test_skills_hub_front_door_and_catalog_routes_prefer_doppel_wording():
         assert old_route not in zh_catalog
 
 
+def test_user_stories_page_and_docs_categories_prefer_doppel_front_door_wording():
+    en_user_stories = (
+        REPO_ROOT / "website" / "docs" / "user-stories.mdx"
+    ).read_text(encoding="utf-8")
+    zh_user_stories = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-stories.mdx"
+    ).read_text(encoding="utf-8")
+    getting_started_category = (
+        REPO_ROOT / "website" / "docs" / "getting-started" / "_category_.json"
+    ).read_text(encoding="utf-8")
+    user_guide_category = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "_category_.json"
+    ).read_text(encoding="utf-8")
+    features_category = (
+        REPO_ROOT
+        / "website"
+        / "docs"
+        / "user-guide"
+        / "features"
+        / "_category_.json"
+    ).read_text(encoding="utf-8")
+
+    assert "Real stories from the Doppel Agent community" in en_user_stories
+    assert "Real stories from the Hermes Agent community" not in en_user_stories
+    assert "来自 Doppel Agent 社区的真实故事" in zh_user_stories
+    assert "来自 Hermes Agent 社区的真实故事" not in zh_user_stories
+
+    assert "Get up and running with Doppel Agent in minutes." in getting_started_category
+    assert "Get up and running with Hermes Agent in minutes." not in getting_started_category
+    assert "Learn how to use Doppel Agent effectively." in user_guide_category
+    assert "Learn how to use Hermes Agent effectively." not in user_guide_category
+    assert "Explore the powerful features of Doppel Agent." in features_category
+    assert "Explore the powerful features of Hermes Agent." not in features_category
+
+
 def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_sections():
     zh_cli_commands = (
         REPO_ROOT

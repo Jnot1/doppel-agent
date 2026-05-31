@@ -2,7 +2,7 @@
 """
 Code Execution Tool -- Programmatic Tool Calling (PTC)
 
-Lets the LLM write a Python script that calls Hermes tools via RPC,
+Lets the LLM write a Python script that calls Doppel Agent tools via RPC,
 collapsing multi-step tool chains into a single inference turn.
 
 Architecture (two transports):
@@ -24,8 +24,9 @@ Architecture (two transports):
 In both cases, only the script's stdout is returned to the LLM; intermediate
 tool results never enter the context window.
 
-Platform: Linux / macOS only (Unix domain sockets for local). Disabled on Windows.
-Remote execution additionally requires Python 3 in the terminal backend.
+Platform: local execution uses UDS on Linux/macOS and loopback TCP on Windows.
+Remote execution additionally requires Python 3 in the terminal backend and
+uses file-based RPC.
 """
 
 import base64
@@ -198,7 +199,7 @@ def _scrub_child_env(source_env, is_passthrough=None, is_windows=None):
 
 
 def check_sandbox_requirements() -> bool:
-    """Code execution sandbox requires a POSIX OS for Unix domain sockets."""
+    """Code execution is available wherever Hermes runs; local transport varies by OS."""
     if not SANDBOX_AVAILABLE:
         return False
     return True

@@ -113,6 +113,7 @@ EN_VOICE_MODE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" /
 EN_HONCHO_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "honcho.md"
 EN_MEMORY_PROVIDERS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "memory-providers.md"
 EN_LSP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "lsp.md"
+EN_CODE_EXECUTION_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "code-execution.md"
 EN_COMPUTER_USE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "computer-use.md"
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
@@ -411,6 +412,17 @@ ZH_LSP_DOC = (
     / "user-guide"
     / "features"
     / "lsp.md"
+)
+ZH_CODE_EXECUTION_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "code-execution.md"
 )
 ZH_COMPUTER_USE_DOC = (
     REPO_ROOT
@@ -2346,6 +2358,61 @@ def test_lsp_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "`hermes lsp install typescript`" not in zh
     assert "`<HERMES_HOME>/lsp/node_modules/`" not in en
     assert "`<HERMES_HOME>/lsp/node_modules/`" not in zh
+
+
+def test_code_execution_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_CODE_EXECUTION_DOC.read_text(encoding="utf-8")
+    zh = ZH_CODE_EXECUTION_DOC.read_text(encoding="utf-8")
+
+    assert "call Doppel Agent tools programmatically" in en
+    assert "调用 Doppel Agent 工具的 Python 脚本" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/logs/agent.log" in en
+    assert "~/.doppel/logs/agent.log" in zh
+    assert "`doppel logs --level DEBUG`" in en
+    assert "`doppel logs --level DEBUG`" in zh
+    assert "loopback TCP on **Windows**" in en
+    assert "在 **Windows** 上使用回环 TCP" in zh
+    assert "file-based RPC" in en
+    assert "基于文件的 RPC" in zh
+    assert "`background`, `pty`, `notify_on_complete`, and `watch_patterns`" in en
+    assert "`background`、`pty`、`notify_on_complete` 和 `watch_patterns`" in zh
+    assert "[OUTPUT TRUNCATED - X chars omitted out of Y total]" in en
+    assert "[OUTPUT TRUNCATED - X chars omitted out of Y total]" in zh
+
+    for fixed in (
+        "execute_code",
+        "terminal()",
+        "from hermes_tools import",
+        "hermes_tools.py",
+        "handle_function_call",
+        "HERMES_HOME",
+        "HERMES_PROFILE",
+        "HERMES_CONFIG",
+        "HERMES_ENV",
+        "HERMES_RPC_DIR",
+        "HERMES_RPC_SOCKET",
+        "HERMES_KANBAN_DB",
+        "HERMES_BASE_URL",
+        "~/.hermes/config.yaml",
+        "~/.hermes/logs/agent.log",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "call Hermes tools programmatically" not in en
+    assert "调用 Hermes 工具的 Python 脚本" not in zh
+    assert "Hermes generates a `hermes_tools.py` stub module" not in en
+    assert "Hermes 生成带有 RPC 函数的 `hermes_tools.py` 存根模块" not in zh
+    assert "Hermes always writes the script" not in en
+    assert "Hermes 始终将脚本和自动生成的 `hermes_tools.py` RPC 存根写入临时暂存目录" not in zh
+    assert "`hermes logs --level\nDEBUG`" not in en
+    assert "`hermes logs --level DEBUG`" not in en
+    assert "`hermes logs --level DEBUG`" not in zh
+    assert "Unix domain sockets and is available on **Linux and macOS only**" not in en
+    assert "仅在 **Linux 和 macOS** 上可用。在 Windows 上会自动禁用" not in zh
+    assert "[output truncated at 50KB]" not in en
+    assert "[output truncated at 50KB]" not in zh
 
 
 def test_computer_use_docs_prefer_doppel_surfaces_and_keep_runtime_literals():

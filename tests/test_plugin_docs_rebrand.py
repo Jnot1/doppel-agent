@@ -5428,6 +5428,72 @@ def test_memory_docs_prefer_doppel_customer_facing_surfaces():
         assert unexpected not in zh
 
 
+def test_deliverable_mode_docs_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT
+        / "website"
+        / "docs"
+        / "user-guide"
+        / "features"
+        / "deliverable-mode.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "deliverable-mode.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "When Doppel Agent runs inside a messaging gateway",
+        "persona in `~/.doppel/SOUL.md`",
+        "`agent.personalities` in `~/.doppel/config.yaml`",
+        "If you use Doppel Agent's kanban multi-agent workflow",
+        "Install MCP servers via `~/.doppel/config.yaml` under the `mcp_servers`",
+        "Doppel Agent's deliverable",
+        "`~/.doppel/auth.json` / `~/.doppel/.env`",
+    ):
+        assert expected in en
+
+    for unexpected in (
+        "When Hermes Agent runs inside a messaging gateway",
+        "persona in `~/.hermes/SOUL.md`",
+        "`agent.personalities` in `~/.hermes/config.yaml`",
+        "If you use Hermes' kanban multi-agent workflow",
+        "Install MCP servers via `~/.hermes/config.yaml` under the `mcp_servers`",
+        "Hermes Agent's deliverable",
+        "`auth.json` / `.env`",
+    ):
+        assert unexpected not in en
+
+    for expected in (
+        "当 Doppel Agent 在消息 gateway",
+        "`~/.doppel/SOUL.md` 中的全局 persona",
+        "`~/.doppel/config.yaml` 的 `agent.personalities`",
+        "如果使用 Doppel Agent 的 kanban（看板）多 agent 工作流",
+        "通过 `~/.doppel/config.yaml` 中的 `mcp_servers` 部分安装 MCP 服务器。",
+        "Doppel Agent 的可交付成果模式",
+        "`~/.doppel/auth.json` / `~/.doppel/.env`",
+    ):
+        assert expected in zh
+
+    for unexpected in (
+        "当 Hermes Agent 在消息 gateway",
+        "`~/.hermes/config.yaml` 中 `agent.custom_instructions`",
+        "`~/.hermes/SOUL.md`",
+        "如果使用 Hermes 的 kanban（看板）多 agent 工作流",
+        "通过 `~/.hermes/config.yaml` 中的 `mcp_servers` 部分安装 MCP 服务器。",
+        "Hermes Agent 的可交付成果模式",
+        "`auth.json` / `.env`",
+    ):
+        assert unexpected not in zh
+
+
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
     zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

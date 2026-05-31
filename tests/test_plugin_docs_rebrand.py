@@ -65,12 +65,16 @@ EN_ADDING_TOOLS_DOC = EN_DEV_GUIDE_DIR / "adding-tools.md"
 EN_CONTRIBUTING_DOC = EN_DEV_GUIDE_DIR / "contributing.md"
 EN_GATEWAY_INTERNALS_DOC = EN_DEV_GUIDE_DIR / "gateway-internals.md"
 EN_CONTEXT_COMPRESSION_DOC = EN_DEV_GUIDE_DIR / "context-compression-and-caching.md"
+EN_ADDING_PLATFORM_ADAPTERS_DOC = EN_DEV_GUIDE_DIR / "adding-platform-adapters.md"
+EN_CREATING_SKILLS_DOC = EN_DEV_GUIDE_DIR / "creating-skills.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
 ZH_CONTRIBUTING_DOC = ZH_DEV_GUIDE_DIR / "contributing.md"
 ZH_GATEWAY_INTERNALS_DOC = ZH_DEV_GUIDE_DIR / "gateway-internals.md"
 ZH_CONTEXT_COMPRESSION_DOC = ZH_DEV_GUIDE_DIR / "context-compression-and-caching.md"
+ZH_ADDING_PLATFORM_ADAPTERS_DOC = ZH_DEV_GUIDE_DIR / "adding-platform-adapters.md"
+ZH_CREATING_SKILLS_DOC = ZH_DEV_GUIDE_DIR / "creating-skills.md"
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -415,3 +419,104 @@ def test_gateway_and_context_docs_prefer_doppel_surfaces():
     assert "run_agent.py" in zh_context
     assert "cache_control" in zh_context
     assert "No intermediate pressure warnings — they caused models to 'give up' prematurely on complex tasks" in zh_context
+
+
+def test_platform_adapter_and_skill_docs_prefer_doppel_surfaces():
+    en_adapters = EN_ADDING_PLATFORM_ADAPTERS_DOC.read_text(encoding="utf-8")
+    en_skills = EN_CREATING_SKILLS_DOC.read_text(encoding="utf-8")
+    zh_adapters = ZH_ADDING_PLATFORM_ADAPTERS_DOC.read_text(encoding="utf-8")
+    zh_skills = ZH_CREATING_SKILLS_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent" in en_adapters
+    assert "Doppel gateway" in en_adapters
+    assert "Doppel plugin system" in en_adapters
+    assert "doppel config" in en_adapters
+    assert "doppel status" in en_adapters
+    assert "doppel gateway setup" in en_adapters
+    assert "doppel tools" in en_adapters
+    assert "doppel skills" in en_adapters
+    assert "doppel gateway status" in en_adapters
+    assert "doppel cron run" in en_adapters
+    assert "`hermes config`" not in en_adapters
+    assert "`hermes status`" not in en_adapters
+    assert "`hermes gateway setup`" not in en_adapters
+    assert "`hermes tools`" not in en_adapters
+    assert "`hermes skills`" not in en_adapters
+    assert "`hermes cron run`" not in en_adapters
+    assert "Hermes core codebase" not in en_adapters
+    assert "~/.hermes/plugins/" in en_adapters
+    assert "hermes_cli/config.py" in en_adapters
+    assert "hermes-newplat" in en_adapters
+    assert "MY_PLATFORM_CHANNEL" in en_adapters
+    assert "NEWPLAT_TOKEN" in en_adapters
+
+    assert "Doppel Agent" in zh_adapters
+    assert "Doppel gateway" in zh_adapters
+    assert "Doppel plugin 系统" in zh_adapters
+    assert "doppel config" in zh_adapters
+    assert "doppel status" in zh_adapters
+    assert "doppel gateway setup" in zh_adapters
+    assert "doppel tools" in zh_adapters
+    assert "doppel skills" in zh_adapters
+    assert "doppel gateway status" in zh_adapters
+    assert "doppel cron run" in zh_adapters
+    assert "`hermes config`" not in zh_adapters
+    assert "`hermes status`" not in zh_adapters
+    assert "`hermes gateway setup`" not in zh_adapters
+    assert "`hermes tools`" not in zh_adapters
+    assert "`hermes skills`" not in zh_adapters
+    assert "`hermes cron run`" not in zh_adapters
+    assert "Hermes 核心代码库" not in zh_adapters
+    assert "~/.hermes/plugins/" in zh_adapters
+    assert "hermes_cli/config.py" in zh_adapters
+    assert "hermes-newplat" in zh_adapters
+    assert "MY_PLATFORM_CHANNEL" in zh_adapters
+    assert "NEWPLAT_TOKEN" in zh_adapters
+
+    assert "Doppel Agent" in en_skills
+    assert "doppel config migrate" in en_skills
+    assert "doppel config show" in en_skills
+    assert "doppel config set" in en_skills
+    assert 'doppel chat --toolsets skills -q "Use the X skill to do Y"' in en_skills
+    assert "doppel skills browse" in en_skills
+    assert "doppel skills install" in en_skills
+    assert "doppel skills publish" in en_skills
+    assert "doppel skills tap add" in en_skills
+    assert "Doppel Agent can now consume third-party skills" in en_skills
+    assert "hermes config migrate" not in en_skills
+    assert "hermes config show" not in en_skills
+    assert "hermes config set" not in en_skills
+    assert "hermes skills browse" not in en_skills
+    assert "hermes skills install" not in en_skills
+    assert "hermes skills publish" not in en_skills
+    assert "hermes skills tap add" not in en_skills
+    assert "Hermes Agent" not in en_skills
+    assert "hermes:" in en_skills
+    assert "${HERMES_SKILL_DIR}" in en_skills
+    assert "${HERMES_SESSION_ID}" in en_skills
+    assert "~/.hermes/.env" in en_skills
+    assert "~/.hermes/config.yaml" in en_skills
+
+    assert "Doppel Agent" in zh_skills
+    assert "doppel config migrate" in zh_skills
+    assert "doppel config show" in zh_skills
+    assert "doppel config set" in zh_skills
+    assert 'doppel chat --toolsets skills -q "Use the X skill to do Y"' in zh_skills
+    assert "doppel skills browse" in zh_skills
+    assert "doppel skills install" in zh_skills
+    assert "doppel skills publish" in zh_skills
+    assert "doppel skills tap add" in zh_skills
+    assert "Doppel Agent 现在可以通过多种外部发现模型使用第三方 skill" in zh_skills
+    assert "hermes config migrate" not in zh_skills
+    assert "hermes config show" not in zh_skills
+    assert "hermes config set" not in zh_skills
+    assert "hermes skills browse" not in zh_skills
+    assert "hermes skills install" not in zh_skills
+    assert "hermes skills publish" not in zh_skills
+    assert "hermes skills tap add" not in zh_skills
+    assert "Hermes Agent" not in zh_skills
+    assert "hermes:" in zh_skills
+    assert "${HERMES_SKILL_DIR}" in zh_skills
+    assert "${HERMES_SESSION_ID}" in zh_skills
+    assert "~/.hermes/.env" in zh_skills
+    assert "~/.hermes/config.yaml" in zh_skills

@@ -6460,6 +6460,63 @@ def test_learning_path_pair_prefer_doppel_customer_facing_surfaces():
         assert stale not in zh
 
 
+def test_docs_home_pair_prefer_doppel_customer_facing_surfaces():
+    en = (REPO_ROOT / "website" / "docs" / "index.mdx").read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "index.mdx"
+    ).read_text(encoding="utf-8")
+
+    assert 'title: "Doppel Agent Documentation"' in en
+    assert 'title: "Doppel Agent 文档"' in zh
+    assert "Doppel Agent is your everyday personal AI assistant" in en
+    assert "Doppel Agent 是你的日常个人 AI 助手" in zh
+    assert "Doppel Agent is **Your Everyday Personal AI Assistant**." in en
+    assert "# Doppel Agent" in zh
+    assert "它由 Doppelme 维护" in zh
+    assert "https://github.com/Jnot1/doppel-agent" in en
+    assert "https://github.com/Jnot1/doppel-agent" in zh
+    assert "https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.sh" in en
+    assert "https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.sh" in zh
+    assert "https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1" in en
+    assert "https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1" in zh
+    assert "Quick wins to get the most out of Doppel Agent" in en
+    assert "充分发挥 Doppel Agent 的能力" in zh
+    assert "Maintained by Doppelme for everyday operations." in en
+    assert "由 Doppelme 维护" in zh
+    assert "Original upstream attribution is preserved in [NOTICE.md]" in en
+    assert "原始上游署名保留在 [NOTICE.md]" in zh
+    assert "[在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-hermes)" in zh
+    assert "通过全局 SOUL.md 定义 Doppel 的默认风格" in zh
+
+    for stale in (
+        'description: "Doppel Agent is Your Everyday Personal AI Assistant: a customer-facing fork of Hermes Agent',
+        "It is a modified fork of Hermes Agent by Nous Research",
+        "Quick wins to get the most out of Hermes",
+        "customer-facing fork of Hermes Agent",
+        "Original Hermes Agent attribution is preserved",
+        'title: "Hermes Agent 文档"',
+        "# Hermes Agent",
+        "https://github.com/NousResearch/hermes-agent",
+        "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh",
+        "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.ps1",
+        "## Hermes Agent 是什么？",
+        "并安全扩展 Hermes",
+        "[在 Hermes 中使用 MCP](/guides/use-mcp-with-hermes)",
+        "定义 Hermes 的默认风格",
+        "充分发挥 Hermes 的潜力",
+        "Hermes Agent 功能丰富",
+        "该实验室是 Hermes、Nomos 和 Psyche 背后的团队",
+    ):
+        assert stale not in en
+        assert stale not in zh
+
+
 def test_local_llm_on_mac_guide_prefers_doppel_customer_facing_surfaces():
     guide = (
         REPO_ROOT / "website" / "docs" / "guides" / "local-llm-on-mac.md"

@@ -133,6 +133,13 @@ EN_MICROSOFT_GRAPH_APP_REG_DOC = (
     / "guides"
     / "microsoft-graph-app-registration.md"
 )
+EN_MCP_CONFIG_REFERENCE_DOC = (
+    REPO_ROOT
+    / "website"
+    / "docs"
+    / "reference"
+    / "mcp-config-reference.md"
+)
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
@@ -529,6 +536,16 @@ ZH_MICROSOFT_GRAPH_APP_REG_DOC = (
     / "guides"
     / "microsoft-graph-app-registration.md"
 )
+ZH_MCP_CONFIG_REFERENCE_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "reference"
+    / "mcp-config-reference.md"
+)
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -731,6 +748,56 @@ def test_microsoft_graph_app_registration_guides_prefer_doppel_branding_and_keep
         "MicrosoftGraphTokenProvider",
         "MicrosoftGraphTokenError",
         "~/.hermes/.env",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+
+def test_mcp_config_reference_docs_prefer_doppel_branding_and_keep_runtime_literals():
+    en = EN_MCP_CONFIG_REFERENCE_DOC.read_text(encoding="utf-8")
+    zh = ZH_MCP_CONFIG_REFERENCE_DOC.read_text(encoding="utf-8")
+
+    assert 'description: "Reference for Doppel Agent MCP configuration keys, filtering semantics, and utility-tool policy"' in en
+    assert 'description: "Doppel Agent MCP 配置键、过滤语义及工具策略参考"' in zh
+    assert "[Use MCP with Doppel Agent](/guides/use-mcp-with-hermes)" in en
+    assert "[在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-hermes)" in zh
+    assert "Doppel Agent may register these utility wrappers per MCP server" in en
+    assert "Doppel Agent 可为每个 MCP 服务器注册以下工具包装器" in zh
+    assert "Doppel Agent only registers those utility tools" in en
+    assert "Doppel Agent 也只在 MCP 会话实际暴露对应能力时才注册相应工具" in zh
+    assert "Doppel Agent does not create an empty MCP runtime toolset" in en
+    assert "Doppel Agent 不会为该服务器创建空的 MCP 运行时工具集" in zh
+    assert "## TLS client certificate (mTLS)" in en
+    assert "## TLS 客户端证书（mTLS）" in zh
+    assert "client_cert: \"~/secrets/mcp-client.pem\"" in en
+    assert "client_cert: \"~/secrets/mcp-client.pem\"" in zh
+    assert "client_key: \"~/secrets/client.key\"" in en
+    assert "client_key: \"~/secrets/client.key\"" in zh
+    assert "Doppel Agent uses the MCP SDK's OAuth 2.1 PKCE flow" in en
+    assert "Doppel Agent 使用 MCP SDK 的 OAuth 2.1 PKCE 流程" in zh
+    assert "`~/.doppel/mcp-tokens/<server>.json`" in en
+    assert "`~/.doppel/mcp-tokens/<server>.json`" in zh
+
+    assert "Use MCP with Doppel](/guides/use-mcp-with-hermes)" not in en
+    assert "在 Hermes 中使用 MCP" not in zh
+    assert 'description: "Hermes Agent MCP 配置键、过滤语义及工具策略参考"' not in zh
+    assert "Hermes 可为每个 MCP 服务器注册以下工具包装器" not in zh
+    assert "Hermes 也只在 MCP 会话实际暴露对应能力时才注册相应工具" not in zh
+    assert "Hermes 不会为该服务器创建空的 MCP 运行时工具集" not in zh
+    assert "Hermes 使用 MCP SDK 的 OAuth 2.1 PKCE 流程" not in zh
+
+    for fixed in (
+        "/reload-mcp",
+        "mcp_<server>_<tool>",
+        "mcp_<server>_list_resources",
+        "mcp_<server>_read_resource",
+        "mcp_<server>_list_prompts",
+        "mcp_<server>_get_prompt",
+        "auth: oauth",
+        "ssl_verify",
+        "client_cert",
+        "client_key",
+        "~/.hermes/",
     ):
         assert fixed in en
         assert fixed in zh

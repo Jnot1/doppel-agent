@@ -1,22 +1,24 @@
 """
-Profile management for multiple isolated Hermes instances.
+Profile management for multiple isolated Doppel Agent profiles.
 
 Each profile is a fully independent HERMES_HOME directory with its own
 config.yaml, .env, memory, sessions, skills, gateway, cron, and logs.
-Profiles live under ``~/.hermes/profiles/<name>/`` by default.
+Profiles live under the active Doppel home, usually
+``~/.doppel/profiles/<name>/`` on fresh installs. Legacy installs may still
+use ``~/.hermes/profiles/<name>/``.
 
-The "default" profile is ``~/.hermes`` itself — backward compatible,
-zero migration needed.
+The "default" profile is the root Doppel home itself — ``~/.doppel`` on
+fresh installs, or an existing ``~/.hermes`` root for legacy installs.
 
 Usage::
 
-    hermes profile create coder          # fresh profile + bundled skills
-    hermes profile create coder --clone  # also copy config, .env, SOUL.md, skills
-    hermes profile create coder --clone-all  # full copy of source profile
+    doppel profile create coder          # fresh profile + bundled skills
+    doppel profile create coder --clone  # also copy config, .env, SOUL.md, skills
+    doppel profile create coder --clone-all  # full copy of source profile
     coder chat                           # use via wrapper alias
-    hermes -p coder chat                 # or via flag
-    hermes profile use coder             # set as sticky default
-    hermes profile delete coder          # remove profile + alias + service
+    doppel -p coder chat                 # or via flag
+    doppel profile use coder             # set as sticky default
+    doppel profile delete coder          # remove profile + alias + service
 """
 
 import json
@@ -100,11 +102,11 @@ _CLONE_ALL_DEFAULT_EXCLUDE_ROOT: frozenset[str] = frozenset({
     "node_modules",
 })
 
-# Marker file written by `hermes profile create --no-skills`.  When present in
+# Marker file written by `doppel profile create --no-skills`. When present in
 # a profile's root, callers of seed_profile_skills() (fresh-create, `hermes
 # update`'s all-profile sync, the web dashboard) skip bundled-skill seeding
 # for that profile.  The user can still install skills manually via
-# `hermes skills install` or drop SKILL.md files into the profile's skills/.
+# `doppel skills install` or drop SKILL.md files into the profile's skills/.
 # Delete the marker file to opt back in.
 NO_BUNDLED_SKILLS_MARKER = ".no-bundled-skills"
 
@@ -689,7 +691,7 @@ def create_profile(
         If True, skip wrapper script creation.
     no_skills:
         If True, create an empty profile with no bundled skills, and write
-        a marker file so ``hermes update`` skips re-seeding this profile's
+        a marker file so ``doppel update`` skips re-seeding this profile's
         skills. Mutually exclusive with ``clone_config``/``clone_all`` (those
         explicitly copy skills from the source).
 
@@ -708,7 +710,8 @@ def create_profile(
 
     if canon == "default":
         raise ValueError(
-            "Cannot create a profile named 'default' — it is the built-in profile (~/.hermes)."
+            "Cannot create a profile named 'default' — it is the built-in "
+            "root profile (~/.doppel on fresh installs; legacy ~/.hermes still works)."
         )
 
     profile_dir = get_profile_dir(canon)
@@ -790,14 +793,14 @@ def create_profile(
         except Exception:
             pass  # best-effort — don't fail profile creation over this
 
-    # Write the opt-out marker so seed_profile_skills() and `hermes update`'s
+    # Write the opt-out marker so seed_profile_skills() and `doppel update`'s
     # all-profile sync loop both skip this profile for bundled-skill seeding.
     if no_skills:
         try:
             (profile_dir / NO_BUNDLED_SKILLS_MARKER).write_text(
                 "This profile opted out of bundled-skill seeding "
-                "(`hermes profile create --no-skills`).\n"
-                "Delete this file to re-enable sync on the next `hermes update`.\n",
+                "(`doppel profile create --no-skills`).\n"
+                "Delete this file to re-enable sync on the next `doppel update`.\n",
                 encoding="utf-8",
             )
         except OSError:
@@ -814,7 +817,7 @@ def create_profile(
                 description_auto=False,
             )
         except Exception:
-            pass  # non-fatal — user can describe later with `hermes profile describe`
+            pass  # non-fatal — user can describe later with `doppel profile describe`
 
     # Phase 4: when running inside a container under s6, register the
     # new profile's gateway as a runtime s6 service so
@@ -833,7 +836,7 @@ def seed_profile_skills(profile_dir: Path, quiet: bool = False) -> Optional[dict
     Uses subprocess because sync_skills() caches HERMES_HOME at module level.
     Returns the sync result dict, or None on failure.
 
-    Profiles that opted out of bundled skills (via ``hermes profile create
+    Profiles that opted out of bundled skills (via ``doppel profile create
     --no-skills`` — which writes ``.no-bundled-skills`` to the profile root)
     are skipped and get an empty-result dict so callers can report
     "opted out" instead of "failed".
@@ -885,7 +888,8 @@ def delete_profile(name: str, yes: bool = False) -> Path:
 
     if canon == "default":
         raise ValueError(
-            "Cannot delete the default profile (~/.hermes).\n"
+            "Cannot delete the built-in root profile "
+            "(~/.doppel on fresh installs; legacy ~/.hermes still works).\n"
             "To remove everything, use: doppel uninstall"
         )
 
@@ -1212,7 +1216,7 @@ def set_active_profile(name: str) -> None:
     if canon != "default" and not profile_exists(canon):
         raise FileNotFoundError(
             f"Profile '{canon}' does not exist. "
-            f"Create it with: hermes profile create {canon}"
+            f"Create it with: doppel profile create {canon}"
         )
 
     path = _get_active_profile_path()
@@ -1421,7 +1425,7 @@ def import_profile(archive_path: str, name: Optional[str] = None) -> Path:
     if not inferred_name:
         raise ValueError(
             "Cannot determine profile name from archive. "
-            "Specify it explicitly: hermes profile import <archive> --name <name>"
+            "Specify it explicitly: doppel profile import <archive> --name <name>"
         )
     if archive_root is None:
         raise ValueError(
@@ -1435,8 +1439,9 @@ def import_profile(archive_path: str, name: Optional[str] = None) -> Path:
     validate_profile_name(canon)
     if canon == "default":
         raise ValueError(
-            "Cannot import as 'default' — that is the built-in root profile (~/.hermes). "
-            "Specify a different name: hermes profile import <archive> --name <name>"
+            "Cannot import as 'default' — that is the built-in root profile "
+            "(~/.doppel on fresh installs; legacy ~/.hermes still works). "
+            "Specify a different name: doppel profile import <archive> --name <name>"
         )
 
     profile_dir = get_profile_dir(canon)
@@ -1602,7 +1607,7 @@ def resolve_profile_env(profile_name: str) -> str:
     if canon != "default" and not profile_dir.is_dir():
         raise FileNotFoundError(
             f"Profile '{canon}' does not exist. "
-            f"Create it with: hermes profile create {canon}"
+            f"Create it with: doppel profile create {canon}"
         )
 
     return str(profile_dir)

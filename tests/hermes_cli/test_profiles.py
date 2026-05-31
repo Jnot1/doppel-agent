@@ -324,7 +324,10 @@ class TestNoSkillsOptOut:
         # Marker file is present
         marker = profile_dir / NO_BUNDLED_SKILLS_MARKER
         assert marker.is_file(), "expected .no-bundled-skills marker in profile root"
-        assert "--no-skills" in marker.read_text()
+        marker_text = marker.read_text()
+        assert "--no-skills" in marker_text
+        assert "doppel profile create --no-skills" in marker_text
+        assert "doppel update" in marker_text
 
         # has_bundled_skills_opt_out() agrees
         assert has_bundled_skills_opt_out(profile_dir) is True
@@ -437,7 +440,7 @@ class TestDeleteProfile:
         assert not profile_dir.is_dir()
 
     def test_default_raises_value_error(self, profile_env):
-        with pytest.raises(ValueError, match="default"):
+        with pytest.raises(ValueError, match="doppel uninstall"):
             delete_profile("default", yes=True)
 
     def test_nonexistent_raises_file_not_found(self, profile_env):
@@ -512,7 +515,7 @@ class TestActiveProfile:
         assert not active_path.exists()
 
     def test_set_nonexistent_raises(self, profile_env):
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError, match="doppel profile create nonexistent"):
             set_active_profile("nonexistent")
 
 
@@ -565,7 +568,7 @@ class TestResolveProfileEnv:
         assert result == str(tmp_path / ".hermes")
 
     def test_nonexistent_raises_file_not_found(self, profile_env):
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError, match="doppel profile create nonexistent"):
             resolve_profile_env("nonexistent")
 
     def test_invalid_name_raises_value_error(self, profile_env):
@@ -1057,7 +1060,10 @@ class TestExportImport:
         archive.parent.mkdir(parents=True, exist_ok=True)
         export_profile("default", str(archive))
 
-        with pytest.raises(ValueError, match="Cannot import as 'default'"):
+        with pytest.raises(
+            ValueError,
+            match=r"doppel profile import <archive> --name <name>",
+        ):
             import_profile(str(archive))
 
     def test_import_default_with_explicit_default_name_raises(self, profile_env, tmp_path):
@@ -1069,7 +1075,10 @@ class TestExportImport:
         archive.parent.mkdir(parents=True, exist_ok=True)
         export_profile("default", str(archive))
 
-        with pytest.raises(ValueError, match="Cannot import as 'default'"):
+        with pytest.raises(
+            ValueError,
+            match=r"doppel profile import <archive> --name <name>",
+        ):
             import_profile(str(archive), name="default")
 
     def test_import_default_export_with_new_name_roundtrip(self, profile_env, tmp_path):

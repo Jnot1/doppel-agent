@@ -96,6 +96,7 @@ EN_FALLBACK_PROVIDERS_DOC = (
 EN_CREDENTIAL_POOLS_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "credential-pools.md"
 )
+EN_CURATOR_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "curator.md"
 EN_CRON_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "cron.md"
 EN_BROWSER_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "browser.md"
 EN_CODEX_RUNTIME_DOC = (
@@ -237,6 +238,17 @@ ZH_CREDENTIAL_POOLS_DOC = (
     / "user-guide"
     / "features"
     / "credential-pools.md"
+)
+ZH_CURATOR_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "curator.md"
 )
 ZH_CRON_DOC = (
     REPO_ROOT
@@ -2099,3 +2111,67 @@ def test_skins_docs_prefer_doppel_surfaces_and_match_runtime_defaults():
     assert "| `agent_name` | 横幅标题和状态显示中的名称 | `Hermes Agent` |" not in zh
     assert "` ⚕ Hermes `" not in en
     assert "` ⚕ Hermes `" not in zh
+
+
+def test_curator_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_CURATOR_DOC.read_text(encoding="utf-8")
+    zh = ZH_CURATOR_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent" in en
+    assert "Doppel Agent" in zh
+    assert "~/.doppel/skills/" in en
+    assert "~/.doppel/skills/" in zh
+    assert "~/.doppel/skills/.archive/" in en
+    assert "~/.doppel/skills/.archive/" in zh
+    assert "~/.doppel/skills/.curator_backups/<utc-iso>/skills.tar.gz" in en
+    assert "~/.doppel/skills/.curator_backups/<utc-iso>/skills.tar.gz" in zh
+    assert "~/.doppel/skills/.usage.json" in en
+    assert "~/.doppel/skills/.usage.json" in zh
+    assert "~/.doppel/logs/curator/" in en
+    assert "~/.doppel/logs/curator/" in zh
+    assert "`doppel update`" in en
+    assert "`doppel update`" in zh
+    assert "`doppel curator run --dry-run`" in en
+    assert "`doppel curator run --dry-run`" in zh
+    assert "`doppel model`" in en
+    assert "`doppel model`" in zh
+    assert "doppel curator status" in en
+    assert "doppel curator status" in zh
+    assert "doppel curator backup" in en
+    assert "doppel curator backup" in zh
+    assert "doppel curator rollback" in en
+    assert "doppel curator rollback" in zh
+    assert "doppel curator pin <name>" in en
+    assert "doppel curator pin <name>" in zh
+    assert "doppel curator restore <name>" in en
+    assert "doppel curator restore <name>" in zh
+    assert "Legacy installs may still keep the same tree under `~/.hermes/skills/`." in en
+    assert "旧安装仍可能将同样的目录树保留在 `~/.hermes/skills/` 下。" in zh
+
+    for fixed in (
+        "AIAgent",
+        "skill_view",
+        "skill_manage",
+        "curator.auxiliary.{provider,model}",
+        "agentskills.io",
+        "Issue #7816",
+        "NousResearch/hermes-agent/issues/7816",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "`hermes update`" not in en
+    assert "`hermes update`" not in zh
+    assert "`hermes curator run --dry-run`" not in en
+    assert "`hermes curator run --dry-run`" not in zh
+    assert "`hermes model`" not in en
+    assert "`hermes model`" not in zh
+    assert "hermes curator status" not in en
+    assert "hermes curator status" not in zh
+    assert "hermes curator backup" not in en
+    assert "hermes curator backup" not in zh
+    assert "hermes curator rollback" not in en
+    assert "hermes curator rollback" not in zh
+    assert "hermes curator pin <name>" not in en
+    assert "hermes curator pin <name>" not in zh
+    assert "hermes curator restore <name>" not in en
+    assert "hermes curator restore <name>" not in zh

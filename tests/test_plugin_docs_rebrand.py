@@ -102,6 +102,7 @@ EN_CODEX_RUNTIME_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "codex-app-server-runtime.md"
 )
 EN_MCP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "mcp.md"
+EN_KANBAN_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "kanban.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -271,6 +272,17 @@ ZH_MCP_DOC = (
     / "user-guide"
     / "features"
     / "mcp.md"
+)
+ZH_KANBAN_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "kanban.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1586,3 +1598,61 @@ def test_mcp_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "hermes mcp serve" not in zh
     assert "Use MCP with Hermes" not in en
     assert "在 Hermes 中使用 MCP" not in zh
+
+
+def test_kanban_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_KANBAN_DOC.read_text(encoding="utf-8")
+    zh = ZH_KANBAN_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent Kanban is a durable task board" in en
+    assert "Doppel Agent Kanban 是一个持久化任务看板" in zh
+    assert "multiple Doppel Agent profiles" in en
+    assert "多个 Doppel Agent 配置文件" in zh
+    assert "~/.doppel/kanban.db" in en
+    assert "~/.doppel/kanban.db" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "doppel kanban create" in en
+    assert "doppel kanban create" in zh
+    assert "doppel gateway start" in en
+    assert "doppel gateway start" in zh
+    assert "doppel dashboard" in en
+    assert "doppel dashboard" in zh
+    assert "doppel chat" in en
+    assert "doppel chat" in zh
+    assert "doppel profile describe" in en
+    assert "doppel profile describe" in zh
+    assert "doppel skills list" in en
+    assert "doppel skills list" in zh
+
+    for fixed in (
+        "~/.hermes",
+        "docs/hermes-kanban-v1-spec.pdf",
+        "HERMES_KANBAN_BOARD",
+        "HERMES_KANBAN_TASK",
+        "HERMES_KANBAN_WORKSPACE",
+        "HERMES_TENANT",
+        "kanban_db",
+        "hermes_cli.kanban.run_slash()",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "HERMES_KANBAN_ATTACHMENTS_ROOT" in en
+
+    assert "multiple Hermes profiles" not in en
+    assert "多个 Hermes 配置文件" not in zh
+    assert "all your Hermes profiles" not in en
+    assert "所有 Hermes 配置文件" not in zh
+    assert "hermes kanban create" not in en
+    assert "hermes kanban create" not in zh
+    assert "hermes gateway start" not in en
+    assert "hermes gateway start" not in zh
+    assert "hermes dashboard" not in en
+    assert "hermes dashboard" not in zh
+    assert "hermes chat" not in en
+    assert "hermes chat" not in zh
+    assert "hermes profile describe" not in en
+    assert "hermes profile describe" not in zh
+    assert "hermes skills list" not in en
+    assert "hermes skills list" not in zh

@@ -2090,6 +2090,47 @@ def test_zh_reference_cli_commands_rebrand_hooks_mcp_and_sessions_cluster():
     assert "运行 `hermes --help`" not in section
 
 
+def test_zh_reference_cli_commands_rebrand_insights_claw_dashboard_and_profile_cluster():
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    section = zh_cli_commands.split("## `doppel insights`", 1)[1].split("## `hermes completion`", 1)[0]
+
+    assert "doppel insights [--days N] [--source platform]" in section
+    assert "## `doppel claw`" in section
+    assert "将 OpenClaw 设置迁移到 Doppel" in section
+    assert "~/.doppel/backups/pre-migration-*.zip" in section
+    assert "doppel import" in section
+    assert "直接导入**到 Doppel 等效项" in section
+    assert "doppel claw migrate --preset full" in section
+    assert "## `doppel dashboard`" in section
+    assert "`doppel --tui`" in section
+    assert "`doppel dashboard`" in section
+    assert "## `doppel profile`" in section
+    assert "多个隔离的 Doppel 实例" in section
+    assert "doppel profile list" in section
+    assert 'doppel -p work chat -q "Hello from work profile"' in section
+    assert "## `hermes insights`" not in section
+    assert "## `hermes claw`" not in section
+    assert "现有 Hermes 文件" not in section
+    assert "~/.hermes/backups/pre-migration-*.zip" not in section
+    assert "hermes claw migrate --dry-run" not in section
+    assert "## `hermes dashboard`" not in section
+    assert "`hermes --tui`" not in section
+    assert "## `hermes profile`" not in section
+    assert "多个隔离的 Hermes 实例" not in section
+    assert "hermes profile list" not in section
+    assert 'hermes -p work chat -q "Hello from work profile"' not in section
+
+
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     en = EN_FEATURE_ACP_DOC.read_text(encoding="utf-8")
     zh = ZH_FEATURE_ACP_DOC.read_text(encoding="utf-8")

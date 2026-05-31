@@ -1118,10 +1118,10 @@ doppel sessions <subcommand>
 | `stats` | 显示会话存储统计信息。 |
 | `rename <session-id> <title>` | 设置或更改会话标题。 |
 
-## `hermes insights`
+## `doppel insights`
 
 ```bash
-hermes insights [--days N] [--source platform]
+doppel insights [--days N] [--source platform]
 ```
 
 | 选项 | 说明 |
@@ -1129,21 +1129,21 @@ hermes insights [--days N] [--source platform]
 | `--days <n>` | 分析最近 `n` 天（默认：30）。 |
 | `--source <platform>` | 按来源过滤，如 `cli`、`telegram` 或 `discord`。 |
 
-## `hermes claw`
+## `doppel claw`
 
 ```bash
-hermes claw migrate [options]
+doppel claw migrate [options]
 ```
 
-将 OpenClaw 设置迁移到 Hermes。从 `~/.openclaw`（或自定义路径）读取并写入 `~/.hermes`。自动检测旧版目录名（`~/.clawdbot`、`~/.moltbot`）和配置文件名（`clawdbot.json`、`moltbot.json`）。
+将 OpenClaw 设置迁移到 Doppel。从 `~/.openclaw`（或自定义路径）读取并写入 `~/.doppel`。自动检测旧版目录名（`~/.clawdbot`、`~/.moltbot`）和配置文件名（`clawdbot.json`、`moltbot.json`）。
 
 | 选项 | 说明 |
 |--------|-------------|
 | `--dry-run` | 预览将迁移的内容而不写入任何内容。 |
 | `--preset <name>` | 迁移预设：`full`（所有兼容设置）或 `user-data`（排除基础设施配置）。两种预设都不导入密钥——需要显式传入 `--migrate-secrets`。 |
-| `--overwrite` | 在冲突时覆盖现有 Hermes 文件（默认：当计划有冲突时拒绝应用）。 |
+| `--overwrite` | 在冲突时覆盖现有 Doppel 文件（默认：当计划有冲突时拒绝应用）。 |
 | `--migrate-secrets` | 在迁移中包含 API 密钥。即使在 `--preset full` 下也需要显式指定。 |
-| `--no-backup` | 跳过迁移前对 `~/.hermes/` 的 zip 快照（默认情况下，在应用前会将单个还原点归档写入 `~/.hermes/backups/pre-migration-*.zip`；可用 `hermes import` 恢复）。 |
+| `--no-backup` | 跳过迁移前对 `~/.doppel/` 的 zip 快照（默认情况下，在应用前会将单个还原点归档写入 `~/.doppel/backups/pre-migration-*.zip`；可用 `doppel import` 恢复）。 |
 | `--source <path>` | 自定义 OpenClaw 目录（默认：`~/.openclaw`）。 |
 | `--workspace-target <path>` | 工作区说明（AGENTS.md）的目标目录。 |
 | `--skill-conflict <mode>` | 处理 skill 名称冲突：`skip`（默认）、`overwrite` 或 `rename`。 |
@@ -1151,7 +1151,7 @@ hermes claw migrate [options]
 
 ### 迁移内容
 
-迁移涵盖 30+ 个类别，包括 persona、memory、skill、模型 provider、消息平台、agent 行为、会话策略、MCP 服务器、TTS 等。条目要么**直接导入**到 Hermes 等效项，要么**归档**以供手动审查。
+迁移涵盖 30+ 个类别，包括 persona、memory、skill、模型 provider、消息平台、agent 行为、会话策略、MCP 服务器、TTS 等。条目要么**直接导入**到 Doppel 等效项，要么**归档**以供手动审查。
 
 **直接导入：** SOUL.md、MEMORY.md、USER.md、AGENTS.md、skill（4 个源目录）、默认模型、自定义 provider、MCP 服务器、消息平台 token 和许可名单（Telegram、Discord、Slack、WhatsApp、Signal、Matrix、Mattermost）、agent 默认值（推理努力程度、压缩、人工延迟、时区、沙箱）、会话重置策略、审批规则、TTS 配置、浏览器设置、工具设置、执行超时、命令许可名单、gateway 配置以及来自 3 个来源的 API 密钥。
 
@@ -1165,25 +1165,25 @@ hermes claw migrate [options]
 
 ```bash
 # 预览将迁移的内容
-hermes claw migrate --dry-run
+doppel claw migrate --dry-run
 
 # 完整迁移（所有兼容设置，不含密钥）
-hermes claw migrate --preset full
+doppel claw migrate --preset full
 
 # 包含 API 密钥的完整迁移
-hermes claw migrate --preset full --migrate-secrets
+doppel claw migrate --preset full --migrate-secrets
 
 # 仅迁移用户数据（不含密钥），覆盖冲突
-hermes claw migrate --preset user-data --overwrite
+doppel claw migrate --preset user-data --overwrite
 
 # 从自定义 OpenClaw 路径迁移
-hermes claw migrate --source /home/user/old-openclaw
+doppel claw migrate --source /home/user/old-openclaw
 ```
 
-## `hermes dashboard`
+## `doppel dashboard`
 
 ```bash
-hermes dashboard [options]
+doppel dashboard [options]
 ```
 
 启动 Web 控制台——基于浏览器的界面，用于管理配置、API 密钥和监控会话。需要 `pip install hermes-agent[web]`（FastAPI + Uvicorn）。内嵌浏览器 Chat 标签页需要 `--tui` 加上 `pty` extra。完整文档请参阅 [Web 控制台](/user-guide/features/web-dashboard)。
@@ -1193,29 +1193,29 @@ hermes dashboard [options]
 | `--port` | `9119` | Web 服务器运行端口 |
 | `--host` | `127.0.0.1` | 绑定地址 |
 | `--no-open` | — | 不自动打开浏览器 |
-| `--tui` | 关闭 | 通过 PTY/WebSocket 桥接在后台运行 `hermes --tui`，启用浏览器内 Chat 标签页。需要 `pip install 'hermes-agent[web,pty]'` 以及 Linux、macOS 或 WSL2 等 POSIX PTY 环境。 |
+| `--tui` | 关闭 | 通过 PTY/WebSocket 桥接在后台运行 `doppel --tui`，启用浏览器内 Chat 标签页。需要 `pip install 'hermes-agent[web,pty]'` 以及 Linux、macOS 或 WSL2 等 POSIX PTY 环境。 |
 | `--insecure` | 关闭 | 允许绑定到非 localhost 主机。会在网络上暴露控制台凭据；仅在受信任的网络控制下使用。 |
-| `--stop` | — | 停止正在运行的 `hermes dashboard` 进程并退出。 |
-| `--status` | — | 列出正在运行的 `hermes dashboard` 进程并退出。 |
+| `--stop` | — | 停止正在运行的 `doppel dashboard` 进程并退出。 |
+| `--status` | — | 列出正在运行的 `doppel dashboard` 进程并退出。 |
 
 ```bash
 # 默认——在浏览器中打开 http://127.0.0.1:9119
-hermes dashboard
+doppel dashboard
 
 # 自定义端口，不打开浏览器
-hermes dashboard --port 8080 --no-open
+doppel dashboard --port 8080 --no-open
 
 # 启用浏览器 Chat 标签页
-hermes dashboard --tui
+doppel dashboard --tui
 ```
 
-## `hermes profile`
+## `doppel profile`
 
 ```bash
-hermes profile <subcommand>
+doppel profile <subcommand>
 ```
 
-管理 profile——多个隔离的 Hermes 实例，每个实例拥有自己的 config、会话、skill 和主目录。
+管理 profile——多个隔离的 Doppel 实例，每个实例拥有自己的 config、会话、skill 和主目录。
 
 | 子命令 | 说明 |
 |------------|-------------|
@@ -1235,15 +1235,15 @@ hermes profile <subcommand>
 示例：
 
 ```bash
-hermes profile list
-hermes profile create work --clone
-hermes profile use work
-hermes profile alias work --name h-work
-hermes profile export work -o work-backup.tar.gz
-hermes profile import work-backup.tar.gz --name restored
-hermes profile install github.com/user/my-distro --alias
-hermes profile update work
-hermes -p work chat -q "Hello from work profile"
+doppel profile list
+doppel profile create work --clone
+doppel profile use work
+doppel profile alias work --name h-work
+doppel profile export work -o work-backup.tar.gz
+doppel profile import work-backup.tar.gz --name restored
+doppel profile install github.com/user/my-distro --alias
+doppel profile update work
+doppel -p work chat -q "Hello from work profile"
 ```
 
 ## `hermes completion`

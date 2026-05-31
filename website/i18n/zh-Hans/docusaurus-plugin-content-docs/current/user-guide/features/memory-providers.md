@@ -1,33 +1,33 @@
 ---
 sidebar_position: 4
 title: "Memory Providers"
-description: "外部记忆提供者插件 — Honcho、OpenViking、Mem0、Hindsight、Holographic、RetainDB、ByteRover、Supermemory"
+description: "外部记忆提供者集成 — Honcho、OpenViking、Mem0、Hindsight、Holographic、RetainDB、ByteRover、Supermemory、Memori"
 ---
 
 # Memory Providers
 
-Hermes Agent 内置 8 个外部记忆提供者插件，为 Agent 提供跨会话的持久化知识，超越内置的 MEMORY.md 和 USER.md。同一时间只能激活**一个**外部提供者——内置记忆始终与其并行工作。
+Doppel Agent 支持 9 个外部记忆提供者集成，为 Agent 提供跨会话的持久化知识，超越内置的 `MEMORY.md` 和 `USER.md` 文件。同一时间只能激活**一个**外部提供者——内置记忆始终与其并行工作。`doppel memory setup` 只会列出当前环境中已安装依赖的提供者。
 
 ## 快速开始
 
 ```bash
-hermes memory setup      # 交互式选择器 + 配置
-hermes memory status     # 查看当前激活状态
-hermes memory off        # 禁用外部提供者
+doppel memory setup      # 交互式选择器 + 配置
+doppel memory status     # 查看当前激活状态
+doppel memory off        # 禁用外部提供者
 ```
 
-也可以通过 `hermes plugins` → Provider Plugins → Memory Provider 选择激活的记忆提供者。
+也可以通过 `doppel plugins` → Provider Plugins → Memory Provider 选择激活的记忆提供者。
 
-或在 `~/.hermes/config.yaml` 中手动设置：
+或在 `~/.doppel/config.yaml` 中手动设置：
 
 ```yaml
 memory:
-  provider: openviking   # 或 honcho, mem0, hindsight, holographic, retaindb, byterover, supermemory
+  provider: openviking   # 或 honcho, mem0, hindsight, holographic, retaindb, byterover, supermemory, memori
 ```
 
 ## 工作原理
 
-当记忆提供者激活时，Hermes 会自动：
+当记忆提供者激活时，Doppel Agent 会自动：
 
 1. **注入提供者上下文**到系统 prompt（提示词）中（提供者已知的内容）
 2. **在每轮对话前预取相关记忆**（后台非阻塞）
@@ -63,12 +63,12 @@ AI 原生的跨会话用户建模，具备辩证推理、会话范围上下文�
 
 **安装向导：**
 ```bash
-hermes memory setup        # 选择 "honcho" — 运行 Honcho 专属的安装后配置
+doppel memory setup        # 选择 "honcho" — 运行 Honcho 专属的安装后配置
 ```
 
-旧版 `hermes honcho setup` 命令仍然有效（现在会重定向到 `hermes memory setup`），但只有在 Honcho 被选为激活记忆提供者后才会注册。
+全新安装时，可直接运行 `doppel memory setup honcho` 配置 Honcho。激活后的 `doppel honcho setup` 会重定向到 `doppel memory setup`；旧版 `hermes honcho setup` 别名仍保留以兼容旧流程。
 
-**配置：** `$HERMES_HOME/honcho.json`（profile 本地）或 `~/.honcho/config.json`（全局）。解析顺序：`$HERMES_HOME/honcho.json` > `~/.hermes/honcho.json` > `~/.honcho/config.json`。参见[配置参考](https://github.com/hermes-ai/hermes-agent/blob/main/plugins/memory/honcho/README.md)和 [Honcho 集成指南](https://docs.honcho.dev/v3/guides/integrations/hermes)。
+**配置：** 优先使用 `$DOPPEL_HOME/honcho.json`（profile 本地；旧版 `$HERMES_HOME/honcho.json` 与 `~/.hermes/honcho.json` 仍然可用），也支持 `~/.honcho/config.json`（全局）。参见[配置参考](https://github.com/NousResearch/hermes-agent/blob/main/plugins/memory/honcho/README.md)和 [Honcho 集成指南](https://docs.honcho.dev/v3/guides/integrations/hermes)。
 
 <details>
 <summary>完整配置参考</summary>
@@ -142,21 +142,21 @@ hermes memory setup        # 选择 "honcho" — 运行 Honcho 专属的安装�
 
 **多 peer 配置：**
 
-Honcho 将对话建模为 peer 之间的消息交换——每个 Hermes profile 对应一个用户 peer 加一个 AI peer，共享同一个 workspace。workspace 是共享环境：用户 peer 在各 profile 间全局共享，每个 AI peer 拥有独立身份。每个 AI peer 从自身的观察中独立构建表示/card，因此 `coder` profile 保持代码导向，而 `writer` profile 针对同一用户保持编辑导向。
+Honcho 将对话建模为 peer 之间的消息交换——每个 Doppel profile 对应一个用户 peer 加一个 AI peer，共享同一个 workspace。workspace 是共享环境：用户 peer 在各 profile 间全局共享，每个 AI peer 拥有独立身份。每个 AI peer 从自身的观察中独立构建表示/card，因此 `coder` profile 保持代码导向，而 `writer` profile 针对同一用户保持编辑导向。
 
 映射关系：
 
 | 概念 | 含义 |
 |---------|-----------|
-| **Workspace** | 共享环境。同一 workspace 下的所有 Hermes profile 共享同一用户身份。 |
+| **Workspace** | 共享环境。同一 workspace 下的所有 Doppel profile 共享同一用户身份。 |
 | **用户 peer**（`peerName`） | 人类用户。在 workspace 内跨 profile 共享。 |
-| **AI peer**（`aiPeer`） | 每个 Hermes profile 一个。host key `hermes` → 默认；其他 profile 使用 `hermes.<profile>`。 |
+| **AI peer**（`aiPeer`） | 每个 Doppel profile 一个。host key `hermes` → 默认；其他 profile 使用 `hermes.<profile>`。 |
 | **Observation** | 每个 peer 的开关，控制 Honcho 从哪些消息中建模。`directional`（默认，全部开启）或 `unified`（单一观察者池）。 |
 
 ### 新建 profile，创建新 Honcho peer
 
 ```bash
-hermes profile create coder --clone
+doppel profile create coder --clone
 ```
 
 `--clone` 在 `honcho.json` 中创建一个 `hermes.coder` host 块，包含 `aiPeer: "coder"`、共享的 `workspace`、继承的 `peerName`、`recallMode`、`writeFrequency`、`observation` 等。AI peer 会在 Honcho 中提前创建，确保在第一条消息之前就已存在。
@@ -164,7 +164,7 @@ hermes profile create coder --clone
 ### 为现有 profile 补充 Honcho peer
 
 ```bash
-hermes honcho sync
+doppel honcho sync
 ```
 
 扫描所有 Hermes profile，为没有 host 块的 profile 创建 host 块，从默认 `hermes` 块继承设置，并提前创建新的 AI peer。幂等操作——跳过已有 host 块的 profile。
@@ -279,11 +279,11 @@ hermes honcho sync
 pip install openviking
 openviking-server
 
-# 然后配置 Hermes
-hermes memory setup    # 选择 "openviking"
+# 然后配置 Doppel Agent
+doppel memory setup    # 选择 "openviking"
 # 或手动配置：
-hermes config set memory.provider openviking
-echo "OPENVIKING_ENDPOINT=http://localhost:1933" >> ~/.hermes/.env
+doppel config set memory.provider openviking
+echo "OPENVIKING_ENDPOINT=http://localhost:1933" >> ~/.doppel/.env
 ```
 
 **主要特性：**
@@ -308,13 +308,13 @@ echo "OPENVIKING_ENDPOINT=http://localhost:1933" >> ~/.hermes/.env
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "mem0"
+doppel memory setup    # 选择 "mem0"
 # 或手动配置：
-hermes config set memory.provider mem0
-echo "MEM0_API_KEY=your-key" >> ~/.hermes/.env
+doppel config set memory.provider mem0
+echo "MEM0_API_KEY=your-key" >> ~/.doppel/.env
 ```
 
-**配置：** `$HERMES_HOME/mem0.json`
+**配置：** 优先使用 `$DOPPEL_HOME/mem0.json`（旧版 `$HERMES_HOME/mem0.json` 仍然可用）
 
 | 键 | 默认值 | 描述 |
 |-----|---------|-------------|
@@ -338,17 +338,17 @@ echo "MEM0_API_KEY=your-key" >> ~/.hermes/.env
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "hindsight"
+doppel memory setup    # 选择 "hindsight"
 # 或手动配置：
-hermes config set memory.provider hindsight
-echo "HINDSIGHT_API_KEY=your-key" >> ~/.hermes/.env
+doppel config set memory.provider hindsight
+echo "HINDSIGHT_API_KEY=your-key" >> ~/.doppel/.env
 ```
 
 安装向导会自动安装依赖，并仅安装所选模式所需的内容（云端用 `hindsight-client`，本地用 `hindsight-all`）。需要 `hindsight-client >= 0.4.22`（会话启动时若版本过旧则自动升级）。
 
 **本地模式 UI：** `hindsight-embed -p hermes ui start`
 
-**配置：** `$HERMES_HOME/hindsight/config.json`
+**配置：** 优先使用 `$DOPPEL_HOME/hindsight/config.json`（旧版 `$HERMES_HOME/hindsight/config.json` 仍然可用）
 
 | 键 | 默认值 | 描述 |
 |-----|---------|-------------|
@@ -385,16 +385,16 @@ echo "HINDSIGHT_API_KEY=your-key" >> ~/.hermes/.env
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "holographic"
+doppel memory setup    # 选择 "holographic"
 # 或手动配置：
-hermes config set memory.provider holographic
+doppel config set memory.provider holographic
 ```
 
 **配置：** `plugins.hermes-memory-store` 下的 `config.yaml`
 
 | 键 | 默认值 | 描述 |
 |-----|---------|-------------|
-| `db_path` | `$HERMES_HOME/memory_store.db` | SQLite 数据库路径 |
+| `db_path` | `$DOPPEL_HOME/memory_store.db` | SQLite 数据库路径 |
 | `auto_extract` | `false` | 会话结束时自动提取事实 |
 | `default_trust` | `0.5` | 默认信任评分（0.0–1.0） |
 
@@ -421,10 +421,10 @@ hermes config set memory.provider holographic
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "retaindb"
+doppel memory setup    # 选择 "retaindb"
 # 或手动配置：
-hermes config set memory.provider retaindb
-echo "RETAINDB_API_KEY=your-key" >> ~/.hermes/.env
+doppel config set memory.provider retaindb
+echo "RETAINDB_API_KEY=your-key" >> ~/.doppel/.env
 ```
 
 ---
@@ -447,15 +447,15 @@ echo "RETAINDB_API_KEY=your-key" >> ~/.hermes/.env
 # 先安装 CLI
 curl -fsSL https://byterover.dev/install.sh | sh
 
-# 然后配置 Hermes
-hermes memory setup    # 选择 "byterover"
+# 然后配置 Doppel Agent
+doppel memory setup    # 选择 "byterover"
 # 或手动配置：
-hermes config set memory.provider byterover
+doppel config set memory.provider byterover
 ```
 
 **主要特性：**
 - 自动预压缩提取（在上下文压缩丢弃内容前保存洞察）
-- 知识树存储于 `$HERMES_HOME/byterover/`（profile 范围隔离）
+- 知识树存储于 `$DOPPEL_HOME/byterover/`（profile 范围隔离；旧版 `$HERMES_HOME/byterover/` 仍然可用）
 - SOC2 Type II 认证的云端同步（可选）
 
 ---
@@ -475,13 +475,13 @@ hermes config set memory.provider byterover
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "supermemory"
+doppel memory setup    # 选择 "supermemory"
 # 或手动配置：
-hermes config set memory.provider supermemory
-echo 'SUPERMEMORY_API_KEY=***' >> ~/.hermes/.env
+doppel config set memory.provider supermemory
+echo 'SUPERMEMORY_API_KEY=***' >> ~/.doppel/.env
 ```
 
-**配置：** `$HERMES_HOME/supermemory.json`
+**配置：** 优先使用 `$DOPPEL_HOME/supermemory.json`（旧版 `$HERMES_HOME/supermemory.json` 仍然可用）
 
 | 键 | 默认值 | 描述 |
 |-----|---------|-------------|
@@ -501,7 +501,7 @@ echo 'SUPERMEMORY_API_KEY=***' >> ~/.hermes/.env
 - 会话结束时的对话导入，用于构建更丰富的图谱级知识
 - 在第一轮及可配置间隔注入 profile 事实
 - 无意义消息过滤（跳过"ok"、"thanks"等）
-- **Profile 范围容器**——在 `container_tag` 中使用 `{identity}`（例如 `hermes-{identity}` → `hermes-coder`），按 Hermes profile 隔离记忆
+- **Profile 范围容器**——在 `container_tag` 中使用 `{identity}`（例如 `hermes-{identity}` → `hermes-coder`），按 Doppel profile 隔离记忆
 - **多容器模式**——启用 `enable_custom_container_tags` 并配置 `custom_containers` 列表，让 Agent 跨命名容器读写。自动操作（同步、预取）保持在主容器上。
 
 <details>
@@ -520,6 +520,27 @@ echo 'SUPERMEMORY_API_KEY=***' >> ~/.hermes/.env
 
 **支持：** [Discord](https://supermemory.link/discord) · [support@supermemory.com](mailto:support@supermemory.com)
 
+### Memori
+
+使用 Memori Cloud 的结构化长期记忆，具备后台已完成轮次捕获、工具感知的回合上下文，以及用于事实、摘要、配额、注册和反馈的显式召回工具。
+
+| | |
+|---|---|
+| **适合场景** | 需要 Agent 自主控制召回，并结合结构化项目与会话归属的场景 |
+| **依赖** | `pip install hermes-memori` + `hermes-memori install` + [Memori API key](https://app.memorilabs.ai/signup) |
+| **数据存储** | Memori Cloud |
+| **费用** | Memori 定价 |
+
+**工具：** `memori_recall`（搜索长期记忆）、`memori_recall_summary`（摘要化上下文）、`memori_quota`（用量/配额）、`memori_signup`（请求注册邮箱）、`memori_feedback`（发送集成反馈）
+
+**安装：**
+```bash
+pip install hermes-memori
+hermes-memori install
+doppel config set memory.provider memori
+doppel memory setup
+```
+
 ---
 
 ## 提供者对比
@@ -534,13 +555,14 @@ echo 'SUPERMEMORY_API_KEY=***' >> ~/.hermes/.env
 | **RetainDB** | 云端 | $20/月 | 5 | `requests` | 增量压缩 |
 | **ByteRover** | 本地/云端 | 免费/付费 | 3 | `brv` CLI | 预压缩提取 |
 | **Supermemory** | 云端 | 付费 | 4 | `supermemory` | 上下文隔离 + 会话图谱导入 + 多容器 |
+| **Memori** | 云端 | 免费/付费 | 5 | `hermes-memori` | 工具感知记忆 + 结构化召回 |
 
 ## Profile 隔离
 
 每个提供者的数据按 [profile](/user-guide/profiles) 隔离：
 
-- **本地存储提供者**（Holographic、ByteRover）使用 `$HERMES_HOME/` 路径，各 profile 路径不同
-- **配置文件提供者**（Honcho、Mem0、Hindsight、Supermemory）将配置存储在 `$HERMES_HOME/` 中，每个 profile 拥有独立凭证
+- **本地存储提供者**（Holographic、ByteRover）使用当前 `$DOPPEL_HOME/` 路径（旧版 `$HERMES_HOME/` 仍然可用），因此每个 profile 都有独立的存储根目录
+- **配置文件提供者**（Honcho、Mem0、Hindsight、Supermemory）将配置存储在当前 home 路径下，因此每个 profile 拥有独立凭证
 - **云端提供者**（RetainDB）自动派生 profile 范围的项目名称
 - **环境变量提供者**（OpenViking）通过每个 profile 的 `.env` 文件配置
 

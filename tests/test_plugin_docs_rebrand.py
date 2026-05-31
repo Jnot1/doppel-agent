@@ -111,6 +111,7 @@ EN_SPOTIFY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "s
 EN_WEB_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "web-search.md"
 EN_VOICE_MODE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "voice-mode.md"
 EN_HONCHO_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "honcho.md"
+EN_MEMORY_PROVIDERS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "memory-providers.md"
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
 )
@@ -386,6 +387,17 @@ ZH_HONCHO_DOC = (
     / "user-guide"
     / "features"
     / "honcho.md"
+)
+ZH_MEMORY_PROVIDERS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "memory-providers.md"
 )
 ZH_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT
@@ -2178,6 +2190,85 @@ def test_honcho_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "When pointing Hermes at a self-hosted Honcho server" not in en
     assert "`hermes honcho status`" not in en
     assert "`hermes honcho status`" not in zh
+
+
+def test_memory_provider_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_MEMORY_PROVIDERS_DOC.read_text(encoding="utf-8")
+    zh = ZH_MEMORY_PROVIDERS_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent supports 9 external memory provider integrations" in en
+    assert "Doppel Agent 支持 9 个外部记忆提供者集成" in zh
+    assert "doppel memory setup` only lists the providers whose dependencies are currently installed" in en
+    assert "`doppel memory setup` 只会列出当前环境中已安装依赖的提供者" in zh
+    assert "doppel memory setup" in en
+    assert "doppel memory setup" in zh
+    assert "doppel memory status" in en
+    assert "doppel memory status" in zh
+    assert "doppel memory off" in en
+    assert "doppel memory off" in zh
+    assert "`doppel plugins`" in en
+    assert "`doppel plugins`" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "$DOPPEL_HOME/honcho.json" in en
+    assert "$DOPPEL_HOME/honcho.json" in zh
+    assert "$DOPPEL_HOME/mem0.json" in en
+    assert "$DOPPEL_HOME/mem0.json" in zh
+    assert "$DOPPEL_HOME/hindsight/config.json" in en
+    assert "$DOPPEL_HOME/hindsight/config.json" in zh
+    assert "$DOPPEL_HOME/memory_store.db" in en
+    assert "$DOPPEL_HOME/memory_store.db" in zh
+    assert "$DOPPEL_HOME/byterover/" in en
+    assert "$DOPPEL_HOME/byterover/" in zh
+    assert "$DOPPEL_HOME/supermemory.json" in en
+    assert "$DOPPEL_HOME/supermemory.json" in zh
+    assert "doppel honcho sync" in en
+    assert "doppel honcho sync" in zh
+    assert "doppel profile create coder --clone" in en
+    assert "doppel profile create coder --clone" in zh
+    assert "### Memori" in en
+    assert "### Memori" in zh
+    assert "doppel config set memory.provider memori" in en
+    assert "doppel config set memory.provider memori" in zh
+
+    for fixed in (
+        "hermes honcho setup",
+        "~/.hermes/honcho.json",
+        "$HERMES_HOME/honcho.json",
+        "$HERMES_HOME/mem0.json",
+        "$HERMES_HOME/hindsight/config.json",
+        "$HERMES_HOME/supermemory.json",
+        "~/.honcho/config.json",
+        "OPENVIKING_ENDPOINT",
+        "MEM0_API_KEY",
+        "HINDSIGHT_API_KEY",
+        "RETAINDB_API_KEY",
+        "SUPERMEMORY_API_KEY",
+        "SUPERMEMORY_CONTAINER_TAG",
+        "hermes.coder",
+        "hermes.writer",
+        '"workspace": "hermes"',
+        "hindsight-embed -p hermes ui start",
+        "hermes-user",
+        "| `bank_id` | `hermes` |",
+        "conversation between Hermes Agent and the User",
+        '| `container_tag` | `hermes` |',
+        "`hermes-memori install`",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "Hermes Agent ships with 8 external memory provider plugins" not in en
+    assert "Hermes Agent 内置 8 个外部记忆提供者插件" not in zh
+    assert "hermes memory setup      # interactive picker + configuration" not in en
+    assert "hermes memory setup      # 交互式选择器 + 配置" not in zh
+    assert "hermes memory status     # check what's active" not in en
+    assert "hermes memory status     # 查看当前激活状态" not in zh
+    assert "hermes memory off        # disable external provider" not in en
+    assert "hermes memory off        # 禁用外部提供者" not in zh
+    assert "`hermes plugins`" not in en
+    assert "`hermes plugins`" not in zh
 
 
 def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():

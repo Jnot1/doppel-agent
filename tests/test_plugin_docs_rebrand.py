@@ -5147,6 +5147,68 @@ def test_checkpoints_and_rollback_docs_prefer_doppel_customer_facing_surfaces():
         assert unexpected not in zh
 
 
+def test_image_generation_docs_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "image-generation.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "image-generation.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "selectable via `doppel tools`",
+        "Doppel Agent generates images from text prompts via FAL.ai.",
+        "user-configurable via `doppel tools`",
+        "`doppel setup --portal`",
+        "via `doppel tools`",
+        "```bash\ndoppel tools\n```",
+    ):
+        assert expected in en
+
+    for unexpected in (
+        "selectable via `hermes tools`",
+        "Hermes Agent generates images from text prompts via FAL.ai.",
+        "user-configurable via `hermes tools`",
+        "`hermes setup --portal`",
+        "via `hermes tools`",
+        "```bash\nhermes tools\n```",
+    ):
+        assert unexpected not in en
+
+    for expected in (
+        "支持 11 个模型",
+        "可用 `doppel tools` 切换",
+        "Doppel Agent 通过 FAL.ai 根据文字提示生成图像。",
+        "当前模型可通过 `doppel tools` 配置",
+        "`doppel setup --portal`",
+        "已有安装可通过 `doppel tools`",
+        "| `fal-ai/gpt-image-2` |",
+        "| `fal-ai/krea/v2/medium/text-to-image` |",
+        "| `fal-ai/krea/v2/large/text-to-image` |",
+        "|---|---|---|---|---|",
+    ):
+        assert expected in zh
+
+    for unexpected in (
+        "支持 8 个模型",
+        "可用 hermes tools 切换",
+        "Hermes Agent 通过 FAL.ai 根据文字提示生成图像。",
+        "当前模型可通过 `hermes tools` 配置",
+        "`hermes setup --portal`",
+        "已有安装可通过 `hermes tools`",
+        "```bash\nhermes tools\n```",
+    ):
+        assert unexpected not in zh
+
+
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
     zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

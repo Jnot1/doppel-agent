@@ -105,6 +105,7 @@ EN_MCP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "mcp.m
 EN_KANBAN_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "kanban.md"
 EN_FEATURE_SKILLS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "skills.md"
 EN_FEATURE_ACP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "acp.md"
+EN_TTS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tts.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -307,6 +308,17 @@ ZH_FEATURE_ACP_DOC = (
     / "user-guide"
     / "features"
     / "acp.md"
+)
+ZH_TTS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "tts.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1788,3 +1800,54 @@ def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     assert "hermes status" not in zh
     assert '"command": "hermes"' not in en
     assert '"command": "hermes"' not in zh
+
+
+def test_tts_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_TTS_DOC.read_text(encoding="utf-8")
+    zh = ZH_TTS_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent supports both text-to-speech output" in en
+    assert "Doppel Agent 支持跨所有消息平台的文字转语音" in zh
+    assert "doppel setup --portal" in en
+    assert "doppel setup --portal" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel tools" in en
+    assert "doppel tools" in zh
+    assert "doppel plugins enable my-tts" in en
+    assert "doppel plugins enable my-tts" in zh
+    assert "~/.doppel/audio_cache/" in en
+    assert "~/.doppel/audio_cache/" in zh
+    assert "~/.doppel/cache/piper-voices/" in en
+    assert "~/.doppel/cache/piper-voices/" in zh
+    assert "# In ~/.doppel/config.yaml" in en
+    assert "# In ~/.doppel/config.yaml" in zh
+
+    for fixed in (
+        "HERMES_LOCAL_STT_COMMAND",
+        "~/.hermes/plugins/my-tts/",
+        "pip install hermes-agent[mistral]",
+        "tts.providers.<name>",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "doppel plugins enable my-stt" in en
+    assert "stt.providers.<name>" in en
+
+    assert "Hermes Agent supports both text-to-speech output" not in en
+    assert "Hermes Agent 支持跨所有消息平台的文字转语音" not in zh
+    assert "hermes setup --portal" not in en
+    assert "hermes setup --portal" not in zh
+    assert "hermes model" not in en
+    assert "hermes model" not in zh
+    assert "hermes tools" not in en
+    assert "hermes tools" not in zh
+    assert "hermes plugins enable my-tts" not in en
+    assert "hermes plugins enable my-tts" not in zh
+    assert "~/.hermes/audio_cache/" not in en
+    assert "~/.hermes/audio_cache/" not in zh
+    assert "~/.hermes/cache/piper-voices/" not in en
+    assert "~/.hermes/cache/piper-voices/" not in zh
+    assert "# In ~/.hermes/config.yaml" not in en
+    assert "# In ~/.hermes/config.yaml" not in zh

@@ -4657,3 +4657,155 @@ def test_zh_environment_variable_reference_rebrands_remaining_doppel_prose():
         "这些配置写入 `~/.hermes/config.yaml` 的 `provider_routing` 部分",
     ):
         assert stale not in zh
+
+
+def test_skill_catalog_and_public_skill_pages_prefer_doppel_wording_for_kanban_teams_and_telephony():
+    en_catalog = (
+        REPO_ROOT / "website" / "docs" / "reference" / "skills-catalog.md"
+    ).read_text(encoding="utf-8")
+    zh_catalog = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "skills-catalog.md"
+    ).read_text(encoding="utf-8")
+    zh_optional_catalog = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "optional-skills-catalog.md"
+    ).read_text(encoding="utf-8")
+    en_kanban_lane = (
+        REPO_ROOT
+        / "website"
+        / "docs"
+        / "user-guide"
+        / "skills"
+        / "bundled"
+        / "autonomous-ai-agents"
+        / "autonomous-ai-agents-kanban-codex-lane.md"
+    ).read_text(encoding="utf-8")
+    en_kanban_worker = (
+        REPO_ROOT
+        / "website"
+        / "docs"
+        / "user-guide"
+        / "skills"
+        / "bundled"
+        / "devops"
+        / "devops-kanban-worker.md"
+    ).read_text(encoding="utf-8")
+    zh_kanban_worker = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "skills"
+        / "bundled"
+        / "devops"
+        / "devops-kanban-worker.md"
+    ).read_text(encoding="utf-8")
+    en_teams = (
+        REPO_ROOT
+        / "website"
+        / "docs"
+        / "user-guide"
+        / "skills"
+        / "bundled"
+        / "productivity"
+        / "productivity-teams-meeting-pipeline.md"
+    ).read_text(encoding="utf-8")
+    zh_teams = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "skills"
+        / "bundled"
+        / "productivity"
+        / "productivity-teams-meeting-pipeline.md"
+    ).read_text(encoding="utf-8")
+    en_telephony = (
+        REPO_ROOT
+        / "website"
+        / "docs"
+        / "user-guide"
+        / "skills"
+        / "optional"
+        / "productivity"
+        / "productivity-telephony.md"
+    ).read_text(encoding="utf-8")
+    zh_telephony = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "skills"
+        / "optional"
+        / "productivity"
+        / "productivity-telephony.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Use when a Doppel Kanban worker wants to run Codex CLI" in en_catalog
+    assert "Pitfalls, examples, and edge cases for Doppel Kanban workers." in en_catalog
+    assert "Operate the Teams meeting summary pipeline via Doppel CLI" in en_catalog
+    assert "通过 Doppel CLI 操作 Teams 会议摘要流水线" in zh_catalog
+    assert "Doppel Kanban worker 的陷阱、示例和边界情况" in zh_catalog
+    assert "为 Doppel 添加电话能力，无需修改核心工具。" in zh_optional_catalog
+
+    assert "Doppel owns the Kanban lifecycle" in en_kanban_lane
+    assert "Doppel Kanban 调度器" in zh_kanban_worker
+    assert "`doppel kanban unblock <id>`" in zh_kanban_worker
+    assert "`doppel kanban show <id> --json`" in zh_kanban_worker
+
+    assert "doppel teams-pipeline validate" in en_teams
+    assert "`~/.doppel/.env` on fresh installs" in en_teams
+    assert "doppel teams-pipeline validate" in zh_teams
+    assert "`~/.doppel/.env`" in zh_teams
+    assert "`doppel cron add`" in zh_teams
+
+    assert "Give Doppel phone capabilities without core tool changes" in en_telephony
+    assert "`doppel skills install official/productivity/telephony`" in en_telephony
+    assert "`~/.doppel/.env`" in en_telephony
+    assert "无需修改核心工具即可赋予 Doppel 电话能力" in zh_telephony
+    assert "`doppel skills install official/productivity/telephony`" in zh_telephony
+    assert "`~/.doppel/.env`" in zh_telephony
+
+    for stale in (
+        "Use when a Hermes Kanban worker wants to run Codex CLI",
+        "Pitfalls, examples, and edge cases for Hermes Kanban workers.",
+        "Operate the Teams meeting summary pipeline via Hermes CLI",
+        "Give Hermes phone capabilities without core tool changes",
+        "Hermes Kanban worker 的陷阱、示例与边界情况",
+        "通过 Hermes CLI 操作 Teams 会议摘要流水线",
+        "无需修改核心工具即可赋予 Hermes 电话能力",
+        "`hermes teams-pipeline validate`",
+        "`hermes kanban show <id> --json`",
+        "`hermes skills install official/productivity/telephony`",
+    ):
+        assert stale not in en_catalog
+        assert stale not in zh_catalog
+        assert stale not in zh_optional_catalog
+        assert stale not in en_kanban_lane
+        assert stale not in zh_kanban_worker
+        assert stale not in en_teams
+        assert stale not in zh_teams
+        assert stale not in en_telephony
+        assert stale not in zh_telephony

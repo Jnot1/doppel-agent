@@ -69,7 +69,7 @@ Doppel Agent 在执行 `doppel update` 时也会同步内置技能，但同步�
 | 技能 | 描述 | 路径 |
 |-------|-------------|------|
 | [`kanban-orchestrator`](/user-guide/skills/bundled/devops/devops-kanban-orchestrator) | 面向编排器（orchestrator）配置文件的分解策略与反诱惑规则，用于通过 Kanban 路由工作。"不要自己做工作"规则和基本生命周期会自动注入每个 Kanban worker 的系统 prompt；如需更深入的细节，请加载此技能。 | `devops/kanban-orchestrator` |
-| [`kanban-worker`](/user-guide/skills/bundled/devops/devops-kanban-worker) | Hermes Kanban worker 的陷阱、示例和边界情况。生命周期本身会作为 `KANBAN_GUIDANCE` 自动注入每个 worker 的系统 prompt（来自 `agent/prompt_builder.py`）；当需要更深入细节时加载此技能。 | `devops/kanban-worker` |
+| [`kanban-worker`](/user-guide/skills/bundled/devops/devops-kanban-worker) | Doppel Kanban worker 的陷阱、示例和边界情况。生命周期本身会作为 `KANBAN_GUIDANCE` 自动注入每个 worker 的系统 prompt（来自 `agent/prompt_builder.py`）；当需要更深入细节时加载此技能。 | `devops/kanban-worker` |
 | [`webhook-subscriptions`](/user-guide/skills/bundled/devops/devops-webhook-subscriptions) | Webhook 订阅：事件驱动的 agent 运行。 | `devops/webhook-subscriptions` |
 
 ## dogfood
@@ -150,7 +150,7 @@ Doppel Agent 在执行 `doppel update` 时也会同步内置技能，但同步�
 | [`notion`](/user-guide/skills/bundled/productivity/productivity-notion) | Notion API + ntn CLI：页面、数据库、Markdown、Workers。 | `productivity/notion` |
 | [`ocr-and-documents`](/user-guide/skills/bundled/productivity/productivity-ocr-and-documents) | 从 PDF/扫描件中提取文本（pymupdf、marker-pdf）。 | `productivity/ocr-and-documents` |
 | [`powerpoint`](/user-guide/skills/bundled/productivity/productivity-powerpoint) | 创建、读取、编辑 .pptx 演示文稿、幻灯片、备注、模板。 | `productivity/powerpoint` |
-| [`teams-meeting-pipeline`](/user-guide/skills/bundled/productivity/productivity-teams-meeting-pipeline) | 通过 Hermes CLI 操作 Teams 会议摘要流水线——汇总会议、检查流水线状态、重放任务、管理 Microsoft Graph 订阅。 | `productivity/teams-meeting-pipeline` |
+| [`teams-meeting-pipeline`](/user-guide/skills/bundled/productivity/productivity-teams-meeting-pipeline) | 通过 Doppel CLI 操作 Teams 会议摘要流水线——汇总会议、检查流水线状态、重放任务、管理 Microsoft Graph 订阅。 | `productivity/teams-meeting-pipeline` |
 
 ## red-teaming
 

@@ -48,6 +48,27 @@ def test_save_twilio_writes_env_and_state(tmp_path: Path, monkeypatch):
     assert state["twilio"]["default_phone_sid"] == "PN123"
 
 
+def test_doppel_home_takes_precedence_over_legacy_home(tmp_path: Path, monkeypatch):
+    mod = load_module()
+    doppel_home = tmp_path / ".doppel"
+    legacy_home = tmp_path / ".hermes"
+    monkeypatch.setenv("DOPPEL_HOME", str(doppel_home))
+    monkeypatch.setenv("HERMES_HOME", str(legacy_home))
+
+    result = mod.save_twilio(
+        "AC123",
+        "secret-token",
+        phone_number="+1 (702) 555-1234",
+        phone_sid="PN123",
+    )
+
+    assert result["success"] is True
+    assert (doppel_home / ".env").exists()
+    assert (doppel_home / "telephony_state.json").exists()
+    assert not (legacy_home / ".env").exists()
+    assert mod._hermes_home() == doppel_home
+
+
 def test_upsert_env_updates_existing_values(tmp_path: Path):
     mod = load_module()
     env_path = tmp_path / ".env"

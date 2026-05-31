@@ -385,28 +385,28 @@ doppel cron <list|create|edit|pause|resume|run|remove|status|tick>
 | `status` | 检查 cron 调度器是否正在运行。 |
 | `tick` | 运行到期任务一次后退出。 |
 
-## `hermes kanban`
+## `doppel kanban`
 
 ```bash
-hermes kanban [--board <slug>] <action> [options]
+doppel kanban [--board <slug>] <action> [options]
 ```
 
-多 profile、多项目协作看板。每个安装可托管多个看板（每个项目、仓库或领域一个）；每个看板是独立的队列，拥有自己的 SQLite 数据库和调度器作用域。新安装从名为 `default` 的单个看板开始，其数据库为 `~/.hermes/kanban.db`（向后兼容）；其他看板位于 `~/.hermes/kanban/boards/<slug>/kanban.db`。嵌入在 gateway 中的调度器每次 tick 扫描所有看板。
+多 profile、多项目协作看板。每个安装可托管多个看板（每个项目、仓库或领域一个）；每个看板是独立的队列，拥有自己的 SQLite 数据库和调度器作用域。新安装从名为 `default` 的单个看板开始，其数据库为 `~/.doppel/kanban.db`（向后兼容）；其他看板位于 `~/.doppel/kanban/boards/<slug>/kanban.db`。嵌入在 gateway 中的调度器每次 tick 扫描所有看板。
 
 **全局标志（适用于以下所有操作）：**
 
 | 标志 | 用途 |
 |------|---------|
-| `--board <slug>` | 操作特定看板。默认为当前看板（通过 `hermes kanban boards switch`、`HERMES_KANBAN_BOARD` 环境变量或 `default` 设置）。 |
+| `--board <slug>` | 操作特定看板。默认为当前看板（通过 `doppel kanban boards switch`、`HERMES_KANBAN_BOARD` 环境变量或 `default` 设置）。 |
 
-**这是人工/脚本操作界面。** 调度器生成的 agent worker 通过专用的 `kanban_*` [toolset](/user-guide/features/kanban#how-workers-interact-with-the-board)（`kanban_show`、`kanban_complete`、`kanban_block`、`kanban_create`、`kanban_link`、`kanban_comment`、`kanban_heartbeat`；编排器 profile 还可使用 `kanban_list` 和 `kanban_unblock`）驱动看板，而非调用 `hermes kanban`。Worker 的环境中固定了 `HERMES_KANBAN_BOARD`，因此物理上无法看到其他看板。
+**这是人工/脚本操作界面。** 调度器生成的 agent worker 通过专用的 `kanban_*` [toolset](/user-guide/features/kanban#how-workers-interact-with-the-board)（`kanban_show`、`kanban_complete`、`kanban_block`、`kanban_create`、`kanban_link`、`kanban_comment`、`kanban_heartbeat`；编排器 profile 还可使用 `kanban_list` 和 `kanban_unblock`）驱动看板，而非调用 `doppel kanban`。Worker 的环境中固定了 `HERMES_KANBAN_BOARD`，因此物理上无法看到其他看板。
 
 | 操作 | 用途 |
 |--------|---------|
 | `init` | 如果缺少则创建 `kanban.db`。幂等操作。 |
 | `boards list` / `boards ls` | 列出所有看板及任务数量。支持 `--json`、`--all`（包含已归档）。 |
 | `boards create <slug>` | 创建新看板。标志：`--name`、`--description`、`--icon`、`--color`、`--switch`（设为活跃）。Slug 为 kebab-case，自动转小写。 |
-| `boards switch <slug>` / `boards use` | 将 `<slug>` 持久化为活跃看板（写入 `~/.hermes/kanban/current`）。 |
+| `boards switch <slug>` / `boards use` | 将 `<slug>` 持久化为活跃看板（写入 `~/.doppel/kanban/current`）。 |
 | `boards show` / `boards current` | 打印当前活跃看板的名称、数据库路径和任务数量。 |
 | `boards rename <slug> "<name>"` | 更改看板的显示名称。Slug 不可变。 |
 | `boards rm <slug>` | 归档（默认）或硬删除看板。`--delete` 跳过归档步骤。已归档看板移至 `boards/_archived/<slug>-<ts>/`。`default` 看板拒绝此操作。 |
@@ -434,28 +434,28 @@ hermes kanban [--board <slug>] <action> [options]
 
 ```bash
 # 创建第二个看板并在不切换的情况下向其添加任务。
-hermes kanban boards create atm10-server --name "ATM10 Server" --icon 🎮
-hermes kanban --board atm10-server create "Restart server" --assignee ops
+doppel kanban boards create atm10-server --name "ATM10 Server" --icon 🎮
+doppel kanban --board atm10-server create "Restart server" --assignee ops
 
 # 切换活跃看板以供后续调用使用。
-hermes kanban boards switch atm10-server
-hermes kanban list                  # 显示 atm10-server 的任务
+doppel kanban boards switch atm10-server
+doppel kanban list                  # 显示 atm10-server 的任务
 
 # 归档看板（可恢复）或硬删除。
-hermes kanban boards rm atm10-server
-hermes kanban boards rm atm10-server --delete
+doppel kanban boards rm atm10-server
+doppel kanban boards rm atm10-server --delete
 ```
 
-看板解析顺序（优先级从高到低）：`--board <slug>` 标志 → `HERMES_KANBAN_BOARD` 环境变量 → `~/.hermes/kanban/current` 文件 → `default`。
+看板解析顺序（优先级从高到低）：`--board <slug>` 标志 → `HERMES_KANBAN_BOARD` 环境变量 → `~/.doppel/kanban/current` 文件 → `default`。
 
 所有操作也可作为 gateway 中的斜杠命令使用（`/kanban …`），参数界面相同——包括 `boards` 子命令和 `--board` 标志。
 
 完整设计——与 Cline Kanban / Paperclip / NanoClaw / Gemini Enterprise 的对比、八种协作模式、四个用户故事、并发正确性证明——请参阅仓库中的 `docs/hermes-kanban-v1-spec.pdf` 或 [Kanban 用户指南](/user-guide/features/kanban)。
 
-## `hermes webhook`
+## `doppel webhook`
 
 ```bash
-hermes webhook <subscribe|list|remove|test>
+doppel webhook <subscribe|list|remove|test>
 ```
 
 管理用于事件驱动 agent 激活的动态 webhook 订阅。需要在 config 中启用 webhook 平台——如未配置，将打印设置说明。
@@ -467,10 +467,10 @@ hermes webhook <subscribe|list|remove|test>
 | `remove` / `rm` | 删除动态订阅。不影响 config.yaml 中的静态路由。 |
 | `test` | 发送测试 POST 以验证订阅是否正常工作。 |
 
-### `hermes webhook subscribe`
+### `doppel webhook subscribe`
 
 ```bash
-hermes webhook subscribe <name> [options]
+doppel webhook subscribe <name> [options]
 ```
 
 | 选项 | 说明 |
@@ -484,12 +484,12 @@ hermes webhook subscribe <name> [options]
 | `--secret` | 自定义 HMAC 密钥。省略时自动生成。 |
 | `--deliver-only` | 跳过 agent——将渲染后的 `--prompt` 作为字面消息投递。零 LLM 成本，亚秒级投递。要求 `--deliver` 为真实目标（非 `log`）。 |
 
-订阅持久化到 `~/.hermes/webhook_subscriptions.json`，webhook 适配器无需重启 gateway 即可热重载。
+订阅持久化到 `~/.doppel/webhook_subscriptions.json`，webhook 适配器无需重启 gateway 即可热重载。
 
-## `hermes doctor`
+## `doppel doctor`
 
 ```bash
-hermes doctor [--fix]
+doppel doctor [--fix]
 ```
 
 | 选项 | 说明 |

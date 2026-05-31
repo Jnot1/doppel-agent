@@ -2206,7 +2206,7 @@ def test_zh_reference_cli_commands_rebrand_whatsapp_auth_and_cron_cluster():
         / "cli-commands.md"
     ).read_text(encoding="utf-8")
 
-    section = zh_cli_commands.split("## `doppel whatsapp`", 1)[1].split("## `hermes kanban`", 1)[0]
+    section = zh_cli_commands.split("## `doppel whatsapp`", 1)[1].split("## `doppel kanban`", 1)[0]
 
     assert "```bash\ndoppel whatsapp\n```" in section
     assert "## `doppel slack`" in section
@@ -2237,6 +2237,48 @@ def test_zh_reference_cli_commands_rebrand_whatsapp_auth_and_cron_cluster():
     assert "hermes status [--all] [--deep]" not in section
     assert "## `hermes cron`" not in section
     assert "hermes cron <list|create|edit|pause|resume|run|remove|status|tick>" not in section
+
+
+def test_zh_reference_cli_commands_rebrand_kanban_webhook_and_doctor_cluster():
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    section = zh_cli_commands.split("## `doppel kanban`", 1)[1].split("## `doppel dump`", 1)[0]
+
+    assert "doppel kanban [--board <slug>] <action> [options]" in section
+    assert "~/.doppel/kanban.db" in section
+    assert "通过 `doppel kanban boards switch`" in section
+    assert "而非调用 `doppel kanban`" in section
+    assert "写入 `~/.doppel/kanban/current`" in section
+    assert "doppel kanban boards create atm10-server" in section
+    assert "doppel kanban boards rm atm10-server --delete" in section
+    assert "→ `~/.doppel/kanban/current` 文件" in section
+    assert "## `doppel webhook`" in section
+    assert "doppel webhook <subscribe|list|remove|test>" in section
+    assert "### `doppel webhook subscribe`" in section
+    assert "doppel webhook subscribe <name> [options]" in section
+    assert "~/.doppel/webhook_subscriptions.json" in section
+    assert "## `doppel doctor`" in section
+    assert "doppel doctor [--fix]" in section
+    assert "## `hermes kanban`" not in section
+    assert "~/.hermes/kanban.db" not in section
+    assert "通过 `hermes kanban boards switch`" not in section
+    assert "而非调用 `hermes kanban`" not in section
+    assert "写入 `~/.hermes/kanban/current`" not in section
+    assert "hermes kanban boards create atm10-server" not in section
+    assert "## `hermes webhook`" not in section
+    assert "### `hermes webhook subscribe`" not in section
+    assert "~/.hermes/webhook_subscriptions.json" not in section
+    assert "## `hermes doctor`" not in section
+    assert "hermes doctor [--fix]" not in section
 
 
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():

@@ -1219,7 +1219,7 @@ display:
 
 ### 文件变更验证器
 
-当 `display.file_mutation_verifier` 为 `true`（默认）时，每当本轮中 `write_file` 或 `patch` 调用失败且从未被对同一路径的成功写入取代时，Hermes 会在 assistant 的最终响应中附加一行建议。这捕获了"批量并行补丁，一半静默失败，模型总结成功"这类过度声明，而无需您在每次编辑后手动运行 `git status`。
+当 `display.file_mutation_verifier` 为 `true`（默认）时，每当本轮中 `write_file` 或 `patch` 调用失败且从未被对同一路径的成功写入取代时，Doppel Agent 会在 assistant 的最终响应中附加一行建议。这捕获了“批量并行补丁，一半静默失败，模型总结成功”这类过度声明，而无需您在每次编辑后手动运行 `git status`。
 
 示例页脚：
 
@@ -1256,7 +1256,7 @@ display:
 
 ### 运行时元数据页脚（仅限 gateway）
 
-当 `display.runtime_footer.enabled: true` 时，Hermes 在每个 gateway 轮次的**最终**消息中附加一个小型运行时上下文页脚 —— 与 CLI 在其状态栏中显示的相同信息（模型、上下文 %、cwd、会话时长、token、成本）。默认关闭；如果您的团队希望每个回复都包含来源信息，请按 gateway 选择加入。
+当 `display.runtime_footer.enabled: true` 时，Doppel Agent 会在每个 gateway 轮次的**最终**消息中附加一个小型运行时上下文页脚 —— 与 CLI 在其状态栏中显示的相同信息（模型、上下文 %、cwd、会话时长、token、成本）。默认关闭；如果您的团队希望每个回复都包含来源信息，请按 gateway 选择加入。
 
 ```yaml
 display:
@@ -1293,7 +1293,7 @@ display:
 
 没有覆盖的平台回退到全局 `tool_progress` 值。有效平台键：`telegram`、`discord`、`slack`、`signal`、`whatsapp`、`matrix`、`mattermost`、`email`、`sms`、`homeassistant`、`dingtalk`、`feishu`、`wecom`、`weixin`、`bluebubbles`、`qqbot`。旧版 `display.tool_progress_overrides` 键仍可加载以向后兼容，但已弃用，并在首次加载时迁移到 `display.platforms`。
 
-`interim_assistant_messages` 仅限 gateway。启用后，Hermes 将已完成的轮次中 assistant 更新作为单独的聊天消息发送。这与 `tool_progress` 无关，不需要 gateway 流式传输。
+`interim_assistant_messages` 仅限 gateway。启用后，Doppel Agent 会将已完成的轮次中 assistant 更新作为单独的聊天消息发送。这与 `tool_progress` 无关，不需要 gateway 流式传输。
 
 ## 隐私
 
@@ -1334,7 +1334,7 @@ Provider 行为：
 - `groq` 使用 Groq 的 Whisper 兼容端点，读取 `GROQ_API_KEY`。
 - `openai` 使用 OpenAI 语音 API，读取 `VOICE_TOOLS_OPENAI_KEY`。
 
-如果请求的 provider 不可用，Hermes 按此顺序自动回退：`local` → `groq` → `openai`。
+如果请求的 provider 不可用，Doppel Agent 会按此顺序自动回退：`local` → `groq` → `openai`。
 
 Groq 和 OpenAI 模型覆盖由环境变量驱动：
 
@@ -1394,7 +1394,7 @@ streaming:
 **新的最终消息（Telegram）：** Telegram 的 `editMessageText` 保留原始消息时间戳，因此长时间运行的流式回复即使在完成后也会保留第一个 token 的时间戳。当 `fresh_final_after_seconds > 0`（默认 `60`）时，完成的回复作为全新消息传递（尽力删除旧预览），以便 Telegram 的可见时间戳反映完成时间。短预览仍然就地最终化。设置为 `0` 以始终就地编辑。
 
 :::note
-流式传输默认禁用。在 `~/.hermes/config.yaml` 中启用以尝试流式传输 UX。
+流式传输默认禁用。在 `~/.doppel/config.yaml` 中启用以尝试流式传输 UX；旧版 `~/.hermes/config.yaml` 仍然兼容。
 :::
 
 ## 群聊会话隔离
@@ -1406,15 +1406,15 @@ group_sessions_per_user: true  # true = 群组/频道中每用户隔离，false 
 ```
 
 - `true` 是默认和推荐设置。在 Discord 频道、Telegram 群组、Slack 频道和类似共享上下文中，当平台提供用户 ID 时，每个发送者获得自己的会话。
-- `false` 恢复到旧的共享房间行为。如果您明确希望 Hermes 将频道视为一个协作对话，这可能有用，但这也意味着用户共享上下文、token 成本和中断状态。
-- 私信不受影响。Hermes 仍然像往常一样通过聊天/DM ID 键入 DM。
+- `false` 恢复到旧的共享房间行为。如果您明确希望 Doppel Agent 将频道视为一个协作对话，这可能有用，但这也意味着用户共享上下文、token 成本和中断状态。
+- 私信不受影响。Doppel Agent 仍然像往常一样通过聊天/DM ID 键入 DM。
 - 线程与其父频道保持隔离；使用 `true` 时，每个参与者在线程内也获得自己的会话。
 
 有关行为详情和示例，请参阅[会话](/user-guide/sessions)和 [Discord 指南](/user-guide/messaging/discord)。
 
 ## 未授权 DM 行为
 
-控制当未知用户发送私信时 Hermes 的行为：
+控制当未知用户发送私信时 Doppel Agent 的行为：
 
 ```yaml
 unauthorized_dm_behavior: pair
@@ -1423,7 +1423,7 @@ whatsapp:
   unauthorized_dm_behavior: ignore
 ```
 
-- `pair` 是默认值。Hermes 拒绝访问，但在 DM 中回复一次性配对码。
+- `pair` 是默认值。Doppel Agent 会拒绝访问，但会在 DM 中回复一次性配对码。
 - `ignore` 静默丢弃未授权的 DM。
 - 平台部分覆盖全局默认值，因此您可以在广泛范围内保持配对启用，同时使一个平台更安静。
 
@@ -1435,13 +1435,13 @@ whatsapp:
 quick_commands:
   status:
     type: exec
-    command: systemctl status hermes-agent
+    command: doppel status
   disk:
     type: exec
     command: df -h /
   update:
     type: exec
-    command: cd ~/.hermes/hermes-agent && git pull && pip install -e .
+    command: doppel update
   gpu:
     type: exec
     command: nvidia-smi --query-gpu=name,utilization.gpu,memory.used,memory.total --format=csv,noheader
@@ -1485,13 +1485,13 @@ code_execution:
 **`mode`** 控制脚本的工作目录和 Python 解释器：
 
 - **`project`**（默认）—— 脚本在会话的工作目录中以活跃 virtualenv/conda 环境的 python 运行。项目依赖（`pandas`、`torch`、项目包）和相对路径（`.env`、`./data.csv`）自然解析，与 `terminal()` 看到的一致。
-- **`strict`** —— 脚本在临时暂存目录中以 `sys.executable`（Hermes 自己的 python）运行。最大可重现性，但项目依赖和相对路径不会解析。
+- **`strict`** —— 脚本在临时暂存目录中以 `sys.executable`（Doppel Agent 自带的 python）运行。最大可重现性，但项目依赖和相对路径不会解析。
 
 环境清理（删除 `*_API_KEY`、`*_TOKEN`、`*_SECRET`、`*_PASSWORD`、`*_CREDENTIAL`、`*_PASSWD`、`*_AUTH`）和工具白名单在两种模式下完全相同 —— 切换模式不会改变安全态势。
 
 ## Web 搜索后端
 
-`web_search` 和 `web_extract` 工具支持五种后端 provider。在 `config.yaml` 中或通过 `hermes tools` 配置后端：
+`web_search` 和 `web_extract` 工具支持五种后端 provider。在 `config.yaml` 中或通过 `doppel tools` 配置后端：
 
 ```yaml
 web:
@@ -1518,7 +1518,7 @@ web:
 
 **Parallel 搜索模式：** 设置 `PARALLEL_SEARCH_MODE` 控制搜索行为 —— `fast`、`one-shot` 或 `agentic`（默认：`agentic`）。
 
-**Exa：** 在 `~/.hermes/.env` 中设置 `EXA_API_KEY`。支持 `category` 过滤（`company`、`research paper`、`news`、`people`、`personal site`、`pdf`）和域名/日期过滤器。
+**Exa：** 在 `~/.doppel/.env` 中设置 `EXA_API_KEY`；旧版 `~/.hermes/.env` 安装也仍然兼容。支持 `category` 过滤（`company`、`research paper`、`news`、`people`、`personal site`、`pdf`）和域名/日期过滤器。
 
 ## 浏览器
 
@@ -1528,8 +1528,8 @@ web:
 browser:
   inactivity_timeout: 120        # 自动关闭空闲会话前的秒数
   command_timeout: 30             # 浏览器命令超时（截图、导航等）（秒）
-  record_sessions: false         # 自动将浏览器会话录制为 WebM 视频到 ~/.hermes/browser_recordings/
-  # 可选 CDP 覆盖 —— 设置后，Hermes 直接附加到您自己的
+  record_sessions: false         # 自动将浏览器会话录制为 WebM 视频到 ~/.doppel/browser_recordings/
+  # 可选 CDP 覆盖 —— 设置后，Doppel Agent 直接附加到您自己的
   # Chromium 系浏览器（通过 /browser connect），而不是启动无头浏览器。
   cdp_url: ""
   # 对话框监督器 —— 控制当 CDP 后端附加时（Browserbase、本地 Chromium 系
@@ -1540,7 +1540,7 @@ browser:
   camofox:
     managed_persistence: false   # 为 true 时，Camofox 会话跨重启持久化 cookie/登录
     user_id: ""                  # 可选的外部管理 Camofox userId
-    session_key: ""              # Hermes 创建标签页时发送的可选会话密钥
+    session_key: ""              # Doppel Agent 创建标签页时发送的可选会话密钥
     adopt_existing_tab: false    # 在创建新标签页之前重用此身份的现有标签页
 ```
 
@@ -1585,7 +1585,7 @@ discord:
 
 ```yaml
 security:
-  redact_secrets: false          # 在工具输出和日志中脱敏 API 密钥模式（默认关闭）
+  redact_secrets: true           # 在工具输出和日志中脱敏 API 密钥模式（默认开启）
   tirith_enabled: true           # 为终端命令启用 Tirith 安全扫描
   tirith_path: "tirith"          # tirith 二进制文件路径（默认：$PATH 中的 "tirith"）
   tirith_timeout: 5              # 等待 tirith 扫描的秒数
@@ -1596,7 +1596,7 @@ security:
     shared_files: []
 ```
 
-- `redact_secrets` —— 为 `true` 时，自动检测并脱敏工具输出中看起来像 API 密钥、token 和密码的模式，然后再进入对话上下文和日志。**默认关闭** —— 如果您经常在工具输出中处理真实凭据并希望有安全网，请启用。显式设置为 `true` 以开启。
+- `redact_secrets` —— 为 `true` 时，自动检测并脱敏工具输出中看起来像 API 密钥、token 和密码的模式，然后再进入对话上下文和日志。**默认开启**。仅当您需要为调试或脱敏器开发保留原始疑似凭据字符串时，才显式将其设置为 `false`。
 - `tirith_enabled` —— 为 `true` 时，终端命令在执行前由 [Tirith](https://github.com/sheeki03/tirith) 扫描以检测潜在危险操作。
 - `tirith_path` —— tirith 二进制文件的路径。如果 tirith 安装在非标准位置，请设置此项。
 - `tirith_timeout` —— 等待 tirith 扫描的最大秒数。如果扫描超时，命令继续执行。
@@ -1615,7 +1615,7 @@ security:
       - "admin.example.com"
       - "*.local"
     shared_files:                # 从外部文件加载额外规则
-      - "/etc/hermes/blocked-sites.txt"
+      - "/etc/doppel/blocked-sites.txt"
 ```
 
 启用后，任何匹配被阻止域名模式的 URL 在 web 或浏览器工具执行之前都会被拒绝。这适用于 `web_search`、`web_extract`、`browser_navigate` 以及任何访问 URL 的工具。
@@ -1631,7 +1631,7 @@ security:
 
 ## 智能审批
 
-控制 Hermes 如何处理潜在危险命令：
+控制 Doppel Agent 如何处理潜在危险命令：
 
 ```yaml
 approvals:
@@ -1656,7 +1656,7 @@ approvals:
 
 ```yaml
 checkpoints:
-  enabled: false                 # 启用自动检查点（也可：hermes chat --checkpoints）。默认：false（选择加入）。
+  enabled: false                 # 启用自动检查点（也可：doppel chat --checkpoints）。默认：false（选择加入）。
   max_snapshots: 20              # 每个目录保留的最大检查点数（默认：20）
 ```
 
@@ -1679,9 +1679,9 @@ delegation:
 
 **子 agent provider:model 覆盖：** 默认情况下，子 agent 继承父 agent 的 provider 和模型。设置 `delegation.provider` 和 `delegation.model` 将子 agent 路由到不同的 provider:model 对 —— 例如，在您的主 agent 运行昂贵推理模型时，为范围较窄的子任务使用便宜/快速的模型。
 
-**直接端点覆盖：** 如果您想要明显的自定义端点路径，请设置 `delegation.base_url`、`delegation.api_key` 和 `delegation.model`。这将子 agent 直接发送到该 OpenAI 兼容端点，并优先于 `delegation.provider`。如果省略 `delegation.api_key`，Hermes 仅回退到 `OPENAI_API_KEY`。
+**直接端点覆盖：** 如果您想要明显的自定义端点路径，请设置 `delegation.base_url`、`delegation.api_key` 和 `delegation.model`。这将子 agent 直接发送到该 OpenAI 兼容端点，并优先于 `delegation.provider`。如果省略 `delegation.api_key`，Doppel Agent 仅回退到 `OPENAI_API_KEY`。
 
-**线路协议（`api_mode`）：** Hermes 从 `delegation.base_url` 自动检测线路协议（例如以 `/anthropic` 结尾的路径 → `anthropic_messages`；Codex/原生 Anthropic/Kimi-coding 主机名保留其现有检测）。对于启发式无法分类的端点 —— 例如 Azure AI Foundry、MiniMax、Zhipu GLM 或前置 Anthropic 形状后端的 LiteLLM 代理 —— 请将 `delegation.api_mode` 显式设置为 `chat_completions`、`codex_responses` 或 `anthropic_messages` 之一。留空（默认）以保持自动检测。
+**线路协议（`api_mode`）：** Doppel Agent 会从 `delegation.base_url` 自动检测线路协议（例如以 `/anthropic` 结尾的路径 → `anthropic_messages`；Codex/原生 Anthropic/Kimi-coding 主机名保留其现有检测）。对于启发式无法分类的端点 —— 例如 Azure AI Foundry、MiniMax、Zhipu GLM 或前置 Anthropic 形状后端的 LiteLLM 代理 —— 请将 `delegation.api_mode` 显式设置为 `chat_completions`、`codex_responses` 或 `anthropic_messages` 之一。留空（默认）以保持自动检测。
 
 委托 provider 使用与 CLI/gateway 启动相同的凭据解析。所有配置的 provider 均受支持：`openrouter`、`nous`、`copilot`、`zai`、`kimi-coding`、`minimax`、`minimax-cn`。设置 provider 时，系统自动解析正确的基础 URL、API 密钥和 API 模式 —— 无需手动凭据连接。
 
@@ -1700,11 +1700,11 @@ clarify:
 
 ## 上下文文件（SOUL.md、AGENTS.md）
 
-Hermes 使用两种不同的上下文范围：
+Doppel Agent 使用两种不同的上下文范围：
 
 | 文件 | 用途 | 范围 |
 |------|---------|-------|
-| `SOUL.md` | **主要 agent 身份** —— 定义 agent 是谁（系统提示词第 #1 槽位） | `~/.hermes/SOUL.md` 或 `$HERMES_HOME/SOUL.md` |
+| `SOUL.md` | **主要 agent 身份** —— 定义 agent 是谁（系统提示词第 #1 槽位） | `~/.doppel/SOUL.md` 或 `$DOPPEL_HOME/SOUL.md` |
 | `.hermes.md` / `HERMES.md` | 项目特定指令（最高优先级） | 向上走到 git 根目录 |
 | `AGENTS.md` | 项目特定指令、编码规范 | 递归目录遍历 |
 | `CLAUDE.md` | Claude Code 上下文文件（也会检测） | 仅工作目录 |
@@ -1712,10 +1712,10 @@ Hermes 使用两种不同的上下文范围：
 | `.cursor/rules/*.mdc` | Cursor 规则文件（也会检测） | 仅工作目录 |
 
 - **SOUL.md** 是 agent 的主要身份。它占据系统提示词的第 #1 槽位，完全替换内置的默认身份。编辑它以完全自定义 agent 是谁。
-- 如果 SOUL.md 缺失、为空或无法加载，Hermes 回退到内置默认身份。
+- 如果 SOUL.md 缺失、为空或无法加载，Doppel Agent 会回退到内置默认身份。
 - **项目上下文文件使用优先级系统** —— 仅加载一种类型（第一个匹配优先）：`.hermes.md` → `AGENTS.md` → `CLAUDE.md` → `.cursorrules`。SOUL.md 始终独立加载。
 - **AGENTS.md** 是分层的：如果子目录也有 AGENTS.md，所有都会合并。
-- 如果 `SOUL.md` 不存在，Hermes 会自动生成默认的 `SOUL.md`。
+- 如果 `SOUL.md` 不存在，Doppel Agent 会自动生成默认的 `SOUL.md`。
 - 所有加载的上下文文件上限为 20,000 字符，并进行智能截断。
 
 另请参阅：
@@ -1726,13 +1726,15 @@ Hermes 使用两种不同的上下文范围：
 
 | 上下文 | 默认值 |
 |---------|---------|
-| **CLI（`hermes`）** | 运行命令的当前目录 |
-| **消息 gateway** | 主目录 `~`（用 `MESSAGING_CWD` 覆盖） |
+| **CLI（`doppel`）** | 运行命令的当前目录 |
+| **消息 gateway** | `~/.doppel/config.yaml` 中的 `terminal.cwd`；如果未设置，则使用主目录 `~` |
 | **Docker / Singularity / Modal / SSH** | 容器或远程机器内用户的主目录 |
 
 覆盖工作目录：
-```bash
-# 在 ~/.hermes/.env 或 ~/.hermes/config.yaml 中：
-MESSAGING_CWD=/home/myuser/projects    # Gateway 会话
-TERMINAL_CWD=/workspace                # 所有终端会话
+```yaml
+# 在 ~/.doppel/config.yaml 中：
+terminal:
+  cwd: /home/myuser/projects
 ```
+
+`MESSAGING_CWD` 和直接写入 `TERMINAL_CWD` 的方式在 `~/.doppel/.env` 中仍然受支持，旧版 `~/.hermes/.env` 安装也依然兼容。新的配置应优先使用 `terminal.cwd`。

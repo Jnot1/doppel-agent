@@ -662,6 +662,28 @@ def _extract_configuration_middle_cluster(
     return text[start:end]
 
 
+def _extract_configuration_display_to_working_directory_cluster(
+    text: str,
+    start_heading: str,
+    working_heading: str,
+) -> str:
+    start = text.index(start_heading)
+    working_start = text.index(working_heading, start)
+    end = text.find("\n## ", working_start + 1)
+    if end == -1:
+        end = len(text)
+    return text[start:end]
+
+
+def _assert_prefer_doppel_terminology(
+    text: str,
+    doppel_phrase: str,
+    hermes_phrase: str,
+) -> None:
+    if doppel_phrase in text:
+        assert hermes_phrase not in text
+
+
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
     plugins = EN_PLUGINS_DOC.read_text(encoding="utf-8")
     guide = EN_BUILD_GUIDE.read_text(encoding="utf-8")
@@ -1044,6 +1066,106 @@ def test_configuration_remote_sync_and_persistent_shell_cluster_prefer_doppel_an
     assert "~/.hermes/" in en_cluster
     assert "~/.hermes/" in zh_cluster
     assert "~/.hermes/.env" in zh_cluster
+
+
+def test_configuration_display_to_working_directory_cluster_prefer_doppel_wording_and_runtime_terms():
+    en = EN_CONFIGURATION_DOC.read_text(encoding="utf-8")
+    zh = ZH_CONFIGURATION_DOC.read_text(encoding="utf-8")
+
+    en_cluster = _extract_configuration_display_to_working_directory_cluster(
+        en,
+        "## Display Settings",
+        "## Working Directory",
+    )
+    zh_cluster = _extract_configuration_display_to_working_directory_cluster(
+        zh,
+        "## 显示设置",
+        "## 工作目录",
+    )
+
+    assert "## Display Settings" in en_cluster
+    assert "## 显示设置" in zh_cluster
+    assert "## Working Directory" in en_cluster
+    assert "## 工作目录" in zh_cluster
+    _assert_prefer_doppel_terminology(
+        en_cluster,
+        "Doppel Agent appends",
+        "Hermes appends",
+    )
+    _assert_prefer_doppel_terminology(
+        en_cluster,
+        "Doppel Agent falls back automatically",
+        "Hermes falls back automatically",
+    )
+    _assert_prefer_doppel_terminology(
+        en_cluster,
+        "Control what Doppel Agent does when an unknown user sends a direct message",
+        "Control what Hermes does when an unknown user sends a direct message",
+    )
+    _assert_prefer_doppel_terminology(
+        zh_cluster,
+        "控制当未知用户发送私信时 Doppel Agent 的行为",
+        "控制当未知用户发送私信时 Hermes 的行为",
+    )
+    _assert_prefer_doppel_terminology(
+        en_cluster,
+        "doppel status",
+        "hermes status",
+    )
+    _assert_prefer_doppel_terminology(
+        en_cluster,
+        "doppel update",
+        "hermes update",
+    )
+    _assert_prefer_doppel_terminology(
+        zh_cluster,
+        "doppel status",
+        "hermes status",
+    )
+    _assert_prefer_doppel_terminology(
+        zh_cluster,
+        "doppel update",
+        "hermes update",
+    )
+    assert "HERMES_FILE_MUTATION_VERIFIER" in en_cluster
+    assert "HERMES_FILE_MUTATION_VERIFIER" in zh_cluster
+    assert "HERMES_LANGUAGE" in en_cluster
+    assert "HERMES_LANGUAGE" in zh_cluster
+    assert "HERMES_YOLO_MODE" in en_cluster
+    assert "HERMES_YOLO_MODE" in zh_cluster
+    assert ".hermes.md" in en_cluster
+    assert "HERMES.md" in en_cluster
+    assert ".hermes.md" in zh_cluster
+    assert "HERMES.md" in zh_cluster
+    assert "MESSAGING_CWD" in en_cluster
+    assert "TERMINAL_CWD" in en_cluster
+    assert "MESSAGING_CWD" in zh_cluster
+    assert "TERMINAL_CWD" in zh_cluster
+
+    assert "~/.doppel/browser_recordings/" in en_cluster
+    assert "~/.doppel/browser_recordings/" in zh_cluster
+    assert "~/.doppel/SOUL.md" in en_cluster
+    assert "$DOPPEL_HOME/SOUL.md" in en_cluster
+    assert "~/.doppel/SOUL.md" in zh_cluster
+    assert "$DOPPEL_HOME/SOUL.md" in zh_cluster
+    assert "~/.hermes/.env" in en_cluster or "~/.hermes/.env" in zh_cluster
+    assert "/etc/doppel/blocked-sites.txt" in en_cluster
+    assert "/etc/doppel/blocked-sites.txt" in zh_cluster
+
+    _assert_prefer_doppel_terminology(
+        en_cluster,
+        "CLI (`doppel`)",
+        "CLI (`hermes`)",
+    )
+    _assert_prefer_doppel_terminology(
+        zh_cluster,
+        "CLI（`doppel`）",
+        "CLI（`hermes`）",
+    )
+    if "doppel tools" in en_cluster:
+        assert "hermes tools" not in en_cluster
+    if "doppel tools" in zh_cluster:
+        assert "hermes tools" not in zh_cluster
 
 
 def test_configuration_skill_and_compression_cluster_prefer_doppel_and_keep_runtime_terms():

@@ -7,13 +7,13 @@ sidebar_position: 7
 
 # Provider Routing
 
-使用 [OpenRouter](https://openrouter.ai) 作为 LLM provider 时，Hermes Agent 支持 **provider routing**（提供商路由）——对哪些底层 AI provider 处理你的请求以及如何排列优先级进行精细控制。
+使用 [OpenRouter](https://openrouter.ai) 作为 LLM provider 时，Doppel Agent 支持 **provider routing**（提供商路由）——对哪些底层 AI provider 处理你的请求以及如何排列优先级进行精细控制。
 
 OpenRouter 将请求路由到多个 provider（例如 Anthropic、Google、AWS Bedrock、Together AI）。Provider routing 让你可以针对成本、速度、质量进行优化，或强制指定特定 provider。
 
 ## 配置
 
-在 `~/.hermes/config.yaml` 中添加 `provider_routing` 部分：
+在 `~/.doppel/config.yaml` 中添加 `provider_routing` 部分：
 
 ```yaml
 provider_routing:
@@ -24,6 +24,8 @@ provider_routing:
   require_parameters: false  # 仅使用支持所有参数的 provider
   data_collection: null   # 控制数据收集（"allow" 或 "deny"）
 ```
+
+legacy 安装仍可能将这段配置保留在 `~/.hermes/config.yaml` 中。
 
 :::info
 Provider routing 仅在使用 OpenRouter 时生效。直接连接 provider（例如直接连接 Anthropic API）时无效。
@@ -165,7 +167,7 @@ provider_routing:
 
 Provider routing 偏好通过每次 API 调用的 `extra_body.provider` 字段传递给 OpenRouter API，适用于以下两种模式：
 
-- **CLI 模式** — 在 `~/.hermes/config.yaml` 中配置，启动时加载
+- **CLI 模式** — 在 `~/.doppel/config.yaml` 中配置，启动时加载（legacy 安装仍可能使用 `~/.hermes/config.yaml`）
 - **Gateway 模式** — 同一配置文件，gateway 启动时加载
 
 路由配置从 `config.yaml` 读取，并在创建 `AIAgent` 时作为参数传入：

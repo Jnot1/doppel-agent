@@ -77,6 +77,9 @@ EN_TRAJECTORY_DOC = EN_DEV_GUIDE_DIR / "trajectory-format.md"
 EN_CONTEXT_FILES_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "context-files.md"
 EN_PERSONALITY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "personality.md"
 EN_GOALS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "goals.md"
+EN_PROVIDER_ROUTING_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "provider-routing.md"
+)
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -124,6 +127,17 @@ ZH_GOALS_DOC = (
     / "user-guide"
     / "features"
     / "goals.md"
+)
+ZH_PROVIDER_ROUTING_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "provider-routing.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -901,3 +915,22 @@ def test_goals_feature_docs_prefer_doppel_surfaces_and_keep_goal_literals():
     assert "让 Hermes 跨轮次持续工作直到完成" not in zh
     assert "`/goal` gives Hermes a standing objective" not in en
     assert "`/goal` 为 Hermes 设置一个跨轮次持续存在的目标" not in zh
+
+
+def test_provider_routing_docs_prefer_doppel_surfaces_and_keep_legacy_config_note():
+    en = EN_PROVIDER_ROUTING_DOC.read_text(encoding="utf-8")
+    zh = ZH_PROVIDER_ROUTING_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent supports **provider routing**" in en
+    assert "Doppel Agent 支持 **provider routing**" in zh
+    assert "`~/.doppel/config.yaml`" in en
+    assert "`~/.doppel/config.yaml`" in zh
+    assert "Legacy installs may still keep this in `~/.hermes/config.yaml`." in en
+    assert "legacy 安装仍可能将这段配置保留在 `~/.hermes/config.yaml` 中。" in zh
+    assert "loaded at startup (legacy installs may still use `~/.hermes/config.yaml`)" in en
+    assert "启动时加载（legacy 安装仍可能使用 `~/.hermes/config.yaml`）" in zh
+    assert "~/.hermes/config.yaml" in en
+    assert "~/.hermes/config.yaml" in zh
+
+    assert "Hermes Agent supports **provider routing**" not in en
+    assert "Hermes Agent 支持 **provider routing**" not in zh

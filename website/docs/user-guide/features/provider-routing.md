@@ -7,7 +7,7 @@ sidebar_position: 7
 
 # Provider Routing
 
-When using [OpenRouter](https://openrouter.ai) as your LLM provider, Hermes Agent supports **provider routing** — fine-grained control over which underlying AI providers handle your requests and how they're prioritized.
+When using [OpenRouter](https://openrouter.ai) as your LLM provider, Doppel Agent supports **provider routing** — fine-grained control over which underlying AI providers handle your requests and how they're prioritized.
 
 OpenRouter routes requests to many providers (e.g., Anthropic, Google, AWS Bedrock, Together AI). Provider routing lets you optimize for cost, speed, quality, or enforce specific provider requirements.
 
@@ -17,7 +17,7 @@ Traffic routed through [Nous Portal](/integrations/nous-portal) still respects p
 
 ## Configuration
 
-Add a `provider_routing` section to your `~/.hermes/config.yaml`:
+Add a `provider_routing` section to your `~/.doppel/config.yaml`:
 
 ```yaml
 provider_routing:
@@ -28,6 +28,8 @@ provider_routing:
   require_parameters: false  # Only use providers that support all parameters
   data_collection: null   # Control data collection ("allow" or "deny")
 ```
+
+Legacy installs may still keep this in `~/.hermes/config.yaml`.
 
 :::info
 Provider routing only applies when using OpenRouter. It has no effect with direct provider connections (e.g., connecting directly to the Anthropic API).
@@ -169,7 +171,7 @@ provider_routing:
 
 Provider routing preferences are passed to the OpenRouter API via the `extra_body.provider` field on every API call. This applies to both:
 
-- **CLI mode** — configured in `~/.hermes/config.yaml`, loaded at startup
+- **CLI mode** — configured in `~/.doppel/config.yaml`, loaded at startup (legacy installs may still use `~/.hermes/config.yaml`)
 - **Gateway mode** — same config file, loaded when the gateway starts
 
 The routing config is read from `config.yaml` and passed as parameters when creating the `AIAgent`:

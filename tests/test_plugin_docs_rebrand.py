@@ -5970,3 +5970,66 @@ def test_aws_bedrock_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_oauth_over_ssh_guides_prefer_doppel_customer_facing_surfaces():
+    en = (REPO_ROOT / "website" / "docs" / "guides" / "oauth-over-ssh.md").read_text(
+        encoding="utf-8"
+    )
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "oauth-over-ssh.md"
+    ).read_text(encoding="utf-8")
+
+    assert "when Doppel runs on a remote machine" in en
+    assert "当 Doppel 运行在远程机器" in zh
+    assert "Some Doppel providers" in en
+    assert "部分 Doppel 提供商" in zh
+    assert "started by Doppel" in en
+    assert "由 `doppel auth ...` 命令启动" in zh
+    assert "This works perfectly when Doppel and your browser are on the same machine." in en
+    assert "当 Doppel 和浏览器在同一台机器上时" in zh
+    assert "Doppel uses the **same PKCE verifier, state and nonce**" in en
+    assert "Doppel 对两种路径使用**相同的 PKCE verifier、state 和 nonce**" in zh
+    assert "Yes, when Doppel is remote" in en
+    assert "是，当 Doppel 在远程时" in zh
+    assert "Doppel prompts you to paste the redirect URL" in en
+    assert "Doppel prints the exact port it bound to" in en
+    assert "`~/.doppel/config.yaml` on a fresh install, or the legacy `~/.hermes/config.yaml`" in en
+    assert "`~/.doppel/auth.json` on fresh installs, or the legacy `~/.hermes/auth.json`" in en
+    assert "MCP 服务器（`auth: oauth`）" in zh
+    assert "`~/.doppel/auth.json`" in zh
+    assert "兼容的 `~/.hermes/auth.json`" in zh
+    assert "[原生 MCP 客户端（OAuth 章节）](../user-guide/features/mcp.md#oauth-authenticated-http-servers)" in zh
+
+    for stale in (
+        "when Hermes runs on a remote machine",
+        "当 Hermes 运行在远程机器",
+        "Some Hermes providers",
+        "部分 Hermes 提供商",
+        "started by Hermes",
+        "由 `hermes auth ...` 命令启动",
+        "This works perfectly when Hermes and your browser are on the same machine.",
+        "当 Hermes 和浏览器在同一台机器上时",
+        "Hermes uses the **same PKCE verifier, state and nonce**",
+        "Hermes 对两种路径使用**相同的 PKCE verifier、state 和 nonce**",
+        "Yes, when Hermes is remote",
+        "是，当 Hermes 在远程时",
+        "Hermes prompts you to paste the redirect URL",
+        "paste it at the Hermes prompt",
+        "Hermes prints the exact port it bound to",
+        "If you edit `~/.hermes/config.yaml` to add an OAuth MCP server",
+        "If you're running Hermes inside `tmux` over a mosh session",
+        "如果你在 mosh 会话中的 `tmux` 里运行 Hermes",
+        "或者本地也有一个 Hermes 在监听",
+        "### Tokens land in the wrong `~/.hermes`",
+        "### Token 写入了错误的 `~/.hermes`",
+    ):
+        assert stale not in en
+        assert stale not in zh

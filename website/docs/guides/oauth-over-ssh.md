@@ -1,14 +1,14 @@
 ---
 sidebar_position: 17
 title: "OAuth over SSH / Remote Hosts"
-description: "How to complete browser-based OAuth (xAI, Spotify, MCP servers) when Hermes runs on a remote machine, container, or behind a jump box"
+description: "How to complete browser-based OAuth (xAI, Spotify, MCP servers) when Doppel runs on a remote machine, container, or behind a jump box"
 ---
 
 # OAuth over SSH / Remote Hosts
 
-Some Hermes providers — **xAI Grok OAuth**, **Spotify**, and **remote MCP servers** (Linear, Sentry, Atlassian, Asana, Figma, …) — use a *loopback redirect* OAuth flow. The auth server redirects your browser to `http://127.0.0.1:<port>/callback` so a tiny HTTP listener started by Hermes can grab the authorization code.
+Some Doppel providers — **xAI Grok OAuth**, **Spotify**, and **remote MCP servers** (Linear, Sentry, Atlassian, Asana, Figma, …) — use a *loopback redirect* OAuth flow. The auth server redirects your browser to `http://127.0.0.1:<port>/callback` so a tiny HTTP listener started by Doppel can grab the authorization code.
 
-This works perfectly when Hermes and your browser are on the same machine. It breaks the moment they aren't: your laptop's browser tries to reach `127.0.0.1` on **your laptop**, but the listener is bound to `127.0.0.1` on **the remote server**.
+This works perfectly when Doppel and your browser are on the same machine. It breaks the moment they aren't: your laptop's browser tries to reach `127.0.0.1` on **your laptop**, but the listener is bound to `127.0.0.1` on **the remote server**.
 
 The fix is a one-line SSH local-forward — **or**, when you don't have a real SSH client (GCP Cloud Shell, GitHub Codespaces, EC2 Instance Connect, Gitpod, browser-based web IDEs), the new `--manual-paste` flag introduced in [#26923](https://github.com/NousResearch/hermes-agent/issues/26923).
 
@@ -42,15 +42,15 @@ doppel auth add xai-oauth --manual-paste
 
 The same flag works on `doppel model --manual-paste` for the integrated model picker. Doppel accepts three callback paste forms interchangeably: the full URL, a bare `?code=...&state=...` query fragment, or — when the upstream consent page renders the authorization code in-page instead of redirecting (xAI's current behavior on browser-based consoles) — just the bare code value on its own.
 
-Hermes uses the **same PKCE verifier, state and nonce** for both paths, so the upstream OAuth flow is byte-identical — `--manual-paste` is purely a transport change for the callback hop and is not a security downgrade.
+Doppel uses the **same PKCE verifier, state and nonce** for both paths, so the upstream OAuth flow is byte-identical — `--manual-paste` is purely a transport change for the callback hop and is not a security downgrade.
 
 ## Which Providers Need This
 
 | Provider | Loopback port | Tunnel needed? |
 |----------|---------------|----------------|
-| `xai-oauth` (Grok SuperGrok) | `56121` | Yes, when Hermes is remote |
-| Spotify | `43827` | Yes, when Hermes is remote |
-| MCP servers (`auth: oauth`) | auto-picked per server | Yes, when Hermes is remote |
+| `xai-oauth` (Grok SuperGrok) | `56121` | Yes, when Doppel is remote |
+| Spotify | `43827` | Yes, when Doppel is remote |
+| MCP servers (`auth: oauth`) | auto-picked per server | Yes, when Doppel is remote |
 | `anthropic` (Claude Pro/Max) | n/a | No — paste-the-code flow |
 | `openai-codex` (ChatGPT Plus/Pro) | n/a | No — device code flow |
 | `minimax`, `nous-portal` | n/a | No — device code flow |
@@ -63,7 +63,7 @@ Remote MCP servers (Linear, Sentry, Atlassian, Asana, Figma, etc.) use the same 
 
 You have two ways to complete it from a remote host:
 
-**Option 1 — paste the redirect URL back (no setup, works anywhere).** On an interactive terminal, Hermes prompts you to paste the redirect URL alongside running the local listener. After approving in your browser, the redirect to `http://127.0.0.1:<port>/callback` will show a connection error — that's expected. Copy the **full URL from the browser's address bar** and paste it at the Hermes prompt:
+**Option 1 — paste the redirect URL back (no setup, works anywhere).** On an interactive terminal, Doppel prompts you to paste the redirect URL alongside running the local listener. After approving in your browser, the redirect to `http://127.0.0.1:<port>/callback` will show a connection error — that's expected. Copy the **full URL from the browser's address bar** and paste it at the Doppel prompt:
 
 ```
   MCP OAuth: authorization required.
@@ -78,7 +78,7 @@ You have two ways to complete it from a remote host:
 
 A bare `?code=...&state=...` query string is accepted too. This works for any MCP server with `auth: oauth` and requires no SSH config changes.
 
-**Option 2 — SSH port forward (same as xAI / Spotify).** Hermes prints the exact port it bound to in the SSH-session hint. Open a separate terminal on your laptop:
+**Option 2 — SSH port forward (same as xAI / Spotify).** Doppel prints the exact port it bound to in the SSH-session hint. Open a separate terminal on your laptop:
 
 ```bash
 ssh -N -L <port>:127.0.0.1:<port> user@remote-host
@@ -86,7 +86,7 @@ ssh -N -L <port>:127.0.0.1:<port> user@remote-host
 
 Then open the authorize URL in your browser as normal; the redirect tunnels through and the listener picks it up. Use this when you need the flow to complete unattended (e.g. scripted re-auth where you can't paste interactively).
 
-**Pitfall — the 30s config-reload race.** If you edit `~/.hermes/config.yaml` to add an OAuth MCP server from inside a running Doppel session, the CLI auto-reloads MCP connections with a 30s timeout. That's not enough time to complete an interactive OAuth flow, and the reload will give up. Use `doppel mcp login <server>` from a fresh terminal instead — it has no such cap and waits the full 5 min for you to paste back.
+**Pitfall — the 30s config-reload race.** If you edit `~/.doppel/config.yaml` on a fresh install, or the legacy `~/.hermes/config.yaml`, to add an OAuth MCP server from inside a running Doppel session, the CLI auto-reloads MCP connections with a 30s timeout. That's not enough time to complete an interactive OAuth flow, and the reload will give up. Use `doppel mcp login <server>` from a fresh terminal instead — it has no such cap and waits the full 5 min for you to paste back.
 
 ## Why the listener can't just bind 0.0.0.0
 
@@ -144,7 +144,7 @@ ssh -N \
 
 ## Mosh, tmux, ssh ControlMaster
 
-The tunnel is a property of the underlying SSH connection. If you're running Hermes inside `tmux` over a mosh session, the mosh roaming doesn't carry the `-L` forwarding. Open a *separate* plain SSH session **only** for the `-L` tunnel — that's the connection that has to stay alive during the auth flow. Your interactive mosh/tmux session can keep running Hermes normally.
+The tunnel is a property of the underlying SSH connection. If you're running Doppel inside `tmux` over a mosh session, the mosh roaming doesn't carry the `-L` forwarding. Open a *separate* plain SSH session **only** for the `-L` tunnel — that's the connection that has to stay alive during the auth flow. Your interactive mosh/tmux session can keep running Doppel normally.
 
 If you use `ssh -o ControlMaster=auto`, port forwards on a multiplexed connection share the master's lifetime. Restart the master if the tunnel doesn't come up:
 
@@ -175,9 +175,9 @@ xAI's authorize page shows this when its redirect to `127.0.0.1:<port>/callback`
 
 Same root cause as above — the redirect never made it back. Check the tunnel is still alive (`ssh -N` doesn't show output, so look at the terminal you started it from), restart it if needed, and re-run `doppel auth add xai-oauth --no-browser`.
 
-### Tokens land in the wrong `~/.hermes`
+### Tokens land in the wrong home directory
 
-The tokens are written under the Linux user that ran `doppel auth add ...`. If your gateway / systemd service runs as a different user (for example, a dedicated `doppel` user on a fresh Doppel-first deploy, or the legacy `hermes` user on an older install), authenticate as **that** user so the tokens land in their `~/.hermes/auth.json`. Use `sudo -u doppel -i` on fresh Doppel-first installs, or `sudo -u hermes -i` if you kept the legacy defaults.
+The tokens are written under the Linux user that ran `doppel auth add ...`. If your gateway / systemd service runs as a different user (for example, a dedicated `doppel` user on a fresh Doppel-first deploy, or the legacy `hermes` user on an older install), authenticate as **that** user so the tokens land in their `~/.doppel/auth.json` on fresh installs, or the legacy `~/.hermes/auth.json` on older ones. Use `sudo -u doppel -i` on fresh Doppel-first installs, or `sudo -u hermes -i` if you kept the legacy defaults.
 
 ## See Also
 

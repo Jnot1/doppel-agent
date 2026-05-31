@@ -12,6 +12,8 @@ When the manifest is unreachable (offline, network blocked, hosting failure), Do
 
 ## Live manifest URL
 
+Current hosted URL in this phase:
+
 ```
 https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
 ```
@@ -74,6 +76,7 @@ model_catalog:
 ```
 
 Set `enabled: false` to disable remote fetch entirely and always use the in-repo snapshot.
+The default URL stays pointed at the current live hosted manifest even while the broader docs-host migration is still in progress.
 
 ### Per-provider override URLs
 

@@ -6,11 +6,13 @@ description: 远程托管的清单文件，驱动 OpenRouter 和 Nous Portal 的
 
 # 模型目录
 
-Hermes 从托管于文档站点旁的 JSON 清单中获取 **OpenRouter** 和 **Nous Portal** 的精选模型列表。这样维护者无需发布新的 `hermes-agent` 版本即可更新选择器列表。
+Doppel 会从托管在文档站点旁的 JSON 清单中获取 **OpenRouter** 和 **Nous Portal** 的精选模型列表。这样维护者无需发布新的 Doppel Agent 版本即可更新选择器列表。
 
-当清单不可达时（离线、网络受阻、托管故障），Hermes 会静默回退到随 CLI 一同发布的仓库内置快照。清单永远不会导致选择器崩溃——最坏情况下，你看到的是与已安装版本捆绑的列表。
+当清单不可达时（离线、网络受阻、托管故障），Doppel 会静默回退到随 CLI 一同发布的仓库内置快照。清单永远不会导致选择器崩溃——最坏情况下，你看到的是与已安装版本捆绑的列表。
 
 ## 线上清单 URL
+
+当前阶段仍使用这个已上线的托管 URL：
 
 ```
 https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
@@ -46,8 +48,8 @@ https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
 
 字段说明：
 
-- **`version`** — 整数类型的 schema 版本号。未来的 schema 会递增此值；Hermes 拒绝处理版本号未知的清单，并回退到硬编码快照。
-- **`metadata`** — 清单、provider 及模型级别的自由格式字典，支持任意键。Hermes 会忽略未知字段，因此你可以为条目添加注解（如 `"tier": "paid"`、`"tags": [...]` 等），无需协调 schema 变更。
+- **`version`** — 整数类型的 schema 版本号。未来的 schema 会递增此值；Doppel 拒绝处理版本号未知的清单，并回退到硬编码快照。
+- **`metadata`** — 清单、provider 及模型级别的自由格式字典，支持任意键。Doppel 会忽略未知字段，因此你可以为条目添加注解（如 `"tier": "paid"`、`"tags": [...]` 等），无需协调 schema 变更。
 - **`description`** — 仅限 OpenRouter。驱动选择器徽章文本（`"recommended"`、`"free"` 或空字符串）。Nous Portal 不使用此字段——免费层级的限制由 Portal 的定价端点实时决定。
 - **定价和上下文长度**不在清单中。这些数据在获取时来自各 provider 的实时 API（`/v1/models` 端点、models.dev）。
 
@@ -55,13 +57,13 @@ https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
 
 | 时机 | 行为 |
 |---|---|
-| `/model` 或 `hermes model` | 若磁盘缓存已过期则重新获取，否则使用缓存 |
+| `/model` 或 `doppel model` | 若磁盘缓存已过期则重新获取，否则使用缓存 |
 | 磁盘缓存新鲜（< TTL） | 不发起网络请求 |
 | 网络故障且有缓存 | 静默回退到缓存，输出一行日志 |
 | 网络故障且无缓存 | 静默回退到仓库内置快照 |
 | 清单未通过 schema 校验 | 视为不可达 |
 
-缓存位置：`~/.hermes/cache/model_catalog.json`。
+缓存位置：新安装默认是 `~/.doppel/cache/model_catalog.json`（仍兼容旧的 `~/.hermes/cache/model_catalog.json`）。
 
 ## 配置
 
@@ -74,6 +76,7 @@ model_catalog:
 ```
 
 将 `enabled` 设为 `false` 可完全禁用远程获取，始终使用仓库内置快照。
+默认 URL 在这一阶段仍指向当前在线的托管清单；更广泛的文档站点迁移会在后续阶段单独处理。
 
 ### 按 provider 覆盖 URL
 

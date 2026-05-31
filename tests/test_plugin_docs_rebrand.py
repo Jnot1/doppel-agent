@@ -90,6 +90,9 @@ EN_SUBSCRIPTION_PROXY_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "subscription-proxy.md"
 )
 EN_TOOLS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tools.md"
+EN_TOOLS_REFERENCE_DOC = (
+    REPO_ROOT / "website" / "docs" / "reference" / "tools-reference.md"
+)
 EN_FALLBACK_PROVIDERS_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "fallback-providers.md"
 )
@@ -241,6 +244,16 @@ ZH_TOOLS_DOC = (
     / "user-guide"
     / "features"
     / "tools.md"
+)
+ZH_TOOLS_REFERENCE_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "reference"
+    / "tools-reference.md"
 )
 ZH_FALLBACK_PROVIDERS_DOC = (
     REPO_ROOT
@@ -1685,6 +1698,52 @@ def test_tools_feature_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert 'hermes chat --toolsets "web,terminal"' not in zh
     assert "hermes tools" not in zh
     assert "hermes model" not in zh
+
+
+def test_tools_reference_docs_prefer_doppel_customer_facing_wording_and_keep_runtime_literals():
+    en = EN_TOOLS_REFERENCE_DOC.read_text(encoding="utf-8")
+    zh = ZH_TOOLS_REFERENCE_DOC.read_text(encoding="utf-8")
+    en_intro = "\n".join(en.splitlines()[:20])
+    zh_intro = "\n".join(zh.splitlines()[:20])
+
+    assert 'description: "Authoritative reference for Doppel Agent built-in tools, grouped by toolset"' in en
+    assert "This page documents Doppel Agent's built-in tools" in en
+    assert "In addition to built-in tools, Doppel Agent can load tools dynamically from MCP servers." in en
+    assert "Doppel Agent tools programmatically" in en
+    assert "Hermes" not in en_intro
+
+    assert 'title: "' in zh and "内置工具参考" in zh
+    assert "本页记录" in zh
+    assert "Doppel" in zh
+    assert "Doppel Agent" in zh
+    assert "Hermes" not in zh_intro
+
+    assert "Hermes 内置工具权威参考，按工具集分组" not in zh
+    assert "本页记录 Hermes 的内置工具" not in zh
+    assert "除内置工具外，Hermes 还可从 MCP 服务器动态加载工具" not in zh
+    assert "运行可以编程方式调用 Hermes 工具的 Python 脚本" not in zh
+    assert "通过 `doppel tools` → 🐦 X (Twitter) Search 选择启用" in zh
+    assert "运行一次 `doppel spotify setup` 进行授权" in zh
+
+    for fixed in (
+        "`hermes-cli`",
+        "`hermes-discord`",
+        "`hermes-yuanbao`",
+        "HERMES_KANBAN_TASK",
+        "~/.hermes/skills/",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "legacy `~/.hermes/skills/`" in en
+    assert "旧版 `~/.hermes/skills/` 目录树仍可用" in zh
+    assert "HERMES_KANBAN_TASK" in en
+    assert "HERMES_KANBAN_TASK" in zh
+
+    assert "hermes-cli" in en or "hermes-cli" in zh
+    assert "`doppel tools`" in en
+    assert "`doppel tools`" in zh
+    assert "doppel spotify setup" in en
+    assert "doppel spotify setup" in zh
 
 
 def test_fallback_provider_docs_prefer_doppel_surfaces_and_keep_legacy_literals():

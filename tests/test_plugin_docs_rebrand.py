@@ -111,6 +111,7 @@ EN_WEB_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" /
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
 )
+EN_SKINS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "skins.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -357,6 +358,17 @@ ZH_EXTENDING_DASHBOARD_DOC = (
     / "user-guide"
     / "features"
     / "extending-the-dashboard.md"
+)
+ZH_SKINS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "skins.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -2048,3 +2060,42 @@ def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_litera
     assert "重启 `hermes dashboard`" not in zh
     assert "~/.hermes/logs/errors.log" not in en
     assert "~/.hermes/logs/errors.log" not in zh
+
+
+def test_skins_docs_prefer_doppel_surfaces_and_match_runtime_defaults():
+    en = EN_SKINS_DOC.read_text(encoding="utf-8")
+    zh = ZH_SKINS_DOC.read_text(encoding="utf-8")
+
+    assert "Customize the Doppel CLI with built-in and user-defined skins" in en
+    assert "使用内置和用户自定义皮肤定制 Doppel CLI 的外观" in zh
+    assert "Skins control the **visual presentation** of the Doppel CLI" in en
+    assert "皮肤控制 Doppel CLI 的**视觉呈现**" in zh
+    assert "~/.doppel/skins/mytheme.yaml" in en
+    assert "~/.doppel/skins/mytheme.yaml" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "| `default` | Classic Doppel — gold and kawaii | `Doppel Agent` |" in en
+    assert "| `default` | 经典 Doppel — 金色与 kawaii 风格 | `Doppel Agent` |" in zh
+    assert "| `mono` | Monochrome — clean grayscale | `Doppel Agent` |" in en
+    assert "| `mono` | 单色 — 简洁灰度 | `Doppel Agent` |" in zh
+    assert "| `agent_name` | Name shown in banner title and status display | `Doppel Agent` |" in en
+    assert "| `agent_name` | 横幅标题和状态显示中的名称 | `Doppel Agent` |" in zh
+    assert "`Welcome to Doppel Agent! Type your message or /help for commands.`" in en
+    assert "`Welcome to Doppel Agent! Type your message or /help for commands.`" in zh
+    assert "` ⚕ Doppel `" in en
+    assert "` ⚕ Doppel `" in zh
+    assert "Hermes Mod" in en
+    assert "Hermes Mod" in zh
+    assert "npx -y hermes-mod" in en
+    assert "npx -y hermes-mod" in zh
+    assert "HERMES_HOME" in en
+    assert "HERMES_HOME" in zh
+
+    assert "Customize the Hermes CLI with built-in and user-defined skins" not in en
+    assert "使用内置和用户自定义皮肤定制 Hermes CLI 的外观" not in zh
+    assert "| `default` | Classic Hermes — gold and kawaii | `Hermes Agent` |" not in en
+    assert "| `default` | 经典 Hermes — 金色与 kawaii 风格 | `Hermes Agent` |" not in zh
+    assert "| `agent_name` | Name shown in banner title and status display | `Hermes Agent` |" not in en
+    assert "| `agent_name` | 横幅标题和状态显示中的名称 | `Hermes Agent` |" not in zh
+    assert "` ⚕ Hermes `" not in en
+    assert "` ⚕ Hermes `" not in zh

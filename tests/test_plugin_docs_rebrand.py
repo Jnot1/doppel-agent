@@ -5117,6 +5117,73 @@ def test_xai_grok_oauth_guides_prefer_doppel_customer_facing_surfaces():
         assert stale not in zh
 
 
+def test_minimax_oauth_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "minimax-oauth.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "minimax-oauth.md"
+    ).read_text(encoding="utf-8")
+
+    assert "use MiniMax-M2.7 models in Doppel Agent" in en
+    assert "在 Doppel Agent 中使用 MiniMax-M2.7 模型" in zh
+    assert "Doppel Agent supports **MiniMax**" in en
+    assert "Doppel Agent 通过基于浏览器的 OAuth 登录流程支持 **MiniMax**" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel chat" in en
+    assert "doppel chat" in zh
+    assert "doppel auth add minimax-oauth" in en
+    assert "doppel auth add minimax-oauth" in zh
+    assert "doppel doctor" in en
+    assert "doppel doctor" in zh
+    assert "doppel config set model.default MiniMax-M2.7" in en
+    assert "doppel config set model.default MiniMax-M2.7" in zh
+    assert "doppel config set model.provider minimax-oauth" in en
+    assert "doppel config set model.provider minimax-oauth" in zh
+    assert "~/.doppel/auth.json" in en
+    assert "~/.doppel/auth.json" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "legacy installs may still use `~/.hermes/auth.json`" in en
+    assert "legacy 安装仍可能使用 `~/.hermes/auth.json`" in zh
+    assert "legacy installs may still use `~/.hermes/config.yaml`" in en
+    assert "legacy 安装仍可能使用 `~/.hermes/config.yaml`" in zh
+    assert "legacy ~/.hermes/.env still works" in en
+    assert "旧版 ~/.hermes/.env 仍可用" in zh
+
+    for stale in (
+        "use MiniMax-M2.7 models in Hermes Agent",
+        "在 Hermes Agent 中使用 MiniMax-M2.7 模型",
+        "Hermes Agent supports **MiniMax**",
+        "Hermes Agent 通过基于浏览器的 OAuth 登录流程支持 **MiniMax**",
+        "Hermes automatically refreshes your session",
+        "Hermes 即可自动刷新您的会话",
+        "Hermes Agent installed",
+        "已安装 Hermes Agent",
+        "hermes model",
+        "hermes chat",
+        "hermes auth add minimax-oauth",
+        "hermes doctor",
+        "hermes config set model.default",
+        "hermes config set model.provider",
+        "hermes setup",
+        "hermes auth remove minimax-oauth",
+        "hermes auth add minimax-cn --type oauth",
+    ):
+        assert stale not in en
+        assert stale not in zh
+
+
 def test_google_gemini_guides_prefer_doppel_customer_facing_surfaces():
     en = (
         REPO_ROOT / "website" / "docs" / "guides" / "google-gemini.md"

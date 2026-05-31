@@ -56,6 +56,14 @@ def _nixos_module_text() -> str:
     return (REPO_ROOT / "nix" / "nixosModules.nix").read_text()
 
 
+def _nix_checks_text() -> str:
+    return (REPO_ROOT / "nix" / "checks.nix").read_text()
+
+
+def _nix_workflow_text() -> str:
+    return (REPO_ROOT / ".github" / "workflows" / "nix.yml").read_text()
+
+
 def _homebrew_managed_descriptor(name: str) -> str:
     content = _homebrew_formula_text(name)
     match = re.search(r'HERMES_MANAGED:\s*"([^"]+)"', content)
@@ -116,6 +124,29 @@ def test_nixos_module_keeps_legacy_service_namespace():
     content = _nixos_module_text()
     assert "options.services.hermes-agent" in content
     assert "systemd.services.hermes-agent" in content
+
+
+def test_nix_checks_encode_package_alias_contracts():
+    content = _nix_checks_text()
+    assert 'package-alias-contracts =' in content
+    assert 'defaultPackage.drvPath != preferredPackage.drvPath' in content
+    assert 'legacyPackage.pname != "doppel-agent"' in content
+
+
+def test_nix_workflow_builds_default_and_alias_packages():
+    content = _nix_workflow_text()
+    assert "nix build --print-build-logs .#default .#doppel-agent .#hermes-agent" in content
+
+
+def test_nix_workflow_evaluates_package_alias_pnames_on_linux_and_macos():
+    content = _nix_workflow_text()
+    assert '.#packages.x86_64-linux.default.pname' in content
+    assert '.#packages.x86_64-linux.doppel-agent.pname' in content
+    assert '.#packages.x86_64-linux.hermes-agent.pname' in content
+    assert '.#packages.aarch64-darwin.default.pname' in content
+    assert '.#packages.aarch64-darwin.doppel-agent.pname' in content
+    assert '.#packages.aarch64-darwin.hermes-agent.pname' in content
+    assert '.#checks.aarch64-darwin.package-alias-contracts.drvPath' in content
 
 
 def test_homebrew_formulae_share_the_same_release_source():

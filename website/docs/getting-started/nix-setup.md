@@ -800,6 +800,9 @@ The flake includes build-time verification that runs in CI and locally:
 # Run all checks
 nix flake check
 
+# Verify the package alias contract directly
+nix build .#default .#doppel-agent .#hermes-agent
+
 # Individual checks
 nix build .#checks.x86_64-linux.package-contents   # binaries exist + version
 nix build .#checks.x86_64-linux.entry-points-sync  # pyproject.toml ↔ Nix package sync

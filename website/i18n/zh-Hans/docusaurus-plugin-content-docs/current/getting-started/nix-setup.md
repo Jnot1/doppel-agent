@@ -771,6 +771,9 @@ direnv allow    # 仅需一次
 # 运行所有检查
 nix flake check
 
+# 直接验证包别名契约
+nix build .#default .#doppel-agent .#hermes-agent
+
 # 单独检查
 nix build .#checks.x86_64-linux.package-contents   # 二进制文件存在 + 版本
 nix build .#checks.x86_64-linux.entry-points-sync  # pyproject.toml ↔ Nix 包同步

@@ -6,7 +6,10 @@
 { inputs, ... }: {
   perSystem = { pkgs, lib, self', ... }:
     let
-      hermes-agent = self'.packages.default;
+      defaultPackage = self'.packages.default;
+      preferredPackage = self'.packages."doppel-agent";
+      legacyPackage = self'.packages."hermes-agent";
+      hermes-agent = defaultPackage;
       hermesVenv = hermes-agent.hermesVenv;
 
       configMergeScript = pkgs.callPackage ./configMergeScript.nix { };
@@ -54,6 +57,31 @@ json.dump(sorted(leaf_paths(DEFAULT_CONFIG)), sys.stdout, indent=2)
             throw "Package fails to evaluate on:\n${failMsg}"
           else ''
             echo "PASS: package evaluates on all ${toString (builtins.length targetSystems)} platforms"
+            mkdir -p $out
+            echo "ok" > $out/result
+          ''
+        );
+
+        package-alias-contracts = let
+          failures = lib.concatLists [
+            (lib.optional (defaultPackage.drvPath != preferredPackage.drvPath)
+              "default package alias does not resolve to the preferred doppel-agent derivation")
+            (lib.optional (defaultPackage.drvPath != legacyPackage.drvPath)
+              "legacy hermes-agent alias does not resolve to the preferred doppel-agent derivation")
+            (lib.optional (defaultPackage.pname != "doppel-agent")
+              "default package pname drifted from doppel-agent")
+            (lib.optional (preferredPackage.pname != "doppel-agent")
+              "preferred doppel-agent alias no longer reports pname doppel-agent")
+            (lib.optional (legacyPackage.pname != "doppel-agent")
+              "legacy hermes-agent alias no longer resolves to pname doppel-agent")
+          ];
+          failMsg = lib.concatStringsSep "\n" failures;
+        in pkgs.runCommand "doppel-package-alias-contracts" { } (
+          if failures != [] then
+            throw "Nix package alias contract failed:\n${failMsg}"
+          else ''
+            echo "PASS: default, doppel-agent, and hermes-agent resolve to the same derivation"
+            echo "PASS: package pname stays doppel-agent across all Nix package aliases"
             mkdir -p $out
             echo "ok" > $out/result
           ''

@@ -86,6 +86,9 @@ EN_CONTEXT_REFERENCES_DOC = (
 EN_TOOL_GATEWAY_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tool-gateway.md"
 )
+EN_SUBSCRIPTION_PROXY_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "subscription-proxy.md"
+)
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -166,6 +169,17 @@ ZH_TOOL_GATEWAY_DOC = (
     / "user-guide"
     / "features"
     / "tool-gateway.md"
+)
+ZH_SUBSCRIPTION_PROXY_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "subscription-proxy.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -1034,3 +1048,41 @@ def test_tool_gateway_docs_prefer_doppel_surfaces_and_keep_gateway_literals():
     assert "hermes setup terminal" not in en
     assert "运行 `hermes model`" not in zh
     assert "### 通过 `hermes tools`" not in zh
+
+
+def test_subscription_proxy_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_SUBSCRIPTION_PROXY_DOC.read_text(encoding="utf-8")
+    zh = ZH_SUBSCRIPTION_PROXY_DOC.read_text(encoding="utf-8")
+
+    assert "use your Doppel-managed provider subscription" in en
+    assert "将你的 Doppel 托管提供商订阅用作其 LLM 端点" in zh
+    assert '"Use Doppel Agent as a chat backend"' in en
+    assert '"将 Doppel Agent 用作聊天后端"' in zh
+    assert "doppel auth add nous" in en
+    assert "doppel auth add nous" in zh
+    assert "doppel proxy start" in en
+    assert "doppel proxy start" in zh
+    assert "doppel proxy providers" in en
+    assert "doppel proxy providers" in zh
+    assert "doppel proxy status" in en
+    assert "doppel proxy status" in zh
+    assert "Starting Doppel proxy for Nous Portal" in en
+    assert "Starting Doppel proxy for Nous Portal" in zh
+    assert "Doppel proxy upstream adapters" in en
+    assert "Doppel proxy upstream adapters" in zh
+    assert "~/.doppel/auth.json" in en
+    assert "~/.doppel/auth.json" in zh
+    assert "~/.hermes/auth.json" in en
+    assert "~/.hermes/auth.json" in zh
+    assert "Hermes-4-70B" in en
+    assert "Hermes-4-70B" in zh
+    assert "hermes_cli/proxy/adapters/" in en
+    assert "hermes_cli/proxy/adapters/" in zh
+    assert "UpstreamAdapter" in en
+    assert "UpstreamAdapter" in zh
+
+    assert "use your Hermes-managed provider subscription" not in en
+    assert "将你的 Hermes 托管提供商订阅用作其 LLM 端点" not in zh
+    assert "hermes auth add nous" not in en
+    assert "hermes proxy start" not in en
+    assert "Hermes proxy upstream adapters" not in en

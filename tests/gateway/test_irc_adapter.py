@@ -1,6 +1,7 @@
 """Tests for the IRC platform adapter plugin."""
 
 import asyncio
+from pathlib import Path
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
@@ -499,6 +500,40 @@ class TestIRCPluginRegistration:
         call_kwargs = ctx.register_platform.call_args
         assert call_kwargs[1]["name"] == "irc" or call_kwargs[0][0] == "irc" if call_kwargs[0] else call_kwargs[1]["name"] == "irc"
 
+    def test_customer_facing_irc_copy_is_doppel_first(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        adapter = (repo_root / "plugins/platforms/irc/adapter.py").read_text(encoding="utf-8")
+        manifest = (repo_root / "plugins/platforms/irc/plugin.yaml").read_text(encoding="utf-8")
+
+        for expected in (
+            "Connect Doppel to an IRC network.",
+            "Bot nickname (e.g. doppel-bot)",
+            "Channel to join (e.g. #doppel — comma-separate for multiple)",
+            "IRC configuration saved to ~/.doppel/.env",
+            "Restart the gateway for changes to take effect: doppel gateway restart",
+            ':Doppel Agent")',
+            'QUIT :Doppel Agent shutting down',
+            "doppel-bot",
+            "#doppel",
+            "IRC gateway adapter for Doppel Agent.",
+            "the Doppel agent.",
+        ):
+            assert expected in adapter or expected in manifest
+
+        for unexpected in (
+            "Connect Hermes to an IRC network.",
+            "Bot nickname (e.g. hermes-bot)",
+            "Channel to join (e.g. #hermes — comma-separate for multiple)",
+            "IRC configuration saved to ~/.hermes/.env",
+            "Restart the gateway for changes to take effect: hermes gateway restart",
+            ':Hermes Agent")',
+            'QUIT :Hermes Agent shutting down',
+            "IRC gateway adapter for Hermes Agent.",
+            "the Hermes agent.",
+        ):
+            assert unexpected not in adapter
+            assert unexpected not in manifest
+
 
 # ── _standalone_send (out-of-process cron delivery) ──────────────────────
 
@@ -578,7 +613,7 @@ class TestIRCStandaloneSend:
         # NICK uses the cron-suffixed identity to avoid colliding with the
         # long-running gateway adapter that may already hold the nickname.
         assert any(line.startswith("NICK hermesbot-cron") for line in sent_lines)
-        assert any(line.startswith("USER hermesbot-cron 0 * :Hermes Agent (cron)")
+        assert any(line.startswith("USER hermesbot-cron 0 * :Doppel Agent (cron)")
                    for line in sent_lines)
         assert any(line == "PRIVMSG #cron :hello from cron" for line in sent_lines)
         assert any(line.startswith("QUIT ") for line in sent_lines)

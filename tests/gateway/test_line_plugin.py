@@ -19,6 +19,7 @@ import hashlib
 import hmac
 import base64
 import json
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -464,6 +465,28 @@ class TestRegister:
         register(ctx)
         # LINE per-bubble limit is 5000; we register 4500 to leave headroom.
         assert ctx.kwargs["max_message_length"] <= 5000
+
+    def test_customer_facing_line_copy_is_doppel_first(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        adapter = (repo_root / "plugins/platforms/line/adapter.py").read_text(encoding="utf-8")
+        manifest = (repo_root / "plugins/platforms/line/plugin.yaml").read_text(encoding="utf-8")
+
+        for expected in (
+            "set LINE_* vars manually in ~/.doppel/.env",
+            "LINE Messaging API gateway adapter for Doppel Agent.",
+            "the Doppel agent.",
+            "author: Doppel Agent contributors",
+        ):
+            assert expected in adapter or expected in manifest
+
+        for unexpected in (
+            "set LINE_* vars manually in ~/.hermes/.env",
+            "LINE Messaging API gateway adapter for Hermes Agent.",
+            "the Hermes agent.",
+            "author: Hermes Agent contributors",
+        ):
+            assert unexpected not in adapter
+            assert unexpected not in manifest
 
 
 class TestEnvEnablement:

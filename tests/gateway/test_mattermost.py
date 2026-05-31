@@ -2,6 +2,7 @@
 import json
 import os
 import time
+from pathlib import Path
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 
@@ -651,6 +652,28 @@ class TestMattermostRequirements:
         monkeypatch.delenv("MATTERMOST_URL", raising=False)
         from plugins.platforms.mattermost.adapter import check_mattermost_requirements
         assert check_mattermost_requirements() is False
+
+    def test_customer_facing_mattermost_copy_is_doppel_first(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        adapter = (repo_root / "plugins/platforms/mattermost/adapter.py").read_text(encoding="utf-8")
+        manifest = (repo_root / "plugins/platforms/mattermost/plugin.yaml").read_text(encoding="utf-8")
+
+        for expected in (
+            "📬 Home Channel: where Doppel delivers cron job results and notifications.",
+            "Open config in your editor:  doppel config edit",
+            "Mattermost gateway adapter for Doppel Agent.",
+            "the Doppel agent.",
+        ):
+            assert expected in adapter or expected in manifest
+
+        for unexpected in (
+            "📬 Home Channel: where Hermes delivers cron job results and notifications.",
+            "Open config in your editor:  hermes config edit",
+            "Mattermost gateway adapter for Hermes Agent.",
+            "the Hermes agent.",
+        ):
+            assert unexpected not in adapter
+            assert unexpected not in manifest
 
 
 # ---------------------------------------------------------------------------

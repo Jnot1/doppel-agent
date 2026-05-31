@@ -1,6 +1,7 @@
 """Tests for the Microsoft Teams platform adapter plugin."""
 
 import json
+from pathlib import Path
 import sys
 import types
 from types import SimpleNamespace
@@ -337,6 +338,34 @@ class TestTeamsPluginRegistration:
         register(ctx)
         kwargs = ctx.register_platform.call_args[1]
         assert kwargs.get("platform_hint")
+
+    def test_customer_facing_teams_copy_is_doppel_first(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        adapter = (repo_root / "plugins/platforms/teams/adapter.py").read_text(encoding="utf-8")
+        manifest = (repo_root / "plugins/platforms/teams/plugin.yaml").read_text(encoding="utf-8")
+
+        for expected in (
+            'headers={"User-Agent": "Doppel"}',
+            'teams app create --name \\"Doppel Agent\\" --endpoint \\"https://<tunnel>/api/messages\\"',
+            "To find your AAD object ID for the allowlist: doppel status --verbose",
+            "Teams configuration saved to ~/.doppel/.env",
+            "Restart the gateway:       doppel gateway restart",
+            "Microsoft Teams gateway adapter for Doppel Agent.",
+            "the Doppel agent.",
+        ):
+            assert expected in adapter or expected in manifest
+
+        for unexpected in (
+            'headers={"User-Agent": "Hermes"}',
+            'teams app create --name \\"Hermes\\" --endpoint \\"https://<tunnel>/api/messages\\"',
+            "To find your AAD object ID for the allowlist: teams status --verbose",
+            "Teams configuration saved to ~/.hermes/.env",
+            "Restart the gateway:       hermes gateway restart",
+            "Microsoft Teams gateway adapter for Hermes Agent.",
+            "the Hermes agent.",
+        ):
+            assert unexpected not in adapter
+            assert unexpected not in manifest
 
 
 # ---------------------------------------------------------------------------

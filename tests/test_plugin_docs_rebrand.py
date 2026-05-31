@@ -5363,6 +5363,71 @@ def test_x_search_docs_prefer_doppel_customer_facing_surfaces():
         assert unexpected not in zh
 
 
+def test_memory_docs_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "memory.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "memory.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        'description: "How Doppel Agent remembers across sessions',
+        "Doppel Agent has bounded, curated memory that persists across sessions.",
+        "Both are stored in `~/.doppel/memories/`",
+        "All CLI and messaging sessions are stored in SQLite (`~/.doppel/state.db`)",
+        "```bash\ndoppel sessions list    # Browse past sessions\n```",
+        "# In ~/.doppel/config.yaml",
+        "Doppel Agent ships with 8 external memory provider plugins",
+        "```bash\ndoppel memory setup      # pick a provider and configure it\ndoppel memory status     # check what's active\n```",
+    ):
+        assert expected in en
+
+    for unexpected in (
+        'description: "How Hermes Agent remembers across sessions',
+        "Hermes Agent has bounded, curated memory that persists across sessions.",
+        "Both are stored in `~/.hermes/memories/`",
+        "All CLI and messaging sessions are stored in SQLite (`~/.hermes/state.db`)",
+        "```bash\nhermes sessions list    # Browse past sessions\n```",
+        "# In ~/.hermes/config.yaml",
+        "Hermes ships with 8 external memory provider plugins",
+        "```bash\nhermes memory setup      # pick a provider and configure it\nhermes memory status     # check what's active\n```",
+    ):
+        assert unexpected not in en
+
+    for expected in (
+        'description: "Doppel Agent 如何跨会话记忆',
+        "Doppel Agent 拥有有界、经过整理的记忆，可跨会话持久保存。",
+        "两个文件均存储于 `~/.doppel/memories/`",
+        "所有 CLI 和消息会话均存储在 SQLite（`~/.doppel/state.db`）中",
+        "```bash\ndoppel sessions list    # 浏览过去的会话\n```",
+        "# In ~/.doppel/config.yaml",
+        "Doppel Agent 内置了 8 个外部记忆提供商插件",
+        "```bash\ndoppel memory setup      # 选择并配置提供商\ndoppel memory status     # 查看当前激活状态\n```",
+    ):
+        assert expected in zh
+
+    for unexpected in (
+        'description: "Hermes Agent 如何跨会话记忆',
+        "Hermes Agent 拥有有界、经过整理的记忆，可跨会话持久保存。",
+        "两个文件均存储于 `~/.hermes/memories/`",
+        "所有 CLI 和消息会话均存储在 SQLite（`~/.hermes/state.db`）中",
+        "```bash\nhermes sessions list    # 浏览过去的会话\n```",
+        "# In ~/.hermes/config.yaml",
+        "Hermes 内置了 8 个外部记忆提供商插件",
+        "```bash\nhermes memory setup      # 选择并配置提供商\nhermes memory status     # 查看当前激活状态\n```",
+    ):
+        assert unexpected not in zh
+
+
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
     zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

@@ -63,10 +63,14 @@ EN_ADDING_PROVIDERS_DOC = EN_DEV_GUIDE_DIR / "adding-providers.md"
 EN_PROVIDER_RUNTIME_DOC = EN_DEV_GUIDE_DIR / "provider-runtime.md"
 EN_ADDING_TOOLS_DOC = EN_DEV_GUIDE_DIR / "adding-tools.md"
 EN_CONTRIBUTING_DOC = EN_DEV_GUIDE_DIR / "contributing.md"
+EN_GATEWAY_INTERNALS_DOC = EN_DEV_GUIDE_DIR / "gateway-internals.md"
+EN_CONTEXT_COMPRESSION_DOC = EN_DEV_GUIDE_DIR / "context-compression-and-caching.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
 ZH_CONTRIBUTING_DOC = ZH_DEV_GUIDE_DIR / "contributing.md"
+ZH_GATEWAY_INTERNALS_DOC = ZH_DEV_GUIDE_DIR / "gateway-internals.md"
+ZH_CONTEXT_COMPRESSION_DOC = ZH_DEV_GUIDE_DIR / "context-compression-and-caching.md"
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -330,3 +334,84 @@ def test_tooling_and_contributing_docs_prefer_doppel_surfaces():
     assert 'hermes chat -q "Hello"' not in zh_contributing
     assert "get_hermes_home()" in zh_contributing
     assert "display_hermes_home()" in zh_contributing
+
+
+def test_gateway_and_context_docs_prefer_doppel_surfaces():
+    en_gateway = EN_GATEWAY_INTERNALS_DOC.read_text(encoding="utf-8")
+    en_context = EN_CONTEXT_COMPRESSION_DOC.read_text(encoding="utf-8")
+    zh_gateway = ZH_GATEWAY_INTERNALS_DOC.read_text(encoding="utf-8")
+    zh_context = ZH_CONTEXT_COMPRESSION_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent" in en_gateway
+    assert "doppel send" in en_gateway
+    assert "doppel gateway start" in en_gateway
+    assert "doppel gateway stop" in en_gateway
+    assert "doppel gateway stop --all" in en_gateway
+    assert "`hermes send`" not in en_gateway
+    assert "`hermes gateway start`" not in en_gateway
+    assert "`hermes gateway stop`" not in en_gateway
+    assert "`hermes gateway stop --all`" not in en_gateway
+    assert "~/.hermes/.env" in en_gateway
+    assert "~/.hermes/config.yaml" in en_gateway
+    assert "~/.hermes/gateway.pid" in en_gateway
+    assert "~/.hermes/hooks/" in en_gateway
+    assert "TELEGRAM_ALLOW_ALL_USERS" in en_gateway
+    assert "GATEWAY_ALLOW_ALL_USERS" in en_gateway
+    assert "build_session_key()" in en_gateway
+    assert "GATEWAY_KNOWN_COMMANDS" in en_gateway
+    assert "start_gateway()" in en_gateway
+    assert "telegram:-1001234567890" in en_gateway
+    assert "/approve" in en_gateway
+    assert "/stop" in en_gateway
+    assert "send_message" in en_gateway
+    assert "agent:main:{platform}:{chat_type}:{chat_id}" in en_gateway
+
+    assert "Doppel Agent" in zh_gateway
+    assert "doppel send" in zh_gateway
+    assert "doppel gateway start" in zh_gateway
+    assert "doppel gateway stop" in zh_gateway
+    assert "doppel gateway stop --all" in zh_gateway
+    assert "`hermes send`" not in zh_gateway
+    assert "`hermes gateway start`" not in zh_gateway
+    assert "`hermes gateway stop`" not in zh_gateway
+    assert "`hermes gateway stop --all`" not in zh_gateway
+    assert "~/.hermes/.env" in zh_gateway
+    assert "~/.hermes/config.yaml" in zh_gateway
+    assert "~/.hermes/gateway.pid" in zh_gateway
+    assert "~/.hermes/hooks/" in zh_gateway
+    assert "TELEGRAM_ALLOW_ALL_USERS" in zh_gateway
+    assert "GATEWAY_ALLOW_ALL_USERS" in zh_gateway
+    assert "build_session_key()" in zh_gateway
+    assert "GATEWAY_KNOWN_COMMANDS" in zh_gateway
+    assert "start_gateway()" in zh_gateway
+    assert "telegram:-1001234567890" in zh_gateway
+    assert "/approve" in zh_gateway
+    assert "/stop" in zh_gateway
+    assert "send_message" in zh_gateway
+    assert "agent:main:{platform}:{chat_type}:{chat_id}" in zh_gateway
+
+    assert "Doppel Agent" in en_context
+    assert "doppel plugins" in en_context
+    assert "Doppel Agent has two separate compression layers" in en_context
+    assert "Doppel Agent\nuses the \"system_and_3\" strategy:" in en_context
+    assert "Hermes Agent uses a dual compression system" not in en_context
+    assert "`hermes plugins`" not in en_context
+    assert "agent/context_engine.py" in en_context
+    assert "apply_anthropic_cache_control()" in en_context
+    assert "compression.threshold" in en_context
+    assert "run_agent.py" in en_context
+    assert "cache_control" in en_context
+    assert "No intermediate pressure warnings — they caused models to 'give up' prematurely on complex tasks" in en_context
+
+    assert "Doppel Agent" in zh_context
+    assert "doppel plugins" in zh_context
+    assert "Doppel Agent 有两个独立运行的压缩层" in zh_context
+    assert 'Doppel Agent 使用"system_and_3"策略：' in zh_context
+    assert "Hermes Agent 使用双重压缩系统" not in zh_context
+    assert "`hermes plugins`" not in zh_context
+    assert "agent/context_engine.py" in zh_context
+    assert "apply_anthropic_cache_control()" in zh_context
+    assert "compression.threshold" in zh_context
+    assert "run_agent.py" in zh_context
+    assert "cache_control" in zh_context
+    assert "No intermediate pressure warnings — they caused models to 'give up' prematurely on complex tasks" in zh_context

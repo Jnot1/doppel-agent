@@ -158,3 +158,51 @@ def test_gateway_status_start_hint_is_doppel_first(monkeypatch, capsys):
 
     out = capsys.readouterr().out
     assert "doppel gateway start" in out
+
+
+def test_bundles_empty_hint_is_doppel_first(monkeypatch):
+    cli_obj = _make_cli()
+    rendered = []
+    monkeypatch.setattr("cli._cprint", lambda *args, **kwargs: rendered.append(
+        " ".join(str(arg) for arg in args)
+    ))
+
+    monkeypatch.setitem(
+        sys.modules,
+        "agent.skill_bundles",
+        SimpleNamespace(
+            list_bundles=lambda: [],
+            _bundles_dir=lambda: "/tmp/bundles",
+        ),
+    )
+
+    cli_obj._handle_bundles_command("/bundles")
+
+    assert any("doppel bundles create" in line for line in rendered)
+
+
+def test_bundles_manage_hint_is_doppel_first(monkeypatch):
+    cli_obj = _make_cli()
+    rendered = []
+    monkeypatch.setattr("cli._cprint", lambda *args, **kwargs: rendered.append(
+        " ".join(str(arg) for arg in args)
+    ))
+    monkeypatch.setattr("cli._accent_hex", lambda: "ffffff")
+
+    class DummyConsole:
+        def print(self, *args, **kwargs):
+            return None
+
+    monkeypatch.setattr("cli.ChatConsole", DummyConsole)
+    monkeypatch.setitem(
+        sys.modules,
+        "agent.skill_bundles",
+        SimpleNamespace(
+            list_bundles=lambda: [{"slug": "backend-dev", "skills": ["a", "b"], "description": "desc"}],
+            _bundles_dir=lambda: "/tmp/bundles",
+        ),
+    )
+
+    cli_obj._handle_bundles_command("/bundles")
+
+    assert any("Manage with `doppel bundles`" in line for line in rendered)

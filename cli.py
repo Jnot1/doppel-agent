@@ -9075,7 +9075,7 @@ class HermesCLI:
         if not bundles:
             _cprint("  No skill bundles installed.")
             _cprint(
-                f"  {_DIM}Create one with: hermes bundles create "
+                f"  {_DIM}Create one with: doppel bundles create "
                 f"<name> --skill <s1> --skill <s2>{_RST}"
             )
             _cprint(f"  {_DIM}Directory: {_bundles_dir()}{_RST}")
@@ -9093,7 +9093,7 @@ class HermesCLI:
                 ChatConsole().print(f"        [dim]· {_escape(s)}[/]")
         _cprint(
             f"\n  {_DIM}Invoke a bundle with /<slug>. "
-            f"Manage with `hermes bundles`.{_RST}"
+            f"Manage with `doppel bundles`.{_RST}"
         )
 
     def _handle_browser_command(self, cmd: str):
@@ -10148,7 +10148,7 @@ class HermesCLI:
         ]
         raw = self._prompt_text_input_modal(
             title="⚕  Update Doppel Agent",
-            detail="This will exit the current session and run `hermes update`.",
+            detail="This will exit the current session and run `doppel update`.",
             choices=choices,
         )
         if raw is None:

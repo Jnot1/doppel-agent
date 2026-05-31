@@ -22,7 +22,7 @@ Doppel 有多种不同的可插拔接口——有些使用 Python `register_*` A
 | **图像生成后端** | [图像生成提供商插件](/developer-guide/image-gen-provider-plugin) |
 | **视频生成后端** | [视频生成提供商插件](/developer-guide/video-gen-provider-plugin) |
 | **TTS 后端**（任意 CLI——Piper、VoxCPM、Kokoro、声音克隆等） | [TTS 自定义命令提供商](/user-guide/features/tts#custom-command-providers)——配置驱动，无需 Python |
-| **STT 后端**（自定义 whisper / ASR CLI） | [语音消息转录](/user-guide/features/tts#voice-message-transcription-stt)——将 `HERMES_LOCAL_STT_COMMAND` 设置为 shell 模板 |
+| **STT 后端**（自定义 whisper / ASR CLI） | [语音消息转录](/user-guide/features/tts#voice-message-transcription-stt)——将 `DOPPEL_LOCAL_STT_COMMAND` 设置为 shell 模板（旧的 `HERMES_LOCAL_STT_COMMAND` 仍然可用） |
 | **通过 MCP 接入外部工具**（文件系统、GitHub、Linear、任意 MCP 服务器） | [MCP](/user-guide/features/mcp)——在 `config.yaml` 中声明 `mcp_servers.<name>` |
 | **网关事件钩子**（在启动、会话事件、命令时触发） | [事件钩子](/user-guide/features/hooks#gateway-event-hooks)——将 `HOOK.yaml` + `handler.py` 放入 `~/.hermes/hooks/<name>/` |
 | **Shell 钩子**（在事件发生时运行 shell 命令） | [Shell 钩子](/user-guide/features/hooks#shell-hooks)——在 `config.yaml` 的 `hooks:` 下声明 |
@@ -1047,7 +1047,7 @@ tts:
       voice_compatible: true
 ```
 
-对于 STT，将 `HERMES_LOCAL_STT_COMMAND` 指向一个 shell 模板。支持的占位符：`{input_path}`、`{output_path}`、`{format}`、`{voice}`、`{model}`、`{speed}`（TTS）；`{input_path}`、`{output_dir}`、`{language}`、`{model}`（STT）。任何与路径交互的 CLI 都自动成为插件。
+对于 STT，将 `DOPPEL_LOCAL_STT_COMMAND` 指向一个 shell 模板。旧的 `HERMES_LOCAL_STT_COMMAND` 仍然可用，但新配置应优先使用 Doppel 名称。支持的占位符：`{input_path}`、`{output_path}`、`{format}`、`{voice}`、`{model}`、`{speed}`（TTS）；`{input_path}`、`{output_dir}`、`{language}`、`{model}`（STT）。任何与路径交互的 CLI 都自动成为插件。
 
 **完整指南：** [TTS 自定义命令提供商](/user-guide/features/tts#custom-command-providers) · [STT](/user-guide/features/tts#voice-message-transcription-stt)。
 

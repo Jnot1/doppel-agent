@@ -1,22 +1,23 @@
 """
-Timezone-aware clock for Hermes.
+Timezone-aware clock for Doppel Agent.
 
 Provides a single ``now()`` helper that returns a timezone-aware datetime
 based on the user's configured IANA timezone (e.g. ``Asia/Kolkata``).
 
 Resolution order:
-  1. ``HERMES_TIMEZONE`` environment variable
-  2. ``timezone`` key in ``~/.hermes/config.yaml``
+  1. ``DOPPEL_TIMEZONE`` environment variable (legacy ``HERMES_TIMEZONE``
+     still works)
+  2. ``timezone`` key in ``~/.doppel/config.yaml``
   3. Falls back to the server's local time (``datetime.now().astimezone()``)
 
-Invalid timezone values log a warning and fall back safely — Hermes never
+Invalid timezone values log a warning and fall back safely — Doppel Agent never
 crashes due to a bad timezone string.
 """
 
 import logging
 import os
 from datetime import datetime
-from hermes_constants import get_config_path
+from hermes_constants import get_config_path, get_customer_facing_env_value
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,11 @@ def _resolve_timezone_name() -> str:
     should cache the result rather than calling on every ``now()``.
     """
     # 1. Environment variable (highest priority — set by Supervisor, etc.)
-    tz_env = os.getenv("HERMES_TIMEZONE", "").strip()
+    tz_env = get_customer_facing_env_value(
+        "DOPPEL_TIMEZONE",
+        "HERMES_TIMEZONE",
+        default="",
+    ).strip()
     if tz_env:
         return tz_env
 
@@ -100,5 +105,4 @@ def now() -> datetime:
         return datetime.now(tz)
     # No timezone configured — use server-local (still tz-aware)
     return datetime.now().astimezone()
-
 

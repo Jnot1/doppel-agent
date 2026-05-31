@@ -267,6 +267,21 @@ class TestCustomerFacingEnvAliases:
         assert env["HERMES_PORTAL_BASE_URL"] == "https://portal.dev"
         assert env["HERMES_NOUS_MIN_KEY_TTL_SECONDS"] == "900"
 
+    def test_preferred_local_runtime_aliases_mirror_to_legacy_names(self):
+        env = {
+            "DOPPEL_LOCAL_STT_COMMAND": "whisper {input_path} --output_dir {output_dir}",
+            "DOPPEL_LOCAL_STT_LANGUAGE": "fr",
+            "DOPPEL_TIMEZONE": "America/Chicago",
+            "DOPPEL_DOCKER_BINARY": "/usr/local/bin/podman",
+        }
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_LOCAL_STT_COMMAND"] == "whisper {input_path} --output_dir {output_dir}"
+        assert env["HERMES_LOCAL_STT_LANGUAGE"] == "fr"
+        assert env["HERMES_TIMEZONE"] == "America/Chicago"
+        assert env["HERMES_DOCKER_BINARY"] == "/usr/local/bin/podman"
+
     def test_legacy_alias_backfills_preferred_name(self):
         env = {"HERMES_IGNORE_RULES": "1"}
 

@@ -3999,10 +3999,12 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
     if current_ver < 5:
         config = load_config()
         if "timezone" not in config:
-            old_tz = os.getenv("HERMES_TIMEZONE", "")
+            old_tz = get_env_value("DOPPEL_TIMEZONE") or ""
             if old_tz and old_tz.strip():
                 config["timezone"] = old_tz.strip()
-                results["config_added"].append(f"timezone={old_tz.strip()} (from HERMES_TIMEZONE)")
+                results["config_added"].append(
+                    f"timezone={old_tz.strip()} (from DOPPEL_TIMEZONE / HERMES_TIMEZONE)"
+                )
             else:
                 config["timezone"] = ""
                 results["config_added"].append("timezone= (empty, uses server-local)")

@@ -929,8 +929,8 @@ def test_configuration_top_cluster_prefer_doppel_customer_facing_and_keep_runtim
     assert "DOPPEL_API_TIMEOUT" in zh_cluster
     assert "DOPPEL_API_CALL_STALE_TIMEOUT" in en_cluster
     assert "DOPPEL_API_CALL_STALE_TIMEOUT" in zh_cluster
-    assert "HERMES_DOCKER_BINARY" in en_cluster
-    assert "HERMES_DOCKER_BINARY" in zh_cluster
+    assert "DOPPEL_DOCKER_BINARY" in en_cluster
+    assert "DOPPEL_DOCKER_BINARY" in zh_cluster
     assert "~/.hermes/.env" in en_cluster
     assert "~/.hermes/.env" in zh_cluster
     assert "~/.hermes/config.yaml" in en_cluster
@@ -3264,13 +3264,16 @@ def test_tts_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "# In ~/.doppel/config.yaml" in zh
 
     for fixed in (
-        "HERMES_LOCAL_STT_COMMAND",
+        "DOPPEL_LOCAL_STT_COMMAND",
         "~/.hermes/plugins/my-tts/",
         "pip install hermes-agent[mistral]",
         "tts.providers.<name>",
     ):
         assert fixed in en
         assert fixed in zh
+
+    assert "HERMES_LOCAL_STT_COMMAND" in en
+    assert "HERMES_LOCAL_STT_COMMAND" in zh
 
     assert "doppel plugins enable my-stt" in en
     assert "stt.providers.<name>" in en
@@ -4390,6 +4393,10 @@ def test_environment_variable_reference_prefers_doppel_stream_timeout_alias():
         "DOPPEL_QWEN_BASE_URL",
         "DOPPEL_PORTAL_BASE_URL",
         "DOPPEL_NOUS_MIN_KEY_TTL_SECONDS",
+        "DOPPEL_LOCAL_STT_COMMAND",
+        "DOPPEL_LOCAL_STT_LANGUAGE",
+        "DOPPEL_TIMEZONE",
+        "DOPPEL_DOCKER_BINARY",
     ):
         assert preferred in en
         assert preferred in zh
@@ -4405,6 +4412,10 @@ def test_environment_variable_reference_prefers_doppel_stream_timeout_alias():
         "| `HERMES_QWEN_BASE_URL` |",
         "| `HERMES_PORTAL_BASE_URL` |",
         "| `HERMES_NOUS_MIN_KEY_TTL_SECONDS` |",
+        "| `HERMES_LOCAL_STT_COMMAND` |",
+        "| `HERMES_LOCAL_STT_LANGUAGE` |",
+        "| `HERMES_TIMEZONE` |",
+        "| `HERMES_DOCKER_BINARY` |",
     ):
         assert legacy not in en
         assert legacy not in zh

@@ -27,6 +27,11 @@ def _reset_hermes_time_cache():
     hermes_time._cache_resolved = False
 
 
+def _clear_timezone_env():
+    os.environ.pop("DOPPEL_TIMEZONE", None)
+    os.environ.pop("HERMES_TIMEZONE", None)
+
+
 # =========================================================================
 # hermes_time.now() — core helper
 # =========================================================================
@@ -39,7 +44,7 @@ class TestHermesTimeNow:
 
     def teardown_method(self):
         _reset_hermes_time_cache()
-        os.environ.pop("HERMES_TIMEZONE", None)
+        _clear_timezone_env()
 
     def test_valid_timezone_applies(self):
         """With a valid IANA timezone, now() returns time in that zone."""
@@ -49,6 +54,13 @@ class TestHermesTimeNow:
         # IST is UTC+5:30
         offset = result.utcoffset()
         assert offset == timedelta(hours=5, minutes=30)
+
+    def test_preferred_timezone_alias_applies(self):
+        """With DOPPEL_TIMEZONE, now() returns time in that zone."""
+        os.environ["DOPPEL_TIMEZONE"] = "Asia/Kolkata"
+        result = hermes_time.now()
+        assert result.tzinfo is not None
+        assert result.utcoffset() == timedelta(hours=5, minutes=30)
 
     def test_utc_timezone(self):
         """UTC timezone works."""
@@ -76,7 +88,7 @@ class TestHermesTimeNow:
 
     def test_empty_timezone_uses_local(self):
         """No timezone configured → server-local time (still tz-aware)."""
-        os.environ.pop("HERMES_TIMEZONE", None)
+        _clear_timezone_env()
         result = hermes_time.now()
         assert result.tzinfo is not None
 
@@ -111,7 +123,7 @@ class TestGetTimezone:
 
     def teardown_method(self):
         _reset_hermes_time_cache()
-        os.environ.pop("HERMES_TIMEZONE", None)
+        _clear_timezone_env()
 
     def test_returns_zoneinfo_for_valid(self):
         os.environ["HERMES_TIMEZONE"] = "Europe/London"
@@ -120,7 +132,7 @@ class TestGetTimezone:
         assert str(tz) == "Europe/London"
 
     def test_returns_none_for_empty(self):
-        os.environ.pop("HERMES_TIMEZONE", None)
+        _clear_timezone_env()
         tz = hermes_time.get_timezone()
         assert tz is None
 
@@ -152,28 +164,30 @@ class TestCodeExecutionTZ:
             pytest.skip("tools.code_execution_tool not importable (missing deps)")
 
     def teardown_method(self):
-        os.environ.pop("HERMES_TIMEZONE", None)
+        _clear_timezone_env()
 
     def _mock_handle(self, function_name, function_args, task_id=None, user_task=None):
         import json as _json
         return _json.dumps({"error": f"unexpected tool call: {function_name}"})
 
     def test_tz_injected_when_configured(self):
-        """When HERMES_TIMEZONE is set, child process sees TZ env var.
+        """When DOPPEL_TIMEZONE is set, child process sees TZ env var.
 
         Verified alongside leak-prevention + empty-TZ handling in one
         subprocess call so we don't pay 3x the subprocess startup cost
         (each execute_code spawns a real Python subprocess ~3s).
         """
         import json as _json
-        os.environ["HERMES_TIMEZONE"] = "Asia/Kolkata"
+        os.environ["DOPPEL_TIMEZONE"] = "Asia/Kolkata"
 
-        # One subprocess, three things checked:
+        # One subprocess, four things checked:
         #   1) TZ is injected as "Asia/Kolkata"
-        #   2) HERMES_TIMEZONE itself does NOT leak into the child env
+        #   2) DOPPEL_TIMEZONE itself does NOT leak into the child env
+        #   3) HERMES_TIMEZONE itself does NOT leak into the child env
         probe = (
             'import os; '
             'print("TZ=" + os.environ.get("TZ", "NOT_SET")); '
+            'print("DOPPEL_TIMEZONE=" + os.environ.get("DOPPEL_TIMEZONE", "NOT_SET")); '
             'print("HERMES_TIMEZONE=" + os.environ.get("HERMES_TIMEZONE", "NOT_SET"))'
         )
         with patch("model_tools.handle_function_call", side_effect=self._mock_handle):
@@ -184,14 +198,17 @@ class TestCodeExecutionTZ:
             ))
         assert result["status"] == "success"
         assert "TZ=Asia/Kolkata" in result["output"]
+        assert "DOPPEL_TIMEZONE=NOT_SET" in result["output"], (
+            "DOPPEL_TIMEZONE should not leak into child env (only TZ)"
+        )
         assert "HERMES_TIMEZONE=NOT_SET" in result["output"], (
             "HERMES_TIMEZONE should not leak into child env (only TZ)"
         )
 
     def test_tz_not_injected_when_empty(self):
-        """When HERMES_TIMEZONE is not set, child process has no TZ."""
+        """When no timezone env is set, child process has no TZ."""
         import json as _json
-        os.environ.pop("HERMES_TIMEZONE", None)
+        _clear_timezone_env()
 
         with patch("model_tools.handle_function_call", side_effect=self._mock_handle):
             result = _json.loads(self._execute_code(
@@ -215,7 +232,7 @@ class TestCronTimezone:
 
     def teardown_method(self):
         _reset_hermes_time_cache()
-        os.environ.pop("HERMES_TIMEZONE", None)
+        _clear_timezone_env()
 
     def test_parse_schedule_duration_uses_tz_aware_now(self):
         """parse_schedule('30m') should produce a tz-aware run_at."""

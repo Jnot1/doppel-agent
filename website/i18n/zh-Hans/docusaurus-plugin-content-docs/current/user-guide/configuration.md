@@ -169,7 +169,7 @@ terminal:
 
 **`terminal.docker_extra_args`**（也可通过 `TERMINAL_DOCKER_EXTRA_ARGS='["--gpus=all"]'` 覆盖）允许传递 Doppel Agent 未作为一级键公开的任意 `docker run` 标志 —— `--gpus`、`--network`、`--add-host`、替代 `--security-opt` 覆盖等。每个条目必须是字符串；该列表最后附加到组装好的 `docker run` 调用中，因此可以在需要时覆盖 Doppel Agent 的默认值。请谨慎使用 —— 与沙箱加固（权限删除、`--user`、workspace 绑定挂载）冲突的标志将悄然削弱隔离性。
 
-**要求：** 已安装并运行 Docker Desktop 或 Docker Engine。Doppel Agent 会探测 `$PATH` 以及常见的 macOS 安装位置（`/usr/local/bin/docker`、`/opt/homebrew/bin/docker`、Docker Desktop 应用包）。开箱即用支持 Podman：设置 `HERMES_DOCKER_BINARY=podman`（或完整路径）以在两者都安装时强制使用它。
+**要求：** 已安装并运行 Docker Desktop 或 Docker Engine。Doppel Agent 会探测 `$PATH` 以及常见的 macOS 安装位置（`/usr/local/bin/docker`、`/opt/homebrew/bin/docker`、Docker Desktop 应用包）。开箱即用支持 Podman：设置 `DOPPEL_DOCKER_BINARY=podman`（或完整路径）以在两者都安装时强制使用它。旧的 `HERMES_DOCKER_BINARY` 仍然可用。
 
 #### 容器生命周期
 

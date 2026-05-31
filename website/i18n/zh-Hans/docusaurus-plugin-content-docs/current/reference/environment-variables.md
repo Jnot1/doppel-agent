@@ -94,8 +94,8 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 | `CLAUDE_CODE_OAUTH_TOKEN` | 手动导出时的显式 Claude Code token 覆盖 |
 | `DOPPEL_MODEL` | 在进程级别覆盖模型名称（供 cron 调度器使用；正常使用请优先在 `config.yaml` 中配置） |
 | `VOICE_TOOLS_OPENAI_KEY` | OpenAI 语音转文字和文字转语音提供商的首选 OpenAI 密钥 |
-| `HERMES_LOCAL_STT_COMMAND` | 可选的本地语音转文字命令模板。支持 `{input_path}`、`{output_dir}`、`{language}` 和 `{model}` 占位符 |
-| `HERMES_LOCAL_STT_LANGUAGE` | 传递给 `HERMES_LOCAL_STT_COMMAND` 或自动检测的本地 `whisper` CLI 回退的默认语言（默认：`en`） |
+| `DOPPEL_LOCAL_STT_COMMAND` | 可选的本地语音转文字命令模板。支持 `{input_path}`、`{output_dir}`、`{language}` 和 `{model}` 占位符。旧的 `HERMES_LOCAL_STT_COMMAND` 仍然可用。 |
+| `DOPPEL_LOCAL_STT_LANGUAGE` | 传递给 `DOPPEL_LOCAL_STT_COMMAND` 或自动检测的本地 `whisper` CLI 回退的默认语言（默认：`en`）。旧的 `HERMES_LOCAL_STT_LANGUAGE` 仍然可用。 |
 | `DOPPEL_HOME` | 覆盖 Doppel 配置目录（默认：`~/.doppel`）。同时限定 gateway PID 文件和 systemd 服务名称，允许多个安装并发运行 |
 | `HERMES_GIT_BASH_PATH` | **仅 Windows。** 覆盖终端工具的 `bash.exe` 发现路径。可指向任意 bash——完整 Git-for-Windows 安装、通过符号链接的 WSL bash、MSYS2、Cygwin。安装程序会自动将其设置为所配置的 PortableGit。参见 [Windows（原生）指南](../user-guide/windows-native.md#how-hermes-runs-shell-commands-on-windows) |
 | `HERMES_DISABLE_WINDOWS_UTF8` | **仅 Windows。** 设为 `1` 可禁用 UTF-8 stdio shim（`configure_windows_stdio()`），回退到控制台的本地代码页。用于排查编码问题；正常操作中极少需要 |
@@ -117,7 +117,7 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 | `DOPPEL_NOUS_TIMEOUT_SECONDS` | Nous 凭证/token 流程的 HTTP 超时 |
 | `HERMES_DUMP_REQUESTS` | 将 API 请求载荷转储到日志文件（`true`/`false`） |
 | `HERMES_PREFILL_MESSAGES_FILE` | 包含在 API 调用时注入的临时预填消息的 JSON 文件路径 |
-| `HERMES_TIMEZONE` | IANA 时区覆盖（例如 `America/New_York`） |
+| `DOPPEL_TIMEZONE` | IANA 时区覆盖（例如 `America/New_York`）。旧的 `HERMES_TIMEZONE` 仍然可用。 |
 
 ## 工具 API
 
@@ -187,7 +187,7 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 | 变量 | 描述 |
 |----------|-------------|
 | `TERMINAL_ENV` | 后端：`local`、`docker`、`ssh`、`singularity`、`modal`、`daytona` |
-| `HERMES_DOCKER_BINARY` | 覆盖 Doppel 调用的容器二进制（例如 `podman`、`/usr/local/bin/docker`）。未设置时，Doppel 自动在 `PATH` 上发现 `docker` 或 `podman`。当两者都已安装且需要非默认选项，或二进制不在 `PATH` 中时使用。 |
+| `DOPPEL_DOCKER_BINARY` | 覆盖 Doppel 调用的容器二进制（例如 `podman`、`/usr/local/bin/docker`）。未设置时，Doppel 自动在 `PATH` 上发现 `docker` 或 `podman`。当两者都已安装且需要非默认选项，或二进制不在 `PATH` 中时使用。旧的 `HERMES_DOCKER_BINARY` 仍然可用。 |
 | `TERMINAL_DOCKER_IMAGE` | Docker 镜像（默认：`nikolaik/python-nodejs:python3.11-nodejs20`） |
 | `TERMINAL_DOCKER_FORWARD_ENV` | 显式转发到 Docker 终端会话的环境变量名 JSON 数组。注意：技能声明的 `required_environment_variables` 会自动转发——仅对未被任何技能声明的变量使用此项。 |
 | `TERMINAL_DOCKER_VOLUMES` | 额外的 Docker 卷挂载（逗号分隔的 `host:container` 对） |

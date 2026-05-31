@@ -15,6 +15,7 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
+from hermes_constants import get_customer_facing_env_value
 from tools.environments.base import BaseEnvironment, _popen_bash
 from tools.environments.local import _HERMES_PROVIDER_ENV_BLOCKLIST
 
@@ -264,7 +265,8 @@ def find_docker() -> Optional[str]:
     """Locate the docker (or podman) CLI binary.
 
     Resolution order:
-    1. ``HERMES_DOCKER_BINARY`` env var — explicit override (e.g. ``/usr/bin/podman``)
+    1. ``DOPPEL_DOCKER_BINARY`` env var — explicit override (legacy
+       ``HERMES_DOCKER_BINARY`` still works)
     2. ``docker`` on PATH via ``shutil.which``
     3. ``podman`` on PATH via ``shutil.which``
     4. Well-known macOS Docker Desktop install locations
@@ -276,10 +278,14 @@ def find_docker() -> Optional[str]:
         return _docker_executable
 
     # 1. Explicit override via env var (e.g. for Podman on immutable distros)
-    override = os.getenv("HERMES_DOCKER_BINARY")
+    override = get_customer_facing_env_value(
+        "DOPPEL_DOCKER_BINARY",
+        "HERMES_DOCKER_BINARY",
+        default="",
+    )
     if override and os.path.isfile(override) and os.access(override, os.X_OK):
         _docker_executable = override
-        logger.info("Using HERMES_DOCKER_BINARY override: %s", override)
+        logger.info("Using DOPPEL_DOCKER_BINARY override: %s", override)
         return override
 
     # 2. docker on PATH

@@ -94,8 +94,8 @@ All variables go in `~/.doppel/.env`. You can also set them with `doppel config 
 | `CLAUDE_CODE_OAUTH_TOKEN` | Explicit Claude Code token override if you export one manually |
 | `DOPPEL_MODEL` | Override model name at process level (used by cron scheduler; prefer `config.yaml` for normal use) |
 | `VOICE_TOOLS_OPENAI_KEY` | Preferred OpenAI key for OpenAI speech-to-text and text-to-speech providers |
-| `HERMES_LOCAL_STT_COMMAND` | Optional local speech-to-text command template. Supports `{input_path}`, `{output_dir}`, `{language}`, and `{model}` placeholders |
-| `HERMES_LOCAL_STT_LANGUAGE` | Default language passed to `HERMES_LOCAL_STT_COMMAND` or auto-detected local `whisper` CLI fallback (default: `en`) |
+| `DOPPEL_LOCAL_STT_COMMAND` | Optional local speech-to-text command template. Supports `{input_path}`, `{output_dir}`, `{language}`, and `{model}` placeholders. Legacy `HERMES_LOCAL_STT_COMMAND` still works. |
+| `DOPPEL_LOCAL_STT_LANGUAGE` | Default language passed to `DOPPEL_LOCAL_STT_COMMAND` or auto-detected local `whisper` CLI fallback (default: `en`). Legacy `HERMES_LOCAL_STT_LANGUAGE` still works. |
 | `DOPPEL_HOME` | Override the Doppel config/data directory (default: `~/.doppel`). Also scopes the gateway PID file and service naming. |
 | `HERMES_GIT_BASH_PATH` | **Windows only.** Override `bash.exe` discovery for the terminal tool. Points at any bash — full Git-for-Windows install, WSL bash via symlink, MSYS2, Cygwin. The installer sets this automatically to the PortableGit it provisioned. See the [Windows (Native) Guide](../user-guide/windows-native.md#how-hermes-runs-shell-commands-on-windows) |
 | `HERMES_DISABLE_WINDOWS_UTF8` | **Windows only.** Set to `1` to disable the UTF-8 stdio shim (`configure_windows_stdio()`) and fall back to the console's locale code page. Useful for bisecting encoding bugs; rarely the right setting in normal operation |
@@ -117,7 +117,7 @@ For native Anthropic auth, Doppel prefers Claude Code's own credential files whe
 | `DOPPEL_NOUS_TIMEOUT_SECONDS` | HTTP timeout for Nous credential / token flows |
 | `HERMES_DUMP_REQUESTS` | Dump API request payloads to log files (`true`/`false`) |
 | `HERMES_PREFILL_MESSAGES_FILE` | Path to a JSON file of ephemeral prefill messages injected at API-call time |
-| `HERMES_TIMEZONE` | IANA timezone override (for example `America/New_York`) |
+| `DOPPEL_TIMEZONE` | IANA timezone override (for example `America/New_York`). Legacy `HERMES_TIMEZONE` still works. |
 
 ## Tool APIs
 
@@ -187,7 +187,7 @@ These variables configure the [Tool Gateway](/user-guide/features/tool-gateway) 
 | Variable | Description |
 |----------|-------------|
 | `TERMINAL_ENV` | Backend: `local`, `docker`, `ssh`, `singularity`, `modal`, `daytona` |
-| `HERMES_DOCKER_BINARY` | Override the container binary Doppel shells out to (e.g. `podman`, `/usr/local/bin/docker`). When unset, Doppel auto-discovers `docker` or `podman` on `PATH`. Needed when both are installed and you want the non-default, or when the binary lives outside `PATH`. |
+| `DOPPEL_DOCKER_BINARY` | Override the container binary Doppel shells out to (e.g. `podman`, `/usr/local/bin/docker`). When unset, Doppel auto-discovers `docker` or `podman` on `PATH`. Needed when both are installed and you want the non-default, or when the binary lives outside `PATH`. Legacy `HERMES_DOCKER_BINARY` still works. |
 | `TERMINAL_DOCKER_IMAGE` | Docker image (default: `nikolaik/python-nodejs:python3.11-nodejs20`) |
 | `TERMINAL_DOCKER_FORWARD_ENV` | JSON array of env var names to explicitly forward into Docker terminal sessions. Note: skill-declared `required_environment_variables` are forwarded automatically — you only need this for vars not declared by any skill. |
 | `TERMINAL_DOCKER_VOLUMES` | Additional Docker volume mounts (comma-separated `host:container` pairs) |

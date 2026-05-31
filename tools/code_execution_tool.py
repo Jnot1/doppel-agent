@@ -47,6 +47,7 @@ import uuid
 _IS_WINDOWS = platform.system() == "Windows"
 from typing import Any, Dict, List, Optional
 
+from hermes_constants import get_customer_facing_env_value
 from tools.thread_context import propagate_context_to_thread
 
 # Availability gate.  On Windows we fall back to loopback TCP for the
@@ -952,7 +953,11 @@ def _execute_remote(
             f"HERMES_RPC_DIR={shlex.quote(f'{sandbox_dir}/rpc')} "
             f"PYTHONDONTWRITEBYTECODE=1"
         )
-        tz = os.getenv("HERMES_TIMEZONE", "").strip()
+        tz = get_customer_facing_env_value(
+            "DOPPEL_TIMEZONE",
+            "HERMES_TIMEZONE",
+            default="",
+        ).strip()
         if tz:
             env_prefix += f" TZ={tz}"
 
@@ -1254,12 +1259,17 @@ def execute_code(
             _pp_parts.append(_existing_pp)
         child_env["PYTHONPATH"] = os.pathsep.join(_pp_parts)
         # Inject user's configured timezone so datetime.now() in sandboxed
-        # code reflects the correct wall-clock time.  Only TZ is set —
-        # HERMES_TIMEZONE is an internal Hermes setting and must not leak
-        # into child processes.
-        _tz_name = os.getenv("HERMES_TIMEZONE", "").strip()
+        # code reflects the correct wall-clock time. Only TZ is set — the
+        # internal Doppel/Hermes timezone env vars must not leak into child
+        # processes.
+        _tz_name = get_customer_facing_env_value(
+            "DOPPEL_TIMEZONE",
+            "HERMES_TIMEZONE",
+            default="",
+        ).strip()
         if _tz_name:
             child_env["TZ"] = _tz_name
+        child_env.pop("DOPPEL_TIMEZONE", None)
         child_env.pop("HERMES_TIMEZONE", None)
 
         # Per-profile HOME isolation: redirect system tool configs into

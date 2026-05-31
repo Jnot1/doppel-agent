@@ -69,6 +69,8 @@ EN_ADDING_PLATFORM_ADAPTERS_DOC = EN_DEV_GUIDE_DIR / "adding-platform-adapters.m
 EN_CREATING_SKILLS_DOC = EN_DEV_GUIDE_DIR / "creating-skills.md"
 EN_ACP_INTERNALS_DOC = EN_DEV_GUIDE_DIR / "acp-internals.md"
 EN_EXTENDING_CLI_DOC = EN_DEV_GUIDE_DIR / "extending-the-cli.md"
+EN_ARCHITECTURE_DOC = EN_DEV_GUIDE_DIR / "architecture.md"
+EN_TRAJECTORY_DOC = EN_DEV_GUIDE_DIR / "trajectory-format.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
@@ -79,6 +81,8 @@ ZH_ADDING_PLATFORM_ADAPTERS_DOC = ZH_DEV_GUIDE_DIR / "adding-platform-adapters.m
 ZH_CREATING_SKILLS_DOC = ZH_DEV_GUIDE_DIR / "creating-skills.md"
 ZH_ACP_INTERNALS_DOC = ZH_DEV_GUIDE_DIR / "acp-internals.md"
 ZH_EXTENDING_CLI_DOC = ZH_DEV_GUIDE_DIR / "extending-the-cli.md"
+ZH_ARCHITECTURE_DOC = ZH_DEV_GUIDE_DIR / "architecture.md"
+ZH_TRAJECTORY_DOC = ZH_DEV_GUIDE_DIR / "trajectory-format.md"
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -577,3 +581,56 @@ def test_acp_and_cli_extension_docs_prefer_doppel_surfaces():
     assert "HermesCLI" in zh_cli
     assert "cd ~/.hermes/hermes-agent" in zh_cli
     assert "Hermes TUI" not in zh_cli
+
+
+def test_architecture_and_trajectory_docs_prefer_doppel_surfaces():
+    en_arch = EN_ARCHITECTURE_DOC.read_text(encoding="utf-8")
+    zh_arch = ZH_ARCHITECTURE_DOC.read_text(encoding="utf-8")
+    en_traj = EN_TRAJECTORY_DOC.read_text(encoding="utf-8")
+    zh_traj = ZH_TRAJECTORY_DOC.read_text(encoding="utf-8")
+
+    assert "Hermes Agent internals" not in en_arch
+    assert "Hermes Agent 内部结构" not in zh_arch
+    assert "Doppel Agent internals" in en_arch
+    assert "Doppel Agent 内部结构" in zh_arch
+    assert "all `doppel` subcommands" in en_arch
+    assert "所有 `doppel` 子命令" in zh_arch
+    assert "doppel plugins" in en_arch
+    assert "doppel plugins" in zh_arch
+    assert "Build a Doppel Plugin" in en_arch
+    assert "构建 Doppel 插件" in zh_arch
+    assert "Exposes Doppel Agent as an editor-native agent" in en_arch
+    assert "将 Doppel Agent 作为编辑器原生 agent 暴露给" in zh_arch
+    assert "`doppel -p <name>`" in en_arch
+    assert "`doppel -p <name>`" in zh_arch
+    assert "AIAgent" in en_arch
+    assert "AIAgent" in zh_arch
+    assert "HermesCLI" in en_arch
+    assert "HermesCLI" in zh_arch
+    assert "run_agent.py" in en_arch
+    assert "run_agent.py" in zh_arch
+    assert "HERMES_HOME" in en_arch
+    assert "HERMES_HOME" in zh_arch
+    assert "~/.hermes/plugins/" in en_arch
+    assert "~/.hermes/plugins/" in zh_arch
+
+    assert "Hermes Agent saves conversation trajectories" not in en_traj
+    assert "Hermes Agent 以 ShareGPT 兼容的 JSONL 格式保存对话轨迹" not in zh_traj
+    assert "Doppel Agent saves conversation trajectories" in en_traj
+    assert "Doppel Agent 以 ShareGPT 兼容的 JSONL 格式保存对话轨迹" in zh_traj
+    assert "Doppel Agent function-calling prompt template" in en_traj
+    assert "Doppel Agent 函数调用 prompt 模板" in zh_traj
+    assert "FunctionCall" in en_traj
+    assert "FunctionCall" in zh_traj
+    assert "_save_trajectory" in en_traj
+    assert "_save_trajectory" in zh_traj
+    assert "model_tools.TOOL_TO_TOOLSET_MAP" in en_traj
+    assert "model_tools.TOOL_TO_TOOLSET_MAP" in zh_traj
+    assert "trajectory_samples.jsonl" in en_traj
+    assert "trajectory_samples.jsonl" in zh_traj
+    assert "failed_trajectories.jsonl" in en_traj
+    assert "failed_trajectories.jsonl" in zh_traj
+    assert '"tool_call_id"' in en_traj
+    assert '"tool_call_id"' in zh_traj
+    assert '"gpt"' in en_traj
+    assert '"gpt"' in zh_traj

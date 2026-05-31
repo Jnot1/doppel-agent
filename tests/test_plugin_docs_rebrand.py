@@ -6215,3 +6215,95 @@ def test_local_llm_on_mac_guide_prefers_doppel_customer_facing_surfaces():
         "\n```bash\nhermes model\n```",
     ):
         assert stale not in guide
+
+
+def test_mcp_guide_pair_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "use-mcp-with-hermes.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "use-mcp-with-hermes.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Use MCP with Doppel Agent" in en
+    assert "在 Doppel Agent 中使用 MCP" in zh
+    assert "connecting MCP servers to Doppel Agent" in en
+    assert "连接到 Doppel Agent" in zh
+    assert "use MCP with Doppel Agent in day-to-day workflows" in en
+    assert "使用 Doppel Agent 的 MCP 功能" in zh
+    assert "build a native Doppel tool" in en
+    assert "构建原生 Doppel 工具" in zh
+    assert "Doppel Agent remains the agent" in en
+    assert "Doppel Agent 仍然是 agent" in zh
+    assert "If you installed Doppel Agent with the standard install script" in en
+    assert "安装了 Doppel Agent" in zh
+    assert "\n```bash\ncd ~/.doppel/doppel-agent\nuv pip install -e \".[mcp]\"\n```" in en
+    assert "\n```bash\ncd ~/.doppel/doppel-agent\nuv pip install -e \".[mcp]\"\n```" in zh
+    assert "\n```bash\ndoppel chat\n```" in en
+    assert "\n```bash\ndoppel chat\n```" in zh
+    assert "Doppel banner/status should show MCP integration" in en
+    assert "Doppel 横幅/状态应显示 MCP 集成" in zh
+    assert "bridge Doppel Agent in WSL to Windows Chrome" in en
+    assert "将 WSL 中的 Doppel Agent 桥接到 Windows Chrome" in zh
+    assert "Doppel Agent (WSL) -> MCP stdio bridge -> Windows Chrome" in en
+    assert "Doppel Agent (WSL) -> MCP stdio bridge -> Windows Chrome" in zh
+    assert "doppel mcp add chrome-devtools-win" in en
+    assert "doppel mcp add chrome-devtools-win" in zh
+    assert "doppel mcp test chrome-devtools-win" in en
+    assert "doppel mcp test chrome-devtools-win" in zh
+    assert "There are two categories of MCP-exposed functionality in Doppel Agent" in en
+    assert "Doppel Agent 中 MCP 暴露的功能分为两类" in zh
+    assert "Doppel-added utility wrappers" in en
+    assert "Doppel 添加的实用工具包装器" in zh
+    assert "Start Doppel Agent and ask:" in en
+    assert "启动 Doppel Agent 并询问：" in zh
+    assert "Now Doppel Agent can combine them" in en
+    assert "现在 Doppel Agent 可以组合使用它们" in zh
+    assert "without changing Doppel core" in en
+    assert "无需修改 Doppel 核心" in zh
+    assert "Because Doppel Agent now respects your per-server policy" in en
+    assert "因为 Doppel Agent 现在遵守你的按服务器策略" in zh
+
+    for stale in (
+        "Use MCP with Hermes",
+        "在 Hermes 中使用 MCP",
+        "connecting MCP servers to Hermes Agent",
+        "连接到 Hermes Agent",
+        "use MCP with Hermes Agent in day-to-day workflows",
+        "build a native Hermes tool",
+        "构建原生 Hermes 工具",
+        "Hermes remains the agent",
+        "Hermes 仍然是 agent",
+        "If you installed Hermes with the standard install script",
+        "标准安装脚本安装了 Hermes",
+        "cd ~/.hermes/hermes-agent",
+        "\n```bash\nhermes chat\n```",
+        "Hermes banner/status should show MCP integration",
+        "Hermes 横幅/状态应显示 MCP 集成",
+        "bridge Hermes in WSL to Windows Chrome",
+        "将 WSL 中的 Hermes 桥接到 Windows Chrome",
+        "Hermes (WSL) -> MCP stdio bridge -> Windows Chrome",
+        "hermes mcp add chrome-devtools-win",
+        "hermes mcp test chrome-devtools-win",
+        "There are two categories of MCP-exposed functionality in Hermes",
+        "Hermes 中 MCP 暴露的功能分为两类",
+        "Hermes-added utility wrappers",
+        "Hermes 添加的实用工具包装器",
+        "Start Hermes and ask:",
+        "启动 Hermes 并询问：",
+        "Now Hermes can combine them",
+        "现在 Hermes 可以组合使用它们",
+        "without changing Hermes core",
+        "无需修改 Hermes 核心",
+        "Because Hermes now respects your per-server policy",
+        "因为 Hermes 现在遵守你的按服务器策略",
+    ):
+        assert stale not in en
+        assert stale not in zh

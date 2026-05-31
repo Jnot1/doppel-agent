@@ -1179,7 +1179,7 @@ Manage MCP (Model Context Protocol) server configurations and run Doppel as an M
 | `configure <name>` (alias: `config`) | Toggle tool selection for a server. |
 | `login <name>` | Force re-authentication for an OAuth-based MCP server. |
 
-See [MCP Config Reference](./mcp-config-reference.md), [Use MCP with Doppel](../guides/use-mcp-with-doppel.md), and [MCP Server Mode](../user-guide/features/mcp.md#running-hermes-as-an-mcp-server).
+See [MCP Config Reference](./mcp-config-reference.md), [Use MCP with Doppel Agent](/guides/use-mcp-with-doppel-agent), and [MCP Server Mode](../user-guide/features/mcp.md#running-hermes-as-an-mcp-server).
 
 ## `doppel plugins`
 

@@ -1,5 +1,6 @@
 ---
 sidebar_position: 6
+slug: /guides/use-mcp-with-doppel-agent
 title: "在 Doppel Agent 中使用 MCP"
 description: "将 MCP 服务器连接到 Doppel Agent、过滤其工具并在实际工作流中安全使用的实践指南"
 ---

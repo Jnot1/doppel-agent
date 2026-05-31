@@ -1,5 +1,6 @@
 ---
 sidebar_position: 6
+slug: /guides/use-mcp-with-doppel-agent
 title: "Use MCP with Doppel Agent"
 description: "A practical guide to connecting MCP servers to Doppel Agent, filtering their tools, and using them safely in real workflows"
 ---

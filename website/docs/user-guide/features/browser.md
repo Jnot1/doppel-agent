@@ -377,7 +377,7 @@ For that setup, prefer `chrome-devtools-mcp` through Doppel Agent MCP support.
 
 See the MCP guide for the practical setup:
 
-- [Use MCP with Doppel Agent](../../guides/use-mcp-with-hermes.md#wsl2-bridge-hermes-in-wsl-to-windows-chrome)
+- [Use MCP with Doppel Agent](/guides/use-mcp-with-doppel-agent#wsl2-bridge-doppel-agent-in-wsl-to-windows-chrome)
 
 ### Local browser mode
 

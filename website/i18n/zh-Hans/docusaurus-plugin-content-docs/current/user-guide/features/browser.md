@@ -343,7 +343,7 @@ google-chrome \
 
 具体配置请参阅 MCP 指南：
 
-- [在 Doppel Agent 中使用 MCP](../../guides/use-mcp-with-hermes.md#wsl2-bridge-hermes-in-wsl-to-windows-chrome)
+- [在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent#wsl2-bridge-doppel-agent-in-wsl-to-windows-chrome)
 
 ### 本地浏览器模式
 

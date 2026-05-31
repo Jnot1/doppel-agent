@@ -61,7 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/ins
 
 参见：
 
-- [在 Doppel 中使用 MCP](../guides/use-mcp-with-hermes.md#wsl2-bridge-hermes-in-wsl-to-windows-chrome)
+- [在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent#wsl2-bridge-doppel-agent-in-wsl-to-windows-chrome)
 - [浏览器自动化](../user-guide/features/browser.md#wsl2--windows-chrome-prefer-mcp-over-browser-connect)
 
 ### 支持 Android / Termux 吗？
@@ -606,7 +606,7 @@ doppel chat
 
 另请参阅：
 - [MCP（模型上下文协议）](/user-guide/features/mcp)
-- [在 Doppel 中使用 MCP](/guides/use-mcp-with-hermes)
+- [在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent)
 - [MCP 配置参考](/reference/mcp-config-reference)
 
 #### MCP 超时错误

@@ -85,6 +85,10 @@ const config: Config = {
             from: ['/guides/use-voice-mode-with-hermes', '/guides/use-voice-mode-with-doppel'],
             to: '/guides/use-voice-mode-with-doppel-agent',
           },
+          {
+            from: ['/guides/use-mcp-with-hermes', '/guides/use-mcp-with-doppel'],
+            to: '/guides/use-mcp-with-doppel-agent',
+          },
         ],
       },
     ],

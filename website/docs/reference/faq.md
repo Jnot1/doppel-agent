@@ -61,7 +61,7 @@ This is more reliable than trying to force Doppel's core browser transport to at
 
 See:
 
-- [Use MCP with Doppel](../guides/use-mcp-with-hermes.md#wsl2-bridge-hermes-in-wsl-to-windows-chrome)
+- [Use MCP with Doppel Agent](/guides/use-mcp-with-doppel-agent#wsl2-bridge-doppel-agent-in-wsl-to-windows-chrome)
 - [Browser Automation](../user-guide/features/browser.md#wsl2--windows-chrome-prefer-mcp-over-browser-connect)
 
 ### Does it work on Android / Termux?
@@ -606,7 +606,7 @@ doppel chat
 
 See also:
 - [MCP (Model Context Protocol)](/user-guide/features/mcp)
-- [Use MCP with Doppel](/guides/use-mcp-with-hermes)
+- [Use MCP with Doppel Agent](/guides/use-mcp-with-doppel-agent)
 - [MCP Config Reference](/reference/mcp-config-reference)
 
 #### MCP timeout errors

@@ -743,7 +743,7 @@ The gateway does NOT need to be running for read operations (listing conversatio
 
 ## Related docs
 
-- [Use MCP with Doppel](/guides/use-mcp-with-hermes)
+- [Use MCP with Doppel Agent](/guides/use-mcp-with-doppel-agent)
 - [CLI Commands](/reference/cli-commands)
 - [Slash Commands](/reference/slash-commands)
 - [FAQ](/reference/faq)

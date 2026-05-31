@@ -1379,8 +1379,8 @@ def test_mcp_config_reference_docs_prefer_doppel_branding_and_keep_runtime_liter
 
     assert 'description: "Reference for Doppel Agent MCP configuration keys, filtering semantics, and utility-tool policy"' in en
     assert 'description: "Doppel Agent MCP 配置键、过滤语义及工具策略参考"' in zh
-    assert "[Use MCP with Doppel Agent](/guides/use-mcp-with-hermes)" in en
-    assert "[在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-hermes)" in zh
+    assert "[Use MCP with Doppel Agent](/guides/use-mcp-with-doppel-agent)" in en
+    assert "[在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent)" in zh
     assert "Doppel Agent may register these utility wrappers per MCP server" in en
     assert "Doppel Agent 可为每个 MCP 服务器注册以下工具包装器" in zh
     assert "Doppel Agent only registers those utility tools" in en
@@ -2194,6 +2194,114 @@ def test_soul_guide_route_graph_uses_doppel_slug_and_legacy_redirect():
         assert "/guides/use-soul-with-hermes" not in text
 
 
+def test_mcp_guide_route_graph_uses_doppel_slug_and_legacy_redirects():
+    en_guide = (
+        REPO_ROOT / "website" / "docs" / "guides" / "use-mcp-with-hermes.md"
+    ).read_text(encoding="utf-8")
+    zh_guide = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "use-mcp-with-hermes.md"
+    ).read_text(encoding="utf-8")
+    config = (REPO_ROOT / "website" / "docusaurus.config.ts").read_text(encoding="utf-8")
+    llms = (
+        REPO_ROOT / "website" / "scripts" / "generate-llms-txt.py"
+    ).read_text(encoding="utf-8")
+    linked_docs = [
+        REPO_ROOT / "website" / "docs" / "index.mdx",
+        REPO_ROOT / "website" / "docs" / "reference" / "mcp-config-reference.md",
+        REPO_ROOT / "website" / "docs" / "reference" / "faq.md",
+        REPO_ROOT / "website" / "docs" / "reference" / "cli-commands.md",
+        REPO_ROOT / "website" / "docs" / "user-guide" / "windows-wsl-quickstart.md",
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "mcp.md",
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "browser.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "index.mdx",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "mcp-config-reference.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "faq.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "windows-wsl-quickstart.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "mcp.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "browser.md",
+    ]
+
+    assert "slug: /guides/use-mcp-with-doppel-agent" in en_guide
+    assert "slug: /guides/use-mcp-with-doppel-agent" in zh_guide
+    assert (
+        "from: ['/guides/use-mcp-with-hermes', '/guides/use-mcp-with-doppel']"
+        in config
+    )
+    assert "to: '/guides/use-mcp-with-doppel-agent'" in config
+    assert (
+        '("guides/use-mcp-with-doppel-agent", "Use MCP with Doppel Agent", None)'
+        in llms
+    )
+    assert (
+        '("guides/use-mcp-with-hermes", "Use MCP with Doppel Agent", None)'
+        not in llms
+    )
+
+    for doc in linked_docs:
+        text = doc.read_text(encoding="utf-8")
+        assert "/guides/use-mcp-with-doppel-agent" in text
+        assert "/guides/use-mcp-with-hermes" not in text
+        assert "/guides/use-mcp-with-doppel" not in text
+
+
 def test_voice_guide_route_graph_uses_doppel_slug_and_legacy_redirects():
     en_guide = (
         REPO_ROOT / "website" / "docs" / "guides" / "use-voice-mode-with-hermes.md"
@@ -2901,8 +3009,8 @@ def test_mcp_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "doppel mcp add codex --preset codex" in zh
     assert "doppel mcp serve" in en
     assert "doppel mcp serve" in zh
-    assert "Use MCP with Doppel" in en
-    assert "在 Doppel 中使用 MCP" in zh
+    assert "Use MCP with Doppel Agent" in en
+    assert "在 Doppel Agent 中使用 MCP" in zh
 
     for fixed in (
         "~/.hermes/config.yaml",
@@ -3271,7 +3379,7 @@ def test_zh_reference_cli_commands_rebrand_hooks_mcp_and_sessions_cluster():
     assert "doppel-acp" in section
     assert "doppel mcp <subcommand>" in section
     assert "doppel mcp install n8n" in section
-    assert "[在 Doppel 中使用 MCP](../guides/use-mcp-with-hermes.md)" in section
+    assert "[在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent)" in section
     assert "doppel plugins [subcommand]" in section
     assert "[构建 Doppel Plugin](../guides/build-a-hermes-plugin.md)" in section
     assert "doppel tools [--summary]" in section
@@ -6491,7 +6599,7 @@ def test_docs_home_pair_prefer_doppel_customer_facing_surfaces():
     assert "由 Doppelme 维护" in zh
     assert "Original upstream attribution is preserved in [NOTICE.md]" in en
     assert "原始上游署名保留在 [NOTICE.md]" in zh
-    assert "[在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-hermes)" in zh
+    assert "[在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent)" in zh
     assert "通过全局 SOUL.md 定义 Doppel 的默认风格" in zh
 
     for stale in (
@@ -6554,6 +6662,8 @@ def test_mcp_guide_pair_prefer_doppel_customer_facing_surfaces():
 
     assert "Use MCP with Doppel Agent" in en
     assert "在 Doppel Agent 中使用 MCP" in zh
+    assert "slug: /guides/use-mcp-with-doppel-agent" in en
+    assert "slug: /guides/use-mcp-with-doppel-agent" in zh
     assert "connecting MCP servers to Doppel Agent" in en
     assert "连接到 Doppel Agent" in zh
     assert "use MCP with Doppel Agent in day-to-day workflows" in en

@@ -587,7 +587,7 @@ MCP 服务器直接从 Doppel Agent 的会话存储（`~/.doppel/sessions/sessio
 
 ## 相关文档
 
-- [在 Doppel 中使用 MCP](/guides/use-mcp-with-hermes)
+- [在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent)
 - [CLI 命令](/reference/cli-commands)
 - [斜杠命令](/reference/slash-commands)
 - [常见问题](/reference/faq)

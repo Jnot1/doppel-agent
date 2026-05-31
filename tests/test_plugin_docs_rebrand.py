@@ -5897,3 +5897,76 @@ def test_daily_briefing_bot_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_aws_bedrock_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "aws-bedrock.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "aws-bedrock.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Use Doppel Agent with Amazon Bedrock" in en
+    assert "将 Doppel Agent 与 Amazon Bedrock 配合使用" in zh
+    assert "Doppel Agent supports Amazon Bedrock" in en
+    assert "Doppel Agent 通过 **Converse API** 原生支持 Amazon Bedrock" in zh
+    assert "Doppel detects the instance role automatically" in en
+    assert "Doppel 会自动检测实例角色" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel chat" in en
+    assert "doppel chat" in zh
+    assert "`~/.doppel/config.yaml`" in en
+    assert "`~/.doppel/config.yaml`" in zh
+    assert "Doppel auto-discovers available models" in en
+    assert "Doppel 通过 Bedrock 控制平面自动发现可用模型" in zh
+    assert "\n```bash\ndoppel doctor\n```" in en
+    assert "\n```bash\ndoppel doctor\n```" in zh
+    assert "all Doppel gateway platforms" in en
+    assert "所有 Doppel gateway 平台" in zh
+    assert "doppel gateway setup" in en
+    assert "doppel gateway setup" in zh
+    assert "doppel gateway start" in en
+    assert "doppel gateway start" in zh
+    assert "Doppel checks for credentials in this order" in en
+    assert "Doppel 按以下顺序检查凭证" in zh
+    assert "Doppel automatically retries with backoff" in en
+    assert "Doppel 会自动进行退避重试" in zh
+    assert "[AWS Bedrock one-click deployment example](https://github.com/JiaDe-Wu/sample-hermes-agent-on-aws-with-bedrock)" in en
+    assert "[AWS Bedrock 一键部署示例](https://github.com/JiaDe-Wu/sample-hermes-agent-on-aws-with-bedrock)" in zh
+    assert "pip install doppel-agent[bedrock]" in en
+    assert "pip install doppel-agent[bedrock]" in zh
+
+    for stale in (
+        "Use Hermes Agent with Amazon Bedrock",
+        "将 Hermes Agent 与 Amazon Bedrock 配合使用",
+        "Hermes Agent supports Amazon Bedrock",
+        "Hermes Agent 通过 **Converse API** 原生支持 Amazon Bedrock",
+        "Hermes detects the instance role automatically",
+        "Hermes 会自动检测实例角色",
+        "hermes model",
+        "hermes chat",
+        "`~/.hermes/config.yaml`",
+        "Hermes auto-discovers available models",
+        "Hermes 通过 Bedrock 控制平面自动发现可用模型",
+        "\n```bash\nhermes doctor\n```",
+        "all Hermes gateway platforms",
+        "所有 Hermes gateway 平台",
+        "hermes gateway setup",
+        "hermes gateway start",
+        "Hermes checks for credentials in this order",
+        "Hermes 按以下顺序检查凭证",
+        "Hermes automatically retries with backoff",
+        "Hermes 会自动进行退避重试",
+        "[sample-hermes-agent-on-aws-with-bedrock]",
+    ):
+        assert stale not in en
+        assert stale not in zh

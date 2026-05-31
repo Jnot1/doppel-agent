@@ -5475,3 +5475,83 @@ def test_run_hermes_with_nous_portal_guides_prefer_doppel_customer_facing_surfac
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_work_with_skills_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "work-with-skills.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "work-with-skills.md"
+    ).read_text(encoding="utf-8")
+
+    assert "teaches Doppel new workflows" in en
+    assert "用于教会 Doppel 新的工作流程" in zh
+    assert "teach Doppel how to handle specific tasks" in en
+    assert "用于教会 Doppel 如何处理特定任务" in zh
+    assert "Every Doppel installation ships with bundled skills." in en
+    assert "每个 Doppel 安装都内置了捆绑的 skills。" in zh
+    assert "doppel skills list" in en
+    assert "doppel skills list" in zh
+    assert "doppel skills install official/research/arxiv" in en
+    assert "doppel skills install official/research/arxiv" in zh
+    assert "doppel skills install https://sharethis.chat/SKILL.md" in en
+    assert "doppel skills install https://sharethis.chat/SKILL.md" in zh
+    assert "doppel skills config gif-search" in en
+    assert "doppel skills config gif-search" in zh
+    assert "doppel config show | grep '^skills\\.config'" in en
+    assert "doppel config show | grep '^skills\\\\.config'" in zh
+    assert 'doppel chat -q "/my-skill help me with the thing"' in en
+    assert 'doppel chat -q "/my-skill help me with the thing"' in zh
+    assert "`~/.doppel/skills/`" in en
+    assert "`~/.doppel/skills/`" in zh
+    assert "~/.doppel/skills/my-category/my-skill/SKILL.md" in en
+    assert "~/.doppel/skills/my-category/my-skill/SKILL.md" in zh
+    assert "Build a Doppel Plugin" in en
+    assert "构建 Doppel 插件" in zh
+    assert "Doppel may offer to save the approach as a skill" in en
+    assert "Doppel 可能会主动提议将该方法保存为 skill" in zh
+    assert "metadata:\n  hermes:" in en
+    assert "metadata:\n  hermes:" in zh
+    assert "skill_view" in en
+    assert "skill_view" in zh
+    assert "skills_list" in en
+    assert "skills_list" in zh
+    assert "skill_manage" in en
+    assert "skill_manage" in zh
+    assert "/guides/build-a-hermes-plugin#bundle-skills" in en
+    assert "/guides/build-a-hermes-plugin#bundle-skills" in zh
+
+    for stale in (
+        "teaches Hermes new workflows",
+        "用于教会 Hermes 新的工作流程",
+        "teach Hermes how to handle specific tasks",
+        "用于教会 Hermes 如何处理特定任务",
+        "Every Hermes installation ships with bundled skills.",
+        "每个 Hermes 安装都内置了捆绑的 skills。",
+        "ask Hermes to use a specific skill",
+        "告诉 Hermes 使用某个特定 skill",
+        "Official optional skills ship with Hermes",
+        "官方可选 skills 随 Hermes 一起发布",
+        "hermes skills list",
+        "hermes skills install official/research/arxiv",
+        "hermes skills install https://sharethis.chat/SKILL.md",
+        "hermes skills config gif-search",
+        "hermes config show | grep '^skills\\.config'",
+        "hermes config get skills.config",
+        'hermes chat -q "/my-skill help me with the thing"',
+        "hermes skills",
+        "`~/.hermes/skills/`",
+        "~/.hermes/skills/my-category/my-skill/SKILL.md",
+        "[Build a Hermes Plugin → Bundle skills]",
+        "[构建 Hermes 插件 → 捆绑 skills]",
+    ):
+        assert stale not in en
+        assert stale not in zh

@@ -71,6 +71,7 @@ EN_CREATING_SKILLS_DOC = EN_DEV_GUIDE_DIR / "creating-skills.md"
 EN_ACP_INTERNALS_DOC = EN_DEV_GUIDE_DIR / "acp-internals.md"
 EN_EXTENDING_CLI_DOC = EN_DEV_GUIDE_DIR / "extending-the-cli.md"
 EN_ARCHITECTURE_DOC = EN_DEV_GUIDE_DIR / "architecture.md"
+EN_PROMPT_ASSEMBLY_DOC = EN_DEV_GUIDE_DIR / "prompt-assembly.md"
 EN_SESSION_STORAGE_DOC = EN_DEV_GUIDE_DIR / "session-storage.md"
 EN_TRAJECTORY_DOC = EN_DEV_GUIDE_DIR / "trajectory-format.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -84,6 +85,7 @@ ZH_CREATING_SKILLS_DOC = ZH_DEV_GUIDE_DIR / "creating-skills.md"
 ZH_ACP_INTERNALS_DOC = ZH_DEV_GUIDE_DIR / "acp-internals.md"
 ZH_EXTENDING_CLI_DOC = ZH_DEV_GUIDE_DIR / "extending-the-cli.md"
 ZH_ARCHITECTURE_DOC = ZH_DEV_GUIDE_DIR / "architecture.md"
+ZH_PROMPT_ASSEMBLY_DOC = ZH_DEV_GUIDE_DIR / "prompt-assembly.md"
 ZH_SESSION_STORAGE_DOC = ZH_DEV_GUIDE_DIR / "session-storage.md"
 ZH_TRAJECTORY_DOC = ZH_DEV_GUIDE_DIR / "trajectory-format.md"
 
@@ -665,3 +667,46 @@ def test_session_storage_and_dev_guide_category_prefer_doppel_surfaces():
 
     assert "Contribute to Doppel Agent" in dev_category
     assert "Contribute to Hermes Agent" not in dev_category
+
+
+def test_prompt_assembly_docs_prefer_doppel_surfaces_but_keep_runtime_literals():
+    en_prompt = EN_PROMPT_ASSEMBLY_DOC.read_text(encoding="utf-8")
+    zh_prompt = ZH_PROMPT_ASSEMBLY_DOC.read_text(encoding="utf-8")
+
+    assert "How Doppel Agent builds the system prompt" in en_prompt
+    assert "Doppel Agent deliberately separates" in en_prompt
+    assert "How Hermes builds the system prompt" not in en_prompt
+    assert "Hermes deliberately separates" not in en_prompt
+    assert "Doppel-native project config" in en_prompt
+    assert "Hermes-native project config" not in en_prompt
+    assert "Doppel Agent already loads" in en_prompt
+    assert "without forking Doppel Agent" in en_prompt
+    assert "~/.doppel/SOUL.md" in en_prompt
+    assert "~/.doppel/MEMORY.md" in en_prompt
+    assert "change how Doppel Agent assembles prompts for everyone" in en_prompt
+
+    assert "Doppel Agent 如何构建系统 prompt" in zh_prompt
+    assert "Doppel Agent 刻意将以下内容分离" in zh_prompt
+    assert "Hermes 如何构建系统 prompt" not in zh_prompt
+    assert "Hermes 刻意将以下内容分离" not in zh_prompt
+    assert "Doppel 原生项目配置" in zh_prompt
+    assert "Hermes 原生项目配置" not in zh_prompt
+    assert "Doppel Agent 已加载的 prompt 输入" in zh_prompt
+    assert "无需 fork Doppel Agent" in zh_prompt
+    assert "~/.doppel/SOUL.md" in zh_prompt
+    assert "~/.doppel/MEMORY.md" in zh_prompt
+    assert "Doppel Agent 为所有人组装 prompt 的方式" in zh_prompt
+
+    assert "You are Hermes, an AI assistant created by Nous Research." in en_prompt
+    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research." in en_prompt
+    assert "You are Hermes, an AI assistant created by Nous Research." in zh_prompt
+    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research." in zh_prompt
+    assert "HERMES.md" in en_prompt and "HERMES_HOME" in en_prompt
+    assert "HERMES_EPHEMERAL_SYSTEM_PROMPT" in en_prompt
+    assert "HERMES.md" in zh_prompt and "HERMES_HOME" in zh_prompt
+    assert "HERMES_EPHEMERAL_SYSTEM_PROMPT" in zh_prompt
+    assert "DEFAULT_AGENT_IDENTITY" in en_prompt
+    assert "DEFAULT_AGENT_IDENTITY" in zh_prompt
+    assert "~/.hermes/" in en_prompt and "~/.hermes/" in zh_prompt
+    assert "build_context_files_prompt(skip_soul=True)" in en_prompt
+    assert "build_context_files_prompt(skip_soul=True)" in zh_prompt

@@ -201,6 +201,45 @@ class TestCustomerFacingEnvAliases:
 
         assert env["HERMES_STREAM_READ_TIMEOUT"] == "1800"
 
+    def test_preferred_timeout_aliases_mirror_to_legacy_names(self):
+        env = {
+            "DOPPEL_API_TIMEOUT": "1800",
+            "DOPPEL_API_CALL_STALE_TIMEOUT": "300",
+            "DOPPEL_STREAM_STALE_TIMEOUT": "180",
+            "DOPPEL_CRON_TIMEOUT": "600",
+            "DOPPEL_CRON_SCRIPT_TIMEOUT": "120",
+            "DOPPEL_AGENT_TIMEOUT": "900",
+            "DOPPEL_AGENT_TIMEOUT_WARNING": "600",
+            "DOPPEL_CHECKPOINT_TIMEOUT": "30",
+            "DOPPEL_RESTART_DRAIN_TIMEOUT": "900",
+            "DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT": "30",
+            "DOPPEL_VISION_DOWNLOAD_TIMEOUT": "30",
+            "DOPPEL_NOUS_TIMEOUT_SECONDS": "15",
+            "DOPPEL_TELEGRAM_HTTP_CONNECT_TIMEOUT": "10",
+            "DOPPEL_TELEGRAM_HTTP_READ_TIMEOUT": "20",
+            "DOPPEL_TELEGRAM_HTTP_WRITE_TIMEOUT": "20",
+            "DOPPEL_TELEGRAM_HTTP_POOL_TIMEOUT": "8",
+        }
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_API_TIMEOUT"] == "1800"
+        assert env["HERMES_API_CALL_STALE_TIMEOUT"] == "300"
+        assert env["HERMES_STREAM_STALE_TIMEOUT"] == "180"
+        assert env["HERMES_CRON_TIMEOUT"] == "600"
+        assert env["HERMES_CRON_SCRIPT_TIMEOUT"] == "120"
+        assert env["HERMES_AGENT_TIMEOUT"] == "900"
+        assert env["HERMES_AGENT_TIMEOUT_WARNING"] == "600"
+        assert env["HERMES_CHECKPOINT_TIMEOUT"] == "30"
+        assert env["HERMES_RESTART_DRAIN_TIMEOUT"] == "900"
+        assert env["HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT"] == "30"
+        assert env["HERMES_VISION_DOWNLOAD_TIMEOUT"] == "30"
+        assert env["HERMES_NOUS_TIMEOUT_SECONDS"] == "15"
+        assert env["HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT"] == "10"
+        assert env["HERMES_TELEGRAM_HTTP_READ_TIMEOUT"] == "20"
+        assert env["HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT"] == "20"
+        assert env["HERMES_TELEGRAM_HTTP_POOL_TIMEOUT"] == "8"
+
     def test_legacy_alias_backfills_preferred_name(self):
         env = {"HERMES_IGNORE_RULES": "1"}
 

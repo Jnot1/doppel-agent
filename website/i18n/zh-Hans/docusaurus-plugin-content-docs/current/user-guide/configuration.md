@@ -79,11 +79,11 @@ delegation:
 
 ### Provider 超时
 
-可以为 provider 设置 `providers.<id>.request_timeout_seconds` 作为全局请求超时，以及 `providers.<id>.models.<model>.timeout_seconds` 作为特定模型的覆盖值。适用于每种传输方式（OpenAI-wire、原生 Anthropic、Anthropic 兼容）上的主轮次客户端、回退链、凭据轮换后的重建，以及（对于 OpenAI-wire）每请求超时 kwarg —— 因此配置值优先于旧版 `HERMES_API_TIMEOUT` 环境变量。
+可以为 provider 设置 `providers.<id>.request_timeout_seconds` 作为全局请求超时，以及 `providers.<id>.models.<model>.timeout_seconds` 作为特定模型的覆盖值。适用于每种传输方式（OpenAI-wire、原生 Anthropic、Anthropic 兼容）上的主轮次客户端、回退链、凭据轮换后的重建，以及（对于 OpenAI-wire）每请求超时 kwarg —— 因此配置值优先于 `DOPPEL_API_TIMEOUT` 环境变量。
 
-还可以设置 `providers.<id>.stale_timeout_seconds` 用于非流式陈旧调用检测器，以及 `providers.<id>.models.<model>.stale_timeout_seconds` 作为特定模型的覆盖值。此值优先于旧版 `HERMES_API_CALL_STALE_TIMEOUT` 环境变量。
+还可以设置 `providers.<id>.stale_timeout_seconds` 用于非流式陈旧调用检测器，以及 `providers.<id>.models.<model>.stale_timeout_seconds` 作为特定模型的覆盖值。此值优先于 `DOPPEL_API_CALL_STALE_TIMEOUT` 环境变量。
 
-不设置这些值将保持旧版默认值（`HERMES_API_TIMEOUT=1800`s、`HERMES_API_CALL_STALE_TIMEOUT=300`s、原生 Anthropic 900s）。目前不适用于 AWS Bedrock（`bedrock_converse` 和 AnthropicBedrock SDK 路径均使用 boto3 及其自身的超时配置）。请参阅 [`cli-config.yaml.example`](https://github.com/NousResearch/hermes-agent/blob/main/cli-config.yaml.example) 中的注释示例。
+不设置这些值将保持当前默认值（`DOPPEL_API_TIMEOUT=1800`s、`DOPPEL_API_CALL_STALE_TIMEOUT=300`s、原生 Anthropic 900s）。目前不适用于 AWS Bedrock（`bedrock_converse` 和 AnthropicBedrock SDK 路径均使用 boto3 及其自身的超时配置）。请参阅 [`cli-config.yaml.example`](https://github.com/NousResearch/hermes-agent/blob/main/cli-config.yaml.example) 中的注释示例。
 
 ## 终端后端配置
 
@@ -703,15 +703,15 @@ Doppel Agent 对流式传输有单独的超时层，以及用于非流式调用�
 | 超时 | 默认值 | 本地 providers | 配置/环境变量 |
 |---------|---------|----------------|--------------|
 | Socket 读取超时 | 120s | 自动提升至 1800s | `DOPPEL_STREAM_READ_TIMEOUT` |
-| 陈旧流检测 | 180s | 自动禁用 | `HERMES_STREAM_STALE_TIMEOUT` |
-| 陈旧非流检测 | 300s | 保持隐式时自动禁用 | `providers.<id>.stale_timeout_seconds` 或 `HERMES_API_CALL_STALE_TIMEOUT` |
-| API 调用（非流式） | 1800s | 不变 | `providers.<id>.request_timeout_seconds` / `timeout_seconds` 或 `HERMES_API_TIMEOUT` |
+| 陈旧流检测 | 180s | 自动禁用 | `DOPPEL_STREAM_STALE_TIMEOUT` |
+| 陈旧非流检测 | 300s | 保持隐式时自动禁用 | `providers.<id>.stale_timeout_seconds` 或 `DOPPEL_API_CALL_STALE_TIMEOUT` |
+| API 调用（非流式） | 1800s | 不变 | `providers.<id>.request_timeout_seconds` / `timeout_seconds` 或 `DOPPEL_API_TIMEOUT` |
 
 **Socket 读取超时**控制 httpx 等待 provider 下一个数据块的时间。本地 LLM 在大上下文上预填充可能需要几分钟才能产生第一个 token，因此当 Doppel Agent 检测到本地端点时，会将此值提升至 30 分钟。如果您显式设置 `DOPPEL_STREAM_READ_TIMEOUT`，无论端点检测如何，始终使用该值。
 
 **陈旧流检测**终止接收 SSE 保活 ping 但没有实际内容的连接。对于本地 providers，这完全禁用，因为它们在预填充期间不发送保活 ping。
 
-**陈旧非流检测**终止长时间没有响应的非流式调用。默认情况下，Doppel Agent 在本地端点上禁用此功能，以避免长时间预填充期间的误报。如果您显式设置 `providers.<id>.stale_timeout_seconds`、`providers.<id>.models.<model>.stale_timeout_seconds` 或 `HERMES_API_CALL_STALE_TIMEOUT`，即使在本地端点上也会遵守该显式值。
+**陈旧非流检测**终止长时间没有响应的非流式调用。默认情况下，Doppel Agent 在本地端点上禁用此功能，以避免长时间预填充期间的误报。如果您显式设置 `providers.<id>.stale_timeout_seconds`、`providers.<id>.models.<model>.stale_timeout_seconds` 或 `DOPPEL_API_CALL_STALE_TIMEOUT`，即使在本地端点上也会遵守该显式值。
 
 ## 上下文压力警告
 

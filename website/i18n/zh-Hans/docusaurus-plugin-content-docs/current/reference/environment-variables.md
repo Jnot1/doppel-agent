@@ -114,7 +114,7 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 | `HERMES_PORTAL_BASE_URL` | 覆盖 Nous Portal URL（用于开发/测试） |
 | `NOUS_INFERENCE_BASE_URL` | 覆盖 Nous 推理 API URL |
 | `HERMES_NOUS_MIN_KEY_TTL_SECONDS` | 重新铸造前的最小 agent 密钥 TTL（默认：1800 = 30 分钟） |
-| `HERMES_NOUS_TIMEOUT_SECONDS` | Nous 凭证/token 流程的 HTTP 超时 |
+| `DOPPEL_NOUS_TIMEOUT_SECONDS` | Nous 凭证/token 流程的 HTTP 超时 |
 | `HERMES_DUMP_REQUESTS` | 将 API 请求载荷转储到日志文件（`true`/`false`） |
 | `HERMES_PREFILL_MESSAGES_FILE` | 包含在 API 调用时注入的临时预填消息的 JSON 文件路径 |
 | `HERMES_TIMEZONE` | IANA 时区覆盖（例如 `America/New_York`） |
@@ -503,7 +503,7 @@ Graph 事件（Teams 会议、日历、聊天等）的入站变更通知监听�
 | `HERMES_TELEGRAM_TEXT_BATCH_SPLIT_DELAY_SECONDS` | 单条 Telegram 消息超过长度限制时分块之间的延迟（默认：`2.0`）。 |
 | `HERMES_TELEGRAM_MEDIA_BATCH_DELAY_SECONDS` | 刷新排队 Telegram 媒体前的宽限窗口（默认：`0.6`）。 |
 | `HERMES_TELEGRAM_FOLLOWUP_GRACE_SECONDS` | agent 完成后发送后续消息前的延迟，以避免与最后一个流块竞争。 |
-| `HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT` / `_READ_TIMEOUT` / `_WRITE_TIMEOUT` / `_POOL_TIMEOUT` | 覆盖底层 `python-telegram-bot` HTTP 超时（秒）。 |
+| `DOPPEL_TELEGRAM_HTTP_CONNECT_TIMEOUT` / `_READ_TIMEOUT` / `_WRITE_TIMEOUT` / `_POOL_TIMEOUT` | 覆盖底层 `python-telegram-bot` HTTP 超时（秒）。 |
 | `HERMES_TELEGRAM_HTTP_POOL_SIZE` | 到 Telegram API 的最大并发 HTTP 连接数。 |
 | `HERMES_TELEGRAM_DISABLE_FALLBACK_IPS` | 禁用 DNS 失败时使用的硬编码 Cloudflare 回退 IP（`true`/`false`）。 |
 | `HERMES_DISCORD_TEXT_BATCH_DELAY_SECONDS` | 刷新排队 Discord 文本块前的宽限窗口（默认：`0.6`）。 |
@@ -513,15 +513,15 @@ Graph 事件（Teams 会议、日历、聊天等）的入站变更通知监听�
 | `HERMES_FEISHU_MEDIA_BATCH_DELAY_SECONDS` | 飞书媒体刷新延迟。 |
 | `HERMES_FEISHU_DEDUP_CACHE_SIZE` | 飞书 webhook 去重缓存大小（默认：`1024`）。 |
 | `HERMES_WECOM_TEXT_BATCH_DELAY_SECONDS` / `_SPLIT_DELAY_SECONDS` | 企业微信批处理器调优。 |
-| `HERMES_VISION_DOWNLOAD_TIMEOUT` | 将图片交给视觉模型前下载的超时（秒，默认：`30`）。 |
-| `HERMES_RESTART_DRAIN_TIMEOUT` | Gateway：`/restart` 时等待活跃运行排空的秒数，超时后强制重启（默认：`900`）。 |
-| `HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT` | gateway 启动期间每个平台的连接超时（秒）。 |
+| `DOPPEL_VISION_DOWNLOAD_TIMEOUT` | 将图片交给视觉模型前下载的超时（秒，默认：`30`）。 |
+| `DOPPEL_RESTART_DRAIN_TIMEOUT` | Gateway：`/restart` 时等待活跃运行排空的秒数，超时后强制重启（默认：`900`）。 |
+| `DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT` | gateway 启动期间每个平台的连接超时（秒）。 |
 | `HERMES_GATEWAY_BUSY_INPUT_MODE` | 默认 gateway 繁忙输入行为：`queue`、`steer` 或 `interrupt`。可通过 `/busy` 按聊天覆盖。 |
 | `HERMES_GATEWAY_BUSY_ACK_ENABLED` | gateway 是否在用户 agent 繁忙时发送确认消息（⚡/⏳/⏩）（默认：`true`）。设为 `false` 可完全抑制这些消息——输入仍会正常排队/引导/中断，只是聊天回复被静默。从 `config.yaml` 中的 `display.busy_ack_enabled` 桥接。 |
 | `HERMES_GATEWAY_NO_SUPERVISE` | 在 s6-overlay Docker 镜像内部运行 `hermes gateway run` 时跳过 s6 自动监管，退回到 pre-s6 前台语义（无自动重启，gateway 作为容器主进程）。真值：`1`、`true`、`yes`。等同于 `--no-supervise` CLI 标志。在 s6 镜像之外为空操作。 |
 | `HERMES_FILE_MUTATION_VERIFIER` | 启用每轮文件变更验证器页脚（默认：`true`）。启用后，Hermes 附加一个建议列表，列出本轮中失败且未被成功写入覆盖的 `write_file`/`patch` 调用。设为 `0`、`false`、`no` 或 `off` 可抑制。镜像 `config.yaml` 中的 `display.file_mutation_verifier`；设置时环境变量优先。 |
-| `HERMES_CRON_TIMEOUT` | cron 任务 agent 运行的不活动超时（秒，默认：`600`）。agent 在主动调用工具或接收流 token 时可无限运行——仅在空闲时触发。设为 `0` 表示无限制。 |
-| `HERMES_CRON_SCRIPT_TIMEOUT` | cron 任务附加的预运行脚本超时（秒，默认：`120`）。对需要更长执行时间的脚本（例如随机延迟的反机器人计时）可增大此值。也可通过 `config.yaml` 中的 `cron.script_timeout_seconds` 配置。 |
+| `DOPPEL_CRON_TIMEOUT` | cron 任务 agent 运行的不活动超时（秒，默认：`600`）。agent 在主动调用工具或接收流 token 时可无限运行——仅在空闲时触发。设为 `0` 表示无限制。 |
+| `DOPPEL_CRON_SCRIPT_TIMEOUT` | cron 任务附加的预运行脚本超时（秒，默认：`120`）。对需要更长执行时间的脚本（例如随机延迟的反机器人计时）可增大此值。也可通过 `config.yaml` 中的 `cron.script_timeout_seconds` 配置。 |
 | `HERMES_CRON_MAX_PARALLEL` | 每次 tick 并行运行的最大 cron 任务数（默认：`4`）。 |
 
 ## Agent 行为
@@ -543,15 +543,15 @@ Graph 事件（Teams 会议、日历、聊天等）的入站变更通知监听�
 | `DOPPEL_QUIET` | 环境变量，用于抑制非必要输出（`true`/`false`）。 |
 | `CODEX_HOME` | 启用 [Codex 应用服务器运行时](../user-guide/features/codex-app-server-runtime)时，覆盖 Codex CLI 读取其配置 + 认证的目录（默认：`~/.codex`）。Hermes 的迁移将托管块写入 `<CODEX_HOME>/config.toml`。 |
 | `HERMES_KANBAN_TASK` | kanban 调度器生成工作进程时设置（任务 UUID）。工作进程和生成的 `hermes-tools` MCP 子进程继承它，以便 kanban 工具正确门控。请勿手动设置。 |
-| `HERMES_API_TIMEOUT` | LLM API 调用超时（秒，默认：`1800`） |
-| `HERMES_API_CALL_STALE_TIMEOUT` | 非流式过期调用超时（秒，默认：`300`）。未设置时对本地提供商自动禁用。也可通过 `config.yaml` 中的 `providers.<id>.stale_timeout_seconds` 或 `providers.<id>.models.<model>.stale_timeout_seconds` 配置。 |
+| `DOPPEL_API_TIMEOUT` | LLM API 调用超时（秒，默认：`1800`） |
+| `DOPPEL_API_CALL_STALE_TIMEOUT` | 非流式过期调用超时（秒，默认：`300`）。未设置时对本地提供商自动禁用。也可通过 `config.yaml` 中的 `providers.<id>.stale_timeout_seconds` 或 `providers.<id>.models.<model>.stale_timeout_seconds` 配置。 |
 | `DOPPEL_STREAM_READ_TIMEOUT` | 流式 socket 读取超时（秒，默认：`120`）。对本地提供商自动增大到已配置的 API 超时。如果本地 LLM 在长代码生成期间超时，请增大此值。 |
-| `HERMES_STREAM_STALE_TIMEOUT` | 过期流检测超时（秒，默认：`180`）。对本地提供商自动禁用。在此窗口内无块到达时触发连接终止。 |
+| `DOPPEL_STREAM_STALE_TIMEOUT` | 过期流检测超时（秒，默认：`180`）。对本地提供商自动禁用。在此窗口内无块到达时触发连接终止。 |
 | `HERMES_STREAM_RETRIES` | 瞬时网络错误时的流中重连尝试次数（默认：`3`）。 |
-| `HERMES_AGENT_TIMEOUT` | gateway 中运行 agent 的不活动超时（秒，默认：`900`）。每次工具调用和流 token 时重置。设为 `0` 可禁用。 |
-| `HERMES_AGENT_TIMEOUT_WARNING` | Gateway：不活动超过此秒数后发送警告消息（默认：`HERMES_AGENT_TIMEOUT` 的 75%）。 |
+| `DOPPEL_AGENT_TIMEOUT` | gateway 中运行 agent 的不活动超时（秒，默认：`900`）。每次工具调用和流 token 时重置。设为 `0` 可禁用。 |
+| `DOPPEL_AGENT_TIMEOUT_WARNING` | Gateway：不活动超过此秒数后发送警告消息（默认：`DOPPEL_AGENT_TIMEOUT` 的 75%）。 |
 | `HERMES_AGENT_NOTIFY_INTERVAL` | Gateway：长时间运行的 agent 轮次中进度通知的间隔（秒）。 |
-| `HERMES_CHECKPOINT_TIMEOUT` | 文件系统检查点创建超时（秒，默认：`30`）。 |
+| `DOPPEL_CHECKPOINT_TIMEOUT` | 文件系统检查点创建超时（秒，默认：`30`）。 |
 | `HERMES_EXEC_ASK` | 在 gateway 模式下启用执行审批提示（`true`/`false`） |
 | `HERMES_ENABLE_PROJECT_PLUGINS` | 为 agent 加载器和仪表板 Web 服务器启用从 `./.hermes/plugins/` 自动发现仓库本地插件。接受标准真值集：`1`/`true`/`yes`/`on`（不区分大小写）。其他所有值——包括 `0`、`false`、`no`、`off` 和空字符串——均视为**禁用**（默认）。注意：自 GHSA-5qr3-c538-wm9j（#29156）起，即使启用此变量，仪表板 Web 服务器也拒绝自动导入项目插件的 Python `api` 文件——项目插件可通过静态 JS/CSS 扩展 UI，但其后端路由仅在移至 `~/.hermes/plugins/` 后才会加载。 |
 | `HERMES_PLUGINS_DEBUG` | `1`/`true` 可在 stderr 上输出详细的插件发现日志——扫描的目录、解析的 manifest、跳过原因以及解析或 `register()` 失败时的完整回溯。面向插件作者。 |

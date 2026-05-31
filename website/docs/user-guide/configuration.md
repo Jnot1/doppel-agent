@@ -79,11 +79,11 @@ For AI provider setup (OpenRouter, Anthropic, Copilot, custom endpoints, self-ho
 
 ### Provider Timeouts
 
-You can set `providers.<id>.request_timeout_seconds` for a provider-wide request timeout, plus `providers.<id>.models.<model>.timeout_seconds` for a model-specific override. Applies to the primary turn client on every transport (OpenAI-wire, native Anthropic, Anthropic-compatible), the fallback chain, rebuilds after credential rotation, and (for OpenAI-wire) the per-request timeout kwarg — so the configured value wins over the legacy `HERMES_API_TIMEOUT` env var.
+You can set `providers.<id>.request_timeout_seconds` for a provider-wide request timeout, plus `providers.<id>.models.<model>.timeout_seconds` for a model-specific override. Applies to the primary turn client on every transport (OpenAI-wire, native Anthropic, Anthropic-compatible), the fallback chain, rebuilds after credential rotation, and (for OpenAI-wire) the per-request timeout kwarg — so the configured value wins over the `DOPPEL_API_TIMEOUT` env var.
 
-You can also set `providers.<id>.stale_timeout_seconds` for the non-streaming stale-call detector, plus `providers.<id>.models.<model>.stale_timeout_seconds` for a model-specific override. This wins over the legacy `HERMES_API_CALL_STALE_TIMEOUT` env var.
+You can also set `providers.<id>.stale_timeout_seconds` for the non-streaming stale-call detector, plus `providers.<id>.models.<model>.stale_timeout_seconds` for a model-specific override. This wins over the `DOPPEL_API_CALL_STALE_TIMEOUT` env var.
 
-Leaving these unset keeps the legacy defaults (`HERMES_API_TIMEOUT=1800`s, `HERMES_API_CALL_STALE_TIMEOUT=300`s, native Anthropic 900s). Not currently wired for AWS Bedrock (both `bedrock_converse` and AnthropicBedrock SDK paths use boto3 with its own timeout configuration). See the commented example in [`cli-config.yaml.example`](https://github.com/NousResearch/hermes-agent/blob/main/cli-config.yaml.example).
+Leaving these unset keeps the current defaults (`DOPPEL_API_TIMEOUT=1800`s, `DOPPEL_API_CALL_STALE_TIMEOUT=300`s, native Anthropic 900s). Not currently wired for AWS Bedrock (both `bedrock_converse` and AnthropicBedrock SDK paths use boto3 with its own timeout configuration). See the commented example in [`cli-config.yaml.example`](https://github.com/NousResearch/hermes-agent/blob/main/cli-config.yaml.example).
 
 ## Terminal Backend Configuration
 
@@ -738,15 +738,15 @@ Doppel Agent has separate timeout layers for streaming, plus a stale detector fo
 | Timeout | Default | Local providers | Config / env |
 |---------|---------|----------------|--------------|
 | Socket read timeout | 120s | Auto-raised to 1800s | `DOPPEL_STREAM_READ_TIMEOUT` |
-| Stale stream detection | 180s | Auto-disabled | `HERMES_STREAM_STALE_TIMEOUT` |
-| Stale non-stream detection | 300s | Auto-disabled when left implicit | `providers.<id>.stale_timeout_seconds` or `HERMES_API_CALL_STALE_TIMEOUT` |
-| API call (non-streaming) | 1800s | Unchanged | `providers.<id>.request_timeout_seconds` / `timeout_seconds` or `HERMES_API_TIMEOUT` |
+| Stale stream detection | 180s | Auto-disabled | `DOPPEL_STREAM_STALE_TIMEOUT` |
+| Stale non-stream detection | 300s | Auto-disabled when left implicit | `providers.<id>.stale_timeout_seconds` or `DOPPEL_API_CALL_STALE_TIMEOUT` |
+| API call (non-streaming) | 1800s | Unchanged | `providers.<id>.request_timeout_seconds` / `timeout_seconds` or `DOPPEL_API_TIMEOUT` |
 
 The **socket read timeout** controls how long httpx waits for the next chunk of data from the provider. Local LLMs can take minutes for prefill on large contexts before producing the first token, so Doppel Agent raises this to 30 minutes when it detects a local endpoint. If you explicitly set `DOPPEL_STREAM_READ_TIMEOUT`, that value is always used regardless of endpoint detection.
 
 The **stale stream detection** kills connections that receive SSE keep-alive pings but no actual content. This is disabled entirely for local providers since they don't send keep-alive pings during prefill.
 
-The **stale non-stream detection** kills non-streaming calls that produce no response for too long. By default Doppel Agent disables this on local endpoints to avoid false positives during long prefills. If you explicitly set `providers.<id>.stale_timeout_seconds`, `providers.<id>.models.<model>.stale_timeout_seconds`, or `HERMES_API_CALL_STALE_TIMEOUT`, that explicit value is honored even on local endpoints.
+The **stale non-stream detection** kills non-streaming calls that produce no response for too long. By default Doppel Agent disables this on local endpoints to avoid false positives during long prefills. If you explicitly set `providers.<id>.stale_timeout_seconds`, `providers.<id>.models.<model>.stale_timeout_seconds`, or `DOPPEL_API_CALL_STALE_TIMEOUT`, that explicit value is honored even on local endpoints.
 
 ## Context Pressure Warnings
 

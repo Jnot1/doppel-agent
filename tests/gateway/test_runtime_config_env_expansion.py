@@ -19,6 +19,7 @@ def gateway_home(monkeypatch, tmp_path):
     monkeypatch.delenv("HERMES_PREFILL_MESSAGES_FILE", raising=False)
     monkeypatch.delenv("HERMES_EPHEMERAL_SYSTEM_PROMPT", raising=False)
     monkeypatch.delenv("HERMES_GATEWAY_BUSY_INPUT_MODE", raising=False)
+    monkeypatch.delenv("DOPPEL_RESTART_DRAIN_TIMEOUT", raising=False)
     monkeypatch.delenv("HERMES_RESTART_DRAIN_TIMEOUT", raising=False)
     monkeypatch.delenv("HERMES_BACKGROUND_NOTIFICATIONS", raising=False)
     return tmp_path

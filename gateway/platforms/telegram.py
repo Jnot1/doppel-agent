@@ -1514,10 +1514,22 @@ class TelegramAdapter(BasePlatformAdapter):
 
             request_kwargs = {
                 "connection_pool_size": _env_int("HERMES_TELEGRAM_HTTP_POOL_SIZE", 512),
-                "pool_timeout": _env_float("HERMES_TELEGRAM_HTTP_POOL_TIMEOUT", 8.0),
-                "connect_timeout": _env_float("HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT", 10.0),
-                "read_timeout": _env_float("HERMES_TELEGRAM_HTTP_READ_TIMEOUT", 20.0),
-                "write_timeout": _env_float("HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT", 20.0),
+                "pool_timeout": _env_float(
+                    "DOPPEL_TELEGRAM_HTTP_POOL_TIMEOUT",
+                    _env_float("HERMES_TELEGRAM_HTTP_POOL_TIMEOUT", 8.0),
+                ),
+                "connect_timeout": _env_float(
+                    "DOPPEL_TELEGRAM_HTTP_CONNECT_TIMEOUT",
+                    _env_float("HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT", 10.0),
+                ),
+                "read_timeout": _env_float(
+                    "DOPPEL_TELEGRAM_HTTP_READ_TIMEOUT",
+                    _env_float("HERMES_TELEGRAM_HTTP_READ_TIMEOUT", 20.0),
+                ),
+                "write_timeout": _env_float(
+                    "DOPPEL_TELEGRAM_HTTP_WRITE_TIMEOUT",
+                    _env_float("HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT", 20.0),
+                ),
             }
 
             disable_fallback = (os.getenv("HERMES_TELEGRAM_DISABLE_FALLBACK_IPS", "").strip().lower() in {"1", "true", "yes", "on"})

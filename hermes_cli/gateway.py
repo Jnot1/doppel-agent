@@ -23,6 +23,7 @@ from gateway.restart import (
     GATEWAY_SERVICE_RESTART_EXIT_CODE,
     parse_restart_drain_timeout,
 )
+from hermes_constants import get_customer_facing_env_value
 from hermes_cli.config import (
     get_env_value,
     get_hermes_home,
@@ -2690,7 +2691,11 @@ def _print_system_scope_remediation(action: str) -> None:
 
 def _get_restart_drain_timeout() -> float:
     """Return the configured gateway restart drain timeout in seconds."""
-    raw = os.getenv("HERMES_RESTART_DRAIN_TIMEOUT", "").strip()
+    raw = get_customer_facing_env_value(
+        "DOPPEL_RESTART_DRAIN_TIMEOUT",
+        "HERMES_RESTART_DRAIN_TIMEOUT",
+        default="",
+    ).strip()
     if not raw:
         cfg = read_raw_config()
         agent_cfg = cfg.get("agent", {}) if isinstance(cfg, dict) else {}

@@ -822,7 +822,7 @@ def test_local_ollama_guides_prefer_doppel_branding_and_keep_runtime_literals():
     assert "gemma4-16k" not in zh
 
     for literal in (
-        "HERMES_API_TIMEOUT",
+        "DOPPEL_API_TIMEOUT",
         "~/.hermes/.env",
         "~/.hermes/config.yaml",
         "ollama",
@@ -925,10 +925,10 @@ def test_configuration_top_cluster_prefer_doppel_customer_facing_and_keep_runtim
 
     assert "providers.<id>.request_timeout_seconds" in en_cluster
     assert "providers.<id>.request_timeout_seconds" in zh_cluster
-    assert "HERMES_API_TIMEOUT" in en_cluster
-    assert "HERMES_API_TIMEOUT" in zh_cluster
-    assert "HERMES_API_CALL_STALE_TIMEOUT" in en_cluster
-    assert "HERMES_API_CALL_STALE_TIMEOUT" in zh_cluster
+    assert "DOPPEL_API_TIMEOUT" in en_cluster
+    assert "DOPPEL_API_TIMEOUT" in zh_cluster
+    assert "DOPPEL_API_CALL_STALE_TIMEOUT" in en_cluster
+    assert "DOPPEL_API_CALL_STALE_TIMEOUT" in zh_cluster
     assert "HERMES_DOCKER_BINARY" in en_cluster
     assert "HERMES_DOCKER_BINARY" in zh_cluster
     assert "~/.hermes/.env" in en_cluster
@@ -1315,9 +1315,9 @@ def test_configuration_context_engine_and_auxiliary_cluster_prefer_doppel_and_ke
 
     for literal in (
         "DOPPEL_STREAM_READ_TIMEOUT",
-        "HERMES_STREAM_STALE_TIMEOUT",
-        "HERMES_API_CALL_STALE_TIMEOUT",
-        "HERMES_API_TIMEOUT",
+        "DOPPEL_STREAM_STALE_TIMEOUT",
+        "DOPPEL_API_CALL_STALE_TIMEOUT",
+        "DOPPEL_API_TIMEOUT",
         "cache_control",
         'ttl: "1h"',
         "OPENROUTER_API_KEY",
@@ -2458,7 +2458,7 @@ def test_cron_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "~/.hermes/state.db" in en
     assert "~/.hermes/state.db" in zh
 
-    for fixed in ("HERMES_HOME", "HERMES_CRON_SCRIPT_TIMEOUT", "cronjob", "wakeAgent"):
+    for fixed in ("HERMES_HOME", "DOPPEL_CRON_SCRIPT_TIMEOUT", "cronjob", "wakeAgent"):
         assert fixed in en
         assert fixed in zh
 
@@ -4337,3 +4337,20 @@ def test_environment_variable_reference_prefers_doppel_stream_timeout_alias():
     assert "| `DOPPEL_STREAM_READ_TIMEOUT` |" in zh
     assert "| `HERMES_STREAM_READ_TIMEOUT` |" not in en
     assert "| `HERMES_STREAM_READ_TIMEOUT` |" not in zh
+    for preferred in (
+        "DOPPEL_NOUS_TIMEOUT_SECONDS",
+        "DOPPEL_TELEGRAM_HTTP_CONNECT_TIMEOUT",
+        "DOPPEL_VISION_DOWNLOAD_TIMEOUT",
+        "DOPPEL_RESTART_DRAIN_TIMEOUT",
+        "DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT",
+        "DOPPEL_CRON_TIMEOUT",
+        "DOPPEL_CRON_SCRIPT_TIMEOUT",
+        "DOPPEL_API_TIMEOUT",
+        "DOPPEL_API_CALL_STALE_TIMEOUT",
+        "DOPPEL_STREAM_STALE_TIMEOUT",
+        "DOPPEL_AGENT_TIMEOUT",
+        "DOPPEL_AGENT_TIMEOUT_WARNING",
+        "DOPPEL_CHECKPOINT_TIMEOUT",
+    ):
+        assert preferred in en
+        assert preferred in zh

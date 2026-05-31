@@ -101,7 +101,7 @@ OpenAI = _OpenAIProxy()  # module-level name, resolves lazily on call/isinstance
 
 from agent.credential_pool import load_pool
 from hermes_cli.config import get_hermes_home
-from hermes_constants import OPENROUTER_BASE_URL
+from hermes_constants import OPENROUTER_BASE_URL, get_customer_facing_env_value
 from utils import base_url_host_matches, base_url_hostname, normalize_proxy_env_vars
 
 logger = logging.getLogger(__name__)
@@ -1279,7 +1279,13 @@ def _resolve_nous_runtime_api(*, force_refresh: bool = False) -> Optional[tuple[
         from hermes_cli.auth import resolve_nous_runtime_credentials
 
         creds = resolve_nous_runtime_credentials(
-            timeout_seconds=float(os.getenv("HERMES_NOUS_TIMEOUT_SECONDS", "15")),
+            timeout_seconds=float(
+                get_customer_facing_env_value(
+                    "DOPPEL_NOUS_TIMEOUT_SECONDS",
+                    "HERMES_NOUS_TIMEOUT_SECONDS",
+                    "15",
+                )
+            ),
             force_refresh=force_refresh,
         )
     except Exception as exc:
@@ -2759,7 +2765,13 @@ def _refresh_provider_credentials(provider: str) -> bool:
             from hermes_cli.auth import resolve_nous_runtime_credentials
 
             creds = resolve_nous_runtime_credentials(
-                timeout_seconds=float(os.getenv("HERMES_NOUS_TIMEOUT_SECONDS", "15")),
+                timeout_seconds=float(
+                    get_customer_facing_env_value(
+                        "DOPPEL_NOUS_TIMEOUT_SECONDS",
+                        "HERMES_NOUS_TIMEOUT_SECONDS",
+                        "15",
+                    )
+                ),
                 force_refresh=True,
             )
             if not str(creds.get("api_key", "") or "").strip():

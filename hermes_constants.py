@@ -7,7 +7,7 @@ without risk of circular imports.
 import os
 import sys
 import sysconfig
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from contextvars import ContextVar, Token
 from pathlib import Path
 
@@ -106,20 +106,36 @@ MODEL_CATALOG_FALLBACK_URLS = (
 )
 CUSTOMER_FACING_ENV_ALIASES: tuple[tuple[str, str], ...] = (
     ("DOPPEL_ACCEPT_HOOKS", "HERMES_ACCEPT_HOOKS"),
+    ("DOPPEL_AGENT_TIMEOUT", "HERMES_AGENT_TIMEOUT"),
+    ("DOPPEL_AGENT_TIMEOUT_WARNING", "HERMES_AGENT_TIMEOUT_WARNING"),
+    ("DOPPEL_API_CALL_STALE_TIMEOUT", "HERMES_API_CALL_STALE_TIMEOUT"),
+    ("DOPPEL_API_TIMEOUT", "HERMES_API_TIMEOUT"),
+    ("DOPPEL_CHECKPOINT_TIMEOUT", "HERMES_CHECKPOINT_TIMEOUT"),
+    ("DOPPEL_CRON_SCRIPT_TIMEOUT", "HERMES_CRON_SCRIPT_TIMEOUT"),
+    ("DOPPEL_CRON_TIMEOUT", "HERMES_CRON_TIMEOUT"),
     ("DOPPEL_EPHEMERAL_SYSTEM_PROMPT", "HERMES_EPHEMERAL_SYSTEM_PROMPT"),
+    ("DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT", "HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT"),
     ("DOPPEL_IGNORE_RULES", "HERMES_IGNORE_RULES"),
     ("DOPPEL_IGNORE_USER_CONFIG", "HERMES_IGNORE_USER_CONFIG"),
     ("DOPPEL_INFERENCE_MODEL", "HERMES_INFERENCE_MODEL"),
     ("DOPPEL_MAX_ITERATIONS", "HERMES_MAX_ITERATIONS"),
     ("DOPPEL_MODEL", "HERMES_MODEL"),
+    ("DOPPEL_NOUS_TIMEOUT_SECONDS", "HERMES_NOUS_TIMEOUT_SECONDS"),
     ("DOPPEL_QUIET", "HERMES_QUIET"),
     ("DOPPEL_REDACT_SECRETS", "HERMES_REDACT_SECRETS"),
+    ("DOPPEL_RESTART_DRAIN_TIMEOUT", "HERMES_RESTART_DRAIN_TIMEOUT"),
     ("DOPPEL_STREAM_READ_TIMEOUT", "HERMES_STREAM_READ_TIMEOUT"),
+    ("DOPPEL_STREAM_STALE_TIMEOUT", "HERMES_STREAM_STALE_TIMEOUT"),
+    ("DOPPEL_TELEGRAM_HTTP_CONNECT_TIMEOUT", "HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT"),
+    ("DOPPEL_TELEGRAM_HTTP_POOL_TIMEOUT", "HERMES_TELEGRAM_HTTP_POOL_TIMEOUT"),
+    ("DOPPEL_TELEGRAM_HTTP_READ_TIMEOUT", "HERMES_TELEGRAM_HTTP_READ_TIMEOUT"),
+    ("DOPPEL_TELEGRAM_HTTP_WRITE_TIMEOUT", "HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT"),
     ("DOPPEL_TUI", "HERMES_TUI"),
     ("DOPPEL_TUI_DIR", "HERMES_TUI_DIR"),
     ("DOPPEL_TUI_NO_EARLY_DISABLE", "HERMES_TUI_NO_EARLY_DISABLE"),
     ("DOPPEL_TUI_RESUME", "HERMES_TUI_RESUME"),
     ("DOPPEL_TUI_THEME", "HERMES_TUI_THEME"),
+    ("DOPPEL_VISION_DOWNLOAD_TIMEOUT", "HERMES_VISION_DOWNLOAD_TIMEOUT"),
     ("DOPPEL_YOLO_MODE", "HERMES_YOLO_MODE"),
 )
 
@@ -164,6 +180,29 @@ def sync_customer_facing_env_aliases(
         target[PREFERRED_HOME_ENV] = legacy_home
 
     return target
+
+
+def get_customer_facing_env_value(
+    preferred: str,
+    legacy: str,
+    default: str | None = None,
+    env: Mapping[str, str] | None = None,
+) -> str | None:
+    """Return the preferred Doppel env value with legacy Hermes fallback.
+
+    This is for call sites that read env vars directly and may execute before
+    a broader alias-sync step runs. Preferred ``DOPPEL_*`` values win. When
+    only the legacy name is set, it is still honored.
+    """
+
+    target = os.environ if env is None else env
+    preferred_value = target.get(preferred)
+    if preferred_value not in (None, ""):
+        return preferred_value
+    legacy_value = target.get(legacy)
+    if legacy_value not in (None, ""):
+        return legacy_value
+    return default
 
 
 def get_distribution_package_name() -> str:

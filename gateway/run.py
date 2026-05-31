@@ -55,7 +55,7 @@ from agent.async_utils import safe_schedule_threadsafe
 from agent.i18n import t
 from hermes_cli.config import cfg_get
 from hermes_cli.fallback_config import get_fallback_chain
-from hermes_constants import API_SERVER_SESSION_ID_HEADER
+from hermes_constants import API_SERVER_SESSION_ID_HEADER, get_customer_facing_env_value
 
 # --- Agent cache tuning ---------------------------------------------------
 # Bounds the per-session AIAgent cache to prevent unbounded growth in
@@ -427,13 +427,17 @@ def _auto_continue_freshness_window() -> float:
         return float(_AUTO_CONTINUE_FRESHNESS_SECS_DEFAULT)
 
 
-def _float_env(name: str, default: float) -> float:
+def _float_env(name: str, default: float, preferred_name: str | None = None) -> float:
     """Read an env var as float, falling back to ``default`` on typos/empty.
 
     A misconfigured env var (e.g. ``HERMES_AGENT_TIMEOUT=abc``) must not
     crash the gateway or an agent turn.  Unset/empty also falls back.
     """
-    raw = os.environ.get(name)
+    raw = (
+        get_customer_facing_env_value(preferred_name, name)
+        if preferred_name
+        else os.environ.get(name)
+    )
     if raw is None or raw == "":
         return float(default)
     try:
@@ -2170,13 +2174,20 @@ class GatewayRunner:
 
     def _platform_connect_timeout_secs(self) -> float:
         """Return the per-platform connect timeout used during startup/retry."""
-        raw = os.getenv("HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT", "").strip()
+        raw = (
+            get_customer_facing_env_value(
+                "DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT",
+                "HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT",
+                "",
+            )
+            or ""
+        ).strip()
         if raw:
             try:
                 timeout = float(raw)
             except ValueError:
                 logger.warning(
-                    "Ignoring invalid HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT=%r",
+                    "Ignoring invalid DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT/HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT=%r",
                     raw,
                 )
             else:
@@ -3054,7 +3065,14 @@ class GatewayRunner:
     @staticmethod
     def _load_restart_drain_timeout() -> float:
         """Load graceful gateway restart/stop drain timeout in seconds."""
-        raw = os.getenv("HERMES_RESTART_DRAIN_TIMEOUT", "").strip()
+        raw = (
+            get_customer_facing_env_value(
+                "DOPPEL_RESTART_DRAIN_TIMEOUT",
+                "HERMES_RESTART_DRAIN_TIMEOUT",
+                "",
+            )
+            or ""
+        ).strip()
         if not raw:
             cfg = _load_gateway_runtime_config()
             raw = str(cfg_get(cfg, "agent", "restart_drain_timeout", default="") or "").strip()
@@ -7218,7 +7236,11 @@ class GatewayRunner:
         # wall-clock age alone isn't sufficient.  Evict only when the agent
         # has been *idle* beyond the inactivity threshold (or when the agent
         # object has no activity tracker and wall-clock age is extreme).
-        _raw_stale_timeout = _float_env("HERMES_AGENT_TIMEOUT", 1800)
+            _raw_stale_timeout = _float_env(
+                "HERMES_AGENT_TIMEOUT",
+                1800,
+                preferred_name="DOPPEL_AGENT_TIMEOUT",
+            )
         _stale_ts = self._running_agents_ts.get(_quick_key, 0)
         if _quick_key in self._running_agents and _stale_ts:
             _stale_age = time.time() - _stale_ts
@@ -17986,11 +18008,19 @@ class GatewayRunner:
             # configured duration is caught and killed.  (#4815)
             #
             # Config: agent.gateway_timeout in config.yaml, or
-            # HERMES_AGENT_TIMEOUT env var (env var takes precedence).
+            # DOPPEL_AGENT_TIMEOUT env var (legacy Hermes alias still works).
             # Default 1800s (30 min inactivity).  0 = unlimited.
-            _agent_timeout_raw = _float_env("HERMES_AGENT_TIMEOUT", 1800)
+            _agent_timeout_raw = _float_env(
+                "HERMES_AGENT_TIMEOUT",
+                1800,
+                preferred_name="DOPPEL_AGENT_TIMEOUT",
+            )
             _agent_timeout = _agent_timeout_raw if _agent_timeout_raw > 0 else None
-            _agent_warning_raw = _float_env("HERMES_AGENT_TIMEOUT_WARNING", 900)
+            _agent_warning_raw = _float_env(
+                "HERMES_AGENT_TIMEOUT_WARNING",
+                900,
+                preferred_name="DOPPEL_AGENT_TIMEOUT_WARNING",
+            )
             _agent_warning = _agent_warning_raw if _agent_warning_raw > 0 else None
             _warning_fired = False
             _executor_task = asyncio.ensure_future(

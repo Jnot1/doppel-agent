@@ -5298,6 +5298,71 @@ def test_vision_docs_prefer_doppel_customer_facing_surfaces():
         assert unexpected not in zh
 
 
+def test_x_search_docs_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "x-search.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "x-search.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "`doppel auth add xai-oauth`",
+        "Set in `~/.doppel/.env`",
+        "Disable explicitly via `doppel tools` → Search → x_search",
+        "```bash\ndoppel tools\n# → 🐦 X (Twitter) Search   (press space to toggle on)\n```",
+        "# ~/.doppel/config.yaml",
+        "Either set `XAI_API_KEY` in `~/.doppel/.env` or run `doppel auth add xai-oauth`",
+        "Run `doppel tools` and confirm `🐦 X (Twitter) Search` is checked.",
+        "Run `doppel auth status` to confirm xai-oauth login state",
+    ):
+        assert expected in en
+
+    for unexpected in (
+        "`hermes auth add xai-oauth`",
+        "Set in `~/.hermes/.env`",
+        "Disable explicitly via `hermes tools` → Search → x_search",
+        "```bash\nhermes tools\n```",
+        "# ~/.hermes/config.yaml",
+        "Either set `XAI_API_KEY` in `~/.hermes/.env` or run `hermes auth add xai-oauth`",
+        "Run `hermes tools` and confirm `🐦 X (Twitter) Search` is checked.",
+        "Run `hermes auth status` to confirm xai-oauth login state",
+    ):
+        assert unexpected not in en
+
+    for expected in (
+        "`doppel auth add xai-oauth`",
+        "在 `~/.doppel/.env` 中设置",
+        "可通过 `doppel tools` → Search → x_search 显式禁用。",
+        "```bash\ndoppel tools\n# → 🐦 X (Twitter) Search   (press space to toggle on)\n```",
+        "# ~/.doppel/config.yaml",
+        "请在 `~/.doppel/.env` 中设置 `XAI_API_KEY`，或运行 `doppel auth add xai-oauth`",
+        "运行 `doppel tools`，确认 `🐦 X (Twitter) Search` 已勾选。",
+        "运行 `doppel auth status` 确认 xai-oauth 登录状态",
+    ):
+        assert expected in zh
+
+    for unexpected in (
+        "`hermes auth add xai-oauth`",
+        "在 `~/.hermes/.env` 中设置",
+        "可通过 `hermes tools` → Search → x_search 显式禁用。",
+        "```bash\nhermes tools\n```",
+        "# ~/.hermes/config.yaml",
+        "请在 `~/.hermes/.env` 中设置 `XAI_API_KEY`，或运行 `hermes auth add xai-oauth`",
+        "运行 `hermes tools`，确认 `🐦 X (Twitter) Search` 已勾选。",
+        "运行 `hermes auth status` 确认 xai-oauth 登录状态",
+    ):
+        assert unexpected not in zh
+
+
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
     zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

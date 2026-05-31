@@ -4354,3 +4354,49 @@ def test_environment_variable_reference_prefers_doppel_stream_timeout_alias():
     ):
         assert preferred in en
         assert preferred in zh
+
+
+def test_zh_environment_variable_reference_rebrands_remaining_doppel_prose():
+    zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
+
+    for updated in (
+        "Doppel 使用 MiniMax 的 Anthropic Messages 兼容端点",
+        "共享 Doppel 根目录",
+        "Doppel 在 Claude Code 自身凭证文件存在时优先使用",
+        "Doppel 自动注入 `--no-sandbox,--disable-dev-shm-usage`",
+        "在 `~/.doppel/.env` 中设置",
+        "`doppel plugins enable observability/langfuse`",
+        "`doppel model` 或 `doppel tools`",
+        "覆盖 Doppel 调用的容器二进制",
+        "控制 Doppel 何时清理空闲终端会话",
+        "`~/.doppel/sandboxes/`",
+        "远程 Doppel API 服务器 URL",
+        "存储在 `~/.doppel/.env` 中并设置 `chmod 600`",
+        "运行 `doppel gateway run` 时跳过 s6 自动监管",
+        "Doppel 附加一个建议列表",
+        "Doppel 的迁移将托管块写入 `<CODEX_HOME>/config.toml`",
+        "自动导出到 Doppel 生成的每个工具子进程",
+        "对于特定任务的直接端点，Doppel 使用",
+        "这些配置写入 `~/.doppel/config.yaml` 的 `provider_routing` 部分",
+    ):
+        assert updated in zh
+
+    for stale in (
+        "Hermes 使用 MiniMax 的 Anthropic Messages 兼容端点",
+        "共享 Hermes 根目录",
+        "Hermes 在 Claude Code 自身凭证文件存在时优先使用",
+        "Hermes 自动注入 `--no-sandbox,--disable-dev-shm-usage`",
+        "hermes plugins enable observability/langfuse",
+        "`hermes model` 或 `hermes tools`",
+        "覆盖 Hermes 调用的容器二进制",
+        "控制 Hermes 何时清理空闲终端会话",
+        "`~/.hermes/sandboxes/`",
+        "远程 Hermes API 服务器 URL",
+        "运行 `hermes gateway run` 时跳过 s6 自动监管",
+        "Hermes 附加一个建议列表",
+        "Hermes 的迁移将托管块写入 `<CODEX_HOME>/config.toml`",
+        "自动导出到 Hermes 生成的每个工具子进程",
+        "对于特定任务的直接端点，Hermes 使用",
+        "这些配置写入 `~/.hermes/config.yaml` 的 `provider_routing` 部分",
+    ):
+        assert stale not in zh

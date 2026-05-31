@@ -149,6 +149,11 @@ class TestMessageLimits:
         from gateway.platforms.whatsapp import WhatsAppAdapter
         assert WhatsAppAdapter.MAX_MESSAGE_LENGTH == 4096
 
+    def test_default_reply_prefix_is_doppel_first(self):
+        from gateway.platforms.whatsapp import WhatsAppAdapter
+
+        assert WhatsAppAdapter.DEFAULT_REPLY_PREFIX == "⚕ *Doppel Agent*\n────────────\n"
+
     def test_chunk_limit_reserves_default_self_chat_prefix(self, monkeypatch):
         adapter = _make_adapter()
         monkeypatch.delenv("WHATSAPP_REPLY_PREFIX", raising=False)

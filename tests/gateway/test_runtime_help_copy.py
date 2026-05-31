@@ -30,3 +30,18 @@ def test_gateway_runtime_lifecycle_copy_is_doppel_first():
     assert "HERMES_HOME=%s" not in runtime
     assert "Use 'hermes gateway restart' to replace it, or 'hermes gateway stop' first." not in runtime
     assert "Or use 'hermes gateway run --replace' to auto-replace." not in runtime
+
+
+def test_platform_runtime_matrix_and_telegram_copy_is_doppel_first():
+    matrix = Path("gateway/platforms/matrix.py").read_text(encoding="utf-8")
+    telegram = Path("gateway/platforms/telegram.py").read_text(encoding="utf-8")
+    web_server = Path("hermes_cli/web_server.py").read_text(encoding="utf-8")
+
+    assert 'device_name="Doppel Agent"' in matrix
+    assert 'device_name="Hermes Agent"' not in matrix
+
+    assert "with this token, then restart the gateway with 'doppel gateway restart'." in telegram
+    assert "with this token, then restart the gateway with 'hermes gateway restart'." not in telegram
+
+    assert 'app = FastAPI(title="Doppel Agent", version=__version__)' in web_server
+    assert 'app = FastAPI(title="Hermes Agent", version=__version__)' not in web_server

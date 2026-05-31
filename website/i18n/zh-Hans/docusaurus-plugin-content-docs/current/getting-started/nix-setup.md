@@ -23,7 +23,7 @@ Doppel Agent 提供了一个 Nix flake，支持三个层级的集成：
 :::
 
 :::note 当前 Nix 包与二进制入口
-Nix derivation 与首选 flake 包契约现已使用 `doppel-agent`。NixOS 服务/模块标识仍保持现有的 `services.hermes-agent` / `systemd.services.hermes-agent` 兼容契约。新的 flake 安装应使用首选包别名 `#doppel-agent`（overlay 中可用 `pkgs.doppel-agent`），同时保留 `#hermes-agent` / `pkgs.hermes-agent` 作为兼容别名。打包安装也会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，以及历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 Doppel 优先的写法，同时明确保留仍然有效的服务兼容契约。
+Nix derivation 与首选 flake 包契约现已使用 `doppel-agent`。新的 NixOS 配置也可以使用首选模块别名 `services.doppel-agent`，同时保留现有的 `services.hermes-agent` / `systemd.services.hermes-agent` 兼容契约。生成的 systemd 单元还会安装 `doppel-agent.service` 别名，与规范的 `hermes-agent` 单元并存。新的 flake 安装应使用首选包别名 `#doppel-agent`（overlay 中可用 `pkgs.doppel-agent`），同时保留 `#hermes-agent` / `pkgs.hermes-agent` 作为兼容别名。打包安装也会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，以及历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 Doppel 优先的写法，同时明确保留仍然有效的兼容契约。
 :::
 
 ## 前提条件
@@ -115,7 +115,7 @@ nix build
 ```nix
 # configuration.nix
 { config, ... }: {
-  services.hermes-agent = {
+  services.doppel-agent = {
     enable = true;
     settings.model.default = "anthropic/claude-sonnet-4";
     environmentFiles = [ config.sops.secrets."hermes-env".path ];
@@ -805,8 +805,8 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 
 | 选项 | 类型 | 默认值 | 描述 |
 |---|---|---|---|
-| `enable` | `bool` | `false` | 通过兼容命名空间 `services.hermes-agent` 启用 Doppel Agent |
-| `package` | `package` | `doppel-agent` | 首选 Doppel 包；选项路径为兼容性仍保持 `services.hermes-agent` |
+| `enable` | `bool` | `false` | 启用 Doppel Agent。新配置可使用 `services.doppel-agent`；实现层为兼容性仍保持在 `services.hermes-agent` |
+| `package` | `package` | `doppel-agent` | 首选 Doppel 包；`services.doppel-agent` 与 `services.hermes-agent` 都会解析到这个选项 |
 | `user` | `str` | `"hermes"` | 系统用户 |
 | `group` | `str` | `"hermes"` | 系统组 |
 | `createUser` | `bool` | `true` | 自动创建用户/组 |

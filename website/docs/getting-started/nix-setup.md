@@ -15,7 +15,7 @@ Doppel Agent ships a Nix flake with three levels of integration:
 | **NixOS module (container)** | Agents that need self-modification | Everything above, plus a persistent Ubuntu container where the agent can `apt`/`pip`/`npm install` |
 
 :::note Current Nix package and binary surface
-The Nix derivation and preferred flake package contract now use `doppel-agent`. The NixOS service/module identifiers still stay on the existing `services.hermes-agent` / `systemd.services.hermes-agent` contract for compatibility. Fresh flake installs should use `#doppel-agent` (and `pkgs.doppel-agent` in overlays), while `#hermes-agent` / `pkgs.hermes-agent` remain compatibility aliases. Packaged installs also expose the preferred `doppel`, `doppel-agent`, and `doppel-acp` entrypoints alongside the legacy `hermes`, `hermes-agent`, and `hermes-acp` aliases, so command examples below use Doppel-first CLI names while keeping the still-live service compatibility contracts explicit.
+The Nix derivation and preferred flake package contract now use `doppel-agent`. Fresh NixOS configs can also use the preferred module alias `services.doppel-agent`, while the existing `services.hermes-agent` / `systemd.services.hermes-agent` contract remains in place for compatibility. The generated systemd unit also installs a `doppel-agent.service` alias alongside the canonical `hermes-agent` unit. Fresh flake installs should use `#doppel-agent` (and `pkgs.doppel-agent` in overlays), while `#hermes-agent` / `pkgs.hermes-agent` remain compatibility aliases. Packaged installs also expose the preferred `doppel`, `doppel-agent`, and `doppel-acp` entrypoints alongside the legacy `hermes`, `hermes-agent`, and `hermes-acp` aliases, so command examples below use Doppel-first CLI names while keeping the still-live compatibility contracts explicit.
 :::
 
 :::info What's different from the standard install
@@ -115,7 +115,7 @@ This module requires NixOS. For non-NixOS systems (macOS, other Linux distros), 
 ```nix
 # configuration.nix
 { config, ... }: {
-  services.hermes-agent = {
+  services.doppel-agent = {
     enable = true;
     settings.model.default = "anthropic/claude-sonnet-4";
     environmentFiles = [ config.sops.secrets."hermes-env".path ];
@@ -834,8 +834,8 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `enable` | `bool` | `false` | Enable Doppel Agent through the compatibility namespace `services.hermes-agent` |
-| `package` | `package` | `doppel-agent` | Preferred Doppel package; the option path remains `services.hermes-agent` for compatibility |
+| `enable` | `bool` | `false` | Enable Doppel Agent. New configs can use `services.doppel-agent`; the implementation remains under `services.hermes-agent` for compatibility |
+| `package` | `package` | `doppel-agent` | Preferred Doppel package; both `services.doppel-agent` and `services.hermes-agent` resolve to this option |
 | `user` | `str` | `"hermes"` | System user |
 | `group` | `str` | `"hermes"` | System group |
 | `createUser` | `bool` | `true` | Auto-create user/group |

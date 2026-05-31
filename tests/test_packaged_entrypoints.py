@@ -126,6 +126,16 @@ def test_nixos_module_keeps_legacy_service_namespace():
     assert "systemd.services.hermes-agent" in content
 
 
+def test_nixos_module_exposes_doppel_service_option_alias():
+    content = _nixos_module_text()
+    assert 'lib.mkAliasOptionModule [ "services" "doppel-agent" ] [ "services" "hermes-agent" ]' in content
+
+
+def test_nixos_module_installs_doppel_systemd_service_alias():
+    content = _nixos_module_text()
+    assert 'aliases = [ "doppel-agent.service" ];' in content
+
+
 def test_nix_checks_encode_package_alias_contracts():
     content = _nix_checks_text()
     assert 'package-alias-contracts =' in content
@@ -147,6 +157,27 @@ def test_nix_workflow_evaluates_package_alias_pnames_on_linux_and_macos():
     assert '.#packages.aarch64-darwin.doppel-agent.pname' in content
     assert '.#packages.aarch64-darwin.hermes-agent.pname' in content
     assert '.#checks.aarch64-darwin.package-alias-contracts.drvPath' in content
+
+
+def test_nix_docs_mention_preferred_doppel_service_alias():
+    content = (REPO_ROOT / "website" / "docs" / "getting-started" / "nix-setup.md").read_text()
+    assert "`services.doppel-agent`" in content
+    assert "`doppel-agent.service`" in content
+
+
+def test_zh_nix_docs_mention_preferred_doppel_service_alias():
+    content = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "getting-started"
+        / "nix-setup.md"
+    ).read_text()
+    assert "`services.doppel-agent`" in content
+    assert "`doppel-agent.service`" in content
 
 
 def test_homebrew_formulae_share_the_same_release_source():

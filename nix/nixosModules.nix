@@ -202,6 +202,10 @@
       else cfg.workingDirectory;
 
   in {
+    imports = [
+      (lib.mkAliasOptionModule [ "services" "doppel-agent" ] [ "services" "hermes-agent" ])
+    ];
+
     options.services.hermes-agent = with lib; {
       enable = mkEnableOption "Doppel Agent gateway service (compat namespace: services.hermes-agent)";
 
@@ -866,6 +870,7 @@
       (lib.mkIf (!cfg.container.enable) {
         systemd.services.hermes-agent = {
           description = "Doppel Agent Gateway";
+          aliases = [ "doppel-agent.service" ];
           wantedBy = [ "multi-user.target" ];
           after = [ "network-online.target" ];
           wants = [ "network-online.target" ];
@@ -927,6 +932,7 @@
 
         systemd.services.hermes-agent = {
           description = "Doppel Agent Gateway (container)";
+          aliases = [ "doppel-agent.service" ];
           wantedBy = [ "multi-user.target" ];
           after = [ "network-online.target" ]
             ++ lib.optional (cfg.container.backend == "docker") "docker.service";

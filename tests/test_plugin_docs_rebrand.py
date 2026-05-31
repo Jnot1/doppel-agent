@@ -3081,6 +3081,8 @@ def test_codex_runtime_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "doppel auth login codex" in zh
     assert "doppel logs --since 5m" in en
     assert "doppel logs --since 5m" in zh
+    assert "`doppel chat -q` subprocess" in en
+    assert "`doppel chat -q` 子进程" in zh
     assert "~/.doppel/config.yaml" in en
     assert "~/.doppel/config.yaml" in zh
     assert "~/.doppel/auth.json" in en
@@ -3112,6 +3114,8 @@ def test_codex_runtime_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "hermes auth login codex" not in zh
     assert "hermes logs --since 5m" not in en
     assert "hermes logs --since 5m" not in zh
+    assert "`hermes chat -q` subprocess" not in en
+    assert "`hermes chat -q` 子进程" not in zh
     assert "Hermes Agent 2026.5" not in en
     assert "Hermes Agent 2026.5" not in zh
 
@@ -3920,6 +3924,8 @@ def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     assert "doppel-acp" in zh
     assert "doppel-agent[acp]" in en
     assert "doppel-agent[acp]" in zh
+    assert "search for **Doppel Agent** (the current registry entry name)." in en
+    assert "搜索 **Doppel Agent**（当前 registry 条目名称）。" in zh
 
     for fixed in (
         "acp_registry/agent.json",
@@ -3949,6 +3955,8 @@ def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     assert "hermes-acp" not in zh
     assert "hermes-agent[acp]" not in en
     assert "hermes-agent[acp]" not in zh
+    assert "search for **Hermes Agent** (the current registry entry name)." not in en
+    assert "搜索 **Hermes Agent**（当前 registry 条目名称）。" not in zh
     assert '"command": "hermes"' not in en
     assert '"command": "hermes"' not in zh
 

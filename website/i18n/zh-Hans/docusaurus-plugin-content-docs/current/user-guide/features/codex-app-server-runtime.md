@@ -83,7 +83,7 @@ Doppel Agent 将自身注册为 MCP server，以便 Codex 能够回调获取 Cod
 
 ### Kanban（多 agent 工作树分发）
 
-**在此运行时上可用，但有一个细微依赖。** Kanban 分发器将每个 worker 生成为独立的 `hermes chat -q` 子进程，该子进程读取用户配置——这意味着如果全局设置了 `model.openai_runtime: codex_app_server`，worker 也会在 Codex 运行时上启动。
+**在此运行时上可用，但有一个细微依赖。** Kanban 分发器将每个 worker 生成为独立的 `doppel chat -q` 子进程，该子进程读取用户配置——这意味着如果全局设置了 `model.openai_runtime: codex_app_server`，worker 也会在 Codex 运行时上启动。
 
 Codex 运行时 worker 内可用的功能：
 - Codex 完整工具集（shell、apply_patch、update_plan、view_image、web_search）——worker 原生完成实际任务

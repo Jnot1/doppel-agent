@@ -234,7 +234,7 @@ The ACP bridge maps these options onto Doppel Agent's internal approval semantic
 
 Check:
 
-- In Zed, open the ACP Registry with `zed: acp registry` and search for **Hermes Agent** (the current registry entry name).
+- In Zed, open the ACP Registry with `zed: acp registry` and search for **Doppel Agent** (the current registry entry name).
 - For manual/local development, verify the custom `agent_servers` command points to `doppel acp`.
 - Doppel Agent is installed and on your PATH.
 - The ACP extra is installed (`pip install -e '.[acp]'`).

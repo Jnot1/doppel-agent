@@ -6250,24 +6250,22 @@ def _hermes_path_argv(path: str) -> list[str]:
 
 
 def _resolve_hermes_argv() -> list[str]:
-    """Resolve the ``hermes`` invocation as argv parts for ``Popen``.
+    """Resolve the preferred Doppel/Hermes CLI invocation as argv parts.
 
     Tries in order:
 
-    1. ``$HERMES_BIN`` — explicit operator override. Path-like values are
-       normalized to absolute paths; bare command names keep normal PATH
-       semantics and never prefer a same-directory file before ``PATH``.
-    2. ``shutil.which("hermes")`` — the console-script shim, normalized to
-       an absolute path. On Windows, ``which`` can return a relative
-       ``.\\hermes.CMD`` when the current directory is on ``PATH``; directly
-       launching batch shims is also unsafe with task-derived argv. The
-       dispatcher therefore falls back to the interpreter-bound module form
-       for implicit ``.cmd`` / ``.bat`` shims.
-    3. ``sys.executable -m hermes_cli.main`` — fallback for setups where
-       Hermes is launched from a venv and the ``hermes`` shim is not on
-       the dispatcher's ``$PATH`` (cron, systemd ``User=`` services,
-       launchd jobs, detached processes, etc.). Goes through the running
-       interpreter so the result is independent of ``$PATH``.
+    1. ``$DOPPEL_BIN`` — preferred explicit operator override.
+    2. ``$HERMES_BIN`` — legacy explicit operator override.
+    3. ``shutil.which("doppel")`` — preferred console-script shim.
+    4. ``shutil.which("hermes")`` — legacy console-script shim.
+    5. ``sys.executable -m hermes_cli.main`` — interpreter-bound fallback.
+
+    Path-like override values are normalized to absolute paths; bare command
+    names keep normal PATH semantics and never prefer a same-directory file
+    before ``PATH``. On Windows, ``which`` can return a relative shim from the
+    current directory, and directly launching batch shims is unsafe with
+    task-derived argv. The dispatcher therefore falls back to the interpreter-
+    bound module form for implicit ``.cmd`` / ``.bat`` shims.
 
     Mirrors ``gateway.run._resolve_hermes_bin`` for the same reason. Kept
     local (not imported from gateway) because ``hermes_cli`` sits below
@@ -6275,8 +6273,10 @@ def _resolve_hermes_argv() -> list[str]:
     """
     import shutil
 
-    env_bin = os.environ.get("HERMES_BIN", "").strip()
-    if env_bin:
+    for env_name in ("DOPPEL_BIN", "HERMES_BIN"):
+        env_bin = os.environ.get(env_name, "").strip()
+        if not env_bin:
+            continue
         if _looks_like_path(env_bin):
             return _hermes_path_argv(env_bin)
         resolved_env_bin = _safe_which_no_cwd(env_bin)
@@ -6284,9 +6284,10 @@ def _resolve_hermes_argv() -> list[str]:
             return _hermes_path_argv(resolved_env_bin)
         return _module_hermes_argv()
 
-    hermes_bin = _safe_which_no_cwd("hermes") if _IS_WINDOWS else shutil.which("hermes")
-    if hermes_bin:
-        return _hermes_path_argv(hermes_bin)
+    for cli_name in ("doppel", "hermes"):
+        cli_bin = _safe_which_no_cwd(cli_name) if _IS_WINDOWS else shutil.which(cli_name)
+        if cli_bin:
+            return _hermes_path_argv(cli_bin)
     return _module_hermes_argv()
 
 
@@ -6361,7 +6362,7 @@ def _default_spawn(
     *,
     board: Optional[str] = None,
 ) -> Optional[int]:
-    """Fire-and-forget ``hermes -p <profile> chat -q ...`` subprocess.
+    """Fire-and-forget ``doppel -p <profile> chat -q ...`` subprocess.
 
     Returns the spawned child's PID so the dispatcher can detect crashes
     before the claim TTL expires. The child's completion is still observed
@@ -6387,7 +6388,7 @@ def _default_spawn(
     # Inject HERMES_HOME so the worker reads the profile-scoped config.yaml
     # (fallback_providers, toolsets, agent settings, etc.) instead of the root
     # config.  Without this, `env = dict(os.environ)` copies only the parent's
-    # env, and when the child process starts `hermes -p <name>` the
+    # env, and when the child process starts `doppel -p <name>` the
     # _apply_profile_override() runs *before* hermes_constants is imported.
     # If HERMES_HOME is absent from the child's env, get_hermes_home() falls
     # back to Path.home() / ".hermes" (the DEFAULT profile root), ignoring the
@@ -6425,7 +6426,7 @@ def _default_spawn(
     if foreground_timeout is not None:
         env["TERMINAL_MAX_FOREGROUND_TIMEOUT"] = foreground_timeout
     # Pin the shared board + workspaces root the dispatcher resolved, so
-    # that even when the worker activates a profile (`hermes -p <name>`
+    # that even when the worker activates a profile (`doppel -p <name>`
     # rewrites HERMES_HOME), its kanban paths still match the
     # dispatcher's. Belt-and-braces with the `get_default_hermes_root()`
     # resolution in `kanban_home()` — symmetric resolution is the norm,
@@ -6511,8 +6512,8 @@ def _default_spawn(
     except FileNotFoundError:
         log_f.close()
         raise RuntimeError(
-            "`hermes` executable not found on PATH. "
-            "Install Hermes Agent or activate its venv before running the kanban dispatcher."
+            "Neither `doppel` nor legacy `hermes` was found on PATH. "
+            "Install Doppel Agent or activate its venv before running the kanban dispatcher."
         )
     # NOTE: we intentionally do NOT close log_f here — we want Popen's
     # child process to keep writing after this function returns.  The

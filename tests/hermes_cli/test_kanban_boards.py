@@ -462,6 +462,41 @@ class TestWorkerSpawnEnv:
         assert env["HERMES_KANBAN_BOARD"] == "default"
         assert env["HERMES_KANBAN_DB"] == str(fresh_home / "kanban.db")
 
+    def test_default_spawn_prefers_doppel_bin_env_override(self, fresh_home, monkeypatch):
+        captured = {}
+
+        class FakeProc:
+            pid = 222
+
+        def fake_popen(cmd, *args, **kwargs):
+            captured["cmd"] = cmd
+            return FakeProc()
+
+        monkeypatch.setattr(subprocess, "Popen", fake_popen)
+        monkeypatch.setenv("DOPPEL_BIN", "/opt/doppel/bin/doppel")
+        monkeypatch.setenv("HERMES_BIN", "/opt/hermes/bin/hermes")
+
+        task = kb.Task(
+            id="t_cli_pref",
+            title="",
+            body=None,
+            assignee="teknium",
+            status="ready",
+            priority=0,
+            created_by=None,
+            created_at=0,
+            started_at=None,
+            completed_at=None,
+            workspace_kind="scratch",
+            workspace_path=None,
+            claim_lock=None,
+            claim_expires=None,
+            tenant=None,
+        )
+
+        kb._default_spawn(task, str(fresh_home / "ws"), board=None)
+        assert captured["cmd"][0] == "/opt/doppel/bin/doppel"
+
 
 # ---------------------------------------------------------------------------
 # CLI surface

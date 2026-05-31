@@ -232,7 +232,7 @@ ACP 桥接将这些选项映射到 Doppel Agent 的内部审批语义——`allo
 
 检查：
 
-- 在 Zed 中，使用 `zed: acp registry` 打开 ACP Registry 并搜索 **Hermes Agent**（当前 registry 条目名称）。
+- 在 Zed 中，使用 `zed: acp registry` 打开 ACP Registry 并搜索 **Doppel Agent**（当前 registry 条目名称）。
 - 对于手动/本地开发，验证自定义 `agent_servers` 命令是否指向 `doppel acp`。
 - Doppel Agent 已安装且在 PATH 中。
 - ACP 扩展已安装（`pip install -e '.[acp]'`）。

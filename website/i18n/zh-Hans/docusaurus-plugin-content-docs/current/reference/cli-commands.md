@@ -1246,25 +1246,25 @@ doppel profile update work
 doppel -p work chat -q "Hello from work profile"
 ```
 
-## `hermes completion`
+## `doppel completion`
 
 ```bash
-hermes completion [bash|zsh|fish]
+doppel completion [bash|zsh|fish]
 ```
 
-将 shell 补全脚本打印到 stdout。在 shell profile 中 source 输出内容，即可对 Hermes 命令、子命令和 profile 名称进行 Tab 补全。
+将 shell 补全脚本打印到 stdout。在 shell profile 中 source 输出内容，即可对 Doppel 命令、子命令和 profile 名称进行 Tab 补全。
 
 示例：
 
 ```bash
 # Bash
-hermes completion bash >> ~/.bashrc
+doppel completion bash >> ~/.bashrc
 
 # Zsh
-hermes completion zsh >> ~/.zshrc
+doppel completion zsh >> ~/.zshrc
 
 # Fish
-hermes completion fish > ~/.config/fish/completions/hermes.fish
+doppel completion fish > ~/.config/fish/completions/doppel.fish
 ```
 
 ## `doppel update`

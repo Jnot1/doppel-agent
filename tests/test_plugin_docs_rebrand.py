@@ -2102,7 +2102,7 @@ def test_zh_reference_cli_commands_rebrand_insights_claw_dashboard_and_profile_c
         / "cli-commands.md"
     ).read_text(encoding="utf-8")
 
-    section = zh_cli_commands.split("## `doppel insights`", 1)[1].split("## `hermes completion`", 1)[0]
+    section = zh_cli_commands.split("## `doppel insights`", 1)[1].split("## `doppel completion`", 1)[0]
 
     assert "doppel insights [--days N] [--source platform]" in section
     assert "## `doppel claw`" in section
@@ -2129,6 +2129,32 @@ def test_zh_reference_cli_commands_rebrand_insights_claw_dashboard_and_profile_c
     assert "多个隔离的 Hermes 实例" not in section
     assert "hermes profile list" not in section
     assert 'hermes -p work chat -q "Hello from work profile"' not in section
+
+
+def test_zh_reference_cli_commands_rebrand_completion_block():
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    section = zh_cli_commands.split("## `doppel completion`", 1)[1].split("## `doppel update`", 1)[0]
+
+    assert "doppel completion [bash|zsh|fish]" in section
+    assert "对 Doppel 命令、子命令和 profile 名称进行 Tab 补全" in section
+    assert "doppel completion bash >> ~/.bashrc" in section
+    assert "doppel completion zsh >> ~/.zshrc" in section
+    assert "doppel completion fish > ~/.config/fish/completions/doppel.fish" in section
+    assert "## `hermes completion`" not in section
+    assert "对 Hermes 命令、子命令和 profile 名称进行 Tab 补全" not in section
+    assert "hermes completion bash >> ~/.bashrc" not in section
+    assert "hermes completion zsh >> ~/.zshrc" not in section
+    assert "hermes completion fish > ~/.config/fish/completions/hermes.fish" not in section
 
 
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():

@@ -3023,12 +3023,12 @@ def _env_enablement() -> Optional[Dict[str, Any]]:
 
 
 def interactive_setup() -> None:
-    """Walk the user through Google Chat configuration via ``hermes setup``.
+    """Walk the user through Google Chat configuration via ``doppel setup``.
 
     The setup wizard at ``hermes_cli/gateway.py`` calls this for plugin
     platforms instead of using the in-tree ``_PLATFORMS`` data block. The
     flow mirrors the in-tree built-ins: print the GCP setup instructions,
-    prompt for env vars, persist them to ``~/.hermes/.env`` so the next
+    prompt for env vars, persist them to ``~/.doppel/.env`` so the next
     gateway restart picks them up.
     """
     from hermes_cli.cli_output import (
@@ -3051,7 +3051,7 @@ def interactive_setup() -> None:
     print_info("Walkthrough:")
     print_info("  1. Create or select a GCP project; enable Google Chat API + Cloud Pub/Sub API.")
     print_info("  2. Create a Service Account (no project-level IAM role needed).")
-    print_info("  3. Create a Pub/Sub topic (e.g. hermes-chat-events) and a Pull subscription.")
+    print_info("  3. Create a Pub/Sub topic (e.g. doppel-chat-events) and a Pull subscription.")
     print_info("  4. On the TOPIC: add chat-api-push@system.gserviceaccount.com as Pub/Sub Publisher.")
     print_info("  5. On the SUBSCRIPTION: grant your Service Account Pub/Sub Subscriber.")
     print_info("  6. Download the Service Account JSON key.")
@@ -3133,8 +3133,8 @@ async def _standalone_send(
     """POST a single Google Chat message via the REST API without the SDK.
 
     Used by ``tools/send_message_tool._send_via_adapter`` when the gateway
-    runner is not in this process (e.g. ``hermes cron`` running as a
-    separate process from ``hermes gateway``).  Without this hook,
+    runner is not in this process (e.g. ``doppel cron`` running as a
+    separate process from ``doppel gateway``).  Without this hook,
     ``deliver=google_chat`` cron jobs fail with ``No live adapter for
     platform``.
 
@@ -3274,7 +3274,7 @@ async def _standalone_send(
 
 
 def register(ctx) -> None:
-    """Plugin entry point — called by the Hermes plugin system at startup.
+    """Plugin entry point — called by the Doppel plugin system at startup.
 
     Registers the Google Chat adapter under the ``google_chat`` name.
     The gateway's ``_create_adapter`` consults the platform registry

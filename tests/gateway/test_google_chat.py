@@ -14,6 +14,7 @@ We shim the imports at module load so collection doesn't fail.
 import asyncio
 import json
 import os
+from pathlib import Path
 import sys
 import types
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -2670,6 +2671,29 @@ class TestGoogleChatInteractiveSetup:
         assert saved["GOOGLE_CHAT_SERVICE_ACCOUNT_JSON"] == "/tmp/sa.json"
         assert saved["GOOGLE_CHAT_ALLOWED_USERS"] == "alice@example.com,bob@example.com"
         assert saved["GOOGLE_CHAT_HOME_CHANNEL"] == "spaces/AAAA"
+
+    def test_google_chat_customer_facing_setup_copy_is_doppel_first(self):
+        body = Path(
+            "/Users/macshelton/Documents/DoppelFork/plugins/platforms/google_chat/adapter.py"
+        ).read_text(encoding="utf-8")
+
+        for expected in (
+            "Google Chat configuration via ``doppel setup``.",
+            "persist them to ``~/.doppel/.env`` so the next",
+            "Create a Pub/Sub topic (e.g. doppel-chat-events) and a Pull subscription.",
+            "e.g. ``doppel cron`` running as a",
+            "separate process from ``doppel gateway``",
+        ):
+            assert expected in body
+
+        for unexpected in (
+            "Google Chat configuration via ``hermes setup``.",
+            "persist them to ``~/.hermes/.env`` so the next",
+            "Create a Pub/Sub topic (e.g. hermes-chat-events) and a Pull subscription.",
+            "e.g. ``hermes cron`` running as a",
+            "separate process from ``hermes gateway``",
+        ):
+            assert unexpected not in body
 
 
 # ===========================================================================

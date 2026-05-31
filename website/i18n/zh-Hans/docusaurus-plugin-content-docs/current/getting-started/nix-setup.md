@@ -345,7 +345,7 @@ Nix 用户最常见自定义需求的快速参考：
 | 在主机 CLI 和容器间共享状态 | `container.hostUsers` | `[ "sidbin" ]` |
 | 为 Agent 提供额外工具 | `extraPackages` | `[ pkgs.pandoc pkgs.imagemagick ]` |
 | 使用自定义基础镜像 | `container.image` | `"ubuntu:24.04"` |
-| 覆盖 hermes 包 | `package` | `inputs.hermes-agent.packages.${system}.default.override { ... }` |
+| 覆盖 Doppel 包 | `package` | `inputs.doppel-agent.packages.${system}.default.override { ... }` |
 | 更改状态目录 | `stateDir` | `"/opt/hermes"` |
 | 设置 Agent 的工作目录 | `workingDirectory` | `"/home/user/projects"` |
 
@@ -805,8 +805,8 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 
 | 选项 | 类型 | 默认值 | 描述 |
 |---|---|---|---|
-| `enable` | `bool` | `false` | 启用 hermes-agent 服务 |
-| `package` | `package` | `hermes-agent` | 使用的 hermes-agent 包 |
+| `enable` | `bool` | `false` | 通过兼容命名空间 `services.hermes-agent` 启用 Doppel Agent |
+| `package` | `package` | `doppel-agent` | 首选 Doppel 包；选项路径为兼容性仍保持 `services.hermes-agent` |
 | `user` | `str` | `"hermes"` | 系统用户 |
 | `group` | `str` | `"hermes"` | 系统组 |
 | `createUser` | `bool` | `true` | 自动创建用户/组 |

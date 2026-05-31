@@ -1,12 +1,12 @@
 ---
 sidebar_position: 8
 title: "Programmatic Integration"
-description: "Three protocols for driving hermes-agent from external programs: ACP, the TUI gateway JSON-RPC, and the OpenAI-compatible HTTP API"
+description: "Three protocols for driving Doppel Agent from external programs: ACP, the TUI gateway JSON-RPC, and the OpenAI-compatible HTTP API"
 ---
 
 # Programmatic Integration
 
-Hermes ships three protocols for driving the agent from external programs — IDE plugins, custom UIs, CI pipelines, embedded sub-agents. Pick the one that matches your transport and consumer.
+Doppel Agent ships three protocols for driving the agent from external programs — IDE plugins, custom UIs, CI pipelines, embedded sub-agents. Pick the one that matches your transport and consumer.
 
 | Protocol | Transport | Best for | Defined by |
 |----------|-----------|----------|------------|
@@ -20,15 +20,15 @@ All three drive the same `AIAgent` core. They differ only in wire format and whi
 
 ## ACP (Agent Client Protocol)
 
-`hermes acp` starts a stdio JSON-RPC server speaking ACP. Used in production by VS Code (Zed Industries' ACP extension), Zed, and any JetBrains IDE with an ACP plugin.
+`doppel acp` starts a stdio JSON-RPC server speaking ACP. Used in production by VS Code (Zed Industries' ACP extension), Zed, and any JetBrains IDE with an ACP plugin.
 
 Capabilities exposed: session creation, prompt submission, streaming agent message chunks, tool-call events, permission requests, session fork, cancel, and authentication. Tool output is rendered into ACP `Diff`/`ToolCall` content blocks the IDE understands.
 
 Full lifecycle, event bridge, and approval flow: [ACP Internals](./acp-internals).
 
 ```bash
-hermes acp                  # serve ACP on stdio
-hermes acp --bootstrap      # print install snippet for an ACP-capable IDE
+doppel acp                  # serve ACP on stdio
+doppel acp --bootstrap      # print install snippet for an ACP-capable IDE
 ```
 
 ---
@@ -94,7 +94,7 @@ GET  /v1/runs/{id}/events        SSE stream of lifecycle events
 POST /v1/runs/{id}/approval      Resolve a pending approval
 POST /v1/runs/{id}/stop          Interrupt the run
 GET  /v1/capabilities            Machine-readable feature flags
-GET  /v1/models                  Lists hermes-agent
+GET  /v1/models                  Lists doppel-agent
 GET  /health, /health/detailed
 ```
 
@@ -105,7 +105,7 @@ Setup, headers (`X-Hermes-Session-Id`, `X-Hermes-Session-Key`), and frontend wir
 ## Which one should I use?
 
 - **You're writing an IDE plugin and the IDE already speaks ACP** → ACP. Zero protocol work on the IDE side.
-- **You're writing a custom desktop / web / TUI host and want every Hermes feature** (slash commands, approvals, clarify, multi-agent, session branching) → TUI gateway JSON-RPC.
+- **You're writing a custom desktop / web / TUI host and want every Doppel feature** (slash commands, approvals, clarify, multi-agent, session branching) → TUI gateway JSON-RPC.
 - **You want any OpenAI-compatible frontend, a language-agnostic HTTP client, or curl-driven automation** → API server.
 - **You want a Python in-process embed without a subprocess** → import `run_agent.AIAgent` directly. See [Agent Loop](./agent-loop).
 

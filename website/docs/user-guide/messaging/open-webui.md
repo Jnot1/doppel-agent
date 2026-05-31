@@ -44,21 +44,21 @@ What the script does:
 - ensures your agent-home `.env` file (`~/.doppel/.env` on fresh installs; legacy `~/.hermes/.env` still works) contains `API_SERVER_ENABLED`, `API_SERVER_HOST`, `API_SERVER_KEY`, `API_SERVER_PORT`, and `API_SERVER_MODEL_NAME`
 - restarts the Doppel gateway so the API server comes up
 - installs Open WebUI into `~/.local/open-webui-venv`
-- writes a launcher at `~/.local/bin/start-open-webui-hermes.sh`
-- on macOS, installs a `launchd` user service; on Linux with `systemd --user`, installs a user service there
+- writes a launcher at `~/.local/bin/start-open-webui-doppel.sh` and leaves a `start-open-webui-hermes.sh` shim for legacy callers
+- on macOS, installs the `ai.openwebui.doppel` `launchd` user service; on Linux with `systemd --user`, installs `openwebui-doppel.service`
 
 Defaults:
 
 - Doppel API: `http://127.0.0.1:8642/v1`
 - Open WebUI: `http://127.0.0.1:8080`
-- model name advertised to Open WebUI: `Hermes Agent`
+- model name advertised to Open WebUI: `Doppel Agent`
 
 Useful overrides:
 
 ```bash
 OPEN_WEBUI_NAME='My Doppel UI' \
 OPEN_WEBUI_ENABLE_SIGNUP=true \
-HERMES_API_MODEL_NAME='My Doppel Agent' \
+OPEN_WEBUI_MODEL_NAME='My Doppel Agent' \
 bash scripts/setup_open_webui.sh
 ```
 
@@ -100,7 +100,7 @@ curl -s http://127.0.0.1:8642/health
 # {"status": "ok", ...}
 
 curl -s -H "Authorization: Bearer your-secret-key" http://127.0.0.1:8642/v1/models
-# {"object":"list","data":[{"id":"hermes-agent", ...}]}
+# {"object":"list","data":[{"id":"doppel-agent", ...}]}
 ```
 
 If `/health` fails, the gateway didn't pick up `API_SERVER_ENABLED=true` — restart it. If `/v1/models` returns `401`, your `Authorization` header doesn't match `API_SERVER_KEY`.
@@ -125,7 +125,7 @@ First launch takes 15–30 seconds: Open WebUI downloads sentence-transformer em
 
 ### 5. Open the UI
 
-Go to **http://localhost:3000**. Create your admin account (the first user becomes admin). You should see your agent in the model dropdown (named after your profile, or **hermes-agent** for the default profile). Start chatting!
+Go to **http://localhost:3000**. Create your admin account (the first user becomes admin). You should see your agent in the model dropdown (named after your profile, or **doppel-agent** for the default profile unless you overrode `API_SERVER_MODEL_NAME`). Start chatting!
 
 ## Docker Compose Setup
 
@@ -172,7 +172,7 @@ If you prefer to configure the connection through the UI instead of environment 
 7. Click the **checkmark** to verify the connection
 8. **Save**
 
-Your agent model should now appear in the model dropdown (named after your profile, or **hermes-agent** for the default profile).
+Your agent model should now appear in the model dropdown (named after your profile, or **doppel-agent** for the default profile unless you overrode `API_SERVER_MODEL_NAME`).
 
 :::warning
 Environment variables only take effect on Open WebUI's **first launch**. After that, connection settings are stored in its internal database. To change them later, use the Admin UI or delete the Docker volume and start fresh.
@@ -196,7 +196,7 @@ This is the default and requires no extra configuration. Open WebUI sends standa
 To use the Responses API mode:
 
 1. Go to **Admin Settings** → **Connections** → **OpenAI** → **Manage**
-2. Edit the connection that points at your Doppel Agent API server (often named `hermes-agent` by default)
+2. Edit the connection that points at your Doppel Agent API server (often named `doppel-agent` by default)
 3. Change **API Type** from "Chat Completions" to **"Responses (Experimental)"**
 4. Save
 
@@ -249,7 +249,7 @@ With streaming enabled (the default), you'll see brief inline indicators as tool
 
 - **Check the URL has `/v1` suffix**: `http://host.docker.internal:8642/v1` (not just `:8642`)
 - **Verify the gateway is running**: `curl http://localhost:8642/health` should return `{"status": "ok"}`
-- **Check model listing**: `curl -H "Authorization: Bearer your-secret-key" http://localhost:8642/v1/models` should return a list with `hermes-agent`
+- **Check model listing**: `curl -H "Authorization: Bearer your-secret-key" http://localhost:8642/v1/models` should return a list with `doppel-agent` (or your custom `API_SERVER_MODEL_NAME` override)
 - **Docker networking**: From inside Docker, `localhost` means the container, not your host. Use `host.docker.internal` or `--network=host`.
 - **Empty Ollama backend shadowing the picker**: If you omitted `ENABLE_OLLAMA_API=false`, Open WebUI shows an empty Ollama section above your Doppel models. Restart the container with `-e ENABLE_OLLAMA_API=false` or disable Ollama in **Admin Settings → Connections**.
 

@@ -44,21 +44,21 @@ bash scripts/setup_open_webui.sh
 - 确保你的 agent-home `.env` 文件（全新安装默认为 `~/.doppel/.env`；旧版 `~/.hermes/.env` 仍兼容）包含 `API_SERVER_ENABLED`、`API_SERVER_HOST`、`API_SERVER_KEY`、`API_SERVER_PORT` 和 `API_SERVER_MODEL_NAME`
 - 重启 Doppel gateway 以启动 API 服务器
 - 将 Open WebUI 安装到 `~/.local/open-webui-venv`
-- 在 `~/.local/bin/start-open-webui-hermes.sh` 写入启动器
-- 在 macOS 上安装 `launchd` 用户服务；在支持 `systemd --user` 的 Linux 上安装用户服务
+- 在 `~/.local/bin/start-open-webui-doppel.sh` 写入启动器，并为旧调用方保留 `start-open-webui-hermes.sh` 兼容 shim
+- 在 macOS 上安装 `ai.openwebui.doppel` `launchd` 用户服务；在支持 `systemd --user` 的 Linux 上安装 `openwebui-doppel.service`
 
 默认值：
 
 - Doppel API：`http://127.0.0.1:8642/v1`
 - Open WebUI：`http://127.0.0.1:8080`
-- 向 Open WebUI 公告的模型名称：`Hermes Agent`
+- 向 Open WebUI 公告的模型名称：`Doppel Agent`
 
 常用覆盖参数：
 
 ```bash
 OPEN_WEBUI_NAME='My Doppel UI' \
 OPEN_WEBUI_ENABLE_SIGNUP=true \
-HERMES_API_MODEL_NAME='My Doppel Agent' \
+OPEN_WEBUI_MODEL_NAME='My Doppel Agent' \
 bash scripts/setup_open_webui.sh
 ```
 
@@ -100,7 +100,7 @@ curl -s http://127.0.0.1:8642/health
 # {"status": "ok", ...}
 
 curl -s -H "Authorization: Bearer your-secret-key" http://127.0.0.1:8642/v1/models
-# {"object":"list","data":[{"id":"hermes-agent", ...}]}
+# {"object":"list","data":[{"id":"doppel-agent", ...}]}
 ```
 
 如果 `/health` 失败，说明 gateway 未加载 `API_SERVER_ENABLED=true`——重启它。如果 `/v1/models` 返回 `401`，说明你的 `Authorization` 头与 `API_SERVER_KEY` 不匹配。
@@ -125,7 +125,7 @@ docker run -d -p 3000:8080 \
 
 ### 5. 打开 UI
 
-访问 **http://localhost:3000** 。创建管理员账户（第一个用户将成为管理员）。你应该能在模型下拉列表中看到你的 agent（以你的 profile 命名，默认 profile 则显示为 **hermes-agent**）。开始聊天吧！
+访问 **http://localhost:3000** 。创建管理员账户（第一个用户将成为管理员）。你应该能在模型下拉列表中看到你的 agent（以你的 profile 命名；若未覆盖 `API_SERVER_MODEL_NAME`，默认 profile 则显示为 **doppel-agent**）。开始聊天吧！
 
 ## Docker Compose 设置
 
@@ -172,7 +172,7 @@ docker compose up -d
 7. 点击**对勾**验证连接
 8. **保存**
 
-你的 agent 模型现在应出现在模型下拉列表中（以你的 profile 命名，默认 profile 则显示为 **hermes-agent**）。
+你的 agent 模型现在应出现在模型下拉列表中（以你的 profile 命名；若未覆盖 `API_SERVER_MODEL_NAME`，默认 profile 则显示为 **doppel-agent**）。
 
 :::warning
 环境变量仅在 Open WebUI **首次启动**时生效。此后，连接设置存储在其内部数据库中。如需后续修改，请使用管理员 UI，或删除 Docker 卷后重新启动。
@@ -196,7 +196,7 @@ Open WebUI 连接后端时支持两种 API 模式：
 启用 Responses API 模式：
 
 1. 进入 **Admin Settings** → **Connections** → **OpenAI** → **Manage**
-2. 编辑指向 Doppel Agent API 服务器的连接（默认情况下通常命名为 `hermes-agent`）
+2. 编辑指向 Doppel Agent API 服务器的连接（默认情况下通常命名为 `doppel-agent`）
 3. 将 **API Type** 从 "Chat Completions" 改为 **"Responses (Experimental)"**
 4. 保存
 
@@ -249,7 +249,7 @@ Open WebUI 目前即使在 Responses 模式下也在客户端管理对话历史�
 
 - **检查 URL 是否有 `/v1` 后缀**：`http://host.docker.internal:8642/v1`（不只是 `:8642`）
 - **验证 gateway 是否运行**：`curl http://localhost:8642/health` 应返回 `{"status": "ok"}`
-- **检查模型列表**：`curl -H "Authorization: Bearer your-secret-key" http://localhost:8642/v1/models` 应返回包含 `hermes-agent` 的列表
+- **检查模型列表**：`curl -H "Authorization: Bearer your-secret-key" http://localhost:8642/v1/models` 应返回包含 `doppel-agent` 的列表（或你自定义的 `API_SERVER_MODEL_NAME` 覆盖值）
 - **Docker 网络**：在 Docker 内部，`localhost` 指容器本身，而非你的主机。请使用 `host.docker.internal` 或 `--network=host`。
 - **空 Ollama 后端遮挡选择器**：如果你省略了 `ENABLE_OLLAMA_API=false`，Open WebUI 会在你的 Doppel 模型上方显示一个空的 Ollama 区域。请使用 `-e ENABLE_OLLAMA_API=false` 重启容器，或在 **Admin Settings → Connections** 中禁用 Ollama。
 

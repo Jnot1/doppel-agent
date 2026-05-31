@@ -1,12 +1,12 @@
 ---
 sidebar_position: 8
 title: "程序化集成"
-description: "从外部程序驱动 hermes-agent 的三种协议：ACP、TUI gateway JSON-RPC 以及兼容 OpenAI 的 HTTP API"
+description: "从外部程序驱动 Doppel Agent 的三种协议：ACP、TUI gateway JSON-RPC 以及兼容 OpenAI 的 HTTP API"
 ---
 
 # 程序化集成
 
-Hermes 提供三种协议，供外部程序驱动 agent——IDE 插件、自定义 UI、CI 流水线、嵌入式子 agent。根据你的传输方式和消费端选择合适的协议。
+Doppel Agent 提供三种协议，供外部程序驱动 agent——IDE 插件、自定义 UI、CI 流水线、嵌入式子 agent。根据你的传输方式和消费端选择合适的协议。
 
 | 协议 | 传输方式 | 适用场景 | 定义位置 |
 |----------|-----------|----------|------------|
@@ -20,15 +20,15 @@ Hermes 提供三种协议，供外部程序驱动 agent——IDE 插件、自定
 
 ## ACP（Agent Client Protocol）
 
-`hermes acp` 启动一个基于 stdio 的 JSON-RPC 服务器，使用 ACP 协议。已在 VS Code（Zed Industries 的 ACP 扩展）、Zed 以及所有安装了 ACP 插件的 JetBrains IDE 中投入生产使用。
+`doppel acp` 启动一个基于 stdio 的 JSON-RPC 服务器，使用 ACP 协议。已在 VS Code（Zed Industries 的 ACP 扩展）、Zed 以及所有安装了 ACP 插件的 JetBrains IDE 中投入生产使用。
 
 暴露的能力：会话创建、prompt（提示词）提交、流式 agent 消息块、工具调用事件、权限请求、会话 fork、取消及身份验证。工具输出会被渲染为 IDE 可理解的 ACP `Diff`/`ToolCall` 内容块。
 
 完整生命周期、事件桥接及审批流程：[ACP 内部机制](./acp-internals)。
 
 ```bash
-hermes acp                  # 在 stdio 上提供 ACP 服务
-hermes acp --bootstrap      # 打印适用于支持 ACP 的 IDE 的安装代码片段
+doppel acp                  # 在 stdio 上提供 ACP 服务
+doppel acp --bootstrap      # 打印适用于支持 ACP 的 IDE 的安装代码片段
 ```
 
 ---
@@ -91,7 +91,7 @@ GET  /v1/runs/{id}/events        生命周期事件的 SSE 流
 POST /v1/runs/{id}/approval      解决待处理的审批
 POST /v1/runs/{id}/stop          中断运行
 GET  /v1/capabilities            机器可读的功能标志
-GET  /v1/models                  列出 hermes-agent
+GET  /v1/models                  列出 doppel-agent
 GET  /health, /health/detailed
 ```
 

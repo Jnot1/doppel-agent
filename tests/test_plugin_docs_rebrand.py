@@ -126,6 +126,13 @@ EN_SKINS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "ski
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 EN_LOCAL_OLLAMA_GUIDE = REPO_ROOT / "website" / "docs" / "guides" / "local-ollama-setup.md"
+EN_MICROSOFT_GRAPH_APP_REG_DOC = (
+    REPO_ROOT
+    / "website"
+    / "docs"
+    / "guides"
+    / "microsoft-graph-app-registration.md"
+)
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
@@ -512,6 +519,16 @@ ZH_LOCAL_OLLAMA_GUIDE = (
     / "guides"
     / "local-ollama-setup.md"
 )
+ZH_MICROSOFT_GRAPH_APP_REG_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "guides"
+    / "microsoft-graph-app-registration.md"
+)
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -667,6 +684,56 @@ def test_local_ollama_guides_prefer_doppel_branding_and_keep_runtime_literals():
     ):
         assert literal in en
         assert literal in zh
+
+
+def test_microsoft_graph_app_registration_guides_prefer_doppel_branding_and_keep_runtime_literals():
+    en = EN_MICROSOFT_GRAPH_APP_REG_DOC.read_text(encoding="utf-8")
+    zh = ZH_MICROSOFT_GRAPH_APP_REG_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Teams Meeting Pipeline" in en
+    assert "Doppel Teams Meeting Pipeline" in zh
+    assert "doppel-graph-secret" in en
+    assert "doppel-graph-secret" in zh
+    assert "# Create a policy scoped to the Doppel app" in en
+    assert "# Create a policy scoped to the Doppel app" in zh
+    assert 'Identity "Doppel-Meeting-Pipeline-Policy"' in en
+    assert 'Identity "Doppel-Meeting-Pipeline-Policy"' in zh
+    assert "Restrict Doppel meeting pipeline to allow-listed users" in en
+    assert "Restrict Doppel meeting pipeline to allow-listed users" in zh
+    assert "Doppel Agent ships a Graph auth smoke-test. From your Doppel Agent install:" in en
+    assert "Doppel Agent 内置了 Graph 身份验证冒烟测试" in zh
+    assert "`~/.doppel/.env` on fresh installs; legacy `~/.hermes/.env` still works" in en
+    assert "默认路径为 `~/.doppel/.env`" in zh
+    assert "chmod 600 ~/.doppel/.env" in en
+    assert "chmod 600 ~/.doppel/.env" in zh
+    assert "doppel gateway restart" in en
+    assert "doppel gateway restart" in zh
+
+    assert "Hermes Teams Meeting Pipeline" not in en
+    assert "Hermes Teams Meeting Pipeline" not in zh
+    assert "hermes-graph-secret" not in en
+    assert "hermes-graph-secret" not in zh
+    assert "# Create a policy scoped to the Hermes app" not in en
+    assert "# Create a policy scoped to the Hermes app" not in zh
+    assert 'Identity "Hermes-Meeting-Pipeline-Policy"' not in en
+    assert 'Identity "Hermes-Meeting-Pipeline-Policy"' not in zh
+    assert "Hermes ships a Graph auth smoke-test. From your Hermes install:" not in en
+    assert "Hermes 内置了 Graph 身份验证冒烟测试" not in zh
+    assert "hermes gateway restart" not in en
+    assert "hermes gateway restart" not in zh
+
+    for fixed in (
+        "MSGRAPH_CLIENT_ID",
+        "MSGRAPH_CLIENT_SECRET",
+        "MSGRAPH_TENANT_ID",
+        "platforms.teams.extra.delivery_mode",
+        "incoming_webhook",
+        "MicrosoftGraphTokenProvider",
+        "MicrosoftGraphTokenError",
+        "~/.hermes/.env",
+    ):
+        assert fixed in en
+        assert fixed in zh
 
 
 def test_built_in_and_integration_plugin_docs_prefer_doppel_surfaces():

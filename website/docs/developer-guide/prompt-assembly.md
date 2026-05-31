@@ -46,8 +46,8 @@ When `skip_context_files` is set (e.g., subagent delegation), SOUL.md is not loa
 Here is a simplified view of what the final system prompt looks like when all layers are present (comments show the source of each section):
 
 ```
-# Layer 1: Agent Identity (from ~/.hermes/SOUL.md)
-You are Hermes, an AI assistant created by Nous Research.
+# Layer 1: Agent Identity (from ~/.doppel/SOUL.md)
+You are Doppel Agent, an AI assistant created by Nous Research.
 You are an expert software engineer and researcher.
 You value correctness, clarity, and efficiency.
 ...
@@ -137,7 +137,7 @@ When `load_soul_md()` returns content, it replaces the hardcoded `DEFAULT_AGENT_
 If `SOUL.md` doesn't exist, the system falls back to:
 
 ```
-You are Hermes Agent, an intelligent AI assistant created by Nous Research.
+You are Doppel Agent, an intelligent AI assistant created by Nous Research.
 You are helpful, knowledgeable, and direct. You assist users with a wide
 range of tasks including answering questions, writing and editing code,
 analyzing information, creative work, and executing actions via your tools.

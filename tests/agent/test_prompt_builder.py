@@ -782,6 +782,8 @@ class TestStripYamlFrontmatter:
 class TestPromptBuilderConstants:
     def test_default_identity_non_empty(self):
         assert len(DEFAULT_AGENT_IDENTITY) > 50
+        assert "You are Doppel Agent" in DEFAULT_AGENT_IDENTITY
+        assert "You are Hermes Agent" not in DEFAULT_AGENT_IDENTITY
 
     def test_platform_hints_known_platforms(self):
         assert "whatsapp" in PLATFORM_HINTS
@@ -1245,6 +1247,5 @@ class TestOpenAIModelExecutionGuidance:
 # =========================================================================
 # Budget warning history stripping
 # =========================================================================
-
 
 

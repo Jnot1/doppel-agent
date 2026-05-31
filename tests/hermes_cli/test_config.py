@@ -40,7 +40,10 @@ class TestGetHermesHome:
 
 class TestEnsureHermesHome:
     def test_creates_subdirs(self, tmp_path):
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(
+            os.environ,
+            {"DOPPEL_HOME": str(tmp_path), "HERMES_HOME": str(tmp_path)},
+        ):
             ensure_hermes_home()
             assert (tmp_path / "cron").is_dir()
             assert (tmp_path / "sessions").is_dir()
@@ -48,14 +51,23 @@ class TestEnsureHermesHome:
             assert (tmp_path / "memories").is_dir()
 
     def test_creates_default_soul_md_if_missing(self, tmp_path):
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(
+            os.environ,
+            {"DOPPEL_HOME": str(tmp_path), "HERMES_HOME": str(tmp_path)},
+        ):
             ensure_hermes_home()
             soul_path = tmp_path / "SOUL.md"
             assert soul_path.exists()
-            assert soul_path.read_text(encoding="utf-8").strip() != ""
+            content = soul_path.read_text(encoding="utf-8")
+            assert content.strip() != ""
+            assert "You are Doppel Agent" in content
+            assert "You are Hermes Agent" not in content
 
     def test_does_not_overwrite_existing_soul_md(self, tmp_path):
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(
+            os.environ,
+            {"DOPPEL_HOME": str(tmp_path), "HERMES_HOME": str(tmp_path)},
+        ):
             soul_path = tmp_path / "SOUL.md"
             soul_path.write_text("custom soul", encoding="utf-8")
             ensure_hermes_home()

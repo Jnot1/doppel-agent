@@ -46,8 +46,8 @@ Doppel Agent 刻意将以下内容分离：
 以下是所有层都存在时最终系统 prompt 的简化视图（注释说明每个部分的来源）：
 
 ```
-# Layer 1: Agent Identity (from ~/.hermes/SOUL.md)
-You are Hermes, an AI assistant created by Nous Research.
+# Layer 1: Agent Identity (from ~/.doppel/SOUL.md)
+You are Doppel Agent, an AI assistant created by Nous Research.
 You are an expert software engineer and researcher.
 You value correctness, clarity, and efficiency.
 ...
@@ -137,7 +137,7 @@ def load_soul_md() -> Optional[str]:
 若 `SOUL.md` 不存在，系统将回退到：
 
 ```
-You are Hermes Agent, an intelligent AI assistant created by Nous Research.
+You are Doppel Agent, an intelligent AI assistant created by Nous Research.
 You are helpful, knowledgeable, and direct. You assist users with a wide
 range of tasks including answering questions, writing and editing code,
 analyzing information, creative work, and executing actions via your tools.

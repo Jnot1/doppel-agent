@@ -2131,10 +2131,10 @@ def test_prompt_assembly_docs_prefer_doppel_surfaces_but_keep_runtime_literals()
     assert "~/.doppel/MEMORY.md" in zh_prompt
     assert "Doppel Agent 为所有人组装 prompt 的方式" in zh_prompt
 
-    assert "You are Hermes, an AI assistant created by Nous Research." in en_prompt
-    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research." in en_prompt
-    assert "You are Hermes, an AI assistant created by Nous Research." in zh_prompt
-    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research." in zh_prompt
+    assert "You are Doppel Agent, an AI assistant created by Nous Research." in en_prompt
+    assert "You are Doppel Agent, an intelligent AI assistant created by Nous Research." in en_prompt
+    assert "You are Doppel Agent, an AI assistant created by Nous Research." in zh_prompt
+    assert "You are Doppel Agent, an intelligent AI assistant created by Nous Research." in zh_prompt
     assert "HERMES.md" in en_prompt and "HERMES_HOME" in en_prompt
     assert "HERMES_EPHEMERAL_SYSTEM_PROMPT" in en_prompt
     assert "HERMES.md" in zh_prompt and "HERMES_HOME" in zh_prompt
@@ -2142,6 +2142,10 @@ def test_prompt_assembly_docs_prefer_doppel_surfaces_but_keep_runtime_literals()
     assert "DEFAULT_AGENT_IDENTITY" in en_prompt
     assert "DEFAULT_AGENT_IDENTITY" in zh_prompt
     assert "~/.hermes/" in en_prompt and "~/.hermes/" in zh_prompt
+    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research." not in en_prompt
+    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research." not in zh_prompt
+    assert "You are Hermes, an AI assistant created by Nous Research." not in en_prompt
+    assert "You are Hermes, an AI assistant created by Nous Research." not in zh_prompt
     assert "build_context_files_prompt(skip_soul=True)" in en_prompt
     assert "build_context_files_prompt(skip_soul=True)" in zh_prompt
 
@@ -2247,10 +2251,12 @@ def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
     assert "/guides/use-soul-with-hermes" not in en
     assert "/guides/use-soul-with-hermes" not in zh
     assert "/personality" in en and "/personality" in zh
-    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." in en
-    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." in zh
+    assert "You are Doppel Agent, an intelligent AI assistant created by Nous Research..." in en
+    assert "You are Doppel Agent, an intelligent AI assistant created by Nous Research..." in zh
     assert "~/.hermes/config.yaml" in en
     assert "~/.hermes/config.yaml" in zh
+    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." not in en
+    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." not in zh
 
     assert "Customize Hermes Agent's personality" not in en
     assert "自定义 Hermes Agent 的个性" not in zh

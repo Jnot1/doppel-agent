@@ -80,6 +80,9 @@ EN_GOALS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "goa
 EN_PROVIDER_ROUTING_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "provider-routing.md"
 )
+EN_CONTEXT_REFERENCES_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "context-references.md"
+)
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -138,6 +141,17 @@ ZH_PROVIDER_ROUTING_DOC = (
     / "user-guide"
     / "features"
     / "provider-routing.md"
+)
+ZH_CONTEXT_REFERENCES_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "context-references.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -934,3 +948,23 @@ def test_provider_routing_docs_prefer_doppel_surfaces_and_keep_legacy_config_not
 
     assert "Hermes Agent supports **provider routing**" not in en
     assert "Hermes Agent 支持 **provider routing**" not in zh
+
+
+def test_context_references_docs_prefer_doppel_prose_and_keep_blocked_literals():
+    en = EN_CONTEXT_REFERENCES_DOC.read_text(encoding="utf-8")
+    zh = ZH_CONTEXT_REFERENCES_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent expands the reference inline" in en
+    assert "Doppel Agent 会将引用内联展开" in zh
+    assert "Doppel env: `$HERMES_HOME/.env`" in en
+    assert "Doppel 环境文件：`$HERMES_HOME/.env`" in zh
+    assert "$HERMES_HOME/.env" in en and "$HERMES_HOME/.env" in zh
+    assert "$HERMES_HOME/skills/.hub/" in en and "$HERMES_HOME/skills/.hub/" in zh
+    assert "`@file:`" in en and "`@file:`" in zh
+    assert "`@folder:`" in en and "`@folder:`" in zh
+    assert "`@url:`" in en and "`@url:`" in zh
+
+    assert "Hermes expands the reference inline" not in en
+    assert "Hermes 会将引用内联展开" not in zh
+    assert "Hermes env: `$HERMES_HOME/.env`" not in en
+    assert "Hermes 环境文件：`$HERMES_HOME/.env`" not in zh

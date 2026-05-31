@@ -59,6 +59,10 @@ ZH_DEV_GUIDE_DIR = (
     / "current"
     / "developer-guide"
 )
+EN_ADDING_PROVIDERS_DOC = EN_DEV_GUIDE_DIR / "adding-providers.md"
+EN_PROVIDER_RUNTIME_DOC = EN_DEV_GUIDE_DIR / "provider-runtime.md"
+ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
+ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -224,3 +228,46 @@ def test_provider_plugin_developer_guides_prefer_doppel_surfaces():
     assert "doppel tools" in zh_web
     assert "如何为 Hermes Agent 构建网页搜索/提取/爬取后端插件" not in zh_web
     assert "hermes plugins enable <name>" not in zh_web
+
+
+def test_provider_onboarding_docs_prefer_doppel_surfaces():
+    en_adding = EN_ADDING_PROVIDERS_DOC.read_text(encoding="utf-8")
+    en_runtime = EN_PROVIDER_RUNTIME_DOC.read_text(encoding="utf-8")
+    zh_adding = ZH_ADDING_PROVIDERS_DOC.read_text(encoding="utf-8")
+    zh_runtime = ZH_PROVIDER_RUNTIME_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel" in en_adding
+    assert "Doppel" in en_runtime
+    assert "Doppel" in zh_adding
+    assert "Doppel" in zh_runtime
+
+    assert "`doppel model`" in en_adding
+    assert "`doppel setup`" in en_adding
+    assert "`hermes model`" not in en_adding
+    assert "`hermes setup`" not in en_adding
+    assert "Hermes Agent" not in en_adding
+    assert "hermes_cli/main.py" in en_adding
+    assert "hermes_cli/setup.py" in en_adding
+    assert (
+        'python -m hermes_cli.main chat -q "Say hello" --provider your-provider --model your-model'
+        in en_adding
+    )
+    assert "tests/hermes_cli/test_runtime_provider_resolution.py" in en_adding
+
+    assert "`doppel model`" in zh_adding
+    assert "`doppel setup`" in zh_adding
+    assert "`hermes model`" not in zh_adding
+    assert "`hermes setup`" not in zh_adding
+    assert "Hermes Agent" not in zh_adding
+    assert "hermes_cli/main.py" in zh_adding
+    assert "hermes_cli/setup.py" in zh_adding
+
+    assert "`doppel chat`" in en_runtime
+    assert "`hermes chat`" not in en_runtime
+    assert "Hermes Agent" not in en_runtime
+    assert "OPENROUTER_API_KEY" in en_runtime
+
+    assert "`doppel chat`" in zh_runtime
+    assert "`hermes chat`" not in zh_runtime
+    assert "Hermes Agent" not in zh_runtime
+    assert "OPENROUTER_API_KEY" in zh_runtime

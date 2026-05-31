@@ -17,14 +17,14 @@ Operate the Teams meeting summary pipeline via Hermes CLI — summarize meetings
 | Source | Bundled (installed by default) |
 | Path | `skills/productivity/teams-meeting-pipeline` |
 | Version | `1.1.0` |
-| Author | Hermes Agent + Teknium |
+| Author | Doppel Agent + Teknium |
 | License | MIT |
 | Tags | `Teams`, `Microsoft Graph`, `Meetings`, `Productivity`, `Operations` |
 
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # Teams Meeting Pipeline

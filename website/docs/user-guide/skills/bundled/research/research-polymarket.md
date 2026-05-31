@@ -17,13 +17,13 @@ Query Polymarket: markets, prices, orderbooks, history.
 | Source | Bundled (installed by default) |
 | Path | `skills/research/polymarket` |
 | Version | `1.0.0` |
-| Author | Hermes Agent + Teknium |
+| Author | Doppel Agent + Teknium |
 | Platforms | linux, macos, windows |
 
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # Polymarket — Prediction Market Data

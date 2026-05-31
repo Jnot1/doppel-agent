@@ -115,3 +115,35 @@ def test_bundled_catalog_explains_missing_local_skills(gen_module):
     assert "respects local deletions and user edits" in result
     assert "doppel skills reset <name> --restore" in result
     assert "hermes skills reset <name> --restore" not in result
+
+
+def test_page_id_uses_doppel_alias_for_legacy_hermes_slugs(gen_module):
+    meta = {
+        "category": "software-development",
+        "sub": None,
+        "slug": "hermes-agent-skill-authoring",
+        "rel_path": "software-development/hermes-agent-skill-authoring",
+    }
+    assert gen_module.page_id(meta) == "software-development-doppel-agent-skill-authoring"
+
+
+def test_render_skill_page_normalizes_hermes_agent_author(gen_module):
+    meta = {
+        "source_kind": "bundled",
+        "category": "software-development",
+        "sub": None,
+        "slug": "debugging-hermes-tui-commands",
+        "rel_path": "software-development/debugging-hermes-tui-commands",
+    }
+    frontmatter = {
+        "name": "debugging-hermes-tui-commands",
+        "description": "Debug Doppel TUI slash commands.",
+        "author": "Hermes Agent",
+        "metadata": {"hermes": {"docs_display_name": "Debugging Doppel TUI Commands"}},
+    }
+    page = gen_module.render_skill_page(meta, frontmatter, "# Body")
+    assert "| Author | Doppel Agent |" in page
+    assert (
+        gen_module.page_output_path(meta).name
+        == "software-development-debugging-doppel-tui-commands.md"
+    )

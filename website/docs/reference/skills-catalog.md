@@ -30,8 +30,8 @@ If a skill is missing from this list but present in the repo, the catalog is reg
 |-------|-------------|------|
 | [`claude-code`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code) | Delegate coding to Claude Code CLI (features, PRs). | `autonomous-ai-agents/claude-code` |
 | [`codex`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex) | Delegate coding to OpenAI Codex CLI (features, PRs). | `autonomous-ai-agents/codex` |
-| [`Doppel Agent`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent) | Configure, extend, or contribute to Doppel Agent. | `autonomous-ai-agents/hermes-agent` |
-| [`kanban-codex-lane`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-kanban-codex-lane) | Use when a Doppel Kanban worker wants to run Codex CLI as an isolated implementation lane while Doppel keeps ownership of task lifecycle, reconciliation, testing, and handoff. | `autonomous-ai-agents/kanban-codex-lane` |
+| [`Doppel Agent`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-doppel-agent) | Configure, extend, or contribute to Doppel Agent. | `autonomous-ai-agents/hermes-agent` |
+| [`kanban-codex-lane`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-kanban-codex-lane) | Use when a Hermes Kanban worker wants to run Codex CLI as an isolated implementation lane while Hermes keeps ownership of task lifecycle, reconciliation, testing, and handoff. | `autonomous-ai-agents/kanban-codex-lane` |
 | [`opencode`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-opencode) | Delegate coding to OpenCode CLI (features, PR review). | `autonomous-ai-agents/opencode` |
 
 ## creative
@@ -70,7 +70,7 @@ If a skill is missing from this list but present in the repo, the catalog is reg
 | Skill | Description | Path |
 |-------|-------------|------|
 | [`kanban-orchestrator`](/docs/user-guide/skills/bundled/devops/devops-kanban-orchestrator) | Decomposition playbook + anti-temptation rules for an orchestrator profile routing work through Kanban. The "don't do the work yourself" rule and the basic lifecycle are auto-injected into every kanban worker's system prompt; this skill... | `devops/kanban-orchestrator` |
-| [`kanban-worker`](/docs/user-guide/skills/bundled/devops/devops-kanban-worker) | Pitfalls, examples, and edge cases for Doppel Kanban workers. The lifecycle itself is auto-injected into every worker's system prompt as KANBAN_GUIDANCE (from agent/prompt_builder.py); this skill is what you load when you want deeper det... | `devops/kanban-worker` |
+| [`kanban-worker`](/docs/user-guide/skills/bundled/devops/devops-kanban-worker) | Pitfalls, examples, and edge cases for Hermes Kanban workers. The lifecycle itself is auto-injected into every worker's system prompt as KANBAN_GUIDANCE (from agent/prompt_builder.py); this skill is what you load when you want deeper det... | `devops/kanban-worker` |
 | [`webhook-subscriptions`](/docs/user-guide/skills/bundled/devops/devops-webhook-subscriptions) | Webhook subscriptions: event-driven agent runs. | `devops/webhook-subscriptions` |
 
 ## dogfood
@@ -151,7 +151,7 @@ If a skill is missing from this list but present in the repo, the catalog is reg
 | [`notion`](/docs/user-guide/skills/bundled/productivity/productivity-notion) | Notion API + ntn CLI: pages, databases, markdown, Workers. | `productivity/notion` |
 | [`ocr-and-documents`](/docs/user-guide/skills/bundled/productivity/productivity-ocr-and-documents) | Extract text from PDFs/scans (pymupdf, marker-pdf). | `productivity/ocr-and-documents` |
 | [`powerpoint`](/docs/user-guide/skills/bundled/productivity/productivity-powerpoint) | Create, read, edit .pptx decks, slides, notes, templates. | `productivity/powerpoint` |
-| [`teams-meeting-pipeline`](/docs/user-guide/skills/bundled/productivity/productivity-teams-meeting-pipeline) | Operate the Teams meeting summary pipeline via Doppel CLI — summarize meetings, inspect pipeline status, replay jobs, manage Microsoft Graph subscriptions. | `productivity/teams-meeting-pipeline` |
+| [`teams-meeting-pipeline`](/docs/user-guide/skills/bundled/productivity/productivity-teams-meeting-pipeline) | Operate the Teams meeting summary pipeline via Hermes CLI — summarize meetings, inspect pipeline status, replay jobs, manage Microsoft Graph subscriptions. | `productivity/teams-meeting-pipeline` |
 
 ## red-teaming
 
@@ -185,11 +185,11 @@ If a skill is missing from this list but present in the repo, the catalog is reg
 
 | Skill | Description | Path |
 |-------|-------------|------|
-| [`debugging-hermes-tui-commands`](/docs/user-guide/skills/bundled/software-development/software-development-debugging-hermes-tui-commands) | Debug Doppel TUI slash commands: Python, gateway, Ink UI. | `software-development/debugging-hermes-tui-commands` |
-| [`Doppel Agent Skill Authoring`](/docs/user-guide/skills/bundled/software-development/software-development-hermes-agent-skill-authoring) | Use when authoring in-repo SKILL.md for Doppel Agent: frontmatter, validator, structure. | `software-development/hermes-agent-skill-authoring` |
-| [`hermes-s6-container-supervision`](/docs/user-guide/skills/bundled/software-development/software-development-hermes-s6-container-supervision) | Modify, debug, or extend the s6-overlay supervision tree inside the Doppel Agent Docker image — adding new services, debugging profile gateways, understanding the Architecture B main-program pattern. | `software-development/hermes-s6-container-supervision` |
+| [`Debugging Doppel TUI Commands`](/docs/user-guide/skills/bundled/software-development/software-development-debugging-doppel-tui-commands) | Debug Doppel TUI slash commands: Python, gateway, Ink UI. | `software-development/debugging-hermes-tui-commands` |
+| [`Doppel Agent Skill Authoring`](/docs/user-guide/skills/bundled/software-development/software-development-doppel-agent-skill-authoring) | Use when authoring in-repo SKILL.md for Doppel Agent: frontmatter, validator, structure. | `software-development/hermes-agent-skill-authoring` |
+| [`Doppel S6 Container Supervision`](/docs/user-guide/skills/bundled/software-development/software-development-doppel-s6-container-supervision) | Modify, debug, or extend the s6-overlay supervision tree inside the Doppel Agent Docker image — adding new services, debugging profile gateways, understanding the Architecture B main-program pattern. | `software-development/hermes-s6-container-supervision` |
 | [`node-inspect-debugger`](/docs/user-guide/skills/bundled/software-development/software-development-node-inspect-debugger) | Debug Node.js via --inspect + Chrome DevTools Protocol CLI. | `software-development/node-inspect-debugger` |
-| [`plan`](/docs/user-guide/skills/bundled/software-development/software-development-plan) | Plan mode: write a markdown plan for later execution, no exec. | `software-development/plan` |
+| [`plan`](/docs/user-guide/skills/bundled/software-development/software-development-plan) | Plan mode: write markdown plan to .hermes/plans/, no exec. | `software-development/plan` |
 | [`python-debugpy`](/docs/user-guide/skills/bundled/software-development/software-development-python-debugpy) | Debug Python: pdb REPL + debugpy remote (DAP). | `software-development/python-debugpy` |
 | [`requesting-code-review`](/docs/user-guide/skills/bundled/software-development/software-development-requesting-code-review) | Pre-commit review: security scan, quality gates, auto-fix. | `software-development/requesting-code-review` |
 | [`spike`](/docs/user-guide/skills/bundled/software-development/software-development-spike) | Throwaway experiments to validate an idea before build. | `software-development/spike` |

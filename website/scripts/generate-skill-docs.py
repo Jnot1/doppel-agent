@@ -33,6 +33,15 @@ SKILL_SOURCES = [
 # We leave these alone (they get first-class sidebar treatment separately).
 HAND_WRITTEN = {"godmode.md", "google-workspace.md"}
 
+# Keep a few historical skill ids/paths intact in the repo while exposing
+# Doppel-first docs routes to users.
+LEGACY_DOC_SLUG_ALIASES = {
+    "autonomous-ai-agents/hermes-agent": "doppel-agent",
+    "software-development/debugging-hermes-tui-commands": "debugging-doppel-tui-commands",
+    "software-development/hermes-agent-skill-authoring": "doppel-agent-skill-authoring",
+    "software-development/hermes-s6-container-supervision": "doppel-s6-container-supervision",
+}
+
 
 _FENCE_RE = re.compile(r"^(?P<indent>\s*)(?P<fence>```+|~~~+)", re.MULTILINE)
 
@@ -299,6 +308,10 @@ def skill_catalog_label(fm: dict[str, Any], meta: dict[str, Any]) -> str:
     return skill_name(fm, meta)
 
 
+def display_author(author: Any) -> str:
+    return str(author).replace("Hermes Agent", "Doppel Agent")
+
+
 def derive_skill_meta(skill_path: Path, source_dir: Path, source_kind: str) -> dict[str, Any]:
     """Extract category + skill slug from filesystem layout.
 
@@ -331,9 +344,11 @@ def derive_skill_meta(skill_path: Path, source_dir: Path, source_kind: str) -> d
 
 def page_id(meta: dict[str, Any]) -> str:
     """Stable slug used for filename + sidebar id."""
+    rel_path = meta["rel_path"].replace("\\", "/")
+    slug = LEGACY_DOC_SLUG_ALIASES.get(rel_path, meta["slug"])
     if meta["sub"]:
-        return f"{meta['category']}-{meta['sub']}-{meta['slug']}"
-    return f"{meta['category']}-{meta['slug']}"
+        return f"{meta['category']}-{meta['sub']}-{slug}"
+    return f"{meta['category']}-{slug}"
 
 
 def page_output_path(meta: dict[str, Any]) -> Path:
@@ -393,7 +408,7 @@ def render_skill_page(
     if version:
         info_rows.append(("Version", f"`{version}`"))
     if author:
-        info_rows.append(("Author", str(author)))
+        info_rows.append(("Author", display_author(author)))
     if license_:
         info_rows.append(("License", str(license_)))
     if deps:

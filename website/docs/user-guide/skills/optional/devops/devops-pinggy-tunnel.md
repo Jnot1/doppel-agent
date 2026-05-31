@@ -14,10 +14,10 @@ Zero-install localhost tunnels over SSH via Pinggy.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/devops/pinggy-tunnel` |
+| Source | Optional — install with `doppel skills install official/devops/pinggy-tunnel` |
 | Path | `optional-skills/devops/pinggy-tunnel` |
 | Version | `0.1.0` |
-| Author | Teknium (teknium1), Hermes Agent |
+| Author | Teknium (teknium1), Doppel Agent |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `Pinggy`, `Tunnel`, `Networking`, `SSH`, `Webhook`, `Localhost` |
@@ -26,7 +26,7 @@ Zero-install localhost tunnels over SSH via Pinggy.
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # Pinggy Tunnel Skill

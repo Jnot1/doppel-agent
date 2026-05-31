@@ -2875,6 +2875,78 @@ def test_zh_reference_skill_docs_mirror_doppel_skill_commands():
     assert "hermes skills reset google-workspace" not in zh_cli_commands
 
 
+def test_skills_hub_front_door_and_catalog_routes_prefer_doppel_wording():
+    skills_hub_page = (
+        REPO_ROOT / "website" / "src" / "pages" / "skills" / "index.tsx"
+    ).read_text(encoding="utf-8")
+    user_stories = (
+        REPO_ROOT / "website" / "src" / "components" / "UserStoriesCollage" / "index.tsx"
+    ).read_text(encoding="utf-8")
+    en_catalog = (
+        REPO_ROOT / "website" / "docs" / "reference" / "skills-catalog.md"
+    ).read_text(encoding="utf-8")
+    zh_catalog = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "skills-catalog.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Browse all skills and plugins available for Doppel Agent" in skills_hub_page
+    assert ">Doppel Agent<" in skills_hub_page
+    assert "doppel skills install ${skill.name}" in skills_hub_page
+    assert "Browse all skills and plugins available for Hermes Agent" not in skills_hub_page
+    assert ">Hermes Agent<" not in skills_hub_page
+    assert "hermes skills install ${skill.name}" not in skills_hub_page
+
+    assert "What the Doppel Agent community is actually building." in user_stories
+    assert "describes how they use Doppel" in user_stories
+    assert "What the Hermes Agent community is actually building." not in user_stories
+    assert "describes how they use Hermes" not in user_stories
+
+    for new_route, old_route in (
+        (
+            "/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-doppel-agent",
+            "/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent",
+        ),
+        (
+            "/docs/user-guide/skills/bundled/software-development/software-development-debugging-doppel-tui-commands",
+            "/docs/user-guide/skills/bundled/software-development/software-development-debugging-hermes-tui-commands",
+        ),
+        (
+            "/docs/user-guide/skills/bundled/software-development/software-development-doppel-agent-skill-authoring",
+            "/docs/user-guide/skills/bundled/software-development/software-development-hermes-agent-skill-authoring",
+        ),
+        (
+            "/docs/user-guide/skills/bundled/software-development/software-development-doppel-s6-container-supervision",
+            "/docs/user-guide/skills/bundled/software-development/software-development-hermes-s6-container-supervision",
+        ),
+    ):
+        assert new_route in en_catalog
+        assert old_route not in en_catalog
+
+    for new_route, old_route in (
+        (
+            "/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-doppel-agent",
+            "/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent",
+        ),
+        (
+            "/user-guide/skills/bundled/software-development/software-development-debugging-doppel-tui-commands",
+            "/user-guide/skills/bundled/software-development/software-development-debugging-hermes-tui-commands",
+        ),
+        (
+            "/user-guide/skills/bundled/software-development/software-development-doppel-agent-skill-authoring",
+            "/user-guide/skills/bundled/software-development/software-development-hermes-agent-skill-authoring",
+        ),
+    ):
+        assert new_route in zh_catalog
+        assert old_route not in zh_catalog
+
+
 def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_sections():
     zh_cli_commands = (
         REPO_ROOT

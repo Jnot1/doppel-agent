@@ -4909,3 +4909,62 @@ def test_cron_script_only_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_cron_troubleshooting_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "cron-troubleshooting.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "cron-troubleshooting.md"
+    ).read_text(encoding="utf-8")
+
+    assert "common Doppel cron issues" in en
+    assert "常见的 Doppel cron 问题" in zh
+    assert "doppel cron list" in en
+    assert "doppel cron list" in zh
+    assert "doppel gateway start" in en
+    assert "doppel gateway start" in zh
+    assert "doppel cron tick" in en
+    assert "doppel cron tick" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/cron/output/" in en
+    assert "~/.doppel/cron/output/" in zh
+    assert "doppel skills list" in en
+    assert "doppel skills list" in zh
+    assert "~/.doppel/logs/agent.log" in en
+    assert "~/.doppel/logs/agent.log" in zh
+    assert "~/.doppel/scripts/your-script.py" in en
+    assert "~/.doppel/scripts/your-script.py" in zh
+    assert "ps aux | grep doppel" in en
+    assert "ps aux | grep doppel" in zh
+    assert "~/.doppel/cron/jobs.json" in en
+    assert "~/.doppel/cron/jobs.json" in zh
+    assert "github.com/Jnot1/doppel-agent" in en
+    assert "github.com/Jnot1/doppel-agent" in zh
+
+    for stale in (
+        "common Hermes cron issues",
+        "常见的 Hermes cron 问题",
+        "hermes cron list",
+        "hermes gateway start",
+        "hermes cron tick",
+        "~/.hermes/.env",
+        "~/.hermes/cron/output/",
+        "hermes skills list",
+        "~/.hermes/logs/agent.log",
+        "~/.hermes/scripts/your-script.py",
+        "ps aux | grep hermes",
+        "~/.hermes/cron/jobs.json",
+        "github.com/NousResearch/hermes-agent",
+    ):
+        assert stale not in en
+        assert stale not in zh

@@ -737,12 +737,12 @@ Doppel Agent has separate timeout layers for streaming, plus a stale detector fo
 
 | Timeout | Default | Local providers | Config / env |
 |---------|---------|----------------|--------------|
-| Socket read timeout | 120s | Auto-raised to 1800s | `HERMES_STREAM_READ_TIMEOUT` |
+| Socket read timeout | 120s | Auto-raised to 1800s | `DOPPEL_STREAM_READ_TIMEOUT` |
 | Stale stream detection | 180s | Auto-disabled | `HERMES_STREAM_STALE_TIMEOUT` |
 | Stale non-stream detection | 300s | Auto-disabled when left implicit | `providers.<id>.stale_timeout_seconds` or `HERMES_API_CALL_STALE_TIMEOUT` |
 | API call (non-streaming) | 1800s | Unchanged | `providers.<id>.request_timeout_seconds` / `timeout_seconds` or `HERMES_API_TIMEOUT` |
 
-The **socket read timeout** controls how long httpx waits for the next chunk of data from the provider. Local LLMs can take minutes for prefill on large contexts before producing the first token, so Doppel Agent raises this to 30 minutes when it detects a local endpoint. If you explicitly set `HERMES_STREAM_READ_TIMEOUT`, that value is always used regardless of endpoint detection.
+The **socket read timeout** controls how long httpx waits for the next chunk of data from the provider. Local LLMs can take minutes for prefill on large contexts before producing the first token, so Doppel Agent raises this to 30 minutes when it detects a local endpoint. If you explicitly set `DOPPEL_STREAM_READ_TIMEOUT`, that value is always used regardless of endpoint detection.
 
 The **stale stream detection** kills connections that receive SSE keep-alive pings but no actual content. This is disabled entirely for local providers since they don't send keep-alive pings during prefill.
 

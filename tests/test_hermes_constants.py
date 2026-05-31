@@ -194,6 +194,13 @@ class TestCustomerFacingEnvAliases:
 
         assert env["HERMES_MODEL"] == "anthropic/claude-sonnet-4.6"
 
+    def test_preferred_stream_timeout_alias_mirrors_to_legacy_name(self):
+        env = {"DOPPEL_STREAM_READ_TIMEOUT": "1800"}
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_STREAM_READ_TIMEOUT"] == "1800"
+
     def test_legacy_alias_backfills_preferred_name(self):
         env = {"HERMES_IGNORE_RULES": "1"}
 

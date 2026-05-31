@@ -702,12 +702,12 @@ Doppel Agent 对流式传输有单独的超时层，以及用于非流式调用�
 
 | 超时 | 默认值 | 本地 providers | 配置/环境变量 |
 |---------|---------|----------------|--------------|
-| Socket 读取超时 | 120s | 自动提升至 1800s | `HERMES_STREAM_READ_TIMEOUT` |
+| Socket 读取超时 | 120s | 自动提升至 1800s | `DOPPEL_STREAM_READ_TIMEOUT` |
 | 陈旧流检测 | 180s | 自动禁用 | `HERMES_STREAM_STALE_TIMEOUT` |
 | 陈旧非流检测 | 300s | 保持隐式时自动禁用 | `providers.<id>.stale_timeout_seconds` 或 `HERMES_API_CALL_STALE_TIMEOUT` |
 | API 调用（非流式） | 1800s | 不变 | `providers.<id>.request_timeout_seconds` / `timeout_seconds` 或 `HERMES_API_TIMEOUT` |
 
-**Socket 读取超时**控制 httpx 等待 provider 下一个数据块的时间。本地 LLM 在大上下文上预填充可能需要几分钟才能产生第一个 token，因此当 Doppel Agent 检测到本地端点时，会将此值提升至 30 分钟。如果您显式设置 `HERMES_STREAM_READ_TIMEOUT`，无论端点检测如何，始终使用该值。
+**Socket 读取超时**控制 httpx 等待 provider 下一个数据块的时间。本地 LLM 在大上下文上预填充可能需要几分钟才能产生第一个 token，因此当 Doppel Agent 检测到本地端点时，会将此值提升至 30 分钟。如果您显式设置 `DOPPEL_STREAM_READ_TIMEOUT`，无论端点检测如何，始终使用该值。
 
 **陈旧流检测**终止接收 SSE 保活 ping 但没有实际内容的连接。对于本地 providers，这完全禁用，因为它们在预填充期间不发送保活 ping。
 

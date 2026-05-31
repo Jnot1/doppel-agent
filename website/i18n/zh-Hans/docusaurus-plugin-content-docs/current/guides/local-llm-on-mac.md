@@ -222,18 +222,18 @@ hermes model
 
 ## 超时设置
 
-Hermes 会自动检测本地端点（localhost、局域网 IP）并放宽其流式传输超时限制。大多数情况下无需额外配置。
+Doppel Agent 会自动检测本地端点（localhost、局域网 IP）并放宽其流式传输超时限制。大多数情况下无需额外配置。
 
 如果仍然遇到超时错误（例如在慢速硬件上使用超大上下文），可以覆盖流式读取超时：
 
 ```bash
 # 在 .env 中——将默认的 120s 提高到 30 分钟
-HERMES_STREAM_READ_TIMEOUT=1800
+DOPPEL_STREAM_READ_TIMEOUT=1800
 ```
 
 | 超时类型 | 默认值 | 本地自动调整 | 环境变量覆盖 |
 |---------|---------|----------------------|------------------|
-| 流式读取（socket 级别） | 120s | 提升至 1800s | `HERMES_STREAM_READ_TIMEOUT` |
+| 流式读取（socket 级别） | 120s | 提升至 1800s | `DOPPEL_STREAM_READ_TIMEOUT` |
 | 停滞流检测 | 180s | 完全禁用 | `HERMES_STREAM_STALE_TIMEOUT` |
 | API 调用（非流式） | 1800s | 无需调整 | `HERMES_API_TIMEOUT` |
 

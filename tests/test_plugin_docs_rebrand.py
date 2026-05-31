@@ -1192,7 +1192,7 @@ def test_configuration_context_engine_and_auxiliary_cluster_prefer_doppel_and_ke
     assert "完整辅助配置参考" not in zh_cluster
 
     for literal in (
-        "HERMES_STREAM_READ_TIMEOUT",
+        "DOPPEL_STREAM_READ_TIMEOUT",
         "HERMES_STREAM_STALE_TIMEOUT",
         "HERMES_API_CALL_STALE_TIMEOUT",
         "HERMES_API_TIMEOUT",
@@ -4068,6 +4068,49 @@ def test_reference_faq_profiles_section_prefers_doppel_home_wording():
     assert "~/.hermes/active_profile" not in zh_profiles
 
 
+def test_reference_faq_prefers_doppel_timeout_and_home_paths():
+    en = EN_REFERENCE_FAQ_DOC.read_text(encoding="utf-8")
+    zh = ZH_REFERENCE_FAQ_DOC.read_text(encoding="utf-8")
+
+    en_cluster = en.split("### What LLM providers work with Doppel?", 1)[1].split(
+        "### How much does it cost?", 1
+    )[0]
+    zh_cluster = zh.split("### Doppel 支持哪些 LLM 提供商？", 1)[1].split(
+        "### 费用是多少？", 1
+    )[0]
+    en_troubleshooting = en.split("### Installation Issues", 1)[1].split(
+        "### Provider & Model Issues", 1
+    )[0]
+    zh_troubleshooting = zh.split("### 安装问题", 1)[1].split(
+        "### 提供商与模型问题", 1
+    )[0]
+    en_export = en.split("### Exporting Doppel to another machine", 1)[1].split(
+        "### Moving a single profile to another machine", 1
+    )[0]
+    zh_export = zh.split("### 将 Doppel 迁移到另一台机器", 1)[1].split(
+        "### 将单个 profile 迁移到另一台机器", 1
+    )[0]
+
+    assert "older installs may still keep the legacy home layout" in en_cluster
+    assert "旧安装仍可能保留旧版主目录布局" in zh_cluster
+    assert "DOPPEL_STREAM_READ_TIMEOUT=1800" in en_cluster
+    assert "DOPPEL_STREAM_READ_TIMEOUT=1800" in zh_cluster
+    assert "~/.hermes" not in en_cluster
+    assert "~/.hermes" not in zh_cluster
+    assert "HERMES_STREAM_READ_TIMEOUT" not in en_cluster
+    assert "HERMES_STREAM_READ_TIMEOUT" not in zh_cluster
+
+    assert "usually `~/.doppel/config.yaml`" in en_troubleshooting
+    assert "`~/.doppel/config.yaml` 中列出需要额外 source 的文件" in zh_troubleshooting
+    assert "~/.hermes/config.yaml" not in en_troubleshooting
+    assert "~/.hermes/config.yaml" not in zh_troubleshooting
+
+    assert "older installs keeping their legacy home layout in place" in en_export
+    assert "旧安装则可能继续保留旧版主目录布局" in zh_export
+    assert "~/.hermes/" not in en_export
+    assert "~/.hermes/" not in zh_export
+
+
 def test_reference_cli_commands_active_home_examples_stay_doppel_first():
     en = (REPO_ROOT / "website" / "docs" / "reference" / "cli-commands.md").read_text(
         encoding="utf-8"
@@ -4162,3 +4205,13 @@ def test_reference_slash_commands_prefer_doppel_customer_wording():
     assert "hermes config set model.aliases.fav anthropic/claude-opus-4.6" not in zh
     assert "将 Hermes Agent 更新到最新版本" not in zh
     assert "command: systemctl status hermes-agent" not in zh
+
+
+def test_environment_variable_reference_prefers_doppel_stream_timeout_alias():
+    en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
+    zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
+
+    assert "| `DOPPEL_STREAM_READ_TIMEOUT` |" in en
+    assert "| `DOPPEL_STREAM_READ_TIMEOUT` |" in zh
+    assert "| `HERMES_STREAM_READ_TIMEOUT` |" not in en
+    assert "| `HERMES_STREAM_READ_TIMEOUT` |" not in zh

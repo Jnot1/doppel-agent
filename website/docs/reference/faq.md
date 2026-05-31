@@ -26,7 +26,7 @@ Doppel Agent works with any OpenAI-compatible API. Supported providers include:
 - **MiniMax** — global and China endpoints
 - **Local models** — via [Ollama](https://ollama.com/), [vLLM](https://docs.vllm.ai/), [llama.cpp](https://github.com/ggerganov/llama.cpp), [SGLang](https://github.com/sgl-project/sglang), or any OpenAI-compatible server
 
-Set your provider with `doppel model` or by editing your agent home `.env` (fresh POSIX installs default to `~/.doppel/.env`; legacy installs may still use `~/.hermes/.env`). See the [Environment Variables](./environment-variables.md) reference for all provider keys.
+Set your provider with `doppel model` or by editing your agent home `.env` (fresh POSIX installs default to `~/.doppel/.env`; older installs may still keep the legacy home layout). See the [Environment Variables](./environment-variables.md) reference for all provider keys.
 
 ### Does it work on Windows?
 
@@ -80,7 +80,7 @@ Important caveat: the full `.[all]` extra is not currently available on Android 
 
 ### Is my data sent anywhere?
 
-API calls go **only to the LLM provider you configure** (e.g., OpenRouter, your local Ollama instance). Doppel Agent does not collect telemetry, usage data, or analytics. Your conversations, memory, and skills are stored locally in your agent home (`~/.doppel/` on fresh POSIX installs, `%LOCALAPPDATA%\doppel\` on native Windows, with legacy `~/.hermes/` installs still supported).
+API calls go **only to the LLM provider you configure** (e.g., OpenRouter, your local Ollama instance). Doppel Agent does not collect telemetry, usage data, or analytics. Your conversations, memory, and skills are stored locally in your agent home (`~/.doppel/` on fresh POSIX installs, `%LOCALAPPDATA%\doppel\` on native Windows, while older installs can keep their legacy home layout in place).
 
 ### Can I use it offline / with local models?
 
@@ -113,7 +113,7 @@ If you set a custom `num_ctx` in Ollama (e.g., `ollama run --num_ctx 64000`), ma
 :::
 
 :::tip Timeouts with local models
-Doppel auto-detects local endpoints and relaxes streaming timeouts (read timeout raised from 120s to 1800s, stale stream detection disabled). If you still hit timeouts on very large contexts, set `HERMES_STREAM_READ_TIMEOUT=1800` in your `.env`. See the [Local LLM guide](../guides/local-llm-on-mac.md#timeouts) for details.
+Doppel auto-detects local endpoints and relaxes streaming timeouts (read timeout raised from 120s to 1800s, stale stream detection disabled). If you still hit timeouts on very large contexts, set `DOPPEL_STREAM_READ_TIMEOUT=1800` in your `.env`. See the [Local LLM guide](../guides/local-llm-on-mac.md#timeouts) for details.
 :::
 
 ### How much does it cost?
@@ -192,7 +192,7 @@ The installer handles this automatically — if you see this error during manual
 
 **Cause:** Doppel builds a per-session environment snapshot by running `bash -l` once at startup. A bash login shell reads `/etc/profile`, `~/.bash_profile`, and `~/.profile`, but **does not source `~/.bashrc`** — so tools that install themselves there (`nvm`, `asdf`, `pyenv`, `cargo`, custom `PATH` exports) stay invisible to the snapshot. This most commonly happens when Doppel runs under systemd or in a minimal shell where nothing has pre-loaded the interactive shell profile.
 
-**Solution:** Doppel auto-sources `~/.bashrc` by default. If that's not enough — e.g. you're a zsh user whose PATH lives in `~/.zshrc`, or you init `nvm` from a standalone file — list the extra files to source in your agent-home `config.yaml` (usually `~/.doppel/config.yaml`; legacy installs may still use `~/.hermes/config.yaml`):
+**Solution:** Doppel auto-sources `~/.bashrc` by default. If that's not enough — e.g. you're a zsh user whose PATH lives in `~/.zshrc`, or you init `nvm` from a standalone file — list the extra files to source in your agent-home `config.yaml` (usually `~/.doppel/config.yaml`):
 
 ```yaml
 terminal:
@@ -768,7 +768,7 @@ Skills with very long descriptions are truncated to 40 characters in the Telegra
    ```bash
    doppel backup
    ```
-   This creates a zip of your agent home directory — `~/.doppel/` on fresh installs, `~/.hermes/` on legacy ones — saved to your home directory. The archive filename intentionally remains `~/hermes-backup-<timestamp>.zip` in this phase for compatibility with existing tooling.
+   This creates a zip of your agent home directory — `~/.doppel/` on fresh installs, with older installs keeping their legacy home layout in place — saved to your home directory. The archive filename intentionally remains `~/hermes-backup-<timestamp>.zip` in this phase for compatibility with existing tooling.
 
 3. Copy the zip to the new machine and import it:
    ```bash

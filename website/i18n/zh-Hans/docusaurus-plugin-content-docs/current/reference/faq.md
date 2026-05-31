@@ -26,7 +26,7 @@ Doppel Agent 可与任何兼容 OpenAI 的 API 配合使用。支持的提供商
 - **MiniMax** — 全球及中国区端点
 - **本地模型** — 通过 [Ollama](https://ollama.com/)、[vLLM](https://docs.vllm.ai/)、[llama.cpp](https://github.com/ggerganov/llama.cpp)、[SGLang](https://github.com/sgl-project/sglang) 或任何兼容 OpenAI 的服务器
 
-使用 `doppel model` 设置提供商，或直接编辑智能体主目录中的 `.env`（新的 POSIX 安装默认为 `~/.doppel/.env`；旧安装仍可能使用 `~/.hermes/.env`）。所有提供商 key 请参阅[环境变量](./environment-variables.md)参考文档。
+使用 `doppel model` 设置提供商，或直接编辑智能体主目录中的 `.env`（新的 POSIX 安装默认为 `~/.doppel/.env`；旧安装仍可能保留旧版主目录布局）。所有提供商 key 请参阅[环境变量](./environment-variables.md)参考文档。
 
 ### 支持 Windows 吗？
 
@@ -80,7 +80,7 @@ curl -fsSL https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/ins
 
 ### 我的数据会被发送到哪里？
 
-API 调用**仅发送至您配置的 LLM 提供商**（例如 OpenRouter、您本地的 Ollama 实例）。Doppel Agent 不收集遥测数据、使用数据或分析数据。您的对话、记忆和技能都存储在本地智能体主目录中：新的 POSIX 安装通常是 `~/.doppel/`，原生 Windows 是 `%LOCALAPPDATA%\\doppel\\`，而旧的 `~/.hermes/` 安装仍然受支持。
+API 调用**仅发送至您配置的 LLM 提供商**（例如 OpenRouter、您本地的 Ollama 实例）。Doppel Agent 不收集遥测数据、使用数据或分析数据。您的对话、记忆和技能都存储在本地智能体主目录中：新的 POSIX 安装通常是 `~/.doppel/`，原生 Windows 是 `%LOCALAPPDATA%\\doppel\\`，旧安装则可以继续保留旧版主目录布局。
 
 ### 可以离线使用 / 使用本地模型吗？
 
@@ -113,7 +113,7 @@ Doppel 会将端点、提供商和 base URL 持久化到 `config.yaml`，重启�
 :::
 
 :::tip 本地模型超时问题
-Doppel 会自动检测本地端点并放宽流式传输超时（读取超时从 120s 提升至 1800s，禁用停滞流检测）。如果在非常大的上下文下仍然超时，请在 `.env` 中设置 `HERMES_STREAM_READ_TIMEOUT=1800`。详情请参阅[本地 LLM 指南](../guides/local-llm-on-mac.md#timeouts)。
+Doppel 会自动检测本地端点并放宽流式传输超时（读取超时从 120s 提升至 1800s，禁用停滞流检测）。如果在非常大的上下文下仍然超时，请在 `.env` 中设置 `DOPPEL_STREAM_READ_TIMEOUT=1800`。详情请参阅[本地 LLM 指南](../guides/local-llm-on-mac.md#timeouts)。
 :::
 
 ### 费用是多少？
@@ -767,7 +767,7 @@ skills:
    ```bash
    doppel backup
    ```
-   这会将您的整个智能体主目录打包——新安装通常是 `~/.doppel/`，旧安装可能仍是 `~/.hermes/`。出于兼容性考虑，归档文件名在这一阶段仍保留为 `~/hermes-backup-<timestamp>.zip`。
+   这会将您的整个智能体主目录打包——新安装通常是 `~/.doppel/`，旧安装则可能继续保留旧版主目录布局。出于兼容性考虑，归档文件名在这一阶段仍保留为 `~/hermes-backup-<timestamp>.zip`。
 
 3. 将 zip 文件复制到新机器并导入：
    ```bash

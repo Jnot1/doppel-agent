@@ -854,7 +854,7 @@ def _wait_for_systemd_service_restart(
 
     print(
         f"⚠ {scope_label} service did not become active within {int(timeout)}s.\n"
-        f"  Check status: {'sudo ' if system else ''}hermes gateway status\n"
+        f"  Check status: {'sudo ' if system else ''}doppel gateway status\n"
         f"  Check logs:   journalctl {'--user ' if not system else ''}-u {svc} -l --since '2 min ago'"
     )
     return False
@@ -895,7 +895,7 @@ def _print_systemd_start_limit_wait(system: bool = False) -> None:
     journal_prefix = "journalctl " if system else "journalctl --user "
     print(f"⏳ {scope_label} service is temporarily rate-limited by systemd.")
     print("  systemd is refusing another immediate start after repeated exits.")
-    print(f"  Wait for the start-limit window to expire, then run: {'sudo ' if system else ''}hermes gateway restart{scope_flag}")
+    print(f"  Wait for the start-limit window to expire, then run: {'sudo ' if system else ''}doppel gateway restart{scope_flag}")
     print(f"  Or clear the failed state manually: {systemctl_prefix}reset-failed {svc}")
     print(f"  Check logs: {journal_prefix}-u {svc} -l --since '5 min ago'")
 
@@ -1038,7 +1038,7 @@ def _print_gateway_process_mismatch(snapshot: GatewayRuntimeSnapshot) -> None:
     print()
     print("⚠ Gateway process is running for this profile, but the service is not active")
     print(f"  PID(s): {_format_gateway_pids(snapshot.gateway_pids, limit=None)}")
-    print("  This is usually a manual foreground/tmux/nohup run, so `hermes gateway`")
+    print("  This is usually a manual foreground/tmux/nohup run, so `doppel gateway`")
     print("  can refuse to start another copy until this process stops.")
 
 
@@ -1625,7 +1625,7 @@ def _raise_user_systemd_unavailable(username: str, *, reason: str, fix_hint: str
         "\n"
         "  Alternative: run the gateway in the foreground (stays up until\n"
         "  you exit / close the terminal):\n"
-        "    hermes gateway run"
+        "    doppel gateway run"
     )
     raise UserSystemdUnavailableError(msg)
 
@@ -1931,8 +1931,8 @@ def print_systemd_scope_conflict_warning() -> None:
     print_info("  This is confusing and can make start/stop/status behavior ambiguous.")
     print_info("  Default gateway commands target the user service unless you pass --system.")
     print_info("  Keep one of these:")
-    print_info("    hermes gateway uninstall")
-    print_info("    sudo hermes gateway uninstall --system")
+    print_info("    doppel gateway uninstall")
+    print_info("    sudo doppel gateway uninstall --system")
 
 
 def _require_root_for_system_service(action: str) -> None:
@@ -2005,12 +2005,12 @@ def install_linux_gateway_from_setup(force: bool = False, enable_on_startup: boo
     if scope == "system":
         run_as_user = _default_system_service_user()
         if os.geteuid() != 0:  # windows-footgun: ok — Linux systemd install wizard, never invoked on Windows
-            print_warning("  System service install requires sudo, so Hermes can't create it from this user session.")
+            print_warning("  System service install requires sudo, so Doppel can't create it from this user session.")
             if run_as_user:
-                print_info(f"  After setup, run: sudo hermes gateway install --system --run-as-user {run_as_user}")
+                print_info(f"  After setup, run: sudo doppel gateway install --system --run-as-user {run_as_user}")
             else:
-                print_info("  After setup, run: sudo hermes gateway install --system --run-as-user <your-user>")
-            print_info("  Then start it with: sudo hermes gateway start --system")
+                print_info("  After setup, run: sudo doppel gateway install --system --run-as-user <your-user>")
+            print_info("  Then start it with: sudo doppel gateway start --system")
             return scope, False
 
         if not run_as_user:
@@ -2683,9 +2683,9 @@ def _print_system_scope_remediation(action: str) -> None:
     else:
         print_info(f"         sudo systemctl {action} {svc}")
     print_info("    2. Switch to a per-user service (recommended for personal use):")
-    print_info("         sudo hermes gateway uninstall --system")
-    print_info("         hermes gateway install")
-    print_info("         hermes gateway start")
+    print_info("         sudo doppel gateway uninstall --system")
+    print_info("         doppel gateway install")
+    print_info("         doppel gateway start")
 
 
 def _get_restart_drain_timeout() -> float:
@@ -2738,8 +2738,8 @@ def systemd_install(
         print(f"✓ {_service_scope_label(system).capitalize()} service {enable_label}!")
         print()
         print("Next steps:")
-        print(f"  {'sudo ' if system else ''}hermes gateway start{scope_flag}              # Start the service")
-        print(f"  {'sudo ' if system else ''}hermes gateway status{scope_flag}             # Check status")
+        print(f"  {'sudo ' if system else ''}doppel gateway start{scope_flag}              # Start the service")
+        print(f"  {'sudo ' if system else ''}doppel gateway status{scope_flag}             # Check status")
         print(f"  {'journalctl' if system else 'journalctl --user'} -u {get_service_name()} -f  # View logs")
         print()
         if system:
@@ -2777,8 +2777,8 @@ def systemd_install(
     print(f"✓ {_service_scope_label(system).capitalize()} service {enable_label}!")
     print()
     print("Next steps:")
-    print(f"  {'sudo ' if system else ''}hermes gateway start{scope_flag}              # Start the service")
-    print(f"  {'sudo ' if system else ''}hermes gateway status{scope_flag}             # Check status")
+    print(f"  {'sudo ' if system else ''}doppel gateway start{scope_flag}              # Start the service")
+    print(f"  {'sudo ' if system else ''}doppel gateway status{scope_flag}             # Check status")
     print(f"  {'journalctl' if system else 'journalctl --user'} -u {get_service_name()} -f  # View logs")
     print()
 
@@ -2841,7 +2841,7 @@ def _require_service_installed(action: str, system: bool = False) -> tuple[str, 
     if svc is None or unit_path is None:
         scope_flag = " --system" if system else ""
         print(f"✗ Gateway service is not installed")
-        print(f"  Run: {'sudo ' if system else ''}hermes gateway install{scope_flag}")
+        print(f"  Run: {'sudo ' if system else ''}doppel gateway install{scope_flag}")
         sys.exit(1)
     return svc, unit_path
 
@@ -2882,7 +2882,7 @@ def systemd_stop(system: bool = False):
         label = _service_scope_label(system)
         print(
             f"Gateway {label} service is still stopping after 90s; "
-            "check `hermes gateway status` or logs for final shutdown state."
+            "check `doppel gateway status` or logs for final shutdown state."
         )
         return
     print(f"✓ {_service_scope_label(system).capitalize()} service stopped")
@@ -2950,7 +2950,7 @@ def systemd_restart(system: bool = False):
             label = _service_scope_label(system)
             print(
                 f"Gateway {label} service is still restarting after 90s; "
-                "check `hermes gateway status` or logs for final state."
+                "check `doppel gateway status` or logs for final state."
             )
             return
         _wait_for_systemd_service_restart(system=system, previous_pid=pid)
@@ -2976,7 +2976,7 @@ def systemd_restart(system: bool = False):
         label = _service_scope_label(system)
         print(
             f"Gateway {label} service is still restarting after 90s; "
-            "check `hermes gateway status` or logs for final state."
+            "check `doppel gateway status` or logs for final state."
         )
         return
     _wait_for_systemd_service_restart(system=system, previous_pid=pid)
@@ -2991,7 +2991,7 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
 
     if svc is None or unit_path is None:
         print("✗ Gateway service is not installed")
-        print(f"  Run: {'sudo ' if system else ''}hermes gateway install{scope_flag}")
+        print(f"  Run: {'sudo ' if system else ''}doppel gateway install{scope_flag}")
         return
 
     _sync_hermes_home_from_systemd_unit(system=system)
@@ -3006,7 +3006,7 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
 
     if not systemd_unit_is_current(system=system):
         print("⚠ Installed gateway service definition is outdated")
-        print(f"  Run: {'sudo ' if system else ''}hermes gateway restart{scope_flag}  # auto-refreshes the unit")
+        print(f"  Run: {'sudo ' if system else ''}doppel gateway restart{scope_flag}  # auto-refreshes the unit")
         print()
 
     status_cmd = ["status", svc, "--no-pager"]
@@ -3034,7 +3034,7 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
         print(f"✓ {_service_scope_label(system).capitalize()} gateway service is running")
     else:
         print(f"✗ {_service_scope_label(system).capitalize()} gateway service is stopped")
-        print(f"  Run: {'sudo ' if system else ''}hermes gateway start{scope_flag}")
+        print(f"  Run: {'sudo ' if system else ''}doppel gateway start{scope_flag}")
 
     configured_user = _read_systemd_user_from_unit(unit_path) if system else None
     if configured_user:
@@ -3056,11 +3056,11 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
         print("  ⏳ Restart pending: systemd is waiting to relaunch the gateway")
     elif _systemd_unit_is_start_limited(unit_props):
         print("  ⏳ Restart pending: systemd is temporarily rate-limiting starts")
-        print(f"  Run after the start-limit window expires: {'sudo ' if system else ''}hermes gateway restart{scope_flag}")
+        print(f"  Run after the start-limit window expires: {'sudo ' if system else ''}doppel gateway restart{scope_flag}")
         print(f"  Or clear it manually: systemctl {'--user ' if not system else ''}reset-failed {svc}")
     elif active_state == "failed" and exec_main_status == str(GATEWAY_SERVICE_RESTART_EXIT_CODE):
         print("  ⚠ Planned restart is stuck in systemd failed state (exit 75)")
-        print(f"  Run: systemctl {'--user ' if not system else ''}reset-failed {svc} && {'sudo ' if system else ''}hermes gateway start{scope_flag}")
+        print(f"  Run: systemctl {'--user ' if not system else ''}reset-failed {svc} && {'sudo ' if system else ''}doppel gateway start{scope_flag}")
     elif active_state == "failed" and result_code:
         print(f"  ⚠ Systemd unit result: {result_code}")
 
@@ -3234,7 +3234,7 @@ def launchd_install(force: bool = False):
         print("✓ Service installed and loaded!")
         print()
         print("Next steps:")
-        print("  hermes gateway status             # Check status")
+        print("  doppel gateway status             # Check status")
         from hermes_constants import display_hermes_home as _dhh
         print(f"  tail -f {_dhh()}/logs/gateway.log  # View logs")
         return
@@ -3259,7 +3259,7 @@ def launchd_install(force: bool = False):
     print("✓ Service installed and loaded!")
     print()
     print("Next steps:")
-    print("  hermes gateway status             # Check status")
+    print("  doppel gateway status             # Check status")
     from hermes_constants import display_hermes_home as _dhh
     print(f"  tail -f {_dhh()}/logs/gateway.log  # View logs")
 
@@ -3432,7 +3432,7 @@ def launchd_status(deep: bool = False):
         print("✓ Service definition matches the current Doppel install")
     else:
         print("⚠ Service definition is stale relative to the current Doppel install")
-        print("  Run: hermes gateway start")
+        print("  Run: doppel gateway start")
 
     if loaded:
         print("✓ Gateway service is loaded")
@@ -3440,7 +3440,7 @@ def launchd_status(deep: bool = False):
     else:
         print("✗ Gateway service is not loaded")
         print("  Service definition exists locally but launchd has not loaded it.")
-        print("  Run: hermes gateway start")
+        print("  Run: doppel gateway start")
     
     if deep:
         log_file = get_hermes_home() / "logs" / "gateway.log"
@@ -4257,7 +4257,7 @@ def _setup_standard_platform(platform: dict):
                     print_success("  DM pairing mode — users will receive a code to request access.")
                     print_info("  Approve with: doppel pairing approve <platform> <code>")
                 else:
-                    print_info("  Skipped — configure later with 'hermes gateway setup'")
+                    print_info("  Skipped — configure later with 'doppel gateway setup'")
             continue
 
         value = prompt(f"  {var['prompt']}", password=var.get("password", False))
@@ -4449,7 +4449,7 @@ def _setup_wecom():
             save_env_value("WECOM_DM_POLICY", "disabled")
             print_warning("  Direct messages disabled.")
         else:
-            print_info("  Skipped — configure later with 'hermes gateway setup'")
+            print_info("  Skipped — configure later with 'doppel gateway setup'")
 
     # ── Home channel (optional) ──
     print()
@@ -4551,7 +4551,7 @@ def _setup_weixin():
 
     if not check_weixin_requirements():
         print_error("  Missing dependencies: Weixin needs aiohttp and cryptography.")
-        print_info("  Install them, then rerun `hermes gateway setup`.")
+        print_info("  Install them, then rerun `doppel gateway setup`.")
         return
 
     print()
@@ -5230,7 +5230,7 @@ def gateway_setup():
                         gateway_windows.restart()
                     else:
                         stop_profile_gateway()
-                        print_info("Start manually: hermes gateway")
+                        print_info("Start manually: doppel gateway run")
                 except UserSystemdUnavailableError as e:
                     print_error("  Restart failed — user systemd not reachable:")
                     for line in str(e).splitlines():
@@ -5310,12 +5310,12 @@ def gateway_setup():
                                 print_error(f"  Start failed: {e}")
                     except subprocess.CalledProcessError as e:
                         print_error(f"  Install failed: {e}")
-                        print_info("  You can try manually: hermes gateway install")
+                        print_info("  You can try manually: doppel gateway install")
                 else:
                     print_info("  Skipped start and auto-start setup.")
-                    print_info("  You can install later: hermes gateway install")
+                    print_info("  You can install later: doppel gateway install")
                     if supports_systemd_services():
-                        print_info("  Or as a boot-time service: sudo hermes gateway install --system")
+                        print_info("  Or as a boot-time service: sudo doppel gateway install --system")
                     print_info("  Or run in foreground:  doppel gateway run")
             elif is_wsl():
                 print_info("  WSL detected but systemd is not running.")
@@ -5332,7 +5332,7 @@ def gateway_setup():
                 print_info("  Run in foreground: doppel gateway run")
     else:
         print()
-        print_info("No platforms configured. Run 'hermes gateway setup' when ready.")
+        print_info("No platforms configured. Run 'doppel gateway setup' when ready.")
 
     print()
 
@@ -5561,7 +5561,7 @@ def _gateway_command_inner(args):
         run_as_user = getattr(args, 'run_as_user', None)
         if is_termux():
             print("Gateway service installation is not supported on Termux.")
-            print("Run manually: hermes gateway")
+            print("Run manually: doppel gateway run")
             sys.exit(1)
         if supports_systemd_services():
             if is_wsl():
@@ -5634,7 +5634,7 @@ def _gateway_command_inner(args):
         system = getattr(args, 'system', False)
         if is_termux():
             print("Gateway service uninstall is not supported on Termux because there is no managed service to remove.")
-            print("Stop manual runs with: hermes gateway stop")
+            print("Stop manual runs with: doppel gateway stop")
             sys.exit(1)
         if supports_systemd_services():
             systemd_uninstall(system=system)
@@ -5682,7 +5682,7 @@ def _gateway_command_inner(args):
 
         if is_termux():
             print("Gateway service start is not supported on Termux because there is no system service manager.")
-            print("Run manually: hermes gateway")
+            print("Run manually: doppel gateway run")
             sys.exit(1)
         if supports_systemd_services():
             systemd_start(system=system)
@@ -5918,7 +5918,7 @@ def _gateway_command_inner(args):
                     print(f"  Run:  sudo loginctl enable-linger {_username}")
                     print()
                     print("  Then restart the gateway:")
-                    print("    hermes gateway restart")
+                    print("    doppel gateway restart")
                     return
 
             if service_configured:
@@ -5984,11 +5984,11 @@ def _gateway_command_inner(args):
                     print("  Use tmux or screen for persistence across terminal closes.")
                 elif is_windows():
                     print("To install as a Windows Scheduled Task (auto-start on login):")
-                    print("  hermes gateway install")
+                    print("  doppel gateway install")
                 else:
                     print("To install as a service:")
-                    print("  hermes gateway install")
-                    print("  sudo hermes gateway install --system")
+                    print("  doppel gateway install")
+                    print("  sudo doppel gateway install --system")
             else:
                 print("✗ Gateway is not running")
                 runtime_lines = _runtime_health_lines()
@@ -6006,10 +6006,10 @@ def _gateway_command_inner(args):
                     print("  tmux new -s doppel 'doppel gateway run'         # persistent via tmux")
                     print("  nohup doppel gateway run > ~/.doppel/logs/gateway.log 2>&1 &  # background")
                 elif is_windows():
-                    print("  hermes gateway install  # Install as Windows Scheduled Task (auto-start on login)")
+                    print("  doppel gateway install  # Install as Windows Scheduled Task (auto-start on login)")
                 else:
-                    print("  hermes gateway install  # Install as user service")
-                    print("  sudo hermes gateway install --system  # Install as boot-time system service")
+                    print("  doppel gateway install  # Install as user service")
+                    print("  sudo doppel gateway install --system  # Install as boot-time system service")
 
         # Show other profiles' gateway status for multi-profile awareness
         _print_other_profiles_gateway_status()

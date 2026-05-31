@@ -112,6 +112,7 @@ EN_WEB_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" /
 EN_VOICE_MODE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "voice-mode.md"
 EN_HONCHO_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "honcho.md"
 EN_MEMORY_PROVIDERS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "memory-providers.md"
+EN_LSP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "lsp.md"
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
 )
@@ -398,6 +399,17 @@ ZH_MEMORY_PROVIDERS_DOC = (
     / "user-guide"
     / "features"
     / "memory-providers.md"
+)
+ZH_LSP_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "lsp.md"
 )
 ZH_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT
@@ -2269,6 +2281,59 @@ def test_memory_provider_docs_prefer_doppel_surfaces_and_keep_runtime_literals()
     assert "hermes memory off        # 禁用外部提供者" not in zh
     assert "`hermes plugins`" not in en
     assert "`hermes plugins`" not in zh
+
+
+def test_lsp_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_LSP_DOC.read_text(encoding="utf-8")
+    zh = ZH_LSP_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent runs full language servers" in en
+    assert "Doppel Agent 以后台子进程方式运行完整的语言服务器" in zh
+    assert "Doppel Agent ships it self-contained" in en.replace("\n", " ")
+    assert "Doppel Agent 将其作为自包含组件提供" in zh
+    assert "`<DOPPEL_HOME>/lsp/bin/`" in en
+    assert "`<DOPPEL_HOME>/lsp/bin/`" in zh
+    assert "`<DOPPEL_HOME>/lsp/node_modules/`" in en
+    assert "`<DOPPEL_HOME>/lsp/node_modules/`" in zh
+    assert "`doppel lsp status`" in en
+    assert "`doppel lsp status`" in zh
+    assert "`doppel lsp install typescript`" in en
+    assert "`doppel lsp install typescript`" in zh
+    assert "doppel lsp restart" in en
+    assert "doppel lsp restart" in zh
+    assert "~/.doppel/logs/agent.log" in en
+    assert "~/.doppel/logs/agent.log" in zh
+    assert "`dockerfile-ls` (`dockerfile-language-server-nodejs`)" in en
+    assert "`dockerfile-ls`（`dockerfile-language-server-nodejs`）" in zh
+    assert "`gleam` (`gleam lsp`)" in en
+    assert "`gleam`（`gleam lsp`）" in zh
+    assert "off     — same as manual today; reserved for a stricter future mode" in en
+    assert "off     — 当前与 manual 相同；为未来更严格的关闭模式预留" in zh
+
+    for fixed in (
+        "pyright-langserver",
+        "typescript-language-server",
+        "rust-analyzer",
+        "bash-language-server",
+        "shellcheck",
+        "write_file",
+        "patch",
+        "`<HERMES_HOME>/lsp/bin/`",
+        "~/.hermes/logs/agent.log",
+        "[agent.lsp.client]",
+        "ast.parse",
+        "json.loads",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "Hermes runs full language servers" not in en
+    assert "Hermes 以后台子进程方式运行完整的语言服务器" not in zh
+    assert "`hermes lsp status`" not in en
+    assert "`hermes lsp status`" not in zh
+    assert "`hermes lsp install typescript`" not in en
+    assert "`hermes lsp install typescript`" not in zh
+    assert "`<HERMES_HOME>/lsp/node_modules/`" not in en
+    assert "`<HERMES_HOME>/lsp/node_modules/`" not in zh
 
 
 def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():

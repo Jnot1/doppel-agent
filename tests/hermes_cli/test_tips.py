@@ -38,6 +38,28 @@ class TestTipsCorpus:
         )
         assert not any("hermes cron add --skill blogwatcher" in tip for tip in TIPS)
 
+    def test_cli_tip_examples_are_doppel_first(self):
+        assert (
+            'doppel -c resumes your most recent CLI session. doppel -c "project name" resumes by title.'
+            in TIPS
+        )
+        assert (
+            "doppel doctor --fix diagnoses and auto-repairs config and dependency issues."
+            in TIPS
+        )
+        assert not any("hermes " in tip for tip in TIPS)
+
+    def test_product_branding_in_tips_is_doppel_first(self):
+        assert (
+            "Ctrl+Z suspends Doppel to the background — run fg in your shell to resume."
+            in TIPS
+        )
+        assert (
+            "Doppel runs on 21 messaging platforms: Telegram, Discord, Slack, WhatsApp, Signal, Matrix, IRC, Microsoft Teams, email, and more."
+            in TIPS
+        )
+        assert not any("Hermes" in tip for tip in TIPS)
+
 
 class TestGetRandomTip:
     """Validate the get_random_tip() function."""

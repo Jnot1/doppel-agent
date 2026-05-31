@@ -75,6 +75,7 @@ EN_PROMPT_ASSEMBLY_DOC = EN_DEV_GUIDE_DIR / "prompt-assembly.md"
 EN_SESSION_STORAGE_DOC = EN_DEV_GUIDE_DIR / "session-storage.md"
 EN_TRAJECTORY_DOC = EN_DEV_GUIDE_DIR / "trajectory-format.md"
 EN_CONTEXT_FILES_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "context-files.md"
+EN_PERSONALITY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "personality.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -100,6 +101,17 @@ ZH_CONTEXT_FILES_DOC = (
     / "user-guide"
     / "features"
     / "context-files.md"
+)
+ZH_PERSONALITY_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "personality.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -805,3 +817,39 @@ def test_context_files_and_soul_guide_prefer_doppel_surfaces_but_keep_literals()
     assert "/personality" in zh_soul
     assert "~/.hermes/SOUL.md" in en_soul
     assert "~/.hermes/SOUL.md" in zh_soul
+
+
+def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
+    en = EN_PERSONALITY_DOC.read_text(encoding="utf-8")
+    zh = ZH_PERSONALITY_DOC.read_text(encoding="utf-8")
+
+    assert "Customize Doppel Agent's personality" in en
+    assert "自定义 Doppel Agent 的个性" in zh
+    assert "Doppel Agent's personality is fully customizable" in en
+    assert "Doppel Agent 的个性完全可自定义" in zh
+    assert "~/.doppel/SOUL.md" in en
+    assert "~/.doppel/SOUL.md" in zh
+    assert "$DOPPEL_HOME/SOUL.md" in en
+    assert "$DOPPEL_HOME/SOUL.md" in zh
+    assert "Doppel Agent ships with built-in personalities" in en
+    assert "Doppel Agent 内置了多种个性" in zh
+    assert "Captain Doppel" in en
+    assert "Doppel 船长" in zh
+    assert "Use SOUL.md with Doppel Agent" in en
+    assert "在 Doppel Agent 中使用 SOUL.md" in zh
+    assert "affect how Doppel Agent speaks" in en
+    assert "影响 Doppel Agent 的说话方式" in zh
+
+    assert "HERMES_HOME" in en and "HERMES_HOME" in zh
+    assert "~/.hermes/SOUL.md" in en and "~/.hermes/SOUL.md" in zh
+    assert "$HERMES_HOME/SOUL.md" in en and "$HERMES_HOME/SOUL.md" in zh
+    assert "/personality" in en and "/personality" in zh
+    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." in en
+    assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." in zh
+    assert "~/.hermes/config.yaml" in en
+    assert "~/.hermes/config.yaml" in zh
+
+    assert "Customize Hermes Agent's personality" not in en
+    assert "自定义 Hermes Agent 的个性" not in zh
+    assert "Hermes Agent's personality is fully customizable" not in en
+    assert "Hermes Agent 的个性完全可自定义" not in zh

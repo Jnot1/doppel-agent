@@ -2422,7 +2422,7 @@ def test_mcp_guide_route_graph_uses_doppel_slug_and_legacy_redirects():
         text = doc.read_text(encoding="utf-8")
         assert "/guides/use-mcp-with-doppel-agent" in text
         assert "/guides/use-mcp-with-hermes" not in text
-        assert "/guides/use-mcp-with-doppel" not in text
+        assert "](/guides/use-mcp-with-doppel)" not in text
 
 
 def test_voice_guide_route_graph_uses_doppel_slug_and_legacy_redirects():
@@ -4880,6 +4880,93 @@ def test_quickstart_and_updating_docs_prefer_doppel_package_name():
     for doc in (en_updating, zh_updating):
         assert "pip install --upgrade doppel-agent" in doc
         assert "pip install --upgrade hermes-agent" not in doc
+
+
+def test_zh_quickstart_and_cli_docs_prefer_doppel_customer_facing_surfaces():
+    zh_quickstart = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "getting-started"
+        / "quickstart.md"
+    ).read_text(encoding="utf-8")
+    zh_cli = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "cli.md"
+    ).read_text(encoding="utf-8")
+    en_cli = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "cli.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "与 Doppel Agent 的第一次对话",
+        "Doppel 环境",
+        "Doppel Agent Masterclass",
+        "Doppel Agent 教程与使用案例",
+        "doppel setup",
+        "doppel model",
+        "doppel gateway setup",
+        "doppel doctor",
+        "doppel --continue",
+        "~/.doppel/.env",
+        "~/.doppel/config.yaml",
+    ):
+        assert expected in zh_quickstart
+
+    for unexpected in (
+        "与 Hermes Agent 的第一次对话",
+        "Hermes 环境",
+        "hermes setup",
+        "hermes model",
+        "hermes gateway setup",
+        "hermes doctor",
+        "hermes --continue",
+    ):
+        assert unexpected not in zh_quickstart
+
+    for expected in (
+        "掌握 Doppel Agent 终端界面",
+        "Doppel Agent 的 CLI",
+        "doppel --tui",
+        'doppel chat -q "Hello"',
+        "DOPPEL_YOLO_MODE",
+        "~/.doppel/config.yaml",
+        "~/.doppel/skills/",
+        "~/.doppel/state.db",
+        "Doppel has been suspended. Run `fg` to bring Doppel back.",
+        "╭─ ⚕ Doppel (background #1)",
+        "doppel sessions list",
+        "doppel chat --verbose",
+    ):
+        assert expected in zh_cli
+
+    for unexpected in (
+        "掌握 Hermes Agent 终端界面",
+        "Hermes Agent 的 CLI",
+        'hermes chat -q "Hello"',
+        "HERMES_YOLO_MODE",
+        "~/.hermes/config.yaml",
+        "~/.hermes/skills/",
+        "~/.hermes/state.db",
+        "Hermes Agent has been suspended. Run `fg` to bring Hermes Agent back.",
+        "╭─ ⚕ Hermes (background #1)",
+        "hermes sessions list",
+        "hermes chat --verbose",
+    ):
+        assert unexpected not in zh_cli
+
+    assert "DOPPEL_YOLO_MODE" in en_cli
+    assert "HERMES_YOLO_MODE" not in en_cli
+
 
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

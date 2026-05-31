@@ -1759,7 +1759,7 @@ def print_legacy_unit_warning() -> None:
     legacy = _find_legacy_hermes_units()
     if not legacy:
         return
-    print_warning("Legacy Hermes gateway unit(s) detected from an older install:")
+    print_warning("Legacy gateway unit(s) detected from an older install:")
     for name, path, is_system in legacy:
         scope = "system" if is_system else "user"
         print_info(f"    {path}  ({scope} scope)")
@@ -1791,14 +1791,14 @@ def remove_legacy_hermes_units(
     """
     legacy = _find_legacy_hermes_units()
     if not legacy:
-        print("No legacy Hermes gateway units found.")
+        print("No legacy gateway units found.")
         return 0, []
 
     user_units = [(n, p) for n, p, is_sys in legacy if not is_sys]
     system_units = [(n, p) for n, p, is_sys in legacy if is_sys]
 
     print()
-    print("Legacy Hermes gateway unit(s) found:")
+    print("Legacy gateway unit(s) found:")
     for name, path, is_system in legacy:
         scope = "system" if is_system else "user"
         print(f"  {path}  ({scope} scope)")
@@ -1874,11 +1874,11 @@ def remove_legacy_launchd_plists(
     """Remove legacy Hermes launchd plist files from older macOS installs."""
     legacy = [(label, path) for label, path in _legacy_launchd_candidates() if path.exists()]
     if not legacy:
-        print("No legacy Hermes launchd plists found.")
+        print("No legacy launchd plists found.")
         return 0, []
 
     print()
-    print("Legacy Hermes launchd plist(s) found:")
+    print("Legacy launchd plist(s) found:")
     for label, path in legacy:
         print(f"  {path}  (label: {label})")
     print()

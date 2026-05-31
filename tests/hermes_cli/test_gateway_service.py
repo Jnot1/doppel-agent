@@ -2265,7 +2265,8 @@ class TestLegacyHermesUnitDetection:
         gateway_cli.print_legacy_unit_warning()
         out = capsys.readouterr().out
 
-        assert "Legacy" in out
+        assert "Legacy gateway unit(s) detected from an older install:" in out
+        assert "Legacy Hermes gateway" not in out
         assert "hermes.service" in out
         assert "doppel gateway migrate-legacy" in out
         assert "doppel-gateway service" in out
@@ -2327,7 +2328,7 @@ class TestRemoveLegacyHermesUnits:
 
         assert removed == 0
         assert remaining == []
-        assert "No legacy" in capsys.readouterr().out
+        assert "No legacy gateway units found." in capsys.readouterr().out
 
     def test_dry_run_lists_without_removing(self, tmp_path, monkeypatch, capsys):
         user_dir, _, calls = self._setup(tmp_path, monkeypatch)
@@ -2343,6 +2344,7 @@ class TestRemoveLegacyHermesUnits:
         assert legacy.exists()  # Not removed
         assert calls == []  # No systemctl invocations
         out = capsys.readouterr().out
+        assert "Legacy gateway unit(s) found:" in out
         assert "dry-run" in out
 
     def test_removes_user_scope_legacy_unit(self, tmp_path, monkeypatch, capsys):
@@ -2585,8 +2587,22 @@ class TestGatewayStatusParser:
 
 
 class TestLegacyLaunchdPlistCleanup:
+    def test_remove_legacy_launchd_plists_returns_zero_when_empty(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        monkeypatch.setattr(gateway_cli, "_legacy_launchd_candidates", lambda: [])
+
+        removed, remaining = gateway_cli.remove_legacy_launchd_plists(
+            interactive=False,
+            dry_run=False,
+        )
+
+        assert removed == 0
+        assert remaining == []
+        assert "No legacy launchd plists found." in capsys.readouterr().out
+
     def test_remove_legacy_launchd_plists_dry_run_lists_targets(
-        self, tmp_path, monkeypatch
+        self, tmp_path, monkeypatch, capsys
     ):
         legacy_plist = tmp_path / "ai.hermes.gateway.plist"
         legacy_plist.write_text("<plist>legacy</plist>", encoding="utf-8")
@@ -2605,6 +2621,9 @@ class TestLegacyLaunchdPlistCleanup:
         assert removed == 0
         assert remaining == [legacy_plist]
         assert legacy_plist.exists()
+        out = capsys.readouterr().out
+        assert "Legacy launchd plist(s) found:" in out
+        assert "ai.hermes.gateway.plist" in out
 
     def test_remove_legacy_launchd_plists_removes_legacy_plist_on_macos(
         self, tmp_path, monkeypatch

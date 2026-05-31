@@ -308,20 +308,14 @@ terminal:
 
 ### 拆卸时远程到宿主文件同步
 
-对于 **SSH**、**Modal** 和 **Daytona** 后端（agent 的工作树位于与运行 Hermes 的宿主不同的机器上），Hermes 跟踪 agent 在远程沙箱中触及的文件，并在会话拆卸/沙箱清理时，将修改的文件**同步回宿主**，存放在 `~/.hermes/cache/remote-syncs/<session-id>/` 下。
+对于 **SSH**、**Modal** 和 **Daytona** 后端，Doppel Agent 会先把一组受跟踪的 agent-home 输入同步到远程 `.hermes/` 树中（凭据、技能、缓存目录，以及已配置的终端凭据文件）。在会话拆卸时，它只会把这些受跟踪集合中被触及的文件同步回宿主上对应的路径（全新安装默认是 `~/.doppel/`；旧版 `~/.hermes/` 布局仍然受支持）。它**不会**创建按会话目录划分的 agent 工作树快照。
 
 - 触发时机：会话关闭、`/new`、`/reset`、gateway 消息超时、子 agent 使用远程后端时 `delegate_task` 子 agent 完成。
-- 覆盖 agent 修改的整个树，而不仅仅是它明确打开的文件。添加、编辑和删除都会被捕获。
-- 远程沙箱可能在您查找时已被拆除；本地 `~/.hermes/cache/remote-syncs/…` 副本是 agent 更改内容的权威记录。
-- 大型二进制输出（模型检查点、原始数据集）按大小限制 —— 同步跳过超过 `file_sync_max_mb`（默认 `100`）的文件。如果您期望更大的工件返回，请调高该值。
+- 只覆盖受同步集合中的文件，而不是 agent 远程工作树的任意完整备份。
+- sync-back 会直接把结果应用到宿主上的对应路径；当前不会额外生成 `remote-syncs/<session-id>` 这样的落地工件目录供事后检查。
+- 当前版本没有 `terminal.file_sync_*` 设置。如果您想在调试时强制立刻执行一次同步循环，请在命令前设置 `HERMES_FORCE_FILE_SYNC=1`。
 
-```yaml
-terminal:
-  file_sync_max_mb: 100     # 默认 —— 同步最大 100 MB 的文件
-  file_sync_enabled: true   # 默认 —— 设为 false 可完全跳过同步
-```
-
-这是从会话结束后被销毁的临时云沙箱中恢复结果的方式，无需告诉 agent 显式地 `scp` 或 `modal volume put` 每个工件。
+这就是 Doppel Agent 在远程沙箱间保持已同步的凭据、技能和基于缓存的工件一致的方式，而无需让 agent 手动对每个文件执行 `scp` 或 `modal volume put`。
 
 ### Docker 卷挂载
 
@@ -333,7 +327,7 @@ terminal:
   docker_volumes:
     - "/home/user/projects:/workspace/projects"   # 读写（默认）
     - "/home/user/datasets:/data:ro"              # 只读
-    - "/home/user/.hermes/cache/documents:/output" # Gateway 可见的导出
+    - "/home/user/.doppel/cache/documents:/output" # Gateway 可见的导出
 ```
 
 适用于：
@@ -341,10 +335,10 @@ terminal:
 - **从 agent 接收文件**（生成的代码、报告、导出）
 - **共享工作区**，您和 agent 都访问相同的文件
 
-如果您使用消息 gateway 并希望 agent 通过 `MEDIA:/...` 发送生成的文件，建议使用专用的宿主可见导出挂载，例如 `/home/user/.hermes/cache/documents:/output`。
+如果您使用消息 gateway 并希望 agent 通过 `MEDIA:/...` 发送生成的文件，建议使用专用的宿主可见导出挂载，例如 `/home/user/.doppel/cache/documents:/output`。
 
 - 在 Docker 中将文件写入 `/output/...`
-- 在 `MEDIA:` 中发出**宿主路径**，例如：`MEDIA:/home/user/.hermes/cache/documents/report.txt`
+- 在 `MEDIA:` 中发出**宿主路径**，例如：`MEDIA:/home/user/.doppel/cache/documents/report.txt`
 - **不要**发出 `/workspace/...` 或 `/output/...`，除非该确切路径在宿主上对 gateway 进程也存在
 
 :::warning
@@ -365,7 +359,7 @@ terminal:
     - "NPM_TOKEN"
 ```
 
-Hermes 首先从您当前的 shell 解析每个列出的变量，然后回退到通过 `hermes config set` 保存的 `~/.hermes/.env`。
+Doppel Agent 首先从您当前的 shell 解析每个列出的变量，然后回退到通过 `doppel config set` 保存的 `~/.doppel/.env`；旧版 `~/.hermes/.env` 安装仍然受支持。
 
 :::warning
 `docker_forward_env` 中列出的任何内容都会对容器内运行的命令可见。只转发您愿意暴露给终端会话的凭据。
@@ -381,13 +375,13 @@ terminal:
   docker_run_as_host_user: true   # 默认：false
 ```
 
-启用后，Hermes 将 `--user $(id -u):$(id -g)` 附加到 `docker run` 命令，使写入绑定挂载目录（`/workspace`、`/root`、`docker_volumes` 中的任何内容）的文件归您的宿主用户所有，而非 root。权衡：容器将无法再 `apt install` 或写入 `/root/.npm` 等 root 拥有的路径 —— 如果您同时需要这两者，请使用 `HOME` 归非 root 用户所有的基础镜像（或在镜像构建时添加所需工具）。
+启用后，Doppel Agent 将 `--user $(id -u):$(id -g)` 附加到 `docker run` 命令，使写入绑定挂载目录（`/workspace`、`/root`、`docker_volumes` 中的任何内容）的文件归您的宿主用户所有，而非 root。权衡：容器将无法再 `apt install` 或写入 `/root/.npm` 等 root 拥有的路径 —— 如果您同时需要这两者，请使用 `HOME` 归非 root 用户所有的基础镜像（或在镜像构建时添加所需工具）。
 
 保持 `false`（默认）以获得向后兼容的行为。当您的工作流主要是"编辑挂载的宿主文件"且厌倦了 `sudo chown -R` 时，请开启此选项。
 
 ### 可选：将启动目录挂载到 `/workspace`
 
-Docker 沙箱默认保持隔离。Hermes **不会**将您当前的宿主工作目录传入容器，除非您明确选择加入。
+Docker 沙箱默认保持隔离。Doppel Agent **不会**将您当前的宿主工作目录传入容器，除非您明确选择加入。
 
 在 `config.yaml` 中启用：
 
@@ -398,7 +392,7 @@ terminal:
 ```
 
 启用后：
-- 如果您从 `~/projects/my-app` 启动 Hermes，该宿主目录将绑定挂载到 `/workspace`
+- 如果您从 `~/projects/my-app` 启动 Doppel Agent，该宿主目录将绑定挂载到 `/workspace`
 - Docker 后端从 `/workspace` 开始
 - 文件工具和终端命令都能看到相同的挂载项目
 
@@ -406,7 +400,7 @@ terminal:
 
 安全权衡：
 - `false` 保留沙箱边界
-- `true` 使沙箱直接访问您启动 Hermes 的目录
+- `true` 使沙箱直接访问您启动 Doppel Agent 的目录
 
 仅在您有意希望容器处理实时宿主文件时才选择加入。
 
@@ -424,7 +418,7 @@ terminal:
 禁用：
 
 ```bash
-hermes config set terminal.persistent_shell false
+doppel config set terminal.persistent_shell false
 ```
 
 **跨命令保持的内容：**

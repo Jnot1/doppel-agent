@@ -924,6 +924,83 @@ def test_configuration_terminal_backend_cluster_prefer_doppel_and_preserve_runti
     assert "~/.hermes/modal_snapshots.json" in zh_cluster
 
 
+def test_configuration_remote_sync_and_persistent_shell_cluster_prefer_doppel_and_keep_runtime_terms():
+    en = EN_CONFIGURATION_DOC.read_text(encoding="utf-8")
+    zh = ZH_CONFIGURATION_DOC.read_text(encoding="utf-8")
+
+    en_cluster = _extract_configuration_backend_cluster(
+        en, "### Remote-to-Host File Sync on Teardown", "## Skill Settings"
+    )
+    zh_cluster = _extract_configuration_backend_cluster(
+        zh, "### 拆卸时远程到宿主文件同步", "## 技能设置"
+    )
+
+    assert "Doppel Agent syncs a tracked set of agent-home inputs" in en_cluster
+    assert "Doppel Agent 会先把一组受跟踪的 agent-home 输入同步到远程" in zh_cluster
+    assert "remote `.hermes/` tree" in en_cluster
+    assert "远程 `.hermes/` 树" in zh_cluster
+    assert "`~/.doppel/` on fresh installs" in en_cluster
+    assert "`~/.doppel/`" in zh_cluster
+    assert "matching host paths in your agent home" in en_cluster
+    assert "同步回宿主上对应的路径" in zh_cluster
+    assert "does **not** create a per-session agent-worktree snapshot directory" in en_cluster
+    assert "不会**创建按会话目录划分的 agent 工作树快照" in zh_cluster
+    assert "/home/user/.doppel/cache/documents:/output" in en_cluster
+    assert "/home/user/.doppel/cache/documents:/output" in zh_cluster
+    assert "MEDIA:/home/user/.doppel/cache/documents/report.txt" in en_cluster
+    assert "MEDIA:/home/user/.doppel/cache/documents/report.txt" in zh_cluster
+    assert "Doppel resolves each listed variable" in en_cluster
+    assert "Doppel Agent 首先从您当前的 shell 解析每个列出的变量" in zh_cluster
+    assert "Doppel Agent appends `--user $(id -u):$(id -g)`" in en_cluster
+    assert "Doppel Agent 将 `--user $(id -u):$(id -g)` 附加到 `docker run` 命令" in zh_cluster
+    assert "Doppel Agent does **not** pass your current host working directory" in en_cluster
+    assert "Doppel Agent **不会**将您当前的宿主工作目录传入容器" in zh_cluster
+    assert "launch Doppel Agent from `~/projects/my-app`" in en_cluster
+    assert "启动 Doppel Agent" in zh_cluster
+    assert "directory you launched Doppel Agent from" in en_cluster
+    assert "启动 Doppel Agent 的目录" in zh_cluster
+    assert "doppel config set terminal.persistent_shell false" in en_cluster
+    assert "doppel config set terminal.persistent_shell false" in zh_cluster
+    assert "HERMES_FORCE_FILE_SYNC=1" in en_cluster
+    assert "HERMES_FORCE_FILE_SYNC=1" in zh_cluster
+
+    assert "/home/user/.hermes/cache/documents:/output" not in en_cluster
+    assert "/home/user/.hermes/cache/documents:/output" not in zh_cluster
+    assert "Hermes appends `--user $(id -u):$(id -g)`" not in en_cluster
+    assert "Hermes 将 `--user $(id -u):$(id -g)`" not in zh_cluster
+    assert "launch Hermes from `~/projects/my-app`" not in en_cluster
+    assert "启动 Hermes" not in zh_cluster
+    assert "hermes config set terminal.persistent_shell false" not in en_cluster
+    assert "hermes config set terminal.persistent_shell false" not in zh_cluster
+    assert "`~/.doppel/cache/remote-syncs/<session-id>/`" not in en_cluster
+    assert "`~/.doppel/cache/remote-syncs/<session-id>/`" not in zh_cluster
+    assert "file_sync_max_mb" not in en_cluster
+    assert "file_sync_max_mb" not in zh_cluster
+    assert "file_sync_enabled" not in en_cluster
+    assert "file_sync_enabled" not in zh_cluster
+
+    for literal in (
+        "MEDIA:/",
+        "TERMINAL_DOCKER_VOLUMES",
+        "docker_forward_env",
+        "GITHUB_TOKEN",
+        "NPM_TOKEN",
+        "--user $(id -u):$(id -g)",
+        "/workspace",
+        "/root",
+        "TERMINAL_SSH_PERSISTENT",
+        "TERMINAL_LOCAL_PERSISTENT",
+        "stdin_data",
+        "sudo",
+    ):
+        assert literal in en_cluster
+        assert literal in zh_cluster
+
+    assert "~/.hermes/" in en_cluster
+    assert "~/.hermes/" in zh_cluster
+    assert "~/.hermes/.env" in zh_cluster
+
+
 def test_mcp_config_reference_docs_prefer_doppel_branding_and_keep_runtime_literals():
     en = EN_MCP_CONFIG_REFERENCE_DOC.read_text(encoding="utf-8")
     zh = ZH_MCP_CONFIG_REFERENCE_DOC.read_text(encoding="utf-8")

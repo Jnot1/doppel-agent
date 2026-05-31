@@ -332,20 +332,14 @@ When in doubt, set `terminal.backend` back to `local` and verify that commands r
 
 ### Remote-to-Host File Sync on Teardown
 
-For the **SSH**, **Modal**, and **Daytona** backends (anywhere the agent's working tree lives on a different machine than the host running Doppel), Doppel tracks files the agent touched inside the remote sandbox and, on session teardown / sandbox cleanup, **syncs the modified files back to the host** under `~/.doppel/cache/remote-syncs/<session-id>/`.
+For the **SSH**, **Modal**, and **Daytona** backends, Doppel Agent syncs a tracked set of agent-home inputs into the remote `.hermes/` tree (credentials, skills, cache directories, and configured terminal credential files). On teardown, it syncs touched tracked files back to their matching host paths in your agent home (`~/.doppel/` on fresh installs; legacy `~/.hermes/` layouts still supported). It does **not** create a per-session agent-worktree snapshot directory.
 
 - Triggers on: session close, `/new`, `/reset`, gateway message timeout, `delegate_task` subagent completion when the child used a remote backend.
-- Covers the whole tree the agent modified, not just files it explicitly opened. Additions, edits, and deletions are all captured.
-- The remote sandbox may have been torn down by the time you go looking; the local `~/.doppel/cache/remote-syncs/…` copy is the authoritative record of what the agent changed.
-- Large binary outputs (model checkpoints, raw datasets) are capped by size — the sync skips files over `file_sync_max_mb` (default `100`). Bump that if you expect bigger artifacts to come back.
+- Covers only the synced file set, not an arbitrary backup of the agent's remote working tree.
+- Sync-back applies directly onto the matching host paths; there is no materialized `remote-syncs/<session-id>` artifact directory to inspect later.
+- There is no `terminal.file_sync_*` setting in the current release. To force an immediate sync cycle while debugging, set `HERMES_FORCE_FILE_SYNC=1` before the command.
 
-```yaml
-terminal:
-  file_sync_max_mb: 100     # default — sync files up to 100 MB each
-  file_sync_enabled: true   # default — set false to skip the sync entirely
-```
-
-This is how you recover results from ephemeral cloud sandboxes that get destroyed after the session ends, without having to tell the agent to explicitly `scp` or `modal volume put` every artifact.
+This is how Doppel Agent keeps synced credentials, skills, and cache-backed artifacts aligned across remote sandboxes without asking the agent to manually `scp` or `modal volume put` each file.
 
 ### Docker Volume Mounts
 
@@ -357,7 +351,7 @@ terminal:
   docker_volumes:
     - "/home/user/projects:/workspace/projects"   # Read-write (default)
     - "/home/user/datasets:/data:ro"              # Read-only
-    - "/home/user/.hermes/cache/documents:/output" # Gateway-visible exports
+    - "/home/user/.doppel/cache/documents:/output" # Gateway-visible exports
 ```
 
 This is useful for:
@@ -367,11 +361,11 @@ This is useful for:
 
 If you use a messaging gateway and want the agent to send generated files via
 `MEDIA:/...`, prefer a dedicated host-visible export mount such as
-`/home/user/.hermes/cache/documents:/output`.
+`/home/user/.doppel/cache/documents:/output`.
 
 - Write files inside Docker to `/output/...`
 - Emit the **host path** in `MEDIA:`, for example:
-  `MEDIA:/home/user/.hermes/cache/documents/report.txt`
+  `MEDIA:/home/user/.doppel/cache/documents/report.txt`
 - Do **not** emit `/workspace/...` or `/output/...` unless that exact path also
   exists for the gateway process on the host
 
@@ -411,13 +405,13 @@ terminal:
   docker_run_as_host_user: true   # default: false
 ```
 
-When enabled, Hermes appends `--user $(id -u):$(id -g)` to the `docker run` command so files written into bind-mounted directories (`/workspace`, `/root`, anything in `docker_volumes`) are owned by your host user, not root. The trade-off: the container can no longer `apt install` or write to root-owned paths like `/root/.npm` — use a base image whose `HOME` is owned by a non-root user (or add your required tooling at image build time) if you need both.
+When enabled, Doppel Agent appends `--user $(id -u):$(id -g)` to the `docker run` command so files written into bind-mounted directories (`/workspace`, `/root`, anything in `docker_volumes`) are owned by your host user, not root. The trade-off: the container can no longer `apt install` or write to root-owned paths like `/root/.npm` — use a base image whose `HOME` is owned by a non-root user (or add your required tooling at image build time) if you need both.
 
 Leave this `false` (the default) for backwards-compatible behavior. Turn it on when your workflow is mostly "edit mounted host files" and you're tired of `sudo chown -R`.
 
 ### Optional: Mount the Launch Directory into `/workspace`
 
-Docker sandboxes stay isolated by default. Hermes does **not** pass your current host working directory into the container unless you explicitly opt in.
+Docker sandboxes stay isolated by default. Doppel Agent does **not** pass your current host working directory into the container unless you explicitly opt in.
 
 Enable it in `config.yaml`:
 
@@ -428,7 +422,7 @@ terminal:
 ```
 
 When enabled:
-- if you launch Hermes from `~/projects/my-app`, that host directory is bind-mounted to `/workspace`
+- if you launch Doppel Agent from `~/projects/my-app`, that host directory is bind-mounted to `/workspace`
 - the Docker backend starts in `/workspace`
 - file tools and terminal commands both see the same mounted project
 
@@ -436,7 +430,7 @@ When disabled, `/workspace` stays sandbox-owned unless you explicitly mount some
 
 Security tradeoff:
 - `false` preserves the sandbox boundary
-- `true` gives the sandbox direct access to the directory you launched Hermes from
+- `true` gives the sandbox direct access to the directory you launched Doppel Agent from
 
 Use the opt-in only when you intentionally want the container to work on live host files.
 
@@ -454,7 +448,7 @@ terminal:
 To disable:
 
 ```bash
-hermes config set terminal.persistent_shell false
+doppel config set terminal.persistent_shell false
 ```
 
 **What persists across commands:**

@@ -11917,13 +11917,13 @@ def main():
     # gateway migrate-legacy
     gateway_migrate_legacy = gateway_subparsers.add_parser(
         "migrate-legacy",
-        help="Remove legacy Hermes gateway service artifacts from pre-rebrand installs",
+        help="Remove legacy gateway service artifacts from pre-rebrand installs",
         description=(
-            "Stop, disable, and remove legacy Hermes gateway service artifacts "
+            "Stop, disable, and remove legacy gateway service artifacts "
             "(for example hermes.service on systemd hosts or ai.hermes.gateway*.plist "
             "on macOS launchd hosts) left over from older installs. Current "
             "Doppel profile units (doppel-gateway-<profile>.service), legacy "
-            "Hermes profile units (hermes-gateway-<profile>.service), and unrelated "
+            "profile units (hermes-gateway-<profile>.service), and unrelated "
             "third-party services are never touched."
         ),
     )

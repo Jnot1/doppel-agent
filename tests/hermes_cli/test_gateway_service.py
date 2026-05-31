@@ -2489,6 +2489,9 @@ class TestMigrateLegacyCommand:
         assert result.returncode == 0
         assert "launchd" in result.stdout
         assert "Current Doppel profile units" in result.stdout
+        assert "legacy profile units" in result.stdout
+        assert "hermes-gateway-<profile>.service" in result.stdout.replace("\n", "")
+        assert "legacy Hermes gateway service artifacts" not in result.stdout
 
     def test_gateway_command_migrate_legacy_dispatches(
         self, tmp_path, monkeypatch, capsys

@@ -88,7 +88,7 @@ Socket Mode 让机器人通过 WebSocket 连接，无需公开 URL。
 1. 在侧边栏前往 **Settings → Socket Mode**
 2. 将 **Enable Socket Mode** 切换为开启
 3. 系统会提示你创建一个 **App-Level Token**：
-   - 命名为类似 `hermes-socket` 的名称（名称不重要）
+   - 命名为类似 `doppel-socket` 的名称（名称不重要）
    - 添加 **`connections:write`** 权限范围
    - 点击 **Generate**
 4. **复制该令牌**——它以 `xapp-` 开头。这就是你的 `SLACK_APP_TOKEN`
@@ -333,8 +333,8 @@ slack:
   # 触发机器人的自定义提及模式
   # （除默认 @mention 检测外）
   mention_patterns:
-    - "hey hermes"
-    - "hermes,"
+    - "hey doppel"
+    - "doppel,"
 
   # 每条发出消息前添加的文本
   reply_prefix: ""

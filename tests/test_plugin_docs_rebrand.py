@@ -160,6 +160,9 @@ EN_MCP_CONFIG_REFERENCE_DOC = (
     / "mcp-config-reference.md"
 )
 EN_REFERENCE_FAQ_DOC = REPO_ROOT / "website" / "docs" / "reference" / "faq.md"
+EN_REFERENCE_SLASH_COMMANDS_DOC = (
+    REPO_ROOT / "website" / "docs" / "reference" / "slash-commands.md"
+)
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
@@ -226,6 +229,16 @@ ZH_REFERENCE_FAQ_DOC = (
     / "current"
     / "reference"
     / "faq.md"
+)
+ZH_REFERENCE_SLASH_COMMANDS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "reference"
+    / "slash-commands.md"
 )
 ZH_ENVIRONMENT_VARIABLES_DOC = (
     REPO_ROOT
@@ -4098,3 +4111,54 @@ def test_reference_cli_commands_active_home_examples_stay_doppel_first():
     assert "在拉取前为当前智能体主目录创建带标签的预更新快照" in zh_update
     assert "with legacy `HERMES_HOME` still honored" not in en_update
     assert "兼容旧版 `HERMES_HOME`" not in zh_update
+
+
+def test_reference_slash_commands_prefer_doppel_customer_wording():
+    en = EN_REFERENCE_SLASH_COMMANDS_DOC.read_text(encoding="utf-8")
+    zh = ZH_REFERENCE_SLASH_COMMANDS_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent has two slash-command surfaces" in en
+    assert "Doppel Agent acknowledges the ping silently" in en
+    assert "Doppel Agent works toward across turns" in en
+    assert "Create or restore state snapshots of Doppel config/state." in en
+    assert "run `doppel model` from your terminal" in en
+    assert "The full `doppel kanban` surface is available" in en
+    assert "Re-scan `~/.doppel/skills/`" in en
+    assert "your agent-home `config.yaml` (usually `~/.doppel/config.yaml`)" in en
+    assert "doppel config set model.aliases.fav anthropic/claude-opus-4.6" in en
+    assert "Update Doppel Agent to the latest version." in en
+    assert "`doppel --tui --resume <id-or-title>`" in en
+    assert "command: doppel gateway status" in en
+
+    assert "Hermes has two slash-command surfaces" not in en
+    assert "Hermes config/state" not in en
+    assert "run `hermes model` from your terminal" not in en
+    assert "Full `hermes kanban` surface is available" not in en
+    assert "Re-scan `~/.hermes/skills/`" not in en
+    assert "Configure them in `~/.hermes/config.yaml`" not in en
+    assert "hermes config set model.aliases.fav anthropic/claude-opus-4.6" not in en
+    assert "Update Hermes Agent to the latest version." not in en
+    assert "`hermes --tui --resume <id-or-title>`" not in en
+    assert "command: systemctl status hermes-agent" not in en
+
+    assert "Doppel Agent 有两个斜杠命令入口" in zh
+    assert "创建或恢复 Doppel 配置/状态的快照" in zh
+    assert "Doppel Agent 将跨轮次持续推进" in zh
+    assert "在终端运行 `doppel model`" in zh
+    assert "完整的 `doppel kanban` 命令面均可用" in zh
+    assert "重新扫描 `~/.doppel/skills/`" in zh
+    assert "agent-home 的 `config.yaml`（通常是 `~/.doppel/config.yaml`）" in zh
+    assert "doppel config set model.aliases.fav anthropic/claude-opus-4.6" in zh
+    assert "将 Doppel Agent 更新到最新版本" in zh
+    assert "command: doppel gateway status" in zh
+
+    assert "Hermes 有两个斜杠命令入口" not in zh
+    assert "创建或恢复 Hermes 配置/状态的快照" not in zh
+    assert "Hermes 将跨轮次持续推进" not in zh
+    assert "在终端运行 `hermes model`" not in zh
+    assert "完整的 `hermes kanban` 命令面均可用" not in zh
+    assert "重新扫描 `~/.hermes/skills/`" not in zh
+    assert "在 `~/.hermes/config.yaml` 中配置" not in zh
+    assert "hermes config set model.aliases.fav anthropic/claude-opus-4.6" not in zh
+    assert "将 Hermes Agent 更新到最新版本" not in zh
+    assert "command: systemctl status hermes-agent" not in zh

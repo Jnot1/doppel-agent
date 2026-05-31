@@ -11599,7 +11599,7 @@ def main():
     model_parser.add_argument(
         "--client-id",
         default=None,
-        help="OAuth client id to use for Nous login (default: hermes-cli)",
+        help="Registered OAuth client id to use for Nous login (default: hermes-cli)",
     )
     model_parser.add_argument(
         "--scope", default=None, help="OAuth scope to request for Nous login"
@@ -12142,7 +12142,9 @@ def main():
         help="Inference API base URL (default: production inference API)",
     )
     login_parser.add_argument(
-        "--client-id", default=None, help="OAuth client id to use (default: hermes-cli)"
+        "--client-id",
+        default=None,
+        help="Registered OAuth client id to use (default: hermes-cli)",
     )
     login_parser.add_argument("--scope", default=None, help="OAuth scope to request")
     login_parser.add_argument(

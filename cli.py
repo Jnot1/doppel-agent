@@ -4915,12 +4915,12 @@ class HermesCLI:
                 if _quiet_mode:
                     print(f"Session not found: {self.session_id}", file=sys.stderr)
                     print(
-                        "Use a session ID from a previous CLI run (hermes sessions list).",
+                        "Use a session ID from a previous CLI run (doppel sessions list).",
                         file=sys.stderr,
                     )
                 else:
                     _cprint(f"\033[1;31mSession not found: {self.session_id}{_RST}")
-                    _cprint(f"{_DIM}Use a session ID from a previous CLI run (hermes sessions list).{_RST}")
+                    _cprint(f"{_DIM}Use a session ID from a previous CLI run (doppel sessions list).{_RST}")
                 return False
             # If the requested session is the (empty) head of a compression
             # chain, walk to the descendant that actually holds the messages.
@@ -5201,7 +5201,7 @@ class HermesCLI:
             )
             self._console_print(
                 "[dim]Use a session ID from a previous CLI run "
-                "(hermes sessions list).[/]"
+                "(doppel sessions list).[/]"
             )
             return False
 
@@ -6727,7 +6727,7 @@ class HermesCLI:
                 # #34584.
                 self._pending_resume_sessions = self._list_recent_sessions(limit=10)
                 return
-            _cprint("  Tip:   Use /history or `hermes sessions list` to find sessions.")
+            _cprint("  Tip:   Use /history or `doppel sessions list` to find sessions.")
             return
 
         # Any explicit /resume <target> supersedes a previously-armed bare
@@ -6757,7 +6757,7 @@ class HermesCLI:
         session_meta = self._session_db.get_session(target_id)
         if not session_meta:
             _cprint(f"  Session not found: {target}")
-            _cprint("  Use /history or `hermes sessions list` to see available sessions.")
+            _cprint("  Use /history or `doppel sessions list` to see available sessions.")
             return
 
         # If the target is the empty head of a compression chain, redirect to
@@ -7078,7 +7078,7 @@ class HermesCLI:
                 }, f, indent=2, ensure_ascii=False)
             print(f"(^_^)v Conversation snapshot saved to: {path}")
             if self.session_id:
-                print(f"       Resume the live session with: hermes --resume {self.session_id}")
+                print(f"       Resume the live session with: doppel --resume {self.session_id}")
         except Exception as e:
             print(f"(x_x) Failed to save: {e}")
     
@@ -12423,9 +12423,9 @@ class HermesCLI:
             profile_flag = (
                 "" if _active_profile in ("default", "custom") else f" -p {_active_profile}"
             )
-            print(f"  hermes --resume {self.session_id}{profile_flag}")
+            print(f"  doppel --resume {self.session_id}{profile_flag}")
             if session_title:
-                print(f"  hermes -c \"{session_title}\"{profile_flag}")
+                print(f"  doppel -c \"{session_title}\"{profile_flag}")
             print()
             print(f"Session:        {self.session_id}")
             if session_title:

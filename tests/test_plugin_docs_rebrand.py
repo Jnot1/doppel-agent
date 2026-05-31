@@ -5115,3 +5115,57 @@ def test_xai_grok_oauth_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_google_gemini_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "google-gemini.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "google-gemini.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Use Doppel Agent with Google Gemini" in en
+    assert "将 Doppel Agent 与 Google Gemini 配合使用" in zh
+    assert "Doppel Agent supports Google Gemini" in en
+    assert "Doppel Agent 通过 **Google AI Studio / Gemini API** 原生支持 Google Gemini" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel chat" in en
+    assert "doppel chat" in zh
+    assert "doppel doctor" in en
+    assert "doppel doctor" in zh
+    assert "doppel gateway setup" in en
+    assert "doppel gateway setup" in zh
+    assert "doppel gateway start" in en
+    assert "doppel gateway start" in zh
+    assert "Upgrade Doppel and rerun `doppel model`." in en
+    assert "升级 Doppel 并重新运行 `doppel model`" in zh
+
+    for stale in (
+        "Use Hermes Agent with Google Gemini",
+        "将 Hermes Agent 与 Google Gemini 配合使用",
+        "Hermes Agent supports Google Gemini",
+        "Hermes Agent 通过 **Google AI Studio / Gemini API** 原生支持 Google Gemini",
+        "~/.hermes/.env",
+        "~/.hermes/config.yaml",
+        "hermes model",
+        "hermes chat",
+        "hermes doctor",
+        "hermes gateway setup",
+        "hermes gateway start",
+        "Upgrade Hermes and rerun `hermes model`.",
+    ):
+        assert stale not in en
+        assert stale not in zh

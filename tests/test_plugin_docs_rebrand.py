@@ -5327,3 +5327,84 @@ def test_team_telegram_assistant_guides_prefer_doppel_customer_facing_surfaces()
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_run_hermes_with_nous_portal_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "run-hermes-with-nous-portal.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "run-hermes-with-nous-portal.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Run Doppel Agent with Nous Portal" in en
+    assert "通过 Nous Portal 运行 Doppel Agent" in zh
+    assert "running Doppel Agent on a [Nous Portal]" in en
+    assert "在 [Nous Portal](https://portal.nousresearch.com) 订阅下运行 Doppel Agent" in zh
+    assert "doppel setup --portal" in en
+    assert "doppel setup --portal" in zh
+    assert "doppel auth add nous" in en
+    assert "doppel auth add nous" in zh
+    assert "doppel portal status" in en
+    assert "doppel portal status" in zh
+    assert "doppel portal tools" in en
+    assert "doppel portal tools" in zh
+    assert "doppel tools" in en
+    assert "doppel tools" in zh
+    assert "doppel chat" in en
+    assert "doppel chat" in zh
+    assert "doppel config set model.default anthropic/claude-sonnet-4.6" in en
+    assert "doppel config set model.default anthropic/claude-sonnet-4.6" in zh
+    assert "doppel setup tts" in en
+    assert "doppel setup tts" in zh
+    assert "doppel cron create" in en
+    assert "doppel cron create" in zh
+    assert "`~/.doppel/auth.json`" in en
+    assert "`~/.doppel/auth.json`" in zh
+    assert "`~/.doppel/config.yaml`" in en
+    assert "`~/.doppel/config.yaml`" in zh
+    assert "legacy installs may still use `~/.hermes/auth.json`" in en
+    assert "legacy 安装仍可能使用 `~/.hermes/auth.json`" in zh
+    assert "legacy installs may still use `~/.hermes/config.yaml`" in en
+    assert "legacy 安装仍可能使用 `~/.hermes/config.yaml`" in zh
+    assert "Hermes-4-70B" in en
+    assert "Hermes-4-70B" in zh
+
+    for stale in (
+        "Run Hermes Agent with Nous Portal",
+        "通过 Nous Portal 运行 Hermes Agent",
+        "running Hermes Agent on a [Nous Portal]",
+        "在 [Nous Portal](https://portal.nousresearch.com) 订阅下运行 Hermes Agent",
+        "Hermes Agent installed",
+        "已安装 Hermes Agent",
+        "hermes setup --portal",
+        "hermes auth add nous",
+        "hermes portal status",
+        "hermes portal tools",
+        "hermes tools",
+        "hermes chat",
+        "hermes config set model.default",
+        "hermes config set model.provider nous",
+        "hermes model",
+        "hermes setup voice",
+        "hermes cron create",
+        "hermes cron add",
+        "Hermes-side opinion",
+        "Hermes 一方的意见",
+        "For Hermes Agent itself",
+        "对于 Hermes Agent 本身",
+        "Multiple Hermes profiles",
+        "多个 Hermes profiles",
+        "hermes profile current",
+        "non-Hermes tools",
+        "非 Hermes 工具",
+    ):
+        assert stale not in en
+        assert stale not in zh

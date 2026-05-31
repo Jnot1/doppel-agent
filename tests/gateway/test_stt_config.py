@@ -32,6 +32,17 @@ def test_load_gateway_config_bridges_stt_enabled_from_config_yaml(tmp_path, monk
     assert config.stt_enabled is False
 
 
+def test_gateway_runtime_stt_setup_copy_is_doppel_first():
+    runtime = Path("gateway/run.py").read_text(encoding="utf-8")
+
+    assert "in the active Doppel environment" in runtime
+    assert "run `doppel setup` on the host" in runtime
+    assert "configure Doppel features" in runtime
+    assert "Hermes venv" not in runtime
+    assert "/skill hermes-agent-setup" not in runtime
+    assert "configure Hermes features" not in runtime
+
+
 @pytest.mark.asyncio
 async def test_enrich_message_with_transcription_surfaces_path_when_stt_disabled():
     from gateway.run import GatewayRunner

@@ -4013,7 +4013,7 @@ class GatewayRunner:
                 logger.warning(
                     "Stale systemd unit detected: %s has TimeoutStopSec=%.0fs but "
                     "drain_timeout=%.0fs (expected >=%.0fs). systemd may SIGKILL the "
-                    "gateway mid-drain. Run `hermes gateway service install --replace` "
+                    "gateway mid-drain. Run `doppel gateway service install --replace` "
                     "to regenerate the unit, or shorten agent.restart_drain_timeout.",
                     _alignment.get("unit", "(unknown)"),
                     _alignment["timeout_stop_sec"],
@@ -5677,7 +5677,7 @@ class GatewayRunner:
                         "SQLite database; pausing dispatch for this board until "
                         "the file changes, the gateway restarts, or the "
                         "quarantine timer expires. Move or restore the file, "
-                        "then run `hermes kanban init` if you need a fresh board.",
+                        "then run `doppel kanban init` if you need a fresh board.",
                         slug,
                         fingerprint[0],
                     )
@@ -5692,7 +5692,7 @@ class GatewayRunner:
                         "SQLite database; pausing dispatch for this board until "
                         "the file changes, the gateway restarts, or the "
                         "quarantine timer expires. Move or restore the file, "
-                        "then run `hermes kanban init` if you need a fresh board.",
+                        "then run `doppel kanban init` if you need a fresh board.",
                         slug,
                         fingerprint[0],
                     )
@@ -5902,7 +5902,7 @@ class GatewayRunner:
                             "kanban dispatcher stuck: ready queue non-empty for "
                             "%d consecutive ticks but 0 workers spawned. Check "
                             "profile health (venv, PATH, credentials) and "
-                            "`hermes kanban list --status ready`.",
+                            "`doppel kanban list --status ready`.",
                             bad_ticks,
                         )
                         last_warn_at = now
@@ -8237,13 +8237,13 @@ class GatewayRunner:
                                 "🎤 I received your voice message but can't transcribe it — "
                                 "no speech-to-text provider is configured.\n\n"
                                 "To enable voice: install faster-whisper "
-                                "(`uv pip install faster-whisper` in the Hermes venv; "
+                                "(`uv pip install faster-whisper` in the active Doppel environment; "
                                 "`pip install faster-whisper` also works if pip is on PATH) "
                                 "and set `stt.enabled: true` in config.yaml, "
                                 "then /restart the gateway."
                             )
                             if self._has_setup_skill():
-                                _stt_msg += "\n\nFor full setup instructions, type: `/skill hermes-agent-setup`"
+                                _stt_msg += "\n\nFor guided host setup, run `doppel setup` on the host."
                             await _stt_adapter.send(
                                 source.chat_id,
                                 _stt_msg,
@@ -15101,8 +15101,8 @@ class GatewayRunner:
                         )
                         if self._has_setup_skill():
                             _no_stt_note += (
-                                " You have a skill called hermes-agent-setup "
-                                "that can help users configure Hermes features "
+                                " You have setup guidance available "
+                                "that can help users configure Doppel features "
                                 "including voice, tools, and more."
                             )
                         _no_stt_note += "]"

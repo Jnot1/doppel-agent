@@ -37,6 +37,13 @@ def _make_runner():
     return runner
 
 
+def test_gateway_runtime_service_reinstall_hint_is_doppel_first():
+    runtime = Path("gateway/run.py").read_text(encoding="utf-8")
+
+    assert "doppel gateway service install --replace" in runtime
+    assert "hermes gateway service install --replace" not in runtime
+
+
 # ---------------------------------------------------------------------------
 # _handle_update_command
 # ---------------------------------------------------------------------------

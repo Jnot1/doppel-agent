@@ -4968,3 +4968,51 @@ def test_cron_troubleshooting_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_automate_with_cron_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "automate-with-cron.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "automate-with-cron.md"
+    ).read_text(encoding="utf-8")
+
+    assert "using Doppel cron" in en
+    assert "使用 Doppel cron" in zh
+    assert "ask Doppel to set one up for you in chat" in en
+    assert "让 Doppel 帮你设置" in zh
+    assert "[`doppel send`](/guides/pipe-script-output)" in en
+    assert "[`doppel send`](/guides/pipe-script-output)" in zh
+    assert "~/.doppel/scripts" in en
+    assert "~/.doppel/scripts" in zh
+    assert "Doppel-Monitor/1.0" in en
+    assert "Doppel-Monitor/1.0" in zh
+    assert "doppel cron create" in en
+    assert "doppel cron create" in zh
+    assert "Jnot1/doppel-agent" in en
+    assert "Jnot1/doppel-agent" in zh
+    assert "~/.doppel/data/prices" in en
+    assert "~/.doppel/data/prices" in zh
+
+    for stale in (
+        "using Hermes cron",
+        "使用 Hermes cron",
+        "ask Hermes to set one up for you in chat",
+        "让 Hermes 帮你设置",
+        "[`hermes send`](/guides/pipe-script-output)",
+        "~/.hermes/scripts",
+        "Hermes-Monitor/1.0",
+        "hermes cron create",
+        "NousResearch/hermes-agent",
+        "~/.hermes/data/prices",
+    ):
+        assert stale not in en
+        assert stale not in zh

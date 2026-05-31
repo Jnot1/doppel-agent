@@ -12,8 +12,12 @@ def _project_scripts() -> list[str]:
     return list(data["project"]["scripts"].keys())
 
 
-def _homebrew_wrapper_list() -> list[str]:
-    content = (REPO_ROOT / "packaging" / "homebrew" / "hermes-agent.rb").read_text()
+def _homebrew_formula_text(name: str) -> str:
+    return (REPO_ROOT / "packaging" / "homebrew" / f"{name}.rb").read_text()
+
+
+def _homebrew_wrapper_list(name: str) -> list[str]:
+    content = _homebrew_formula_text(name)
     match = re.search(r"%w\[(?P<body>[^\]]+)\]\.each do \|exe\|", content)
     assert match, "Could not locate Homebrew wrapper list"
     return match.group("body").split()
@@ -41,15 +45,34 @@ def _nix_overlay_aliases() -> dict[str, str]:
     )
 
 
-def _homebrew_managed_descriptor() -> str:
-    content = (REPO_ROOT / "packaging" / "homebrew" / "hermes-agent.rb").read_text()
+def _homebrew_managed_descriptor(name: str) -> str:
+    content = _homebrew_formula_text(name)
     match = re.search(r'HERMES_MANAGED:\s*"([^"]+)"', content)
     assert match, "Could not locate Homebrew managed descriptor"
     return match.group(1)
 
 
-def test_homebrew_formula_wraps_all_project_scripts():
-    assert _homebrew_wrapper_list() == _project_scripts()
+def _homebrew_formula_source(name: str) -> tuple[str, str]:
+    content = _homebrew_formula_text(name)
+    url = re.search(r'^\s*url\s+"([^"]+)"', content, flags=re.MULTILINE)
+    sha = re.search(r'^\s*sha256\s+"([^"]+)"', content, flags=re.MULTILINE)
+    assert url and sha, "Could not locate Homebrew source url/sha256"
+    return url.group(1), sha.group(1)
+
+
+def _homebrew_conflicts_with(name: str) -> str:
+    content = _homebrew_formula_text(name)
+    match = re.search(r'^\s*conflicts_with\s+"([^"]+)"', content, flags=re.MULTILINE)
+    assert match, "Could not locate Homebrew conflicts_with target"
+    return match.group(1)
+
+
+def test_legacy_homebrew_formula_wraps_all_project_scripts():
+    assert _homebrew_wrapper_list("hermes-agent") == _project_scripts()
+
+
+def test_preferred_homebrew_formula_wraps_all_project_scripts():
+    assert _homebrew_wrapper_list("doppel-agent") == _project_scripts()
 
 
 def test_nix_package_wraps_all_project_scripts():
@@ -74,5 +97,18 @@ def test_nix_overlay_exports_preferred_and_legacy_package_aliases():
     assert aliases["hermes-agent"] == "hermesAgent"
 
 
+def test_homebrew_formulae_share_the_same_release_source():
+    assert _homebrew_formula_source("hermes-agent") == _homebrew_formula_source("doppel-agent")
+
+
 def test_homebrew_formula_stamps_legacy_formula_descriptor():
-    assert _homebrew_managed_descriptor() == "homebrew:hermes-agent"
+    assert _homebrew_managed_descriptor("hermes-agent") == "homebrew:hermes-agent"
+
+
+def test_homebrew_formula_stamps_preferred_formula_descriptor():
+    assert _homebrew_managed_descriptor("doppel-agent") == "homebrew:doppel-agent"
+
+
+def test_homebrew_formulae_conflict_using_qualified_tap_names():
+    assert _homebrew_conflicts_with("doppel-agent") == "jnot1/doppel-agent/hermes-agent"
+    assert _homebrew_conflicts_with("hermes-agent") == "jnot1/doppel-agent/doppel-agent"

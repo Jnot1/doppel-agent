@@ -236,6 +236,23 @@ nix profile rollback
 
 详情参见 [Nix 安装](./nix-setup.md)。
 
+### Homebrew 用户注意事项
+
+如果你的 tap 已暴露新的 Doppel 公式名，全新安装可以使用：
+
+```bash
+brew install doppel-agent
+brew upgrade doppel-agent
+```
+
+仍在使用旧公式名的 Homebrew 旧安装，应继续通过以下命令升级：
+
+```bash
+brew upgrade hermes-agent
+```
+
+`doppel update` 现在会显示为该安装写入的确切 Homebrew 公式名，因此受 Homebrew 管理的安装会明确提示你应使用 `doppel-agent` 还是 `hermes-agent`。
+
 ---
 
 ## 卸载

@@ -236,6 +236,23 @@ nix profile rollback
 
 See [Nix Setup](./nix-setup.md) for more details.
 
+### Note for Homebrew users
+
+If your tap exposes the new Doppel formula name, fresh installs can use:
+
+```bash
+brew install doppel-agent
+brew upgrade doppel-agent
+```
+
+Legacy Homebrew installs that still use the old formula name should continue to upgrade with:
+
+```bash
+brew upgrade hermes-agent
+```
+
+`doppel update` now surfaces the exact Homebrew formula name that stamped the install, so a managed Homebrew install can tell you whether it expects `doppel-agent` or `hermes-agent`.
+
 ---
 
 ## Uninstalling

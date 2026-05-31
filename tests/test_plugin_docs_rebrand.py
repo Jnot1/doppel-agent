@@ -1902,6 +1902,54 @@ def test_feature_skills_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "my-org/hermes-skills" not in zh
 
 
+def test_zh_reference_skill_docs_mirror_doppel_skill_commands():
+    zh_skills_catalog = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "skills-catalog.md"
+    ).read_text(encoding="utf-8")
+    zh_optional_skills_catalog = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "optional-skills-catalog.md"
+    ).read_text(encoding="utf-8")
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    assert "`doppel update`" in zh_skills_catalog
+    assert "`doppel skills reset <name> --restore`" in zh_skills_catalog
+    assert "`hermes update`" not in zh_skills_catalog
+    assert "`hermes skills reset <name> --restore`" not in zh_skills_catalog
+
+    assert "doppel skills install official/<category>/<skill>" in zh_optional_skills_catalog
+    assert "doppel skills uninstall <skill-name>" in zh_optional_skills_catalog
+    assert "hermes skills install official/<category>/<skill>" not in zh_optional_skills_catalog
+    assert "hermes skills uninstall <skill-name>" not in zh_optional_skills_catalog
+
+    assert "doppel skills install official/migration/openclaw-migration" in zh_cli_commands
+    assert "doppel skills reset google-workspace" in zh_cli_commands
+    assert "hermes skills install official/migration/openclaw-migration" not in zh_cli_commands
+    assert "hermes skills reset google-workspace" not in zh_cli_commands
+
+
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     en = EN_FEATURE_ACP_DOC.read_text(encoding="utf-8")
     zh = ZH_FEATURE_ACP_DOC.read_text(encoding="utf-8")

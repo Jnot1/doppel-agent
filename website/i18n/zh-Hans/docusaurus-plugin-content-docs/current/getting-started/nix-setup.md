@@ -130,11 +130,12 @@ nix build
 上面的 `environmentFiles` 行假设你已配置 [sops-nix](https://github.com/Mic92/sops-nix) 或 [agenix](https://github.com/ryantm/agenix)。该文件至少应包含一个 LLM 提供商密钥（例如 `OPENROUTER_API_KEY=sk-or-...`）。完整设置请参阅[密钥管理](#secrets-management)。如果你还没有密钥管理器，可以先使用普通文件——只需确保它不是全局可读的：
 
 ```bash
-echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o hermes /dev/stdin /var/lib/hermes/env
+echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o doppel /dev/stdin /var/lib/doppel/env
+# 如果你保留了历史默认值，请改用：-o hermes /var/lib/hermes/env
 ```
 
 ```nix
-services.hermes-agent.environmentFiles = [ "/var/lib/hermes/env" ];
+services.doppel-agent.environmentFiles = [ "/var/lib/doppel/env" ];
 ```
 :::
 
@@ -159,6 +160,23 @@ services.doppel-agent = {
 
 这会把系统用户/组、父级状态目录，以及容器模式下的 OCI 对象名称切换为 Doppel 优先。此阶段**内部**兼容布局仍然保留 `.hermes` 和 `HERMES_HOME`，因此下面的一些示例仍会显式提到 `${stateDir}/.hermes` 之类的路径。
 
+:::tip 服务命名
+在 Nix 配置中使用 `services.doppel-agent`，在 `systemctl` 或 `journalctl` 中使用 `doppel-agent.service`。底层的 `systemd.services.hermes-agent` 名称仍然作为兼容实现细节存在，因此在 Nix 内部、trace 或模块调试输出中仍可能看到它。
+:::
+
+:::note Shell 示例默认值
+除非另有说明，下面的运维 shell 示例都假设你使用了上面的 Doppel 优先运行时身份：
+
+```bash
+export SERVICE_NAME=doppel-agent
+export CONTAINER_NAME=doppel-agent
+export SERVICE_USER=doppel
+export STATE_DIR=/var/lib/doppel
+```
+
+如果你保留了历史默认值，请将这些值分别替换为 `hermes-agent`、`hermes` 和 `/var/lib/hermes`。
+:::
+
 :::tip addToSystemPackages
 设置 `addToSystemPackages = true` 有两个作用：将首选的 `doppel` CLI 添加到系统 PATH（同时保留 `hermes` 作为兼容别名），**并**在系统范围内设置 `HERMES_HOME`，使交互式 CLI 与 gateway 服务共享状态（会话、技能、cron）。不设置此项时，在 shell 中运行 `doppel` 会创建独立的 `~/.doppel/` 目录。
 :::
@@ -173,10 +191,10 @@ services.doppel-agent = {
 - 如果容器未运行，CLI 会短暂重试（交互式使用时显示 5 秒 spinner，脚本中静默等待 10 秒），然后以明确的错误退出——不会静默回退
 - 对于在 Doppel 代码库上工作的开发者，设置 `HERMES_DEV=1` 可绕过容器路由，直接运行本地检出版本
 
-设置 `container.hostUsers` 可创建 `~/.hermes` 到服务状态目录的符号链接，使主机 CLI 和容器共享会话、配置和记忆：
+设置 `container.hostUsers` 可创建兼容性的 `~/.hermes` 到服务状态目录的符号链接，使主机 CLI 和容器共享会话、配置和记忆：
 
 ```nix
-services.hermes-agent = {
+services.doppel-agent = {
   container.enable = true;
   container.hostUsers = [ "your-username" ];
   addToSystemPackages = true;
@@ -232,7 +250,7 @@ doppel config       # 显示生成的配置
 
 ```nix
 {
-  services.hermes-agent = {
+  services.doppel-agent = {
     enable = true;
     container.enable = true;
     # ... 其余配置相同
@@ -254,14 +272,14 @@ doppel config       # 显示生成的配置
 
 ```nix
 # base.nix
-services.hermes-agent.settings = {
+services.doppel-agent.settings = {
   model.default = "anthropic/claude-sonnet-4";
   toolsets = [ "all" ];
   terminal = { backend = "local"; timeout = 180; };
 };
 
 # personality.nix
-services.hermes-agent.settings = {
+services.doppel-agent.settings = {
   display = { compact = false; personality = "kawaii"; };
   memory = { memory_enabled = true; user_profile_enabled = true; };
 };
@@ -282,7 +300,7 @@ services.hermes-agent.settings = {
 
 ```nix
 { config, ... }: {
-  services.hermes-agent = {
+  services.doppel-agent = {
     enable = true;
     container.enable = true;
 
@@ -344,7 +362,7 @@ services.hermes-agent.settings = {
 如果你希望完全在 Nix 之外管理 `config.yaml`，请使用 `configFile`：
 
 ```nix
-services.hermes-agent.configFile = /etc/hermes/config.yaml;
+services.doppel-agent.configFile = /etc/hermes/config.yaml;
 ```
 
 这会完全绕过 `settings`——不合并，不生成。每次激活时，该文件会原样复制到 `$HERMES_HOME/config.yaml`。
@@ -358,7 +376,7 @@ Nix 用户最常见自定义需求的快速参考：
 | 更改 LLM 模型 | `settings.model.default` | `"anthropic/claude-sonnet-4"` |
 | 使用不同的提供商端点 | `settings.model.base_url` | `"https://openrouter.ai/api/v1"` |
 | 添加 API 密钥 | `environmentFiles` | `[ config.sops.secrets."hermes-env".path ]` |
-| 给 Agent 设置个性 | `${services.hermes-agent.stateDir}/.hermes/SOUL.md` | 直接管理该文件 |
+| 给 Agent 设置个性 | `${services.doppel-agent.stateDir}/.hermes/SOUL.md` | 直接管理该文件 |
 | 添加 MCP 工具服务器 | `mcpServers.<name>` | 参见 [MCP 服务器](#mcp-servers) |
 | 将主机目录挂载到容器 | `container.extraVolumes` | `[ "/data:/data:rw" ]` |
 | 为容器传入 GPU 访问 | `container.extraOptions` | `[ "--gpus" "all" ]` |
@@ -391,7 +409,7 @@ Nix 表达式中的值会进入 `/nix/store`，该目录是全局可读的。请
     secrets."hermes-env" = { format = "yaml"; };
   };
 
-  services.hermes-agent.environmentFiles = [
+  services.doppel-agent.environmentFiles = [
     config.sops.secrets."hermes-env".path
   ];
 }
@@ -413,7 +431,7 @@ hermes-env: |
 {
   age.secrets.hermes-env.file = ./secrets/hermes-env.age;
 
-  services.hermes-agent.environmentFiles = [
+  services.doppel-agent.environmentFiles = [
     config.age.secrets.hermes-env.path
   ];
 }
@@ -425,7 +443,7 @@ hermes-env: |
 
 ```nix
 {
-  services.hermes-agent = {
+  services.doppel-agent = {
     authFile = config.sops.secrets."hermes/auth.json".path;
     # authFileForceOverwrite = true;  # 每次激活时强制覆盖
   };
@@ -443,11 +461,11 @@ hermes-env: |
 - **`USER.md`** — 关于 Agent 正在交互的用户的上下文信息。
 - 你放置在此处的任何其他文件对 Agent 都可见，作为工作区文件。
 
-Agent 身份文件是独立的：Doppel 从 `$HERMES_HOME/SOUL.md` 加载其主要 `SOUL.md`，在 NixOS 模块中对应 `${services.hermes-agent.stateDir}/.hermes/SOUL.md`。将 `SOUL.md` 放入 `documents` 只会创建一个工作区文件，不会替换主角色文件。
+Agent 身份文件是独立的：Doppel 从 `$HERMES_HOME/SOUL.md` 加载其主要 `SOUL.md`，在 NixOS 模块中对应 `${services.doppel-agent.stateDir}/.hermes/SOUL.md`。将 `SOUL.md` 放入 `documents` 只会创建一个工作区文件，不会替换主角色文件。
 
 ```nix
 {
-  services.hermes-agent.documents = {
+  services.doppel-agent.documents = {
     "USER.md" = ./documents/USER.md;  # 路径引用，从 Nix store 复制
   };
 }
@@ -465,7 +483,7 @@ Agent 身份文件是独立的：Doppel 从 `$HERMES_HOME/SOUL.md` 加载其主�
 
 ```nix
 {
-  services.hermes-agent.mcpServers = {
+  services.doppel-agent.mcpServers = {
     filesystem = {
       command = "npx";
       args = [ "-y" "@modelcontextprotocol/server-filesystem" "/data/workspace" ];
@@ -487,7 +505,7 @@ Agent 身份文件是独立的：Doppel 从 `$HERMES_HOME/SOUL.md` 加载其主�
 
 ```nix
 {
-  services.hermes-agent.mcpServers.remote-api = {
+  services.doppel-agent.mcpServers.remote-api = {
     url = "https://mcp.example.com/v1/mcp";
     headers.Authorization = "Bearer \${MCP_REMOTE_API_KEY}";
     timeout = 180;
@@ -501,7 +519,7 @@ Agent 身份文件是独立的：Doppel 从 `$HERMES_HOME/SOUL.md` 加载其主�
 
 ```nix
 {
-  services.hermes-agent.mcpServers.my-oauth-server = {
+  services.doppel-agent.mcpServers.my-oauth-server = {
     url = "https://mcp.example.com/mcp";
     auth = "oauth";
   };
@@ -515,16 +533,16 @@ Token 存储在 `$HERMES_HOME/mcp-tokens/<server-name>.json` 中，在重启和�
 
 首次 OAuth 授权需要基于浏览器的同意流程。在无头部署中，Doppel Agent 会将授权 URL 打印到 stdout/日志，而不是打开浏览器。
 
-**方案 A：交互式引导** — 通过 `docker exec`（容器）或 `sudo -u hermes`（原生）运行一次流程：
+**方案 A：交互式引导** — 通过 `docker exec`（容器）或 `sudo -u "$SERVICE_USER"`（原生）运行一次流程：
 
 ```bash
 # 容器模式
-docker exec -it hermes-agent \
-  hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+docker exec -it "$CONTAINER_NAME" \
+  doppel mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
 
 # 原生模式
-sudo -u hermes HERMES_HOME=/var/lib/hermes/.hermes \
-  hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+sudo -u "$SERVICE_USER" HERMES_HOME="$STATE_DIR/.hermes" \
+  doppel mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
 ```
 
 容器使用 `--network=host`，因此 `127.0.0.1` 上的 OAuth 回调监听器可从主机浏览器访问。
@@ -532,10 +550,10 @@ sudo -u hermes HERMES_HOME=/var/lib/hermes/.hermes \
 **方案 B：预置 token** — 在工作站上完成流程，然后复制 token：
 
 ```bash
-hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
-scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
-    server:/var/lib/hermes/.hermes/mcp-tokens/
-# 确保：chown hermes:hermes，chmod 0600
+doppel mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+scp ~/.doppel/mcp-tokens/my-oauth-server{,.client}.json \
+    "server:$STATE_DIR/.hermes/mcp-tokens/"
+# 确保：chown "$SERVICE_USER:$SERVICE_USER"，chmod 0600
 ```
 
 </details>
@@ -546,7 +564,7 @@ scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
 
 ```nix
 {
-  services.hermes-agent.mcpServers.analysis = {
+  services.doppel-agent.mcpServers.analysis = {
     command = "npx";
     args = [ "-y" "analysis-server" ];
     sampling = {
@@ -577,7 +595,7 @@ scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
 这可以防止 Nix 声明的内容与磁盘上实际内容之间产生漂移。检测使用两个信号：
 
 1. **`HERMES_MANAGED=true`** 环境变量——由 systemd 服务设置，对 gateway 进程可见
-2. **`.managed` 标记文件**，位于 `HERMES_HOME` 中——由激活脚本设置，对交互式 shell 可见（例如 `docker exec -it hermes-agent hermes config set ...` 也会被屏蔽）
+2. **`.managed` 标记文件**，位于 `HERMES_HOME` 中——由激活脚本设置，对交互式 shell 可见（例如 `docker exec -it "$CONTAINER_NAME" doppel config set ...` 也会被屏蔽）
 
 要更改配置，请编辑你的 Nix 配置并运行 `sudo nixos-rebuild switch`。
 
@@ -589,14 +607,14 @@ scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
 本节仅在使用 `container.enable = true` 时相关。原生模式部署可跳过。
 :::
 
-启用容器模式后，hermes 在持久化 Ubuntu 容器内运行，Nix 构建的二进制文件以只读方式从主机绑定挂载：
+启用容器模式后，Doppel 在持久化 Ubuntu 容器内运行，Nix 构建的二进制文件以只读方式从主机绑定挂载：
 
 ```
 主机                                    容器
 ────                                    ─────────
-/nix/store/...-hermes-agent-0.1.0  ──►  /nix/store/... (ro)
-~/.hermes -> /var/lib/hermes/.hermes       （符号链接桥接，按 hostUsers）
-/var/lib/hermes/                    ──►  /data/          (rw)
+/nix/store/...-doppel-agent-0.1.0  ──►  /nix/store/... (ro)
+~/.hermes -> ${stateDir}/.hermes          （兼容符号链接桥接，按 hostUsers）
+${stateDir}/                         ──►  /data/          (rw)
   ├── current-package -> /nix/store/...    （符号链接，每次重建更新）
   ├── .gc-root -> /nix/store/...           （防止 nix-collect-garbage）
   ├── .container-identity                  （sha256 哈希，触发重建）
@@ -607,7 +625,7 @@ scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
   │   ├── .container-mode                  （路由元数据：backend、exec_user 等）
   │   ├── state.db, sessions/, memories/   （运行时状态）
   │   └── mcp-tokens/                      （MCP 服务器的 OAuth token）
-  ├── home/                                ──►  /home/hermes    (rw)
+  ├── home/                                ──►  /home/${user}   (rw)
   └── workspace/                           （MESSAGING_CWD）
       ├── SOUL.md                          （来自 documents 选项）
       └── （Agent 创建的文件）
@@ -615,11 +633,11 @@ scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
 容器可写层（apt/pip/npm）：   /usr, /usr/local, /tmp
 ```
 
-Nix 构建的二进制文件能在 Ubuntu 容器内运行，是因为 `/nix/store` 被绑定挂载——它携带自己的解释器和所有依赖，不依赖容器的系统库。容器入口点通过 `current-package` 符号链接解析：`/data/current-package/bin/hermes gateway run --replace`。执行 `nixos-rebuild switch` 时，只更新符号链接——容器继续运行。
+Nix 构建的二进制文件能在 Ubuntu 容器内运行，是因为 `/nix/store` 被绑定挂载——它携带自己的解释器和所有依赖，不依赖容器的系统库。容器入口点通过 `current-package` 符号链接解析：`/data/current-package/bin/doppel gateway run --replace`。执行 `nixos-rebuild switch` 时，只更新符号链接——容器继续运行。
 
 ### 各事件的持久性
 
-| 事件 | 容器重建？ | `/data`（状态） | `/home/hermes` | 可写层（`apt`/`pip`/`npm`） |
+| 事件 | 容器重建？ | `/data`（状态） | `/home/${user}` | 可写层（`apt`/`pip`/`npm`） |
 |---|---|---|---|---|
 | `systemctl restart doppel-agent` | 否 | 保留 | 保留 | 保留 |
 | `nixos-rebuild switch`（代码变更） | 否（更新符号链接） | 保留 | 保留 | 保留 |
@@ -629,17 +647,17 @@ Nix 构建的二进制文件能在 Ubuntu 容器内运行，是因为 `/nix/stor
 | 卷/选项变更 | **是** | 保留 | 保留 | **丢失** |
 | `environment`/`environmentFiles` 变更 | 否 | 保留 | 保留 | 保留 |
 
-仅当容器的**身份哈希**发生变化时才会重建容器。哈希涵盖：schema 版本、镜像、`extraVolumes`、`extraOptions` 和入口点脚本。环境变量、settings、文档或 hermes 包本身的变更**不会**触发重建。
+仅当容器的**身份哈希**发生变化时才会重建容器。哈希涵盖：schema 版本、镜像、容器名、配置的服务用户/组、派生得到的容器 home/workdir，以及 `extraVolumes`、`extraOptions`。环境变量、settings、文档或打包后的 Doppel 二进制本身的变更**不会**触发重建。
 
 :::warning 可写层丢失
-当身份哈希发生变化（镜像升级、新卷、新容器选项）时，容器会被销毁并从 `container.image` 的全新拉取重建。可写层中通过 `apt install`、`pip install` 或 `npm install` 安装的包将丢失。`/data` 和 `/home/hermes` 中的状态会保留（这些是绑定挂载）。
+当身份哈希发生变化（镜像升级、运行时身份变更、新卷或新容器选项）时，容器会被销毁并从 `container.image` 的全新拉取重建。可写层中通过 `apt install`、`pip install` 或 `npm install` 安装的包将丢失。`/data` 和 `/home/${user}` 中的状态会保留（这些是绑定挂载）。
 
 如果 Agent 依赖特定包，考虑将其烘焙到自定义镜像中（`container.image = "my-registry/hermes-base:latest"`），或在 Agent 的 SOUL.md 中编写安装脚本。
 :::
 
 ### GC Root 保护
 
-`preStart` 脚本在 `${stateDir}/.gc-root` 创建一个指向当前 hermes 包的 GC root。这可以防止 `nix-collect-garbage` 删除正在运行的二进制文件。如果 GC root 损坏，重启服务会重新创建它。
+`preStart` 脚本在 `${stateDir}/.gc-root` 创建一个指向当前 Doppel 包的 GC root。这可以防止 `nix-collect-garbage` 删除正在运行的二进制文件。如果 GC root 损坏，重启服务会重新创建它。
 
 ---
 
@@ -652,7 +670,7 @@ NixOS 模块支持声明式插件安装——无需命令式的 `hermes plugins 
 对于只包含 `plugin.yaml` + `__init__.py` 的源码树插件（例如 [hermes-lcm](https://github.com/stephenschoettler/hermes-lcm)）：
 
 ```nix
-services.hermes-agent.extraPlugins = [
+services.doppel-agent.extraPlugins = [
   (pkgs.fetchFromGitHub {
     owner = "stephenschoettler";
     repo = "hermes-lcm";
@@ -669,7 +687,7 @@ services.hermes-agent.extraPlugins = [
 对于通过 `[project.entry-points."hermes_agent.plugins"]` 注册的 pip 打包插件（例如 [rtk-hermes](https://github.com/ogallotti/rtk-hermes)）：
 
 ```nix
-services.hermes-agent.extraPythonPackages = [
+services.doppel-agent.extraPythonPackages = [
   (pkgs.python312Packages.buildPythonPackage {
     pname = "rtk-hermes";
     version = "1.0.0";
@@ -692,7 +710,7 @@ services.hermes-agent.extraPythonPackages = [
 对于已在 hermes-agent 的 `pyproject.toml` 中声明的可选 extras（例如 `hindsight` 或 `honcho` 等记忆提供商），使用 `extraDependencyGroups` 在构建时将其包含到封闭的 venv 中：
 
 ```nix
-services.hermes-agent = {
+services.doppel-agent = {
   extraDependencyGroups = [ "hindsight" ];
   settings.memory.provider = "hindsight";
 };
@@ -714,7 +732,7 @@ services.hermes-agent = {
 带有第三方 Python 依赖的目录插件需要同时使用两个选项：
 
 ```nix
-services.hermes-agent = {
+services.doppel-agent = {
   extraPlugins = [ my-plugin-src ];          # 插件源码
   extraPythonPackages = [ pkgs.python312Packages.redis ];  # 其 Python 依赖
   extraPackages = [ pkgs.redis ];            # 其需要的系统二进制文件
@@ -744,7 +762,7 @@ services.hermes-agent = {
 插件仍需在 `config.yaml` 中启用。通过声明式 settings 添加：
 
 ```nix
-services.hermes-agent.settings.plugins.enabled = [
+services.doppel-agent.settings.plugins.enabled = [
   "hermes-lcm"
   "rtk-rewrite"
 ];
@@ -879,8 +897,8 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 
 | 选项 | 类型 | 默认值 | 描述 |
 |---|---|---|---|
-| `extraArgs` | `listOf str` | `[]` | `hermes gateway` 的额外参数 |
-| `extraPackages` | `listOf package` | `[]` | Agent 可用的额外包。添加到 hermes 用户的每用户 profile，终端命令、skills 和 cron 任务均可见 |
+| `extraArgs` | `listOf str` | `[]` | `doppel gateway` 的额外参数 |
+| `extraPackages` | `listOf package` | `[]` | Agent 可用的额外包。添加到当前配置的服务用户的每用户 profile，终端命令、skills 和 cron 任务均可见 |
 | `extraPlugins` | `listOf package` | `[]` | 以符号链接方式安装到 `$HERMES_HOME/plugins/` 的目录插件包。每个包必须包含 `plugin.yaml` |
 | `extraPythonPackages` | `listOf package` | `[]` | 添加到 PYTHONPATH 用于入口点插件发现的 Python 包。使用 `python312Packages` 构建 |
 | `extraDependencyGroups` | `listOf str` | `[]` | 包含到封闭 venv 中的 pyproject.toml 可选 extras（例如 `["hindsight"]`）。由 uv 解析——无冲突 |
@@ -897,7 +915,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 | `container.name` | `str` | `"hermes-agent"` | OCI 容器名。为升级安全保留历史默认值；全新 Doppel 优先部署可设置为 `"doppel-agent"` |
 | `container.extraVolumes` | `listOf str` | `[]` | 额外卷挂载（`host:container:mode`） |
 | `container.extraOptions` | `listOf str` | `[]` | 传递给 `docker create` 的额外参数 |
-| `container.hostUsers` | `listOf str` | `[]` | 获得 `~/.hermes` 符号链接（指向服务 stateDir）的交互式用户，自动加入 `hermes` 组 |
+| `container.hostUsers` | `listOf str` | `[]` | 获得兼容 `~/.hermes` 符号链接（指向服务 stateDir）的交互式用户，自动加入当前配置的服务组 |
 
 ---
 
@@ -906,7 +924,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 ### 原生模式
 
 ```
-/var/lib/hermes/                     # stateDir（归 hermes:hermes 所有，权限 0750）
+${stateDir}/                         # stateDir（全新示例：/var/lib/doppel；历史默认值：/var/lib/hermes）
 ├── .hermes/                         # HERMES_HOME
 │   ├── config.yaml                  # Nix 生成（每次重建深度合并）
 │   ├── .managed                     # 标记：CLI 配置变更被屏蔽
@@ -920,7 +938,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 │   ├── skills/
 │   ├── cron/
 │   └── logs/
-├── home/                            # Agent HOME
+├── home/                            # 主机上的 Agent HOME
 └── workspace/                       # MESSAGING_CWD
     ├── SOUL.md                      # 来自 documents 选项
     └── （Agent 创建的文件）
@@ -933,8 +951,8 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 | 容器路径 | 主机路径 | 模式 | 说明 |
 |---|---|---|---|
 | `/nix/store` | `/nix/store` | `ro` | Doppel Agent 二进制文件 + 所有 Nix 依赖 |
-| `/data` | `/var/lib/hermes` | `rw` | 所有状态、配置、工作区 |
-| `/home/hermes` | `${stateDir}/home` | `rw` | 持久化 Agent home——`pip install --user`、工具缓存 |
+| `/data` | `${stateDir}` | `rw` | 所有状态、配置、工作区 |
+| `/home/${user}` | `${stateDir}/home` | `rw` | 持久化 Agent home——`pip install --user`、工具缓存 |
 | `/usr`、`/usr/local`、`/tmp` | （可写层） | `rw` | `apt`/`pip`/`npm` 安装——重启后持久，重建后丢失 |
 
 ---
@@ -965,19 +983,19 @@ sudo nixos-rebuild switch
 # 两种模式使用相同的 systemd 单元
 journalctl -u doppel-agent -f
 
-# 容器模式：运行时名称默认仍为 hermes-agent，除非你设置了 container.name
-docker logs -f hermes-agent
+# 容器模式
+docker logs -f "$CONTAINER_NAME"
 ```
 
 ### 容器检查
 
 ```bash
 systemctl status doppel-agent
-docker ps -a --filter name=hermes-agent
-docker inspect hermes-agent --format='{{.State.Status}}'
-docker exec -it hermes-agent bash
-docker exec hermes-agent readlink /data/current-package
-docker exec hermes-agent cat /data/.container-identity
+docker ps -a --filter "name=$CONTAINER_NAME"
+docker inspect "$CONTAINER_NAME" --format='{{.State.Status}}'
+docker exec -it "$CONTAINER_NAME" bash
+docker exec "$CONTAINER_NAME" readlink /data/current-package
+docker exec "$CONTAINER_NAME" cat /data/.container-identity
 ```
 
 ### 强制重建容器
@@ -986,8 +1004,8 @@ docker exec hermes-agent cat /data/.container-identity
 
 ```bash
 sudo systemctl stop doppel-agent
-docker rm -f hermes-agent
-sudo rm /var/lib/hermes/.container-identity
+docker rm -f "$CONTAINER_NAME"
+sudo rm "$STATE_DIR/.container-identity"
 sudo systemctl start doppel-agent
 ```
 
@@ -997,16 +1015,16 @@ sudo systemctl start doppel-agent
 
 ```bash
 # 原生模式
-sudo -u hermes cat /var/lib/hermes/.hermes/.env
+sudo -u "$SERVICE_USER" cat "$STATE_DIR/.hermes/.env"
 
 # 容器模式
-docker exec hermes-agent cat /data/.hermes/.env
+docker exec "$CONTAINER_NAME" cat /data/.hermes/.env
 ```
 
 ### GC Root 验证
 
 ```bash
-nix-store --query --roots $(docker exec hermes-agent readlink /data/current-package)
+nix-store --query --roots "$(docker exec "$CONTAINER_NAME" readlink /data/current-package)"
 ```
 
 ### 常见问题
@@ -1016,8 +1034,8 @@ nix-store --query --roots $(docker exec hermes-agent readlink /data/current-pack
 | `Cannot save configuration: managed by NixOS` | CLI 守卫已激活 | 编辑 `configuration.nix` 并执行 `nixos-rebuild switch` |
 | 容器意外重建 | `extraVolumes`、`extraOptions` 或 `image` 发生变更 | 预期行为——可写层重置。重新安装包或使用自定义镜像 |
 | `doppel version` 显示旧版本 | 容器未重启 | `systemctl restart doppel-agent` |
-| `/var/lib/hermes` 权限拒绝 | 状态目录为 `0750 hermes:hermes` | 使用 `docker exec` 或 `sudo -u hermes` |
-| `nix-collect-garbage` 删除了 hermes | GC root 缺失 | 重启服务（preStart 会重新创建 GC root） |
-| `no container with name or ID "hermes-agent"`（Podman） | Podman rootful 容器对普通用户不可见 | 为 podman 添加免密 sudo（参见[容器模式](#container-mode)章节） |
-| `unable to find user hermes` | 容器仍在启动中（入口点尚未创建用户） | 等待几秒后重试——CLI 会自动重试 |
+| 对你配置的 `stateDir` 出现权限拒绝 | 状态目录由当前配置的服务用户/组以 `0750`/`2770` 权限拥有 | 使用 `docker exec` 或 `sudo -u "$SERVICE_USER"` |
+| `nix-collect-garbage` 删除了当前活动包 | GC root 缺失 | 重启服务（preStart 会重新创建 GC root） |
+| `no container with name or ID "$CONTAINER_NAME"`（Podman） | Podman rootful 容器对普通用户不可见 | 为 podman 添加免密 sudo（参见[容器模式](#container-mode)章节） |
+| `unable to find user "$SERVICE_USER"` | 容器仍在启动中（入口点尚未创建当前配置的服务用户） | 等待几秒后重试——CLI 会自动重试 |
 | 通过 `extraPackages` 添加的工具在终端中找不到 | 需要 `nixos-rebuild switch` 更新每用户 profile | 重建并重启：`nixos-rebuild switch && systemctl restart doppel-agent` |

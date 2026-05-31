@@ -130,11 +130,12 @@ That's it. By default, `nixos-rebuild switch` creates the legacy `hermes` user, 
 The `environmentFiles` line above assumes you have [sops-nix](https://github.com/Mic92/sops-nix) or [agenix](https://github.com/ryantm/agenix) configured. The file should contain at least one LLM provider key (e.g., `OPENROUTER_API_KEY=sk-or-...`). See [Secrets Management](#secrets-management) for full setup. If you don't have a secrets manager yet, you can use a plain file as a starting point — just ensure it's not world-readable:
 
 ```bash
-echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o hermes /dev/stdin /var/lib/hermes/env
+echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o doppel /dev/stdin /var/lib/doppel/env
+# If you kept the legacy runtime defaults, substitute: -o hermes /var/lib/hermes/env
 ```
 
 ```nix
-services.hermes-agent.environmentFiles = [ "/var/lib/hermes/env" ];
+services.doppel-agent.environmentFiles = [ "/var/lib/doppel/env" ];
 ```
 :::
 
@@ -159,6 +160,23 @@ services.doppel-agent = {
 
 This changes the system user/group, the parent state directory, and the OCI runtime object name for fresh container deployments. The **inner** compatibility layout still stays on `.hermes` and `HERMES_HOME` in this phase, so examples below may still mention paths such as `${stateDir}/.hermes`.
 
+:::tip Service Naming
+Use `services.doppel-agent` in your Nix configuration and `doppel-agent.service` in `systemctl` or `journalctl`. The lower-level `systemd.services.hermes-agent` name remains an implementation detail for compatibility, so you may still see it in Nix internals, traces, or module debugging output.
+:::
+
+:::note Shell Example Defaults
+Unless noted otherwise, the operational shell snippets below assume the fresh Doppel runtime identity from the recipe above:
+
+```bash
+export SERVICE_NAME=doppel-agent
+export CONTAINER_NAME=doppel-agent
+export SERVICE_USER=doppel
+export STATE_DIR=/var/lib/doppel
+```
+
+If you kept the legacy defaults, substitute `hermes-agent`, `hermes`, and `/var/lib/hermes` where appropriate.
+:::
+
 :::tip addToSystemPackages
 Setting `addToSystemPackages = true` does two things: puts the preferred `doppel` CLI on your system PATH (with `hermes` kept as a compatibility alias) **and** sets `HERMES_HOME` system-wide so the interactive CLI shares state (sessions, skills, cron) with the gateway service. Without it, running `doppel` in your shell creates a separate `~/.doppel/` directory.
 :::
@@ -173,10 +191,10 @@ When `container.enable = true` and `addToSystemPackages = true`, **every** `dopp
 - If the container isn't running, the CLI retries briefly (5s with a spinner for interactive use, 10s silently for scripts) then fails with a clear error — no silent fallback
 - For developers working on the Doppel codebase, set `HERMES_DEV=1` to bypass container routing and run the local checkout directly
 
-Set `container.hostUsers` to create a `~/.hermes` symlink to the service state directory, so the host CLI and the container share sessions, config, and memories:
+Set `container.hostUsers` to create the compatibility `~/.hermes` symlink to the service state directory, so the host CLI and the container share sessions, config, and memories:
 
 ```nix
-services.hermes-agent = {
+services.doppel-agent = {
   container.enable = true;
   container.hostUsers = [ "your-username" ];
   addToSystemPackages = true;
@@ -232,7 +250,7 @@ To enable container mode, add one line:
 
 ```nix
 {
-  services.hermes-agent = {
+  services.doppel-agent = {
     enable = true;
     container.enable = true;
     # ... rest of config is identical
@@ -254,14 +272,14 @@ The `settings` option accepts an arbitrary attrset that is rendered as `config.y
 
 ```nix
 # base.nix
-services.hermes-agent.settings = {
+services.doppel-agent.settings = {
   model.default = "anthropic/claude-sonnet-4";
   toolsets = [ "all" ];
   terminal = { backend = "local"; timeout = 180; };
 };
 
 # personality.nix
-services.hermes-agent.settings = {
+services.doppel-agent.settings = {
   display = { compact = false; personality = "kawaii"; };
   memory = { memory_enabled = true; user_profile_enabled = true; };
 };
@@ -282,7 +300,7 @@ Run `nix build .#configKeys && cat result` to see every leaf config key extracte
 
 ```nix
 { config, ... }: {
-  services.hermes-agent = {
+  services.doppel-agent = {
     enable = true;
     container.enable = true;
 
@@ -344,7 +362,7 @@ Run `nix build .#configKeys && cat result` to see every leaf config key extracte
 If you'd rather manage `config.yaml` entirely outside Nix, use `configFile`:
 
 ```nix
-services.hermes-agent.configFile = /etc/hermes/config.yaml;
+services.doppel-agent.configFile = /etc/hermes/config.yaml;
 ```
 
 This bypasses `settings` entirely — no merge, no generation. The file is copied as-is to `$HERMES_HOME/config.yaml` on each activation.
@@ -358,7 +376,7 @@ Quick reference for the most common things Nix users want to customize:
 | Change the LLM model | `settings.model.default` | `"anthropic/claude-sonnet-4"` |
 | Use a different provider endpoint | `settings.model.base_url` | `"https://openrouter.ai/api/v1"` |
 | Add API keys | `environmentFiles` | `[ config.sops.secrets."hermes-env".path ]` |
-| Give the agent a personality | `${services.hermes-agent.stateDir}/.hermes/SOUL.md` | manage the file directly |
+| Give the agent a personality | `${services.doppel-agent.stateDir}/.hermes/SOUL.md` | manage the file directly |
 | Add MCP tool servers | `mcpServers.<name>` | See [MCP Servers](#mcp-servers) |
 | Enable Discord/Telegram/Slack | `extraDependencyGroups` | `[ "messaging" ]` |
 | Mount host directories into container | `container.extraVolumes` | `[ "/data:/data:rw" ]` |
@@ -392,7 +410,7 @@ Both `environment` (non-secret vars) and `environmentFiles` (secret files) are m
     secrets."hermes-env" = { format = "yaml"; };
   };
 
-  services.hermes-agent.environmentFiles = [
+  services.doppel-agent.environmentFiles = [
     config.sops.secrets."hermes-env".path
   ];
 }
@@ -414,7 +432,7 @@ hermes-env: |
 {
   age.secrets.hermes-env.file = ./secrets/hermes-env.age;
 
-  services.hermes-agent.environmentFiles = [
+  services.doppel-agent.environmentFiles = [
     config.age.secrets.hermes-env.path
   ];
 }
@@ -426,7 +444,7 @@ For platforms requiring OAuth (e.g., Discord), use `authFile` to seed credential
 
 ```nix
 {
-  services.hermes-agent = {
+  services.doppel-agent = {
     authFile = config.sops.secrets."hermes/auth.json".path;
     # authFileForceOverwrite = true;  # overwrite on every activation
   };
@@ -444,11 +462,11 @@ The `documents` option installs files into the agent's working directory (the `w
 - **`USER.md`** — context about the user the agent is interacting with.
 - Any other files you place here are visible to the agent as workspace files.
 
-The agent identity file is separate: Doppel loads its primary `SOUL.md` from `$HERMES_HOME/SOUL.md`, which in the NixOS module is `${services.hermes-agent.stateDir}/.hermes/SOUL.md`. Putting `SOUL.md` in `documents` only creates a workspace file and will not replace the main persona file.
+The agent identity file is separate: Doppel loads its primary `SOUL.md` from `$HERMES_HOME/SOUL.md`, which in the NixOS module is `${services.doppel-agent.stateDir}/.hermes/SOUL.md`. Putting `SOUL.md` in `documents` only creates a workspace file and will not replace the main persona file.
 
 ```nix
 {
-  services.hermes-agent.documents = {
+  services.doppel-agent.documents = {
     "USER.md" = ./documents/USER.md;  # path reference, copied from Nix store
   };
 }
@@ -466,7 +484,7 @@ The `mcpServers` option declaratively configures [MCP (Model Context Protocol)](
 
 ```nix
 {
-  services.hermes-agent.mcpServers = {
+  services.doppel-agent.mcpServers = {
     filesystem = {
       command = "npx";
       args = [ "-y" "@modelcontextprotocol/server-filesystem" "/data/workspace" ];
@@ -488,7 +506,7 @@ Environment variables in `env` values are resolved from `$HERMES_HOME/.env` at r
 
 ```nix
 {
-  services.hermes-agent.mcpServers.remote-api = {
+  services.doppel-agent.mcpServers.remote-api = {
     url = "https://mcp.example.com/v1/mcp";
     headers.Authorization = "Bearer \${MCP_REMOTE_API_KEY}";
     timeout = 180;
@@ -502,7 +520,7 @@ Set `auth = "oauth"` for servers using OAuth 2.1. Doppel implements the full PKC
 
 ```nix
 {
-  services.hermes-agent.mcpServers.my-oauth-server = {
+  services.doppel-agent.mcpServers.my-oauth-server = {
     url = "https://mcp.example.com/mcp";
     auth = "oauth";
   };
@@ -516,16 +534,16 @@ Tokens are stored in `$HERMES_HOME/mcp-tokens/<server-name>.json` and persist ac
 
 The first OAuth authorization requires a browser-based consent flow. In a headless deployment, Doppel prints the authorization URL to stdout/logs instead of opening a browser.
 
-**Option A: Interactive bootstrap** — run the flow once via `docker exec` (container) or `sudo -u hermes` (native):
+**Option A: Interactive bootstrap** — run the flow once via `docker exec` (container) or `sudo -u "$SERVICE_USER"` (native):
 
 ```bash
 # Container mode
-docker exec -it hermes-agent \
-  hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+docker exec -it "$CONTAINER_NAME" \
+  doppel mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
 
 # Native mode
-sudo -u hermes HERMES_HOME=/var/lib/hermes/.hermes \
-  hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+sudo -u "$SERVICE_USER" HERMES_HOME="$STATE_DIR/.hermes" \
+  doppel mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
 ```
 
 The container uses `--network=host`, so the OAuth callback listener on `127.0.0.1` is reachable from the host browser.
@@ -533,10 +551,10 @@ The container uses `--network=host`, so the OAuth callback listener on `127.0.0.
 **Option B: Pre-seed tokens** — complete the flow on a workstation, then copy tokens:
 
 ```bash
-hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
-scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
-    server:/var/lib/hermes/.hermes/mcp-tokens/
-# Ensure: chown hermes:hermes, chmod 0600
+doppel mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+scp ~/.doppel/mcp-tokens/my-oauth-server{,.client}.json \
+    "server:$STATE_DIR/.hermes/mcp-tokens/"
+# Ensure: chown "$SERVICE_USER:$SERVICE_USER", chmod 0600
 ```
 
 </details>
@@ -547,7 +565,7 @@ Some MCP servers can request LLM completions from the agent:
 
 ```nix
 {
-  services.hermes-agent.mcpServers.analysis = {
+  services.doppel-agent.mcpServers.analysis = {
     command = "npx";
     args = [ "-y" "analysis-server" ];
     sampling = {
@@ -578,7 +596,7 @@ When Doppel runs via the NixOS module, the following CLI commands are **blocked*
 This prevents drift between what Nix declares and what's on disk. Detection uses two signals:
 
 1. **`HERMES_MANAGED=true`** environment variable — set by the systemd service, visible to the gateway process
-2. **`.managed` marker file** in `HERMES_HOME` — set by the activation script, visible to interactive shells (e.g., `docker exec -it hermes-agent doppel config set ...` is also blocked)
+2. **`.managed` marker file** in `HERMES_HOME` — set by the activation script, visible to interactive shells (e.g., `docker exec -it "$CONTAINER_NAME" doppel config set ...` is also blocked)
 
 To change configuration, edit your Nix config and run `sudo nixos-rebuild switch`.
 
@@ -590,14 +608,14 @@ To change configuration, edit your Nix config and run `sudo nixos-rebuild switch
 This section is only relevant if you're using `container.enable = true`. Skip it for native mode deployments.
 :::
 
-When container mode is enabled, hermes runs inside a persistent Ubuntu container with the Nix-built binary bind-mounted read-only from the host:
+When container mode is enabled, Doppel runs inside a persistent Ubuntu container with the Nix-built binary bind-mounted read-only from the host:
 
 ```
 Host                                    Container
 ────                                    ─────────
-/nix/store/...-hermes-agent-0.1.0  ──►  /nix/store/... (ro)
-~/.hermes -> /var/lib/hermes/.hermes       (symlink bridge, per hostUsers)
-/var/lib/hermes/                    ──►  /data/          (rw)
+/nix/store/...-doppel-agent-0.1.0  ──►  /nix/store/... (ro)
+~/.hermes -> ${stateDir}/.hermes          (compat symlink bridge, per hostUsers)
+${stateDir}/                         ──►  /data/          (rw)
   ├── current-package -> /nix/store/...    (symlink, updated each rebuild)
   ├── .gc-root -> /nix/store/...           (prevents nix-collect-garbage)
   ├── .container-identity                  (sha256 hash, triggers recreation)
@@ -608,7 +626,7 @@ Host                                    Container
   │   ├── .container-mode                  (routing metadata: backend, exec_user, etc.)
   │   ├── state.db, sessions/, memories/   (runtime state)
   │   └── mcp-tokens/                      (OAuth tokens for MCP servers)
-  ├── home/                                ──►  /home/hermes    (rw)
+  ├── home/                                ──►  /home/${user}   (rw)
   └── workspace/                           (agent working directory)
       ├── SOUL.md                          (from documents option)
       └── (agent-created files)
@@ -616,11 +634,11 @@ Host                                    Container
 Container writable layer (apt/pip/npm):   /usr, /usr/local, /tmp
 ```
 
-The Nix-built binary works inside the Ubuntu container because `/nix/store` is bind-mounted — it brings its own interpreter and all dependencies, so there's no reliance on the container's system libraries. The container entrypoint resolves through a `current-package` symlink: `/data/current-package/bin/hermes gateway run --replace`. On `nixos-rebuild switch`, only the symlink is updated — the container keeps running.
+The Nix-built binary works inside the Ubuntu container because `/nix/store` is bind-mounted — it brings its own interpreter and all dependencies, so there's no reliance on the container's system libraries. The container entrypoint resolves through a `current-package` symlink: `/data/current-package/bin/doppel gateway run --replace`. On `nixos-rebuild switch`, only the symlink is updated — the container keeps running.
 
 ### What Persists Across What
 
-| Event | Container recreated? | `/data` (state) | `/home/hermes` | Writable layer (`apt`/`pip`/`npm`) |
+| Event | Container recreated? | `/data` (state) | `/home/${user}` | Writable layer (`apt`/`pip`/`npm`) |
 |---|---|---|---|---|
 | `systemctl restart doppel-agent` | No | Persists | Persists | Persists |
 | `nixos-rebuild switch` (code change) | No (symlink updated) | Persists | Persists | Persists |
@@ -630,17 +648,17 @@ The Nix-built binary works inside the Ubuntu container because `/nix/store` is b
 | Volume/options change | **Yes** | Persists | Persists | **Lost** |
 | `environment`/`environmentFiles` change | No | Persists | Persists | Persists |
 
-The container is only recreated when its **identity hash** changes. The hash covers: schema version, image, `extraVolumes`, `extraOptions`, and the entrypoint script. Changes to environment variables, settings, documents, or the hermes package itself do **not** trigger recreation.
+The container is only recreated when its **identity hash** changes. The hash covers: schema version, image, container name, configured service user/group, derived container home/workdir, `extraVolumes`, and `extraOptions`. Changes to environment variables, settings, documents, or the packaged Doppel binaries themselves do **not** trigger recreation.
 
 :::warning Writable layer loss
-When the identity hash changes (image upgrade, new volumes, new container options), the container is destroyed and recreated from a fresh pull of `container.image`. Any `apt install`, `pip install`, or `npm install` packages in the writable layer are lost. State in `/data` and `/home/hermes` is preserved (these are bind mounts).
+When the identity hash changes (image upgrade, runtime identity change, new volumes, or new container options), the container is destroyed and recreated from a fresh pull of `container.image`. Any `apt install`, `pip install`, or `npm install` packages in the writable layer are lost. State in `/data` and `/home/${user}` is preserved (these are bind mounts).
 
 If the agent relies on specific packages, consider baking them into a custom image (`container.image = "my-registry/hermes-base:latest"`) or scripting their installation in the agent's SOUL.md.
 :::
 
 ### GC Root Protection
 
-The `preStart` script creates a GC root at `${stateDir}/.gc-root` pointing to the current hermes package. This prevents `nix-collect-garbage` from removing the running binary. If the GC root somehow breaks, restarting the service recreates it.
+The `preStart` script creates a GC root at `${stateDir}/.gc-root` pointing to the current Doppel package. This prevents `nix-collect-garbage` from removing the running binary. If the GC root somehow breaks, restarting the service recreates it.
 
 ---
 
@@ -653,7 +671,7 @@ The NixOS module supports declarative plugin installation — no imperative `her
 For plugins that are just a source tree with `plugin.yaml` + `__init__.py` (e.g., [hermes-lcm](https://github.com/stephenschoettler/hermes-lcm)):
 
 ```nix
-services.hermes-agent.extraPlugins = [
+services.doppel-agent.extraPlugins = [
   (pkgs.fetchFromGitHub {
     owner = "stephenschoettler";
     repo = "hermes-lcm";
@@ -670,7 +688,7 @@ Plugins are symlinked into `$HERMES_HOME/plugins/` at activation time. Doppel di
 For pip-packaged plugins that register via `[project.entry-points."hermes_agent.plugins"]` (e.g., [rtk-hermes](https://github.com/ogallotti/rtk-hermes)):
 
 ```nix
-services.hermes-agent.extraPythonPackages = [
+services.doppel-agent.extraPythonPackages = [
   (pkgs.python312Packages.buildPythonPackage {
     pname = "rtk-hermes";
     version = "1.0.0";
@@ -694,12 +712,12 @@ For optional extras declared in hermes-agent's `pyproject.toml`, use `extraDepen
 
 ```nix
 # Enable Discord, Telegram, Slack
-services.hermes-agent.extraDependencyGroups = [ "messaging" ];
+services.doppel-agent.extraDependencyGroups = [ "messaging" ];
 ```
 
 ```nix
 # Enable a memory provider
-services.hermes-agent = {
+services.doppel-agent = {
   extraDependencyGroups = [ "hindsight" ];
   settings.memory.provider = "hindsight";
 };
@@ -743,7 +761,7 @@ Or use the pre-built `#messaging` or `#full` flake packages instead of per-extra
 A directory plugin with third-party Python dependencies needs both options:
 
 ```nix
-services.hermes-agent = {
+services.doppel-agent = {
   extraPlugins = [ my-plugin-src ];          # plugin source
   extraPythonPackages = [ pkgs.python312Packages.redis ];  # its Python dep
   extraPackages = [ pkgs.redis ];            # system binary it needs
@@ -773,7 +791,7 @@ External flakes can override the package directly:
 Plugins still need to be enabled in `config.yaml`. Add them via the declarative settings:
 
 ```nix
-services.hermes-agent.settings.plugins.enabled = [
+services.doppel-agent.settings.plugins.enabled = [
   "hermes-lcm"
   "rtk-rewrite"
 ];
@@ -908,8 +926,8 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `extraArgs` | `listOf str` | `[]` | Extra args for `hermes gateway` |
-| `extraPackages` | `listOf package` | `[]` | Extra packages available to the agent. Added to the hermes user's per-user profile so terminal commands, skills, and cron jobs all see them |
+| `extraArgs` | `listOf str` | `[]` | Extra args for `doppel gateway` |
+| `extraPackages` | `listOf package` | `[]` | Extra packages available to the agent. Added to the configured service user's per-user profile so terminal commands, skills, and cron jobs all see them |
 | `extraPlugins` | `listOf package` | `[]` | Directory plugin packages to symlink into `$HERMES_HOME/plugins/`. Each must contain `plugin.yaml` |
 | `extraPythonPackages` | `listOf package` | `[]` | Python packages added to PYTHONPATH for entry-point plugin discovery. Build with `python312Packages` |
 | `extraDependencyGroups` | `listOf str` | `[]` | pyproject.toml optional extras to include in the sealed venv (e.g. `["hindsight"]`). Resolved by uv — no collisions |
@@ -926,7 +944,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 | `container.name` | `str` | `"hermes-agent"` | OCI container name. Keep the legacy default for upgrades, or set `"doppel-agent"` for fresh Doppel-first deployments |
 | `container.extraVolumes` | `listOf str` | `[]` | Extra volume mounts (`host:container:mode`) |
 | `container.extraOptions` | `listOf str` | `[]` | Extra args passed to `docker create` |
-| `container.hostUsers` | `listOf str` | `[]` | Interactive users who get a `~/.hermes` symlink to the service stateDir and are auto-added to the `hermes` group |
+| `container.hostUsers` | `listOf str` | `[]` | Interactive users who get the compatibility `~/.hermes` symlink to the service stateDir and are auto-added to the configured service group |
 
 ---
 
@@ -935,7 +953,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 ### Native Mode
 
 ```
-/var/lib/hermes/                     # stateDir (owned by hermes:hermes, 0750)
+${stateDir}/                         # stateDir (fresh example: /var/lib/doppel; legacy default: /var/lib/hermes)
 ├── .hermes/                         # HERMES_HOME
 │   ├── config.yaml                  # Nix-generated (deep-merged each rebuild)
 │   ├── .managed                     # Marker: CLI config mutation blocked
@@ -949,7 +967,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 │   ├── skills/
 │   ├── cron/
 │   └── logs/
-├── home/                            # Agent HOME
+├── home/                            # Agent HOME on the host
 └── workspace/                       # Agent working directory
     ├── SOUL.md                      # From documents option
     └── (agent-created files)
@@ -962,8 +980,8 @@ Same layout, mounted into the container:
 | Container path | Host path | Mode | Notes |
 |---|---|---|---|
 | `/nix/store` | `/nix/store` | `ro` | Doppel Agent binary + all Nix deps |
-| `/data` | `/var/lib/hermes` | `rw` | All state, config, workspace |
-| `/home/hermes` | `${stateDir}/home` | `rw` | Persistent agent home — `pip install --user`, tool caches |
+| `/data` | `${stateDir}` | `rw` | All state, config, workspace |
+| `/home/${user}` | `${stateDir}/home` | `rw` | Persistent agent home — `pip install --user`, tool caches |
 | `/usr`, `/usr/local`, `/tmp` | (writable layer) | `rw` | `apt`/`pip`/`npm` installs — persists across restarts, lost on recreation |
 
 ---
@@ -994,19 +1012,19 @@ All `docker` commands below work the same with `podman`. Substitute accordingly 
 # Both modes use the same systemd unit
 journalctl -u doppel-agent -f
 
-# Container mode: runtime name defaults to hermes-agent unless you set container.name
-docker logs -f hermes-agent
+# Container mode
+docker logs -f "$CONTAINER_NAME"
 ```
 
 ### Container Inspection
 
 ```bash
 systemctl status doppel-agent
-docker ps -a --filter name=hermes-agent
-docker inspect hermes-agent --format='{{.State.Status}}'
-docker exec -it hermes-agent bash
-docker exec hermes-agent readlink /data/current-package
-docker exec hermes-agent cat /data/.container-identity
+docker ps -a --filter "name=$CONTAINER_NAME"
+docker inspect "$CONTAINER_NAME" --format='{{.State.Status}}'
+docker exec -it "$CONTAINER_NAME" bash
+docker exec "$CONTAINER_NAME" readlink /data/current-package
+docker exec "$CONTAINER_NAME" cat /data/.container-identity
 ```
 
 ### Force Container Recreation
@@ -1015,8 +1033,8 @@ If you need to reset the writable layer (fresh Ubuntu):
 
 ```bash
 sudo systemctl stop doppel-agent
-docker rm -f hermes-agent
-sudo rm /var/lib/hermes/.container-identity
+docker rm -f "$CONTAINER_NAME"
+sudo rm "$STATE_DIR/.container-identity"
 sudo systemctl start doppel-agent
 ```
 
@@ -1026,16 +1044,16 @@ If the agent starts but can't authenticate with the LLM provider, check that the
 
 ```bash
 # Native mode
-sudo -u hermes cat /var/lib/hermes/.hermes/.env
+sudo -u "$SERVICE_USER" cat "$STATE_DIR/.hermes/.env"
 
 # Container mode
-docker exec hermes-agent cat /data/.hermes/.env
+docker exec "$CONTAINER_NAME" cat /data/.hermes/.env
 ```
 
 ### GC Root Verification
 
 ```bash
-nix-store --query --roots $(docker exec hermes-agent readlink /data/current-package)
+nix-store --query --roots "$(docker exec "$CONTAINER_NAME" readlink /data/current-package)"
 ```
 
 ### Common Issues
@@ -1046,8 +1064,8 @@ nix-store --query --roots $(docker exec hermes-agent readlink /data/current-pack
 | `No adapter available for discord` (or telegram/slack) | Messaging deps missing from the sealed Nix venv | Install `#messaging` variant: `nix profile install ...#messaging`. For NixOS module: `extraDependencyGroups = [ "messaging" ]`. Check `journalctl -u doppel-agent` for `FeatureUnavailable` or `requirements not met` for the underlying error. |
 | Container recreated unexpectedly | `extraVolumes`, `extraOptions`, or `image` changed | Expected — writable layer resets. Reinstall packages or use a custom image |
 | `doppel version` shows old version | Container not restarted | `systemctl restart doppel-agent` |
-| Permission denied on `/var/lib/hermes` | State dir is `0750 hermes:hermes` | Use `docker exec` or `sudo -u hermes` |
-| `nix-collect-garbage` removed hermes | GC root missing | Restart the service (preStart recreates the GC root) |
-| `no container with name or ID "hermes-agent"` (Podman) | Podman rootful container not visible to regular user | Add passwordless sudo for podman (see [Container Mode](#container-mode) section) |
-| `unable to find user hermes` | Container still starting (entrypoint hasn't created user yet) | Wait a few seconds and retry — the CLI retries automatically |
+| Permission denied on your configured `stateDir` | State dir is owned by the configured service user/group with `0750`/`2770` permissions | Use `docker exec` or `sudo -u "$SERVICE_USER"` |
+| `nix-collect-garbage` removed the active package | GC root missing | Restart the service (preStart recreates the GC root) |
+| `no container with name or ID "$CONTAINER_NAME"` (Podman) | Podman rootful container not visible to regular user | Add passwordless sudo for podman (see [Container Mode](#container-mode) section) |
+| `unable to find user "$SERVICE_USER"` | Container still starting (entrypoint hasn't created the configured service user yet) | Wait a few seconds and retry — the CLI retries automatically |
 | Tool added via `extraPackages` not found in terminal | Requires `nixos-rebuild switch` to update the per-user profile | Rebuild and restart: `nixos-rebuild switch && systemctl restart doppel-agent` |

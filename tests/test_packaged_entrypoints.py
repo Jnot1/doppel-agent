@@ -194,6 +194,16 @@ def test_nix_docs_mention_preferred_doppel_service_alias():
     assert 'user = "doppel";' in content
     assert 'group = "doppel";' in content
     assert 'stateDir = "/var/lib/doppel";' in content
+    assert "export SERVICE_NAME=doppel-agent" in content
+    assert "export CONTAINER_NAME=doppel-agent" in content
+    assert "export SERVICE_USER=doppel" in content
+    assert "export STATE_DIR=/var/lib/doppel" in content
+    assert 'sudo -u "$SERVICE_USER" HERMES_HOME="$STATE_DIR/.hermes"' in content
+    assert 'docker exec -it "$CONTAINER_NAME" doppel config set' in content
+    assert "/data/current-package/bin/doppel gateway run --replace" in content
+    assert "docker exec -it hermes-agent" not in content
+    assert "sudo -u hermes HERMES_HOME=/var/lib/hermes/.hermes" not in content
+    assert "/data/current-package/bin/hermes gateway run --replace" not in content
 
 
 def test_zh_nix_docs_mention_preferred_doppel_service_alias():
@@ -214,6 +224,26 @@ def test_zh_nix_docs_mention_preferred_doppel_service_alias():
     assert 'user = "doppel";' in content
     assert 'group = "doppel";' in content
     assert 'stateDir = "/var/lib/doppel";' in content
+    assert "export SERVICE_NAME=doppel-agent" in content
+    assert "export CONTAINER_NAME=doppel-agent" in content
+    assert "export SERVICE_USER=doppel" in content
+    assert "export STATE_DIR=/var/lib/doppel" in content
+    assert 'sudo -u "$SERVICE_USER" HERMES_HOME="$STATE_DIR/.hermes"' in content
+    assert 'docker exec -it "$CONTAINER_NAME" doppel config set' in content
+    assert "/data/current-package/bin/doppel gateway run --replace" in content
+    assert "docker exec -it hermes-agent" not in content
+    assert "sudo -u hermes HERMES_HOME=/var/lib/hermes/.hermes" not in content
+    assert "/data/current-package/bin/hermes gateway run --replace" not in content
+
+
+def test_nixos_module_copy_mentions_doppel_first_cli_and_host_users_behavior():
+    content = _nixos_module_text()
+    assert "Add the preferred doppel CLI to environment.systemPackages" in content
+    assert "legacy hermes alias available" in content
+    assert "Interactive users who get the compatibility ~/.hermes symlink to" in content
+    assert "configured service group." in content
+    assert "Without a host-installed doppel" in content
+    assert "legacy hermes alias" in content
 
 
 def test_homebrew_formulae_share_the_same_release_source():

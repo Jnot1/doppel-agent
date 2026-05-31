@@ -467,7 +467,7 @@
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        description = "Extra command-line arguments for `hermes gateway`.";
+        description = "Extra command-line arguments for `doppel gateway`.";
       };
 
       extraPackages = mkOption {
@@ -477,7 +477,7 @@
           Extra packages available to the agent — terminal commands, skills,
           cron jobs, and the service process all see them.
 
-          Implemented via the hermes user's per-user profile
+          Implemented via the configured service user's per-user profile
           (`/etc/profiles/per-user/${cfg.user}/bin`), which NixOS includes
           in PATH for login shells.  The packages are also added to the
           systemd service PATH for direct process access.
@@ -512,7 +512,7 @@
           Python packages to add to PYTHONPATH for entry-point plugin discovery.
           These are pip-packaged plugins that register via the
           hermes_agent.plugins entry-point group. Each package must be built
-          with the same Python interpreter as hermes (python312).
+          with the same Python interpreter as Doppel Agent (python312).
         '';
         example = literalExpression ''
           [
@@ -561,9 +561,10 @@
         type = types.bool;
         default = false;
         description = ''
-          Add the hermes CLI to environment.systemPackages and export
-          HERMES_HOME system-wide (via environment.variables) so interactive
-          shells share state with the gateway service.
+          Add the preferred doppel CLI to environment.systemPackages, keep the
+          legacy hermes alias available, and export HERMES_HOME system-wide
+          (via environment.variables) so interactive shells share state with
+          the gateway service.
         '';
       };
 
@@ -610,8 +611,9 @@
           type = types.listOf types.str;
           default = [ ];
           description = ''
-            Interactive users who get a ~/.hermes symlink to the service
-            stateDir. These users are automatically added to the hermes group.
+            Interactive users who get the compatibility ~/.hermes symlink to
+            the service stateDir. These users are automatically added to the
+            configured service group.
           '';
           example = [ "sidbin" ];
         };
@@ -665,7 +667,7 @@
       })
 
       # ── Host CLI ──────────────────────────────────────────────────────
-      # Add the hermes CLI to system PATH and export HERMES_HOME system-wide
+      # Add the preferred doppel CLI to system PATH and export HERMES_HOME system-wide
       # so interactive shells share state (sessions, skills, cron) with the
       # gateway service instead of creating a separate ~/.hermes/.
       (lib.mkIf cfg.addToSystemPackages {
@@ -702,7 +704,7 @@
 
       # ── Warnings ──────────────────────────────────────────────────────
       # ── Per-user profile for extraPackages ───────────────────────────
-      # Wire extraPackages into the hermes user's per-user profile so the
+      # Wire extraPackages into the configured service user's per-user profile so the
       # login-shell snapshot (which rebuilds PATH from NixOS profiles) sees
       # them.  The systemd service PATH also includes them for direct access.
       (lib.mkIf (cfg.extraPackages != []) {
@@ -716,9 +718,9 @@
         warnings = [
           ''
             services.hermes-agent: container.enable is true and container.hostUsers
-            is set, but addToSystemPackages is false. Without a host-installed hermes
-            binary, container routing will not work for interactive users.
-            Set addToSystemPackages = true or ensure hermes is on PATH.
+            is set, but addToSystemPackages is false. Without a host-installed doppel
+            binary (or the legacy hermes alias), container routing will not work for
+            interactive users. Set addToSystemPackages = true or ensure doppel is on PATH.
           ''
         ];
       })
@@ -802,7 +804,7 @@
               in ''
                 if [ -L "${symlinkPath}" ] && [ "$(readlink "${symlinkPath}")" = "${cfg.stateDir}/.hermes" ]; then
                   rm -f "${symlinkPath}"
-                  echo "hermes-agent: removed symlink ${symlinkPath}"
+                  echo "doppel-agent: removed compatibility symlink ${symlinkPath}"
                 fi
               '') cfg.container.hostUsers)}
           ''}
@@ -822,7 +824,7 @@
                   # Real directory — back it up, then create symlink.
                   # (ln -sfn cannot atomically replace a directory.)
                   _backup="${symlinkPath}.bak.$(date +%s)"
-                  echo "hermes-agent: backing up existing ${symlinkPath} to $_backup"
+                  echo "doppel-agent: backing up existing ${symlinkPath} to $_backup"
                   mv "${symlinkPath}" "$_backup"
                 fi
                 # For everything else (existing symlink, doesn't exist, etc.)

@@ -2578,7 +2578,7 @@ def refresh_systemd_unit_if_needed(system: bool = False) -> bool:
 
     unit_path.write_text(new_unit, encoding="utf-8")
     _run_systemctl(["daemon-reload"], system=system, check=True, timeout=30)
-    print(f"↻ Updated gateway {_service_scope_label(system)} service definition to match the current Hermes install")
+    print(f"↻ Updated gateway {_service_scope_label(system)} service definition to match the current Doppel install")
     return True
 
 
@@ -3219,7 +3219,7 @@ def refresh_launchd_plist_if_needed() -> bool:
     # Bootout/bootstrap so launchd picks up the new definition
     subprocess.run(["launchctl", "bootout", f"{_launchd_domain()}/{label}"], check=False, timeout=90)
     subprocess.run(["launchctl", "bootstrap", _launchd_domain(), str(plist_path)], check=False, timeout=30)
-    print("↻ Updated gateway launchd service definition to match the current Hermes install")
+    print("↻ Updated gateway launchd service definition to match the current Doppel install")
     return True
 
 
@@ -3429,9 +3429,9 @@ def launchd_status(deep: bool = False):
 
     print(f"Launchd plist: {plist_path}")
     if launchd_plist_is_current():
-        print("✓ Service definition matches the current Hermes install")
+        print("✓ Service definition matches the current Doppel install")
     else:
-        print("⚠ Service definition is stale relative to the current Hermes install")
+        print("⚠ Service definition is stale relative to the current Doppel install")
         print("  Run: hermes gateway start")
 
     if loaded:
@@ -3475,7 +3475,7 @@ def _guard_official_docker_root_gateway() -> None:
         return
 
     print_error(
-        "Refusing to run the Hermes gateway as root inside the official Docker image."
+        "Refusing to run the Doppel gateway as root inside the official Docker image."
     )
     print(
         "  The image entrypoint normally drops privileges to the 'hermes' user. "
@@ -3559,7 +3559,7 @@ def run_gateway(verbose: int = 0, quiet: bool = False, replace: bool = False):
     from gateway.run import start_gateway
     
     print("┌─────────────────────────────────────────────────────────┐")
-    print("│           ⚕ Hermes Gateway Starting...                 │")
+    print("│           ⚕ Doppel Gateway Starting...                 │")
     print("├─────────────────────────────────────────────────────────┤")
     print("│  Messaging platforms + cron scheduler                    │")
     print("│  Press Ctrl+C to stop                                   │")
@@ -3725,7 +3725,7 @@ _PLATFORMS = [
             "3. Get an access token: Element → Settings → Help & About → Access Token",
             "   Or via API: curl -X POST https://your-server/_matrix/client/v3/login \\",
             "     -d '{\"type\":\"m.login.password\",\"user\":\"@bot:server\",\"password\":\"...\"}'",
-            "4. Alternatively, provide user ID + password and Hermes will log in directly",
+            "4. Alternatively, provide user ID + password and Doppel will log in directly",
             "5. For E2EE: set MATRIX_ENCRYPTION=true (requires pip install 'mautrix[encryption]')",
             "6. To find your user ID: it's @username:your-server (shown in Element profile)",
         ],
@@ -3767,7 +3767,7 @@ _PLATFORMS = [
              "is_allowlist": True,
              "help": "Your Mattermost user ID from step 4 above."},
             {"name": "MATTERMOST_HOME_CHANNEL", "prompt": "Home channel ID (for cron/notification delivery, or empty to set later with /set-home)", "password": False,
-             "help": "Channel ID where Hermes delivers cron results and notifications."},
+             "help": "Channel ID where Doppel delivers cron results and notifications."},
             {"name": "MATTERMOST_REPLY_MODE", "prompt": "Reply mode — 'off' for flat messages, 'thread' for threaded replies (default: off)", "password": False,
              "help": "off = flat channel messages, thread = replies nest under your message."},
         ],
@@ -3790,7 +3790,7 @@ _PLATFORMS = [
         "emoji": "📧",
         "token_var": "EMAIL_ADDRESS",
         "setup_instructions": [
-            "1. Use a dedicated email account for your Hermes agent",
+            "1. Use a dedicated email account for your Doppel agent",
             "2. For Gmail: enable 2FA, then create an App Password at",
             "   https://myaccount.google.com/apppasswords",
             "3. For other providers: use your email password or app-specific password",
@@ -3798,7 +3798,7 @@ _PLATFORMS = [
         ],
         "vars": [
             {"name": "EMAIL_ADDRESS", "prompt": "Email address", "password": False,
-             "help": "The email address Hermes will use (e.g., hermes@gmail.com)."},
+             "help": "The email address Doppel will use (e.g., doppel@gmail.com)."},
             {"name": "EMAIL_PASSWORD", "prompt": "Email password (or app password)", "password": True,
              "help": "For Gmail, use an App Password (not your regular password)."},
             {"name": "EMAIL_IMAP_HOST", "prompt": "IMAP host", "password": False,
@@ -3956,9 +3956,9 @@ _PLATFORMS = [
             "2. Complete the BlueBubbles setup wizard — sign in with your Apple ID",
             "3. In BlueBubbles Settings → API, note the Server URL and password",
             "4. The server URL is typically http://<your-mac-ip>:1234",
-            "5. Hermes connects via the BlueBubbles REST API and receives",
+            "5. Doppel connects via the BlueBubbles REST API and receives",
             "   incoming messages via a local webhook",
-            "6. To authorize users, use DM pairing: hermes pairing generate bluebubbles",
+            "6. To authorize users, use DM pairing: doppel pairing generate bluebubbles",
             "   Share the code — the user sends it via iMessage to get approved",
         ],
         "vars": [
@@ -4005,7 +4005,7 @@ _PLATFORMS = [
             "1. Download the Yuanbao app from https://yuanbao.tencent.com/",
             "2. In the app, go to PAI → My Bot and create a new bot",
             "3. After the bot is created, copy the App ID and App Secret",
-            "4. Enter them below and Hermes will connect automatically over WebSocket",
+            "4. Enter them below and Doppel will connect automatically over WebSocket",
         ],
         "vars": [
             {"name": "YUANBAO_APP_ID", "prompt": "App ID", "password": False,
@@ -4246,7 +4246,7 @@ def _setup_standard_platform(platform: dict):
                 print()
                 access_choices = [
                     "Enable open access (anyone can message the bot)",
-                    "Use DM pairing (unknown users request access, you approve with 'hermes pairing approve')",
+                    "Use DM pairing (unknown users request access, you approve with 'doppel pairing approve')",
                     "Skip for now (bot will deny all users until configured)",
                 ]
                 access_idx = prompt_choice("  How should unauthorized users be handled?", access_choices, 1)
@@ -4255,7 +4255,7 @@ def _setup_standard_platform(platform: dict):
                     print_warning("  Open access enabled — anyone can use your bot!")
                 elif access_idx == 1:
                     print_success("  DM pairing mode — users will receive a code to request access.")
-                    print_info("  Approve with: hermes pairing approve <platform> <code>")
+                    print_info("  Approve with: doppel pairing approve <platform> <code>")
                 else:
                     print_info("  Skipped — configure later with 'hermes gateway setup'")
             continue
@@ -4432,7 +4432,7 @@ def _setup_wecom():
         print()
         access_choices = [
             "Enable open access (anyone can message the bot)",
-            "Use DM pairing (unknown users request access, you approve with 'hermes pairing approve')",
+            "Use DM pairing (unknown users request access, you approve with 'doppel pairing approve')",
             "Disable direct messages",
             "Skip for now (bot will deny all users until configured)",
         ]
@@ -4444,7 +4444,7 @@ def _setup_wecom():
         elif access_idx == 1:
             save_env_value("WECOM_DM_POLICY", "pairing")
             print_success("  DM pairing mode — users will receive a code to request access.")
-            print_info("  Approve with: hermes pairing approve <platform> <code>")
+            print_info("  Approve with: doppel pairing approve <platform> <code>")
         elif access_idx == 2:
             save_env_value("WECOM_DM_POLICY", "disabled")
             print_warning("  Direct messages disabled.")
@@ -4598,7 +4598,7 @@ def _setup_weixin():
         save_env_value("WEIXIN_ALLOW_ALL_USERS", "false")
         save_env_value("WEIXIN_ALLOWED_USERS", "")
         print_success("  DM pairing enabled.")
-        print_info("  Unknown DM users can request access and you approve them with `hermes pairing approve`.")
+        print_info("  Unknown DM users can request access and you approve them with `doppel pairing approve`.")
     elif access_idx == 1:
         save_env_value("WEIXIN_DM_POLICY", "open")
         save_env_value("WEIXIN_ALLOW_ALL_USERS", "true")
@@ -4788,7 +4788,7 @@ def _setup_feishu():
         save_env_value("FEISHU_ALLOW_ALL_USERS", "false")
         save_env_value("FEISHU_ALLOWED_USERS", "")
         print_success("  DM pairing enabled.")
-        print_info("  Unknown users can request access; approve with `hermes pairing approve`.")
+        print_info("  Unknown users can request access; approve with `doppel pairing approve`.")
     elif access_idx == 1:
         save_env_value("FEISHU_ALLOW_ALL_USERS", "true")
         save_env_value("FEISHU_ALLOWED_USERS", "")
@@ -4906,7 +4906,7 @@ def _setup_qqbot():
         else:
             save_env_value("QQ_ALLOWED_USERS", "")
         print_success("  DM pairing enabled.")
-        print_info("  Unknown users can request access; approve with `hermes pairing approve`.")
+        print_info("  Unknown users can request access; approve with `doppel pairing approve`.")
     elif access_idx == 1:
         save_env_value("QQ_ALLOW_ALL_USERS", "true")
         save_env_value("QQ_ALLOWED_USERS", "")
@@ -4964,7 +4964,7 @@ def _setup_signal():
         print_info("    Docker: bbernhard/signal-cli-rest-api")
         print()
         print_info("  After installing, link your account and start the daemon:")
-        print_info("    signal-cli link -n \"HermesAgent\"")
+        print_info("    signal-cli link -n \"DoppelAgent\"")
         print_info("    signal-cli --account +YOURNUMBER daemon --http 127.0.0.1:8080")
         print()
 

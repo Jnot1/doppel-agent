@@ -124,7 +124,7 @@ nix build
 }
 ```
 
-就这些。`nixos-rebuild switch` 会创建 `hermes` 用户、生成 `config.yaml`、连接密钥并启动 gateway——这是一个长期运行的服务，将 Agent 连接到消息平台（Telegram、Discord 等）并监听传入消息。
+就这些。默认情况下，`nixos-rebuild switch` 会创建历史兼容的 `hermes` 用户、生成 `config.yaml`、连接密钥并启动 gateway——这是一个长期运行的服务，将 Agent 连接到消息平台（Telegram、Discord 等）并监听传入消息。如果你希望新部署直接使用 Doppel 优先的运行时身份，而不是这些历史默认值，请使用下面的配方。
 
 :::warning 密钥是必需的
 上面的 `environmentFiles` 行假设你已配置 [sops-nix](https://github.com/Mic92/sops-nix) 或 [agenix](https://github.com/ryantm/agenix)。该文件至少应包含一个 LLM 提供商密钥（例如 `OPENROUTER_API_KEY=sk-or-...`）。完整设置请参阅[密钥管理](#secrets-management)。如果你还没有密钥管理器，可以先使用普通文件——只需确保它不是全局可读的：
@@ -137,6 +137,27 @@ echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o hermes /dev/s
 services.hermes-agent.environmentFiles = [ "/var/lib/hermes/env" ];
 ```
 :::
+
+### 全新部署的 Doppel 运行时身份
+
+如果这是一个**全新**部署，不需要保留历史服务用户或父级状态目录名称，可以把**外层**运行时身份切换成 Doppel 优先：
+
+```nix
+services.doppel-agent = {
+  enable = true;
+  user = "doppel";
+  group = "doppel";
+  stateDir = "/var/lib/doppel";
+  addToSystemPackages = true;
+  environmentFiles = [ "/var/lib/doppel/env" ];
+
+  # 如果你启用容器模式，可额外设置
+  container.enable = true;
+  container.name = "doppel-agent";
+};
+```
+
+这会把系统用户/组、父级状态目录，以及容器模式下的 OCI 对象名称切换为 Doppel 优先。此阶段**内部**兼容布局仍然保留 `.hermes` 和 `HERMES_HOME`，因此下面的一些示例仍会显式提到 `${stateDir}/.hermes` 之类的路径。
 
 :::tip addToSystemPackages
 设置 `addToSystemPackages = true` 有两个作用：将首选的 `doppel` CLI 添加到系统 PATH（同时保留 `hermes` 作为兼容别名），**并**在系统范围内设置 `HERMES_HOME`，使交互式 CLI 与 gateway 服务共享状态（会话、技能、cron）。不设置此项时，在 shell 中运行 `doppel` 会创建独立的 `~/.doppel/` 目录。
@@ -162,7 +183,7 @@ services.hermes-agent = {
 };
 ```
 
-`hostUsers` 中列出的用户会自动加入 `hermes` 组以获得文件权限访问。
+`hostUsers` 中列出的用户会自动加入当前配置的服务组（默认值为 `hermes`）以获得文件权限访问。
 
 **Podman 用户：** NixOS 服务以 root 身份运行容器。Docker 用户通过 `docker` 组 socket 获得访问权限，但 Podman 的 rootful 容器需要 sudo。为你的容器运行时授予免密 sudo：
 
@@ -808,10 +829,10 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 |---|---|---|---|
 | `enable` | `bool` | `false` | 启用 Doppel Agent。新配置可使用 `services.doppel-agent`；实现层为兼容性仍保持在 `services.hermes-agent` |
 | `package` | `package` | `doppel-agent` | 首选 Doppel 包；`services.doppel-agent` 与 `services.hermes-agent` 都会解析到这个选项 |
-| `user` | `str` | `"hermes"` | 系统用户 |
-| `group` | `str` | `"hermes"` | 系统组 |
+| `user` | `str` | `"hermes"` | 系统用户。升级现有部署时保留历史默认值；全新 Doppel 优先部署可改为 `doppel` |
+| `group` | `str` | `"hermes"` | 系统组。升级现有部署时保留历史默认值；全新 Doppel 优先部署可改为 `doppel` |
 | `createUser` | `bool` | `true` | 自动创建用户/组 |
-| `stateDir` | `str` | `"/var/lib/hermes"` | 状态目录（`HERMES_HOME` 的父目录） |
+| `stateDir` | `str` | `"/var/lib/hermes"` | 状态目录父路径。内部兼容 home 仍保持为 `${stateDir}/.hermes`；全新部署可改为 `"/var/lib/doppel"` 之类的 Doppel 父目录 |
 | `workingDirectory` | `str` | `"${stateDir}/workspace"` | Agent 工作目录（`MESSAGING_CWD`） |
 | `addToSystemPackages` | `bool` | `false` | 将首选的 `doppel` CLI 添加到系统 PATH，保留 `hermes` 兼容别名，并在系统范围内设置 `HERMES_HOME` |
 

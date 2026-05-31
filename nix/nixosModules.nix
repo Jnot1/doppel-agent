@@ -68,7 +68,9 @@
 
     containerName = cfg.container.name;
     containerDataDir = "/data";     # stateDir mount point inside container
-    containerHomeDir = "/home/hermes";
+    containerHomeDir = "/home/${cfg.user}";
+    containerProvisionMarker = "/var/lib/${cfg.user}-tools-provisioned";
+    containerSudoersFile = "/etc/sudoers.d/${cfg.user}";
 
     # ── Container mode helpers ──────────────────────────────────────────
     containerBin = if cfg.container.backend == "docker"
@@ -76,8 +78,8 @@
       else "${pkgs.podman}/bin/podman";
 
     # Runs as root inside the container on every start. Provisions the
-    # hermes user + sudo on first boot (writable layer persists), then
-    # drops privileges. Supports arbitrary base images (Debian, Alpine, etc).
+    # configured runtime user + sudo on first boot (writable layer persists),
+    # then drops privileges. Supports arbitrary base images (Debian, Alpine, etc).
     containerEntrypoint = pkgs.writeShellScript "hermes-container-entrypoint" ''
       set -eu
 
@@ -91,7 +93,7 @@
       if [ -n "$EXISTING_GROUP" ]; then
         GROUP_NAME="$EXISTING_GROUP"
       else
-        GROUP_NAME="hermes"
+        GROUP_NAME="${cfg.group}"
         if command -v groupadd >/dev/null 2>&1; then
           groupadd -g "$HERMES_GID" "$GROUP_NAME"
         elif command -v addgroup >/dev/null 2>&1; then
@@ -105,8 +107,8 @@
         TARGET_USER=$(echo "$PASSWD_ENTRY" | cut -d: -f1)
         TARGET_HOME=$(echo "$PASSWD_ENTRY" | cut -d: -f6)
       else
-        TARGET_USER="hermes"
-        TARGET_HOME="/home/hermes"
+        TARGET_USER="${cfg.user}"
+        TARGET_HOME="${containerHomeDir}"
         if command -v useradd >/dev/null 2>&1; then
           useradd -u "$HERMES_UID" -g "$HERMES_GID" -m -d "$TARGET_HOME" -s /bin/bash "$TARGET_USER"
         elif command -v adduser >/dev/null 2>&1; then
@@ -131,7 +133,7 @@
       # nodejs/npm: writable node so npm i -g works (nix store copies are read-only)
       #   Node 22 via NodeSource — Ubuntu 24.04 ships Node 18 which is EOL.
       # curl: needed for uv installer + NodeSource setup
-      if [ ! -f /var/lib/hermes-tools-provisioned ] && command -v apt-get >/dev/null 2>&1; then
+      if [ ! -f ${containerProvisionMarker} ] && command -v apt-get >/dev/null 2>&1; then
         echo "First boot: provisioning agent tools..."
         apt-get update -qq
         apt-get install -y -qq sudo curl ca-certificates gnupg
@@ -142,13 +144,14 @@
           > /etc/apt/sources.list.d/nodesource.list
         apt-get update -qq
         apt-get install -y -qq nodejs
-        touch /var/lib/hermes-tools-provisioned
+        mkdir -p "$(dirname ${containerProvisionMarker})"
+        touch ${containerProvisionMarker}
       fi
 
-      if command -v sudo >/dev/null 2>&1 && [ ! -f /etc/sudoers.d/hermes ]; then
+      if command -v sudo >/dev/null 2>&1 && [ ! -f ${containerSudoersFile} ]; then
         mkdir -p /etc/sudoers.d
-        echo "$TARGET_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/hermes
-        chmod 0440 /etc/sudoers.d/hermes
+        echo "$TARGET_USER ALL=(ALL) NOPASSWD:ALL" > ${containerSudoersFile}
+        chmod 0440 ${containerSudoersFile}
       fi
 
       # uv (Python manager) — not in Ubuntu repos, retry-safe outside the sentinel
@@ -186,15 +189,20 @@
     # Package and entrypoint use stable symlinks (current-package, current-entrypoint)
     # so they can update without recreation. Env vars go through $HERMES_HOME/.env.
     containerIdentity = builtins.hashString "sha256" (builtins.toJSON {
-      schema = 4; # bump when identity inputs change (4: Node 18→22 via NodeSource)
+      schema = 5; # bump when identity inputs change (5: runtime identity fields)
       image = cfg.container.image;
+      name = containerName;
+      user = cfg.user;
+      group = cfg.group;
+      home = containerHomeDir;
+      workDir = containerWorkDir;
       extraVolumes = cfg.container.extraVolumes;
       extraOptions = cfg.container.extraOptions;
     });
 
     identityFile = "${cfg.stateDir}/.container-identity";
 
-    # Default: /var/lib/hermes/workspace → /data/workspace.
+    # Default legacy layout: /var/lib/hermes/workspace → /data/workspace.
     # Custom paths outside stateDir pass through unchanged (user must add extraVolumes).
     containerWorkDir =
       if lib.hasPrefix "${cfg.stateDir}/" cfg.workingDirectory
@@ -220,13 +228,13 @@
       user = mkOption {
         type = types.str;
         default = "hermes";
-        description = "System user running the gateway.";
+        description = "System user running the gateway. Keep the legacy default for upgrades, or set this to doppel for fresh Doppel-first deployments.";
       };
 
       group = mkOption {
         type = types.str;
         default = "hermes";
-        description = "System group running the gateway.";
+        description = "System group running the gateway. Keep the legacy default for upgrades, or set this to doppel for fresh Doppel-first deployments.";
       };
 
       createUser = mkOption {
@@ -239,7 +247,7 @@
       stateDir = mkOption {
         type = types.str;
         default = "/var/lib/hermes";
-        description = "State directory. Contains .hermes/ subdir (HERMES_HOME).";
+        description = "State directory. Contains the compatibility .hermes/ subdir (HERMES_HOME). Keep the legacy default for upgrades, or set a Doppel-first parent such as /var/lib/doppel for fresh deployments.";
       };
 
       workingDirectory = mkOption {

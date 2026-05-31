@@ -124,7 +124,7 @@ This module requires NixOS. For non-NixOS systems (macOS, other Linux distros), 
 }
 ```
 
-That's it. `nixos-rebuild switch` creates the `hermes` user, generates `config.yaml`, wires up secrets, and starts the gateway — a long-running service that connects the agent to messaging platforms (Telegram, Discord, etc.) and listens for incoming messages.
+That's it. By default, `nixos-rebuild switch` creates the legacy `hermes` user, generates `config.yaml`, wires up secrets, and starts the gateway — a long-running service that connects the agent to messaging platforms (Telegram, Discord, etc.) and listens for incoming messages. If you want a fresh Doppel-first runtime identity instead of the legacy service user/path defaults, use the recipe below.
 
 :::warning Secrets are required
 The `environmentFiles` line above assumes you have [sops-nix](https://github.com/Mic92/sops-nix) or [agenix](https://github.com/ryantm/agenix) configured. The file should contain at least one LLM provider key (e.g., `OPENROUTER_API_KEY=sk-or-...`). See [Secrets Management](#secrets-management) for full setup. If you don't have a secrets manager yet, you can use a plain file as a starting point — just ensure it's not world-readable:
@@ -137,6 +137,27 @@ echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o hermes /dev/s
 services.hermes-agent.environmentFiles = [ "/var/lib/hermes/env" ];
 ```
 :::
+
+### Fresh Doppel Runtime Identity
+
+For a brand-new deployment that does not need to preserve the legacy service user and parent state path, move the **outer** runtime identity to Doppel-first names:
+
+```nix
+services.doppel-agent = {
+  enable = true;
+  user = "doppel";
+  group = "doppel";
+  stateDir = "/var/lib/doppel";
+  addToSystemPackages = true;
+  environmentFiles = [ "/var/lib/doppel/env" ];
+
+  # Optional if you use container mode
+  container.enable = true;
+  container.name = "doppel-agent";
+};
+```
+
+This changes the system user/group, the parent state directory, and the OCI runtime object name for fresh container deployments. The **inner** compatibility layout still stays on `.hermes` and `HERMES_HOME` in this phase, so examples below may still mention paths such as `${stateDir}/.hermes`.
 
 :::tip addToSystemPackages
 Setting `addToSystemPackages = true` does two things: puts the preferred `doppel` CLI on your system PATH (with `hermes` kept as a compatibility alias) **and** sets `HERMES_HOME` system-wide so the interactive CLI shares state (sessions, skills, cron) with the gateway service. Without it, running `doppel` in your shell creates a separate `~/.doppel/` directory.
@@ -162,7 +183,7 @@ services.hermes-agent = {
 };
 ```
 
-Users listed in `hostUsers` are automatically added to the `hermes` group for file permission access.
+Users listed in `hostUsers` are automatically added to the configured service group (default: `hermes`) for file permission access.
 
 **Podman users:** The NixOS service runs the container as root. Docker users get access via the `docker` group socket, but Podman's rootful containers require sudo. Grant passwordless sudo for your container runtime:
 
@@ -837,10 +858,10 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 |---|---|---|---|
 | `enable` | `bool` | `false` | Enable Doppel Agent. New configs can use `services.doppel-agent`; the implementation remains under `services.hermes-agent` for compatibility |
 | `package` | `package` | `doppel-agent` | Preferred Doppel package; both `services.doppel-agent` and `services.hermes-agent` resolve to this option |
-| `user` | `str` | `"hermes"` | System user |
-| `group` | `str` | `"hermes"` | System group |
+| `user` | `str` | `"hermes"` | System user. Keep the legacy default for upgrades, or set `doppel` for fresh Doppel-first deployments |
+| `group` | `str` | `"hermes"` | System group. Keep the legacy default for upgrades, or set `doppel` for fresh Doppel-first deployments |
 | `createUser` | `bool` | `true` | Auto-create user/group |
-| `stateDir` | `str` | `"/var/lib/hermes"` | State directory (`HERMES_HOME` parent) |
+| `stateDir` | `str` | `"/var/lib/hermes"` | State directory parent. The inner compatibility home still remains `${stateDir}/.hermes`; use a parent like `"/var/lib/doppel"` for fresh deployments |
 | `workingDirectory` | `str` | `"${stateDir}/workspace"` | Agent working directory |
 | `addToSystemPackages` | `bool` | `false` | Add the preferred `doppel` CLI to system PATH, keep `hermes` as a compatibility alias, and set `HERMES_HOME` system-wide |
 

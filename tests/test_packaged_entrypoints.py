@@ -143,6 +143,25 @@ def test_nixos_module_exposes_container_name_option_with_legacy_default():
     assert 'default = "hermes-agent";' in content
 
 
+def test_nixos_module_derives_container_runtime_identity_from_service_identity():
+    content = _nixos_module_text()
+    assert 'containerHomeDir = "/home/${cfg.user}";' in content
+    assert 'containerProvisionMarker = "/var/lib/${cfg.user}-tools-provisioned";' in content
+    assert 'containerSudoersFile = "/etc/sudoers.d/${cfg.user}";' in content
+    assert 'GROUP_NAME="${cfg.group}"' in content
+    assert 'TARGET_USER="${cfg.user}"' in content
+    assert 'TARGET_HOME="${containerHomeDir}"' in content
+
+
+def test_nixos_module_container_identity_hash_covers_runtime_identity_inputs():
+    content = _nixos_module_text()
+    assert "name = containerName;" in content
+    assert "user = cfg.user;" in content
+    assert "group = cfg.group;" in content
+    assert "home = containerHomeDir;" in content
+    assert "workDir = containerWorkDir;" in content
+
+
 def test_nix_checks_encode_package_alias_contracts():
     content = _nix_checks_text()
     assert 'package-alias-contracts =' in content
@@ -172,6 +191,9 @@ def test_nix_docs_mention_preferred_doppel_service_alias():
     assert "`doppel-agent.service`" in content
     assert "`container.name`" in content
     assert "systemctl status doppel-agent" in content
+    assert 'user = "doppel";' in content
+    assert 'group = "doppel";' in content
+    assert 'stateDir = "/var/lib/doppel";' in content
 
 
 def test_zh_nix_docs_mention_preferred_doppel_service_alias():
@@ -189,6 +211,9 @@ def test_zh_nix_docs_mention_preferred_doppel_service_alias():
     assert "`doppel-agent.service`" in content
     assert "`container.name`" in content
     assert "systemctl status doppel-agent" in content
+    assert 'user = "doppel";' in content
+    assert 'group = "doppel";' in content
+    assert 'stateDir = "/var/lib/doppel";' in content
 
 
 def test_homebrew_formulae_share_the_same_release_source():

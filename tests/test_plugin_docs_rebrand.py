@@ -1224,10 +1224,14 @@ def test_configuration_display_to_working_directory_cluster_prefer_doppel_wordin
     assert "HERMES_LANGUAGE" in zh_cluster
     assert "HERMES_YOLO_MODE" in en_cluster
     assert "HERMES_YOLO_MODE" in zh_cluster
-    assert ".hermes.md" in en_cluster
-    assert "HERMES.md" in en_cluster
-    assert ".hermes.md" in zh_cluster
-    assert "HERMES.md" in zh_cluster
+    assert ".doppel.md" in en_cluster
+    assert "DOPPEL.md" in en_cluster
+    assert ".doppel.md" in zh_cluster
+    assert "DOPPEL.md" in zh_cluster
+    assert ".hermes.md" not in en_cluster
+    assert "HERMES.md" not in en_cluster
+    assert ".hermes.md" not in zh_cluster
+    assert "HERMES.md" not in zh_cluster
     assert "MESSAGING_CWD" in en_cluster
     assert "TERMINAL_CWD" in en_cluster
     assert "MESSAGING_CWD" in zh_cluster
@@ -2036,6 +2040,8 @@ def test_architecture_and_trajectory_docs_prefer_doppel_surfaces():
     assert "所有 `doppel` 子命令" in zh_arch
     assert "doppel plugins" in en_arch
     assert "doppel plugins" in zh_arch
+    assert ".doppel.md" in en_arch
+    assert ".doppel.md" in zh_arch
     assert "Build a Doppel Plugin" in en_arch
     assert "构建 Doppel 插件" in zh_arch
     assert "Exposes Doppel Agent as an editor-native agent" in en_arch
@@ -2052,6 +2058,8 @@ def test_architecture_and_trajectory_docs_prefer_doppel_surfaces():
     assert "HERMES_HOME" in zh_arch
     assert "~/.hermes/plugins/" in en_arch
     assert "~/.hermes/plugins/" in zh_arch
+    assert ".hermes.md" not in en_arch
+    assert ".hermes.md" not in zh_arch
 
     assert "Hermes Agent saves conversation trajectories" not in en_traj
     assert "Hermes Agent 以 ShareGPT 兼容的 JSONL 格式保存对话轨迹" not in zh_traj
@@ -2135,13 +2143,20 @@ def test_prompt_assembly_docs_prefer_doppel_surfaces_but_keep_runtime_literals()
     assert "You are Doppel Agent, an intelligent AI assistant created by Nous Research." in en_prompt
     assert "You are Doppel Agent, an AI assistant created by Nous Research." in zh_prompt
     assert "You are Doppel Agent, an intelligent AI assistant created by Nous Research." in zh_prompt
-    assert "HERMES.md" in en_prompt and "HERMES_HOME" in en_prompt
+    assert "DOPPEL.md" in en_prompt
+    assert "DOPPEL.md" in zh_prompt
     assert "HERMES_EPHEMERAL_SYSTEM_PROMPT" in en_prompt
-    assert "HERMES.md" in zh_prompt and "HERMES_HOME" in zh_prompt
     assert "HERMES_EPHEMERAL_SYSTEM_PROMPT" in zh_prompt
     assert "DEFAULT_AGENT_IDENTITY" in en_prompt
     assert "DEFAULT_AGENT_IDENTITY" in zh_prompt
-    assert "~/.hermes/" in en_prompt and "~/.hermes/" in zh_prompt
+    assert "~/.hermes/" not in en_prompt
+    assert "~/.hermes/" not in zh_prompt
+    assert "HERMES_HOME" not in en_prompt
+    assert "HERMES_HOME" not in zh_prompt
+    assert ".hermes.md" not in en_prompt
+    assert ".hermes.md" not in zh_prompt
+    assert "HERMES.md" not in en_prompt
+    assert "HERMES.md" not in zh_prompt
     assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research." not in en_prompt
     assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research." not in zh_prompt
     assert "You are Hermes, an AI assistant created by Nous Research." not in en_prompt
@@ -2174,10 +2189,14 @@ def test_context_files_and_soul_guide_prefer_doppel_surfaces_but_keep_literals()
     assert "~/.hermes/SOUL.md" not in zh_context
     assert "HERMES_HOME" not in en_context
     assert "HERMES_HOME" not in zh_context
-    assert ".hermes.md" in en_context
-    assert ".hermes.md" in zh_context
-    assert "HERMES.md" in en_context
-    assert "HERMES.md" in zh_context
+    assert ".doppel.md" in en_context
+    assert ".doppel.md" in zh_context
+    assert "DOPPEL.md" in en_context
+    assert "DOPPEL.md" in zh_context
+    assert ".hermes.md" not in en_context
+    assert ".hermes.md" not in zh_context
+    assert "HERMES.md" not in en_context
+    assert "HERMES.md" not in zh_context
     assert "build_context_files_prompt()" in en_context
     assert "SubdirectoryHintTracker" in en_context
     assert "agent/subdirectory_hints.py" in en_context

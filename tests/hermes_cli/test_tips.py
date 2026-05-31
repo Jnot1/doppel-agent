@@ -60,6 +60,18 @@ class TestTipsCorpus:
         )
         assert not any("Hermes" in tip for tip in TIPS)
 
+    def test_context_file_tips_prefer_doppel_filenames(self):
+        assert (
+            "Context files (.doppel.md, AGENTS.md) are security-scanned for prompt injection before loading."
+            in TIPS
+        )
+        assert (
+            "Doppel loads project context from .doppel.md, AGENTS.md, CLAUDE.md, or .cursorrules (first match)."
+            in TIPS
+        )
+        assert not any(".hermes.md" in tip for tip in TIPS)
+        assert not any("legacy .hermes.md" in tip for tip in TIPS)
+
 
 class TestGetRandomTip:
     """Validate the get_random_tip() function."""

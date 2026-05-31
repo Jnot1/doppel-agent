@@ -1705,7 +1705,7 @@ Doppel Agent 使用两种不同的上下文范围：
 | 文件 | 用途 | 范围 |
 |------|---------|-------|
 | `SOUL.md` | **主要 agent 身份** —— 定义 agent 是谁（系统提示词第 #1 槽位） | `~/.doppel/SOUL.md` 或 `$DOPPEL_HOME/SOUL.md` |
-| `.hermes.md` / `HERMES.md` | 项目特定指令（最高优先级） | 向上走到 git 根目录 |
+| `.doppel.md` / `DOPPEL.md` | 项目特定指令（最高优先级） | 向上走到 git 根目录 |
 | `AGENTS.md` | 项目特定指令、编码规范 | 递归目录遍历 |
 | `CLAUDE.md` | Claude Code 上下文文件（也会检测） | 仅工作目录 |
 | `.cursorrules` | Cursor IDE 规则（也会检测） | 仅工作目录 |
@@ -1713,7 +1713,7 @@ Doppel Agent 使用两种不同的上下文范围：
 
 - **SOUL.md** 是 agent 的主要身份。它占据系统提示词的第 #1 槽位，完全替换内置的默认身份。编辑它以完全自定义 agent 是谁。
 - 如果 SOUL.md 缺失、为空或无法加载，Doppel Agent 会回退到内置默认身份。
-- **项目上下文文件使用优先级系统** —— 仅加载一种类型（第一个匹配优先）：`.hermes.md` → `AGENTS.md` → `CLAUDE.md` → `.cursorrules`。SOUL.md 始终独立加载。
+- **项目上下文文件使用优先级系统** —— 仅加载一种类型（第一个匹配优先）：`.doppel.md` → `AGENTS.md` → `CLAUDE.md` → `.cursorrules`。SOUL.md 始终独立加载。
 - **AGENTS.md** 是分层的：如果子目录也有 AGENTS.md，所有都会合并。
 - 如果 `SOUL.md` 不存在，Doppel Agent 会自动生成默认的 `SOUL.md`。
 - 所有加载的上下文文件上限为 20,000 字符，并进行智能截断。

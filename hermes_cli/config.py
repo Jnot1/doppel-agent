@@ -411,6 +411,7 @@ def format_docker_update_message() -> str:
     (the dry-run path) share the same wording.
     """
     image_name = hermes_constants.get_docker_image_name()
+    tags_url = hermes_constants.get_docker_image_tags_url()
     container_name = image_name.rsplit("/", 1)[-1]
     return f"""\
 ✗ ``hermes update`` doesn't apply inside the Docker container.
@@ -431,7 +432,7 @@ Notes:
   • If you pinned a specific tag (e.g. ``:v0.14.0``) the ``:latest`` tag
     won't move your container — pull the newer tag you actually want, or
     switch to ``:latest`` / ``:main`` for rolling updates.  See available
-    tags at https://hub.docker.com/r/{image_name}/tags
+    tags at {tags_url}
   • Your config and session history live under ``$HERMES_HOME`` (``/opt/data``
     in the container, typically bind-mounted from the host) and persist
     across image upgrades — re-pulling doesn't lose any state.
@@ -1902,7 +1903,7 @@ DEFAULT_CONFIG = {
     # The default URL is served by the docs site GitHub Pages deploy.
     "model_catalog": {
         "enabled": True,
-        "url": "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json",
+        "url": hermes_constants.get_model_catalog_url(),
         # Disk cache TTL in hours.  Beyond this, the CLI refetches on the
         # next /model or `hermes model` invocation; network failures
         # silently fall back to the stale cache.

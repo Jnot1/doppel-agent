@@ -46,6 +46,8 @@ API_SERVER_TOOL_PROGRESS_EVENT = "hermes.tool.progress"
 PACKAGE_DISTRIBUTION_NAME = "hermes-agent"
 HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
 DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
+DOCKER_IMAGE_TAGS_URL = f"https://hub.docker.com/r/{DOCKER_IMAGE_NAME}/tags"
+DOCS_SITE_BASE_URL = "https://hermes-agent.nousresearch.com/docs"
 MANAGED_CHECKOUT_NAMES = ("doppel-agent", "hermes-agent")
 GATEWAY_SERVICE_BASE = "doppel-gateway"
 LEGACY_GATEWAY_SERVICE_BASES = ("hermes-gateway",)
@@ -67,6 +69,11 @@ UPSTREAM_REPO_GIT_URLS = frozenset({
     UPSTREAM_REPO_WEB_URL,
     UPSTREAM_REPO_SSH_URL,
 })
+MODEL_CATALOG_URL = f"{DOCS_SITE_BASE_URL}/api/model-catalog.json"
+MODEL_CATALOG_DOCS_URL = f"{DOCS_SITE_BASE_URL}/reference/model-catalog"
+MODEL_CATALOG_FALLBACK_URLS = (
+    f"https://raw.githubusercontent.com/{UPSTREAM_REPO_SLUG}/main/website/static/api/model-catalog.json",
+)
 
 
 def get_cli_prog_name(argv0: str | None = None) -> str:
@@ -108,6 +115,31 @@ def get_homebrew_formula_name() -> str:
 def get_docker_image_name() -> str:
     """Return the published Docker image name for this distribution."""
     return DOCKER_IMAGE_NAME
+
+
+def get_docker_image_tags_url() -> str:
+    """Return the Docker Hub tags page for the published image."""
+    return DOCKER_IMAGE_TAGS_URL
+
+
+def get_docs_site_base_url() -> str:
+    """Return the current hosted docs base URL for this project."""
+    return DOCS_SITE_BASE_URL
+
+
+def get_model_catalog_url() -> str:
+    """Return the current hosted model-catalog manifest URL."""
+    return MODEL_CATALOG_URL
+
+
+def get_model_catalog_docs_url() -> str:
+    """Return the docs page that explains the hosted model catalog."""
+    return MODEL_CATALOG_DOCS_URL
+
+
+def get_model_catalog_fallback_urls() -> tuple[str, ...]:
+    """Return fallback URLs for the hosted model-catalog manifest."""
+    return MODEL_CATALOG_FALLBACK_URLS
 
 
 def get_official_upstream_repo_slug() -> str:

@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from hermes_constants import get_model_catalog_fallback_urls, get_model_catalog_url
 
 
 @pytest.fixture
@@ -180,11 +181,8 @@ class TestFallbackChain:
     releases (opus 4.8, etc.) never reach the picker.
     """
 
-    PRIMARY = "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json"
-    FALLBACK = (
-        "https://raw.githubusercontent.com/NousResearch/hermes-agent"
-        "/main/website/static/api/model-catalog.json"
-    )
+    PRIMARY = get_model_catalog_url()
+    FALLBACK = get_model_catalog_fallback_urls()[0]
 
     def test_uses_primary_when_it_succeeds(self, isolated_home):
         from hermes_cli import model_catalog

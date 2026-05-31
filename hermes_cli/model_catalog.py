@@ -53,6 +53,7 @@ from pathlib import Path
 from typing import Any
 
 from hermes_cli import __version__ as _HERMES_VERSION
+from hermes_constants import get_model_catalog_fallback_urls, get_model_catalog_url
 from utils import atomic_replace
 
 logger = logging.getLogger(__name__)
@@ -61,9 +62,7 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_CATALOG_URL = (
-    "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json"
-)
+DEFAULT_CATALOG_URL = get_model_catalog_url()
 # Fallback fetch chain. The Docusaurus site is served through Vercel, which
 # occasionally returns HTTP 403 + x-vercel-mitigated: challenge for non-
 # browser clients (urllib, curl). When that happens the disk cache goes
@@ -71,7 +70,7 @@ DEFAULT_CATALOG_URL = (
 # is the same manifest published from the same repo and is not bot-gated,
 # so we fall through to it whenever the primary URL fails.
 DEFAULT_CATALOG_FALLBACK_URLS: tuple[str, ...] = (
-    "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/api/model-catalog.json",
+    *get_model_catalog_fallback_urls(),
 )
 DEFAULT_TTL_HOURS = 24
 DEFAULT_FETCH_TIMEOUT = 8.0

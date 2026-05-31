@@ -15,6 +15,7 @@ from hermes_constants import (
     FORK_REPO_URL,
     FORK_REPO_WEB_URL,
     PREFERRED_AGENT_NAME,
+    get_distribution_package_name,
     get_hermes_home,
 )
 from typing import TYPE_CHECKING, Dict, List, Optional
@@ -184,11 +185,12 @@ def _version_tuple(v: str) -> tuple[int, ...]:
     return tuple(parts)
 
 
-def _fetch_pypi_latest(package: str = "hermes-agent") -> Optional[str]:
+def _fetch_pypi_latest(package: str | None = None) -> Optional[str]:
     """Fetch the latest version of a package from PyPI. Returns None on failure."""
     try:
         import urllib.request
-        url = f"https://pypi.org/pypi/{package}/json"
+        resolved_package = package or get_distribution_package_name()
+        url = f"https://pypi.org/pypi/{resolved_package}/json"
         req = urllib.request.Request(url, headers={"Accept": "application/json"})
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read())

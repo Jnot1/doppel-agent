@@ -33,3 +33,30 @@ def test_version_tuple_comparison():
     assert _version_tuple("0.13.0") > _version_tuple("0.12.0")
     assert _version_tuple("0.13.0") == _version_tuple("0.13.0")
     assert _version_tuple("1.0.0") > _version_tuple("0.99.99")
+
+
+def test_fetch_pypi_latest_defaults_to_shared_distribution_name(monkeypatch):
+    """The default PyPI lookup should follow the shared package-identity helper."""
+    from hermes_cli import banner
+
+    captured: dict[str, str] = {}
+
+    class _FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return b'{"info":{"version":"9.9.9"}}'
+
+    def _fake_urlopen(req, timeout=0):
+        captured["url"] = req.full_url
+        return _FakeResponse()
+
+    monkeypatch.setattr("hermes_cli.banner.get_distribution_package_name", lambda: "doppel-agent-test")
+    with patch("urllib.request.urlopen", side_effect=_fake_urlopen):
+        assert banner._fetch_pypi_latest() == "9.9.9"
+
+    assert captured["url"] == "https://pypi.org/pypi/doppel-agent-test/json"

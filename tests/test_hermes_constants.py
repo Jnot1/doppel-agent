@@ -15,6 +15,7 @@ from hermes_constants import (
     get_distribution_package_name,
     get_default_hermes_root,
     get_docker_image_name,
+    get_docker_image_tags_url,
     get_gateway_launchd_label,
     get_gateway_launchd_plist_path,
     get_gateway_service_name,
@@ -23,6 +24,9 @@ from hermes_constants import (
     get_homebrew_formula_name,
     get_managed_checkout_dir,
     get_managed_checkout_names,
+    get_model_catalog_docs_url,
+    get_model_catalog_fallback_urls,
+    get_model_catalog_url,
     get_official_repo_urls,
     get_official_upstream_repo_url,
     find_managed_checkout_dir,
@@ -213,6 +217,20 @@ class TestDistributionIdentity:
 
     def test_docker_image_name(self):
         assert get_docker_image_name() == "nousresearch/hermes-agent"
+
+    def test_docker_image_tags_url(self):
+        assert get_docker_image_tags_url() == "https://hub.docker.com/r/nousresearch/hermes-agent/tags"
+
+    def test_model_catalog_url(self):
+        assert get_model_catalog_url() == "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json"
+
+    def test_model_catalog_docs_url(self):
+        assert get_model_catalog_docs_url() == "https://hermes-agent.nousresearch.com/docs/reference/model-catalog"
+
+    def test_model_catalog_fallback_urls(self):
+        assert get_model_catalog_fallback_urls() == (
+            "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/api/model-catalog.json",
+        )
 
 
 class TestUpstreamIdentity:

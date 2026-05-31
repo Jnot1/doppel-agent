@@ -1,6 +1,7 @@
 # Session Storage
 
-Hermes Agent uses a SQLite database (`~/.hermes/state.db`) to persist session
+Doppel Agent uses a SQLite database (`~/.doppel/state.db` for fresh installs,
+or an existing `~/.hermes/state.db` on legacy roots) to persist session
 metadata, full message history, and model configuration across CLI and gateway
 sessions. This replaces the earlier per-session JSONL file approach.
 
@@ -10,7 +11,7 @@ Source file: `hermes_state.py`
 ## Architecture Overview
 
 ```
-~/.hermes/state.db (SQLite, WAL mode)
+~/.doppel/state.db (SQLite, WAL mode; legacy ~/.hermes/state.db preserved in place)
 ├── sessions              — Session metadata, token counts, billing
 ├── messages              — Full message history per session
 ├── messages_fts          — FTS5 virtual table (content + tool_name + tool_calls)
@@ -156,7 +157,7 @@ Declarative column adds use `ALTER TABLE ADD COLUMN` wrapped in try/except to ha
 
 ## Write Contention Handling
 
-Multiple hermes processes (gateway + CLI sessions + worktree agents) share one
+Multiple Doppel processes (gateway + CLI sessions + worktree agents) share one
 `state.db`. The `SessionDB` class handles write contention with:
 
 - **Short SQLite timeout** (1 second) instead of the default 30s
@@ -182,7 +183,7 @@ _CHECKPOINT_EVERY_N_WRITES = 50
 ```python
 from hermes_state import SessionDB
 
-db = SessionDB()                           # Default: ~/.hermes/state.db
+db = SessionDB()                           # Default: ~/.doppel/state.db (legacy ~/.hermes roots stay in place)
 db = SessionDB(db_path=Path("/tmp/test.db"))  # Custom path
 ```
 
@@ -386,10 +387,14 @@ db.delete_session("sess_abc123")
 
 ## Database Location
 
-Default path: `~/.hermes/state.db`
+Preferred default path: `~/.doppel/state.db`
 
-This is derived from `hermes_constants.get_hermes_home()` which resolves to
-`~/.hermes/` by default, or the value of `HERMES_HOME` environment variable.
+This is derived from `hermes_constants.get_hermes_home()` which reads
+`DOPPEL_HOME` first, then `HERMES_HOME`, and otherwise prefers `~/.doppel/`
+while preserving an existing `~/.hermes/` root in place.
+
+Legacy installs that already live under `~/.hermes/` continue to use
+`~/.hermes/state.db` until migrated.
 
 The database file, WAL file (`state.db-wal`), and shared-memory file
 (`state.db-shm`) are all created in the same directory.

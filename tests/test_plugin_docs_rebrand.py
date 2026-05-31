@@ -3,6 +3,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+DEV_GUIDE_CATEGORY = REPO_ROOT / "website" / "docs" / "developer-guide" / "_category_.json"
 EN_PLUGINS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "plugins.md"
 EN_BUILD_GUIDE = REPO_ROOT / "website" / "docs" / "guides" / "build-a-hermes-plugin.md"
 ZH_PLUGINS_DOC = (
@@ -70,6 +71,7 @@ EN_CREATING_SKILLS_DOC = EN_DEV_GUIDE_DIR / "creating-skills.md"
 EN_ACP_INTERNALS_DOC = EN_DEV_GUIDE_DIR / "acp-internals.md"
 EN_EXTENDING_CLI_DOC = EN_DEV_GUIDE_DIR / "extending-the-cli.md"
 EN_ARCHITECTURE_DOC = EN_DEV_GUIDE_DIR / "architecture.md"
+EN_SESSION_STORAGE_DOC = EN_DEV_GUIDE_DIR / "session-storage.md"
 EN_TRAJECTORY_DOC = EN_DEV_GUIDE_DIR / "trajectory-format.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -82,6 +84,7 @@ ZH_CREATING_SKILLS_DOC = ZH_DEV_GUIDE_DIR / "creating-skills.md"
 ZH_ACP_INTERNALS_DOC = ZH_DEV_GUIDE_DIR / "acp-internals.md"
 ZH_EXTENDING_CLI_DOC = ZH_DEV_GUIDE_DIR / "extending-the-cli.md"
 ZH_ARCHITECTURE_DOC = ZH_DEV_GUIDE_DIR / "architecture.md"
+ZH_SESSION_STORAGE_DOC = ZH_DEV_GUIDE_DIR / "session-storage.md"
 ZH_TRAJECTORY_DOC = ZH_DEV_GUIDE_DIR / "trajectory-format.md"
 
 
@@ -634,3 +637,31 @@ def test_architecture_and_trajectory_docs_prefer_doppel_surfaces():
     assert '"tool_call_id"' in zh_traj
     assert '"gpt"' in en_traj
     assert '"gpt"' in zh_traj
+
+
+def test_session_storage_and_dev_guide_category_prefer_doppel_surfaces():
+    en_session = EN_SESSION_STORAGE_DOC.read_text(encoding="utf-8")
+    zh_session = ZH_SESSION_STORAGE_DOC.read_text(encoding="utf-8")
+    dev_category = DEV_GUIDE_CATEGORY.read_text(encoding="utf-8")
+
+    assert "Doppel Agent uses a SQLite database" in en_session
+    assert "Doppel Agent 使用 SQLite 数据库" in zh_session
+    assert "Hermes Agent uses a SQLite database" not in en_session
+    assert "Hermes Agent 使用 SQLite 数据库" not in zh_session
+    assert "Multiple Doppel processes" in en_session
+    assert "多个 Doppel 进程" in zh_session
+    assert "Preferred default path: `~/.doppel/state.db`" in en_session
+    assert "首选默认路径：`~/.doppel/state.db`" in zh_session
+    assert "~/.hermes/state.db" in en_session
+    assert "~/.hermes/state.db" in zh_session
+    assert "DOPPEL_HOME" in en_session
+    assert "DOPPEL_HOME" in zh_session
+    assert "hermes_state.py" in en_session
+    assert "hermes_state.py" in zh_session
+    assert "hermes_constants.get_hermes_home()" in en_session
+    assert "hermes_constants.get_hermes_home()" in zh_session
+    assert "HERMES_HOME" in en_session
+    assert "HERMES_HOME" in zh_session
+
+    assert "Contribute to Doppel Agent" in dev_category
+    assert "Contribute to Hermes Agent" not in dev_category

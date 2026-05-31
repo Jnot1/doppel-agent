@@ -5169,3 +5169,57 @@ def test_google_gemini_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_azure_foundry_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "azure-foundry.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "azure-foundry.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Use Doppel Agent with Microsoft Foundry" in en
+    assert "将 Doppel Agent 与 Microsoft Foundry 配合使用" in zh
+    assert "Doppel Agent's `azure-foundry` provider" in en
+    assert "Doppel Agent 的 `azure-foundry` provider" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel doctor" in en
+    assert "doppel doctor" in zh
+    assert "doppel auth" in en
+    assert "doppel auth" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "Doppel's standard metadata chain" in en
+    assert "Doppel 的标准元数据链" in zh
+    assert "Doppel uses this list to prefill the model picker." in en
+    assert "Doppel 使用此列表预填模型选择器。" in zh
+    assert "Upgrade Doppel" in en
+    assert "升级 Doppel" in zh
+
+    for stale in (
+        "Use Hermes Agent with Microsoft Foundry",
+        "将 Hermes Agent 与 Microsoft Foundry 配合使用",
+        "Hermes Agent's `azure-foundry` provider",
+        "Hermes Agent 的 `azure-foundry` provider",
+        "hermes model",
+        "hermes doctor",
+        "hermes auth",
+        "~/.hermes/.env",
+        "Hermes' standard metadata chain",
+        "Hermes 的标准元数据链",
+        "Hermes uses this list to prefill the model picker.",
+        "Hermes 使用此列表预填模型选择器。",
+        "Upgrade Hermes",
+        "升级 Hermes",
+    ):
+        assert stale not in en
+        assert stale not in zh

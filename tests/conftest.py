@@ -5,11 +5,13 @@ Hermetic-test invariants enforced here (see AGENTS.md for rationale):
 1. **No credential env vars.** All provider/credential-shaped env vars
    (ending in _API_KEY, _TOKEN, _SECRET, _PASSWORD, _CREDENTIALS, etc.)
    are unset before every test. Local developer keys cannot leak in.
-2. **Isolated HERMES_HOME.** HERMES_HOME points to a per-test tempdir so
-   code reading ``~/.hermes/*`` via ``get_hermes_home()`` can't see the
-   real one. (We do NOT also redirect HOME — that broke subprocesses in
-   CI. Code using ``Path.home() / ".hermes"`` instead of the canonical
-   ``get_hermes_home()`` is a bug to fix at the callsite.)
+2. **Isolated agent home.** ``DOPPEL_HOME`` and legacy ``HERMES_HOME``
+   point to a per-test tempdir so code reading the canonical agent home
+   via ``get_hermes_home()`` can't see the real one. (We do NOT also
+   redirect HOME — that broke subprocesses in CI. Code using
+   ``Path.home() / ".hermes"`` or ``Path.home() / ".doppel"`` instead
+   of the canonical ``get_hermes_home()`` is a bug to fix at the
+   callsite.)
 3. **Deterministic runtime.** TZ=UTC, LANG=C.UTF-8, PYTHONHASHSEED=0.
 4. **No HERMES_SESSION_* inheritance** — the agent's current gateway
    session must not leak into tests.
@@ -339,23 +341,56 @@ def _hermetic_environment(tmp_path, monkeypatch):
     for name in _HERMES_BEHAVIORAL_VARS:
         monkeypatch.delenv(name, raising=False)
 
-    # 3. Redirect HERMES_HOME to a per-test tempdir. Code that reads
-    #    ``~/.hermes/*`` via ``get_hermes_home()`` now gets the tempdir.
+    # 3. Redirect both home env names to a per-test tempdir. Code that
+    #    reads the canonical agent home via ``get_hermes_home()`` now
+    #    gets the tempdir.
     #
     #    NOTE: We do NOT also redirect HOME. Doing so broke CI because
     #    some tests (and their transitive deps) spawn subprocesses that
     #    inherit HOME and expect it to be stable. If a test genuinely
     #    needs HOME isolated, it should set it explicitly in its own
-    #    fixture. Any code in the codebase reading ``~/.hermes/*`` via
-    #    ``Path.home() / ".hermes"`` instead of ``get_hermes_home()``
-    #    is a bug to fix at the callsite.
+    #    fixture. Any code in the codebase reading ``~/.hermes/*`` /
+    #    ``~/.doppel/*`` via ``Path.home()`` instead of
+    #    ``get_hermes_home()`` is a bug to fix at the callsite.
     fake_hermes_home = tmp_path / "hermes_test"
     fake_hermes_home.mkdir()
     (fake_hermes_home / "sessions").mkdir()
     (fake_hermes_home / "cron").mkdir()
     (fake_hermes_home / "memories").mkdir()
     (fake_hermes_home / "skills").mkdir()
+    monkeypatch.setenv("DOPPEL_HOME", str(fake_hermes_home))
     monkeypatch.setenv("HERMES_HOME", str(fake_hermes_home))
+
+    # Older tests often patch only one home env name. Keep the pair in
+    # lockstep while they still match so those tests keep driving the
+    # canonical home, but preserve intentional divergence for precedence
+    # tests that explicitly set the names differently.
+    original_setenv = monkeypatch.setenv
+    original_delenv = monkeypatch.delenv
+    touched_home_envs = set()
+
+    def _synced_setenv(name, value, prepend=None):
+        if name not in {"DOPPEL_HOME", "HERMES_HOME"}:
+            original_setenv(name, value, prepend=prepend)
+            return
+        touched_home_envs.add(name)
+        original_setenv(name, value, prepend=prepend)
+        if len(touched_home_envs) == 1:
+            counterpart = "HERMES_HOME" if name == "DOPPEL_HOME" else "DOPPEL_HOME"
+            original_setenv(counterpart, value, prepend=prepend)
+
+    def _synced_delenv(name, raising=True):
+        if name not in {"DOPPEL_HOME", "HERMES_HOME"}:
+            original_delenv(name, raising=raising)
+            return
+        touched_home_envs.add(name)
+        original_delenv(name, raising=raising)
+        if len(touched_home_envs) == 1:
+            counterpart = "HERMES_HOME" if name == "DOPPEL_HOME" else "DOPPEL_HOME"
+            original_delenv(counterpart, raising=False)
+
+    monkeypatch.setenv = _synced_setenv
+    monkeypatch.delenv = _synced_delenv
 
     # 4. Deterministic locale / timezone / hashseed. CI runs in UTC with
     #    C.UTF-8 locale; local dev often doesn't. Pin everything.

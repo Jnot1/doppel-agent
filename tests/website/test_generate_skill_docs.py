@@ -147,3 +147,72 @@ def test_render_skill_page_normalizes_hermes_agent_author(gen_module):
         gen_module.page_output_path(meta).name
         == "software-development-debugging-doppel-tui-commands.md"
     )
+
+
+def test_render_skill_page_uses_doppel_display_path_for_legacy_slug(gen_module):
+    meta = {
+        "source_kind": "bundled",
+        "category": "autonomous-ai-agents",
+        "sub": None,
+        "slug": "hermes-agent",
+        "rel_path": "autonomous-ai-agents/hermes-agent",
+    }
+    frontmatter = {
+        "name": "hermes-agent",
+        "description": "Configure, extend, or contribute to Doppel Agent.",
+        "metadata": {"hermes": {"docs_display_name": "Doppel Agent"}},
+    }
+
+    page = gen_module.render_skill_page(meta, frontmatter, "# Body")
+
+    assert "| Path | `skills/autonomous-ai-agents/doppel-agent` |" in page
+    assert "| Path | `skills/autonomous-ai-agents/hermes-agent` |" not in page
+
+
+def test_bundled_catalog_uses_doppel_display_paths_for_legacy_slugs(gen_module):
+    entries = [
+        (
+            {
+                "source_kind": "bundled",
+                "category": "autonomous-ai-agents",
+                "sub": None,
+                "slug": "hermes-agent",
+                "rel_path": "autonomous-ai-agents/hermes-agent",
+            },
+            {
+                "frontmatter": {
+                    "name": "hermes-agent",
+                    "description": "Configure, extend, or contribute to Doppel Agent.",
+                    "metadata": {"hermes": {"docs_display_name": "Doppel Agent"}},
+                }
+            },
+        ),
+        (
+            {
+                "source_kind": "bundled",
+                "category": "software-development",
+                "sub": None,
+                "slug": "hermes-agent-skill-authoring",
+                "rel_path": "software-development/hermes-agent-skill-authoring",
+            },
+            {
+                "frontmatter": {
+                    "name": "hermes-agent-skill-authoring",
+                    "description": "Use when authoring in-repo SKILL.md for Doppel Agent: frontmatter, validator, structure.",
+                    "metadata": {
+                        "hermes": {
+                            "docs_display_name": "Doppel Agent Skill Authoring"
+                        }
+                    },
+                }
+            },
+        ),
+    ]
+
+    result = gen_module.build_catalog_md_bundled(entries)
+
+    assert "`autonomous-ai-agents/doppel-agent`" in result
+    assert "`software-development/doppel-agent-skill-authoring`" in result
+    assert "`autonomous-ai-agents/hermes-agent`" not in result
+    assert "`software-development/hermes-agent-skill-authoring`" not in result
+    assert "historical `hermes-` prefixes" not in result

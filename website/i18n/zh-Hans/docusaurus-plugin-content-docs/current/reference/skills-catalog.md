@@ -10,7 +10,7 @@ Doppel Agent 附带一个大型内置技能库；全新安装会复制到 `~/.do
 
 Doppel Agent 在执行 `doppel update` 时也会同步内置技能，但同步清单会尊重本地删除和用户编辑。如果此处列出的某个技能在你的 agent-home skill 目录树中缺失（全新安装使用 `~/.doppel/skills/`，旧版 `~/.hermes/skills/` 仍受支持），它仍随 Doppel Agent 一同发布；可通过 `doppel skills reset <name> --restore` 恢复。
 
-部分内置 skill id 仍保留历史性的 `hermes-` 前缀，以兼容既有工作流和贡献者工具链。
+部分内置 skill id 仍保留历史性的内部前缀，以兼容既有工作流和贡献者工具链。
 
 如果某个技能未出现在此列表中但存在于仓库中，目录由 `website/scripts/generate-skill-docs.py` 重新生成。
 
@@ -30,7 +30,7 @@ Doppel Agent 在执行 `doppel update` 时也会同步内置技能，但同步�
 |-------|-------------|------|
 | [`claude-code`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code) | 将编码任务委托给 Claude Code CLI（功能开发、PR）。 | `autonomous-ai-agents/claude-code` |
 | [`codex`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex) | 将编码任务委托给 OpenAI Codex CLI（功能开发、PR）。 | `autonomous-ai-agents/codex` |
-| [`Doppel Agent`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-doppel-agent) | 配置、扩展或贡献 Doppel Agent。 | `autonomous-ai-agents/hermes-agent` |
+| [`Doppel Agent`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-doppel-agent) | 配置、扩展或贡献 Doppel Agent。 | `autonomous-ai-agents/doppel-agent` |
 | [`opencode`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-opencode) | 将编码任务委托给 OpenCode CLI（功能开发、PR 审查）。 | `autonomous-ai-agents/opencode` |
 
 ## creative
@@ -184,8 +184,8 @@ Doppel Agent 在执行 `doppel update` 时也会同步内置技能，但同步�
 
 | 技能 | 描述 | 路径 |
 |-------|-------------|------|
-| [`Debugging Doppel TUI Commands`](/user-guide/skills/bundled/software-development/software-development-debugging-doppel-tui-commands) | 调试 Doppel TUI 斜杠命令：Python、gateway、Ink UI。 | `software-development/debugging-hermes-tui-commands` |
-| [`Doppel Agent Skill Authoring`](/user-guide/skills/bundled/software-development/software-development-doppel-agent-skill-authoring) | 编写仓库内 SKILL.md：frontmatter、验证器、结构规范。 | `software-development/hermes-agent-skill-authoring` |
+| [`Debugging Doppel TUI Commands`](/user-guide/skills/bundled/software-development/software-development-debugging-doppel-tui-commands) | 调试 Doppel TUI 斜杠命令：Python、gateway、Ink UI。 | `software-development/debugging-doppel-tui-commands` |
+| [`Doppel Agent Skill Authoring`](/user-guide/skills/bundled/software-development/software-development-doppel-agent-skill-authoring) | 编写仓库内 SKILL.md：frontmatter、验证器、结构规范。 | `software-development/doppel-agent-skill-authoring` |
 | [`node-inspect-debugger`](/user-guide/skills/bundled/software-development/software-development-node-inspect-debugger) | 通过 --inspect + Chrome DevTools Protocol CLI 调试 Node.js。 | `software-development/node-inspect-debugger` |
 | [`plan`](/user-guide/skills/bundled/software-development/software-development-plan) | 计划模式：将 Markdown 计划写入 `.hermes/plans/`，不执行。 | `software-development/plan` |
 | [`python-debugpy`](/user-guide/skills/bundled/software-development/software-development-python-debugpy) | 调试 Python：pdb REPL + debugpy 远程调试（DAP）。 | `software-development/python-debugpy` |

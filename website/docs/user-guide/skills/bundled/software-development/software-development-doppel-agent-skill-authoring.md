@@ -15,7 +15,7 @@ Use when authoring in-repo SKILL.md for Doppel Agent: frontmatter, validator, st
 | | |
 |---|---|
 | Source | Bundled (installed by default) |
-| Path | `skills/software-development/hermes-agent-skill-authoring` |
+| Path | `skills/software-development/doppel-agent-skill-authoring` |
 | Version | `1.0.0` |
 | Author | Doppel Agent |
 | License | MIT |

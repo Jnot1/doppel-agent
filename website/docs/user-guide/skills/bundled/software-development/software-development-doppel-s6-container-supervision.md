@@ -15,7 +15,7 @@ Modify, debug, or extend the s6-overlay supervision tree inside the Doppel Agent
 | | |
 |---|---|
 | Source | Bundled (installed by default) |
-| Path | `skills/software-development/hermes-s6-container-supervision` |
+| Path | `skills/software-development/doppel-s6-container-supervision` |
 | Version | `1.0.0` |
 | Author | Doppel Agent |
 | License | MIT |

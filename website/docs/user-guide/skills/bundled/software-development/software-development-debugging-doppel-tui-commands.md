@@ -15,7 +15,7 @@ Debug Doppel TUI slash commands: Python, gateway, Ink UI.
 | | |
 |---|---|
 | Source | Bundled (installed by default) |
-| Path | `skills/software-development/debugging-hermes-tui-commands` |
+| Path | `skills/software-development/debugging-doppel-tui-commands` |
 | Version | `1.0.0` |
 | Author | Doppel Agent |
 | License | MIT |

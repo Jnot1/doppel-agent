@@ -3393,6 +3393,65 @@ def test_skills_hub_front_door_and_catalog_routes_prefer_doppel_wording():
         assert old_route not in zh_catalog
 
 
+def test_bundled_doppel_skill_docs_and_catalog_prefer_doppel_customer_facing_surfaces():
+    en_skill_page = (
+        REPO_ROOT
+        / "website"
+        / "docs"
+        / "user-guide"
+        / "skills"
+        / "bundled"
+        / "autonomous-ai-agents"
+        / "autonomous-ai-agents-doppel-agent.md"
+    ).read_text(encoding="utf-8")
+    zh_skill_page = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "skills"
+        / "bundled"
+        / "autonomous-ai-agents"
+        / "autonomous-ai-agents-doppel-agent.md"
+    ).read_text(encoding="utf-8")
+    en_catalog = (
+        REPO_ROOT / "website" / "docs" / "reference" / "skills-catalog.md"
+    ).read_text(encoding="utf-8")
+    zh_catalog = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "skills-catalog.md"
+    ).read_text(encoding="utf-8")
+
+    assert "`skills/autonomous-ai-agents/doppel-agent`" in en_skill_page
+    assert "`skills/autonomous-ai-agents/hermes-agent`" not in en_skill_page
+    assert "modified fork of Hermes Agent" not in en_skill_page
+    assert "https://hermes-agent.nousresearch.com/docs/" not in en_skill_page
+    assert "| Tags | `doppel`, `setup`" in en_skill_page
+    assert "`hermes`" not in en_skill_page.split("| Tags |", 1)[1].split("\n", 1)[0]
+
+    assert "`skills/autonomous-ai-agents/doppel-agent`" in zh_skill_page
+    assert "`skills/autonomous-ai-agents/hermes-agent`" not in zh_skill_page
+    assert "它是 Hermes Agent 的一个修改版分叉" not in zh_skill_page
+    assert "https://hermes-agent.nousresearch.com/docs/" not in zh_skill_page
+
+    assert "`autonomous-ai-agents/doppel-agent`" in en_catalog
+    assert "`autonomous-ai-agents/hermes-agent`" not in en_catalog
+    assert "historical `hermes-` prefixes" not in en_catalog
+
+    assert "`autonomous-ai-agents/doppel-agent`" in zh_catalog
+    assert "`autonomous-ai-agents/hermes-agent`" not in zh_catalog
+    assert "历史性的 `hermes-` 前缀" not in zh_catalog
+
+
 def test_user_stories_page_and_docs_categories_prefer_doppel_front_door_wording():
     en_user_stories = (
         REPO_ROOT / "website" / "docs" / "user-stories.mdx"

@@ -15,12 +15,12 @@ Configure, extend, or contribute to Doppel Agent.
 | | |
 |---|---|
 | Source | Bundled (installed by default) |
-| Path | `skills/autonomous-ai-agents/hermes-agent` |
+| Path | `skills/autonomous-ai-agents/doppel-agent` |
 | Version | `2.1.0` |
 | Author | Doppel Agent + Teknium |
 | License | MIT |
 | Platforms | linux, macos, windows |
-| Tags | `doppel`, `hermes`, `setup`, `configuration`, `multi-agent`, `spawning`, `cli`, `gateway`, `development` |
+| Tags | `doppel`, `setup`, `configuration`, `multi-agent`, `spawning`, `cli`, `gateway`, `development` |
 | Related skills | [`claude-code`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code), [`codex`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex), [`opencode`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-opencode) |
 
 ## Reference: full SKILL.md
@@ -31,7 +31,7 @@ The following is the complete skill definition that the agent loads when this sk
 
 # Doppel Agent
 
-Doppel Agent is Your Everyday Personal AI Assistant: a modified fork of Hermes Agent by Nous Research, maintained by Doppelme. It runs in your terminal, messaging platforms, and IDEs. It belongs to the same category as Claude Code (Anthropic), Codex (OpenAI), and OpenClaw — autonomous coding and task-execution agents that use tool calling to interact with your system. Doppel works with any LLM provider (OpenRouter, Anthropic, OpenAI, DeepSeek, local models, and 15+ others) and runs on Linux, macOS, and WSL.
+Doppel Agent is Your Everyday Personal AI Assistant, maintained by Doppelme. It runs in your terminal, messaging platforms, and IDEs. It belongs to the same category as Claude Code (Anthropic), Codex (OpenAI), and OpenClaw — autonomous coding and task-execution agents that use tool calling to interact with your system. Doppel works with any LLM provider (OpenRouter, Anthropic, OpenAI, DeepSeek, local models, and 15+ others) and runs on Linux, macOS, and WSL.
 
 What makes Doppel different:
 
@@ -46,7 +46,7 @@ People use Doppel for software development, research, system administration, dat
 
 **This skill helps you work with Doppel Agent effectively** — setting it up, configuring features, spawning additional agent instances, troubleshooting issues, finding the right commands and settings, and understanding how the system works when you need to extend or contribute to it.
 
-**Live docs:** https://hermes-agent.nousresearch.com/docs/
+**Live docs:** /docs/
 
 ## Quick Start
 
@@ -170,7 +170,7 @@ doppel gateway setup        Configure platforms
 
 Supported platforms: Telegram, Discord, Slack, WhatsApp, Signal, Email, SMS, Matrix, Mattermost, Home Assistant, DingTalk, Feishu, WeCom, BlueBubbles (iMessage), Weixin (WeChat), API Server, Webhooks. Open WebUI connects via the API Server adapter.
 
-Platform docs: https://hermes-agent.nousresearch.com/docs/user-guide/messaging/
+Platform docs: /docs/user-guide/messaging/
 
 ### Sessions
 
@@ -249,7 +249,7 @@ doppel uninstall            Uninstall Doppel Agent
 
 Type these during an interactive chat session. New commands land fairly
 often; if something below looks stale, run `/help` in-session for the
-authoritative list or see the [live slash commands reference](https://hermes-agent.nousresearch.com/docs/reference/slash-commands).
+authoritative list or see the [live slash commands reference](/docs/reference/slash-commands).
 The registry of record is `hermes_cli/commands.py` — every consumer
 (autocomplete, Telegram menu, Slack mapping, `/help`) derives from it.
 
@@ -382,7 +382,7 @@ Edit with `doppel config edit` or `doppel config set section.key value`.
 | `delegation` | `model`, `provider`, `base_url`, `api_key`, `max_iterations` (50), `reasoning_effort` |
 | `checkpoints` | `enabled`, `max_snapshots` (50) |
 
-Full config reference: https://hermes-agent.nousresearch.com/docs/user-guide/configuration
+Full config reference: /docs/user-guide/configuration
 
 ### Providers
 
@@ -412,7 +412,7 @@ Full config reference: https://hermes-agent.nousresearch.com/docs/user-guide/con
 | Custom endpoint | Config | `model.base_url` + `model.api_key` in config.yaml |
 | GitHub Copilot ACP | External | `COPILOT_CLI_PATH` or Copilot CLI |
 
-Full provider docs: https://hermes-agent.nousresearch.com/docs/integrations/providers
+Full provider docs: /docs/integrations/providers
 
 ### Toolsets
 
@@ -672,7 +672,7 @@ the `cronjob` tool, the `doppel cron` CLI (`list`, `add`, `edit`,
   header/footer instead of being mirrored into the target gateway
   session (keeps role alternation intact).
 
-User docs: https://hermes-agent.nousresearch.com/docs/user-guide/features/cron
+User docs: /docs/user-guide/features/cron
 
 ### Curator (skill lifecycle)
 
@@ -693,7 +693,7 @@ so nothing is lost.
 
 Config: `curator.*` (`enabled`, `interval_hours`, `min_idle_hours`,
 `stale_after_days`, `archive_after_days`, `backup.*`).
-User docs: https://hermes-agent.nousresearch.com/docs/user-guide/features/curator
+User docs: /docs/user-guide/features/curator
 
 ### Kanban (multi-agent work queue)
 
@@ -722,7 +722,7 @@ sessions still have zero `kanban_*` schema footprint unless configured.
   `HERMES_KANBAN_BOARD` pinned in env); tenant is a soft namespace
   within a board for workspace-path + memory-key isolation.
 
-User docs: https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban
+User docs: /docs/user-guide/features/kanban
 
 ---
 
@@ -873,18 +873,18 @@ doppel config set auxiliary.vision.model <model_name>
 
 | Looking for... | Location |
 |----------------|----------|
-| Config options | `doppel config edit` or [Configuration docs](https://hermes-agent.nousresearch.com/docs/user-guide/configuration) |
-| Available tools | `doppel tools list` or [Tools reference](https://hermes-agent.nousresearch.com/docs/reference/tools-reference) |
-| Slash commands | `/help` in session or [Slash commands reference](https://hermes-agent.nousresearch.com/docs/reference/slash-commands) |
-| Skills catalog | `doppel skills browse` or [Skills catalog](https://hermes-agent.nousresearch.com/docs/reference/skills-catalog) |
-| Provider setup | `doppel model` or [Providers guide](https://hermes-agent.nousresearch.com/docs/integrations/providers) |
-| Platform setup | `doppel gateway setup` or [Messaging docs](https://hermes-agent.nousresearch.com/docs/user-guide/messaging/) |
-| MCP servers | `doppel mcp list` or [MCP guide](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp) |
-| Profiles | `doppel profile list` or [Profiles docs](https://hermes-agent.nousresearch.com/docs/user-guide/profiles) |
-| Cron jobs | `doppel cron list` or [Cron docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/cron) |
-| Memory | `doppel memory status` or [Memory docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory) |
-| Env variables | `doppel config env-path` or [Env vars reference](https://hermes-agent.nousresearch.com/docs/reference/environment-variables) |
-| CLI commands | `doppel --help` or [CLI reference](https://hermes-agent.nousresearch.com/docs/reference/cli-commands) |
+| Config options | `doppel config edit` or [Configuration docs](/docs/user-guide/configuration) |
+| Available tools | `doppel tools list` or [Tools reference](/docs/reference/tools-reference) |
+| Slash commands | `/help` in session or [Slash commands reference](/docs/reference/slash-commands) |
+| Skills catalog | `doppel skills browse` or [Skills catalog](/docs/reference/skills-catalog) |
+| Provider setup | `doppel model` or [Providers guide](/docs/integrations/providers) |
+| Platform setup | `doppel gateway setup` or [Messaging docs](/docs/user-guide/messaging/) |
+| MCP servers | `doppel mcp list` or [MCP guide](/docs/user-guide/features/mcp) |
+| Profiles | `doppel profile list` or [Profiles docs](/docs/user-guide/profiles) |
+| Cron jobs | `doppel cron list` or [Cron docs](/docs/user-guide/features/cron) |
+| Memory | `doppel memory status` or [Memory docs](/docs/user-guide/features/memory) |
+| Env variables | `doppel config env-path` or [Env vars reference](/docs/reference/environment-variables) |
+| CLI commands | `doppel --help` or [CLI reference](/docs/reference/cli-commands) |
 | Gateway logs | `~/.doppel/logs/gateway.log` |
 | Session files | `doppel sessions browse` (reads state.db) |
 | Source code | `~/.doppel/doppel-agent/` |
@@ -893,7 +893,7 @@ doppel config set auxiliary.vision.model <model_name>
 
 ## Contributor Quick Reference
 
-For occasional contributors and PR authors. Full developer docs: https://hermes-agent.nousresearch.com/docs/developer-guide/
+For occasional contributors and PR authors. Full developer docs: /docs/developer-guide/
 
 ### Project Layout
 
@@ -903,7 +903,7 @@ doppel-agent/
 ├── run_agent.py          # AIAgent — core conversation loop
 ├── model_tools.py        # Tool discovery and dispatch
 ├── toolsets.py           # Toolset definitions
-├── cli.py                # Interactive CLI (HermesCLI)
+├── cli.py                # Interactive CLI
 ├── hermes_state.py       # SQLite session store
 ├── agent/                # Prompt builder, context compression, memory, model routing, credential pooling, skill dispatch
 ├── hermes_cli/           # CLI subcommands, config, setup, commands

@@ -110,6 +110,7 @@ EN_TTS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tts.m
 EN_SPOTIFY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "spotify.md"
 EN_WEB_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "web-search.md"
 EN_VOICE_MODE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "voice-mode.md"
+EN_HONCHO_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "honcho.md"
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
 )
@@ -374,6 +375,17 @@ ZH_VOICE_MODE_DOC = (
     / "user-guide"
     / "features"
     / "voice-mode.md"
+)
+ZH_HONCHO_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "honcho.md"
 )
 ZH_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT
@@ -2117,6 +2129,55 @@ def test_voice_mode_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "`hermes --tui`" not in zh
     assert "@hermesbyt4 hello" not in en
     assert "@hermesbyt4 你好" not in zh
+
+
+def test_honcho_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_HONCHO_DOC.read_text(encoding="utf-8")
+    zh = ZH_HONCHO_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent's built-in memory system" in en
+    assert "Doppel Agent 内置记忆系统" in zh
+    assert "multiple Doppel Agent instances" in en
+    assert "多个 Doppel Agent 实例" in zh
+    assert "`doppel memory setup`" in en
+    assert "`doppel memory setup`" in zh
+    assert "`doppel honcho`" in en
+    assert "`doppel honcho`" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "$DOPPEL_HOME/honcho.json" in en
+    assert "$DOPPEL_HOME/honcho.json" in zh
+    assert "When pointing Doppel Agent at a self-hosted Honcho server" in en
+    assert "当你将 Doppel Agent 指向自托管 Honcho 服务器时" in zh
+
+    for fixed in (
+        "~/.honcho/config.json",
+        "$HERMES_HOME/honcho.json",
+        "HONCHO_API_KEY",
+        "AUTH_JWT_SECRET",
+        "AUTH_USE_AUTH=false",
+        "openclaw-honcho",
+        "honcho_reasoning",
+        "honcho_search",
+        "doppel honcho migrate",
+        "Migrating from `hermes honcho`",
+        "从 `hermes honcho` 迁移",
+        "~/.hermes/config.yaml",
+        "~/.hermes/.env",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "Hermes's built-in memory system" not in en
+    assert "Hermes 内置记忆系统" not in zh
+    assert "multiple Hermes instances" not in en
+    assert "多个 Hermes 实例" not in zh
+    assert "hermes memory setup    # select \"honcho\" from the provider list" not in en
+    assert "hermes memory setup    # 从 provider 列表中选择 \"honcho\"" not in zh
+    assert "When pointing Hermes at a self-hosted Honcho server" not in en
+    assert "`hermes honcho status`" not in en
+    assert "`hermes honcho status`" not in zh
 
 
 def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():

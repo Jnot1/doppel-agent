@@ -165,7 +165,7 @@ Doppel Agent supports voice on WhatsApp:
 
 - **Incoming:** Voice messages (`.ogg` opus) are automatically transcribed using the configured STT provider: local `faster-whisper`, Groq Whisper (`GROQ_API_KEY`), or OpenAI Whisper (`VOICE_TOOLS_OPENAI_KEY`)
 - **Outgoing:** TTS responses are sent as MP3 audio file attachments
-- Agent responses include a built-in reply prefix by default. In this phase, the default string remains `⚕ **Hermes Agent**` unless you override it yourself. You can customize or disable it in `config.yaml`:
+- Agent responses include a built-in reply prefix by default. The default string is `⚕ **Doppel Agent**` unless you override it yourself. You can customize or disable it in `config.yaml`:
 
 ```yaml
 # ~/.doppel/config.yaml

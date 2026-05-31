@@ -140,6 +140,12 @@ EN_EXTENDING_DASHBOARD_DOC = (
 EN_WEB_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "web-dashboard.md"
 )
+EN_WHATSAPP_MESSAGING_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "messaging" / "whatsapp.md"
+)
+EN_MATRIX_MESSAGING_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "messaging" / "matrix.md"
+)
 EN_SKINS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "skins.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
@@ -209,6 +215,28 @@ ZH_GOALS_DOC = (
     / "user-guide"
     / "features"
     / "goals.md"
+)
+ZH_WHATSAPP_MESSAGING_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "messaging"
+    / "whatsapp.md"
+)
+ZH_MATRIX_MESSAGING_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "messaging"
+    / "matrix.md"
 )
 ZH_SECURITY_DOC = (
     REPO_ROOT
@@ -5564,6 +5592,22 @@ def test_platform_gateway_setup_copy_prefers_doppel_customer_facing_strings():
     assert 'install_hint="pip install \'hermes-agent[google_chat]\'"' not in google_chat_adapter
     assert "Google Chat configuration saved to ~/.hermes/.env" not in google_chat_adapter
     assert "Restart the gateway: hermes gateway restart" not in google_chat_adapter
+
+
+def test_whatsapp_and_matrix_messaging_docs_prefer_doppel_customer_facing_surfaces():
+    en_whatsapp = EN_WHATSAPP_MESSAGING_DOC.read_text(encoding="utf-8")
+    zh_whatsapp = ZH_WHATSAPP_MESSAGING_DOC.read_text(encoding="utf-8")
+    en_matrix = EN_MATRIX_MESSAGING_DOC.read_text(encoding="utf-8")
+    zh_matrix = ZH_MATRIX_MESSAGING_DOC.read_text(encoding="utf-8")
+
+    assert '`⚕ **Doppel Agent**`' in en_whatsapp
+    assert '`⚕ **Hermes Agent**`' not in en_whatsapp
+    assert '"⚕ **Doppel Agent**"' in zh_whatsapp
+    assert '"⚕ **Hermes Agent**"' not in zh_whatsapp
+
+    assert '"initial_device_display_name": "Doppel Agent"' in en_matrix
+    assert '"initial_device_display_name": "Hermes Agent"' not in en_matrix
+    assert '"initial_device_display_name": "Doppel Agent"' in zh_matrix
 
 
 def test_deliverable_mode_docs_prefer_doppel_customer_facing_surfaces():

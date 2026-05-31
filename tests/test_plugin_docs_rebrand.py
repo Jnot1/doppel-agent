@@ -4968,6 +4968,89 @@ def test_zh_quickstart_and_cli_docs_prefer_doppel_customer_facing_surfaces():
     assert "HERMES_YOLO_MODE" not in en_cli
 
 
+def test_windows_wsl_quickstart_pair_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "windows-wsl-quickstart.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "windows-wsl-quickstart.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        'description: "Run Doppel Agent on Windows via WSL2',
+        "Doppel Agent now supports **both** native Windows and WSL2.",
+        "your Doppel sessions",
+        "most Doppel features",
+        "Doppel uses Git Bash",
+        "The Doppel CLI, gateway, sessions, memory, skills, and tool runtimes all live inside the Linux VM.",
+        "curl -fsSL https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.sh | bash",
+        "doppel gateway setup",
+        "doppel chat",
+        "~/.doppel/",
+        "Doppel WSL 8080",
+        "Running Doppel services long-term on Windows",
+        "wt.exe -w 0 -p \"Ubuntu\" wsl.exe -d Ubuntu --cd ~ -- bash -ic \"doppel\"",
+        "uv run doppel",
+    ):
+        assert expected in en
+
+    for unexpected in (
+        'description: "Run Hermes Agent on Windows via WSL2',
+        "Hermes Agent now supports **both** native Windows and WSL2.",
+        "your Hermes sessions",
+        "most Hermes features",
+        "Hermes uses Git Bash",
+        "The Hermes CLI, gateway, sessions, memory, skills, and tool runtimes all live inside the Linux VM.",
+        "curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash",
+        "hermes gateway setup",
+        "hermes chat",
+        "~/.hermes/",
+        "Hermes WSL 8080",
+        "Running Hermes services long-term on Windows",
+        "uv run hermes",
+    ):
+        assert unexpected not in en
+
+    for expected in (
+        'description: "通过 WSL2 在 Windows 上运行 Doppel Agent',
+        "Doppel Agent 现已同时支持原生 Windows 和 WSL2。",
+        "希望 Doppel 会话与开发工具共享同一文件系统和路径。",
+        "大多数 Doppel 功能均可在 Windows 上原生运行。",
+        "Doppel 使用 Git Bash 执行 shell 命令",
+        "Doppel CLI、gateway、会话、内存、技能和工具运行时均位于 Linux 虚拟机内部。",
+        "curl -fsSL https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.sh | bash",
+        "doppel gateway setup",
+        "doppel chat",
+        "~/.doppel/",
+        "Doppel WSL 8080",
+        "在 Windows 上长期运行 Doppel 服务",
+    ):
+        assert expected in zh
+
+    for unexpected in (
+        'description: "通过 WSL2 在 Windows 上运行 Hermes Agent',
+        "Hermes Agent 现已同时支持原生 Windows 和 WSL2。",
+        "希望 Hermes 会话与开发工具共享同一文件系统和路径。",
+        "大多数 Hermes 功能均可在 Windows 上原生运行。",
+        "Hermes 使用 Git Bash 执行 shell 命令",
+        "Hermes CLI、gateway、会话、内存、技能和工具运行时均位于 Linux 虚拟机内部。",
+        "curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash",
+        "hermes gateway setup",
+        "hermes chat",
+        "~/.hermes/",
+        "Hermes WSL 8080",
+        "在 Windows 上长期运行 Hermes 服务",
+    ):
+        assert unexpected not in zh
+
+
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
     zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

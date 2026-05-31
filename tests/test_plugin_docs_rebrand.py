@@ -103,6 +103,7 @@ EN_CODEX_RUNTIME_DOC = (
 )
 EN_MCP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "mcp.md"
 EN_KANBAN_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "kanban.md"
+EN_FEATURE_SKILLS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "skills.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -283,6 +284,17 @@ ZH_KANBAN_DOC = (
     / "user-guide"
     / "features"
     / "kanban.md"
+)
+ZH_FEATURE_SKILLS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "skills.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1656,3 +1668,51 @@ def test_kanban_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "hermes profile describe" not in zh
     assert "hermes skills list" not in en
     assert "hermes skills list" not in zh
+
+
+def test_feature_skills_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_FEATURE_SKILLS_DOC.read_text(encoding="utf-8")
+    zh = ZH_FEATURE_SKILLS_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent currently integrates with these skills ecosystems" in en
+    assert "Doppel Agent 目前与以下 skills 生态系统和发现来源集成" in zh
+    assert "~/.doppel/skills/" in en
+    assert "~/.doppel/skills/" in zh
+    assert "doppel chat --toolsets skills -q \"What skills do you have?\"" in en
+    assert "doppel chat --toolsets skills -q \"What skills do you have?\"" in zh
+    assert "doppel bundles create backend-dev" in en
+    assert "doppel bundles create backend-dev" in zh
+    assert "doppel skills browse --source official" in en
+    assert "doppel skills browse --source official" in zh
+    assert "doppel skills install official/security/1password" in en
+    assert "doppel skills install official/security/1password" in zh
+    assert "doppel skills tap add my-org/doppel-skills" in en
+    assert "doppel skills tap add my-org/doppel-skills" in zh
+    assert "doppel skills install my-org/doppel-skills/deploy-runbook" in en
+    assert "doppel skills install my-org/doppel-skills/deploy-runbook" in zh
+    assert "doppel skills reset google-workspace" in en
+    assert "doppel skills reset google-workspace" in zh
+
+    for fixed in (
+        ".hermes/plans/",
+        "  hermes:",
+        "HERMES_HOME",
+        "TRUSTED_REPOS",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "hermes-agent.nousresearch.com/docs" in en
+
+    assert "Hermes currently integrates with these skills ecosystems" not in en
+    assert "Hermes 目前与以下 skills 生态系统和发现来源集成" not in zh
+    assert "hermes chat --toolsets skills" not in en
+    assert "hermes chat --toolsets skills" not in zh
+    assert "hermes bundles create" not in en
+    assert "hermes bundles create" not in zh
+    assert "hermes skills browse" not in en
+    assert "hermes skills browse" not in zh
+    assert "hermes skills install" not in en
+    assert "hermes skills install" not in zh
+    assert "my-org/hermes-skills" not in en
+    assert "my-org/hermes-skills" not in zh

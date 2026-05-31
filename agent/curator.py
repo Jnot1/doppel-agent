@@ -234,7 +234,7 @@ def should_run_now(now: Optional[datetime] = None) -> bool:
             state["last_run_at"] = now.isoformat()
             state["last_run_summary"] = (
                 "deferred first run — curator seeded, will run after one "
-                "interval; use `hermes curator run --dry-run` to preview now"
+                "interval; use `doppel curator run --dry-run` to preview now"
             )
             save_state(state)
         except Exception as e:  # pragma: no cover — best-effort persistence
@@ -917,8 +917,8 @@ def _build_rename_summary(
           • docx-extraction → document-tools
           • flaky-thing — pruned (stale)
           • old-utility → spreadsheet-ops
-        full report: hermes curator status
-        keep an umbrella stable: hermes curator pin document-tools
+        full report: doppel curator status
+        keep an umbrella stable: doppel curator pin document-tools
 
     Cap is 10 entries so a 50-skill consolidation doesn't blow up
     agent.log; the full list is always in REPORT.md. The pin hint only
@@ -971,7 +971,7 @@ def _build_rename_summary(
         shown += 1
     if total > SHOW:
         lines.append(f"  … and {total - SHOW} more")
-    lines.append("full report: hermes curator status")
+    lines.append("full report: doppel curator status")
     # Pin hint — only surface it when there's actually a destination skill
     # worth pinning. The umbrella skills that absorbed content are the natural
     # candidates: pinning one tells future curator runs to leave it alone.
@@ -981,7 +981,7 @@ def _build_rename_summary(
         if umbrellas:
             example = umbrellas[0]
             lines.append(
-                f"keep an umbrella stable: hermes curator pin {example}"
+                f"keep an umbrella stable: doppel curator pin {example}"
             )
     return "\n".join(lines)
 

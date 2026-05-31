@@ -78,7 +78,7 @@ def test_prints_multiline_summary_with_rename_map(curator_env):
         "archived 2 skill(s):\n"
         "  • pdf-extraction → document-tools\n"
         "  • docx-extraction → document-tools\n"
-        "full report: hermes curator status"
+        "full report: doppel curator status"
     )
     _set_state(
         curator_env["curator"],
@@ -91,6 +91,7 @@ def test_prints_multiline_summary_with_rename_map(curator_env):
     assert "pdf-extraction → document-tools" in out
     assert "docx-extraction → document-tools" in out
     assert "shows once per curator run" in out
+    assert "View anytime: doppel curator status" in out
 
 
 def test_show_once_semantics(curator_env):
@@ -100,7 +101,7 @@ def test_show_once_semantics(curator_env):
         "auto: no changes; llm: consolidated 1 into 1\n"
         "archived 1 skill(s):\n"
         "  • old → new\n"
-        "full report: hermes curator status"
+        "full report: doppel curator status"
     )
     _set_state(
         curator_env["curator"],
@@ -127,7 +128,7 @@ def test_new_run_resets_show_once(curator_env):
             "auto: no changes; llm: consolidated 1 into 1\n"
             "archived 1 skill(s):\n"
             "  • thing-a → umbrella\n"
-            "full report: hermes curator status"
+            "full report: doppel curator status"
         ),
     )
     curator_env["main"]._print_curator_recent_run_notice()
@@ -142,7 +143,7 @@ def test_new_run_resets_show_once(curator_env):
             "auto: no changes; llm: consolidated 1 into 1\n"
             "archived 1 skill(s):\n"
             "  • thing-b → umbrella\n"
-            "full report: hermes curator status"
+            "full report: doppel curator status"
         ),
     )
     curator_env["main"]._print_curator_recent_run_notice()

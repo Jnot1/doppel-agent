@@ -323,8 +323,8 @@ If terminal commands fail immediately or the terminal tool is reported as disabl
 
 - **Local** — No special requirements. The safest default when getting started.
 - **Docker** — Run `docker version` to verify Docker is working. If it fails, fix Docker or `doppel config set terminal.backend local`.
-- **SSH** — Both `TERMINAL_SSH_HOST` and `TERMINAL_SSH_USER` must be set. Hermes logs a clear error if either is missing.
-- **Modal** — Needs `MODAL_TOKEN_ID` env var or `~/.modal.toml`. Run `hermes doctor` to check.
+- **SSH** — Both `TERMINAL_SSH_HOST` and `TERMINAL_SSH_USER` must be set. Doppel Agent logs a clear error if either is missing.
+- **Modal** — Needs `MODAL_TOKEN_ID` env var or `~/.modal.toml`. Run `doppel doctor` to check.
 - **Daytona** — Needs `DAYTONA_API_KEY`. The Daytona SDK handles server URL configuration.
 - **Singularity** — Needs `apptainer` or `singularity` in `$PATH`. Common on HPC clusters.
 

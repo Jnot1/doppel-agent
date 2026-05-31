@@ -249,9 +249,9 @@ terminal:
 
 **必需：** `MODAL_TOKEN_ID` + `MODAL_TOKEN_SECRET` 环境变量，或 `~/.modal.toml` 配置文件。
 
-**持久化：** 启用后，沙箱文件系统在清理时快照，并在下次会话时恢复。快照在 `~/.hermes/modal_snapshots.json` 中跟踪。这保留文件系统状态，而非活跃进程、PID 空间或后台任务。
+**持久化：** 启用后，沙箱文件系统在清理时快照，并在下次会话时恢复。快照在 `~/.doppel/modal_snapshots.json` 中跟踪；旧版 `~/.hermes/modal_snapshots.json` 安装仍然受支持。这保留文件系统状态，而非活跃进程、PID 空间或后台任务。
 
-**凭据文件：** 自动从 `~/.hermes/` 挂载（OAuth token 等），并在每条命令前同步。
+**凭据文件：** 自动从 `~/.doppel/` 挂载（OAuth token 等）；旧版 `~/.hermes/` 目录仍然受支持，并在每条命令前同步。
 
 ### Daytona 后端
 
@@ -298,9 +298,9 @@ terminal:
 如果终端命令立即失败或终端工具报告为已禁用：
 
 - **Local** —— 无特殊要求。入门时最安全的默认选项。
-- **Docker** —— 运行 `docker version` 验证 Docker 是否正常工作。如果失败，修复 Docker 或执行 `hermes config set terminal.backend local`。
-- **SSH** —— `TERMINAL_SSH_HOST` 和 `TERMINAL_SSH_USER` 都必须设置。如果缺少任一项，Hermes 会记录清晰的错误。
-- **Modal** —— 需要 `MODAL_TOKEN_ID` 环境变量或 `~/.modal.toml`。运行 `hermes doctor` 检查。
+- **Docker** —— 运行 `docker version` 验证 Docker 是否正常工作。如果失败，修复 Docker 或执行 `doppel config set terminal.backend local`。
+- **SSH** —— `TERMINAL_SSH_HOST` 和 `TERMINAL_SSH_USER` 都必须设置。如果缺少任一项，Doppel Agent 会记录清晰的错误。
+- **Modal** —— 需要 `MODAL_TOKEN_ID` 环境变量或 `~/.modal.toml`。运行 `doppel doctor` 检查。
 - **Daytona** —— 需要 `DAYTONA_API_KEY`。Daytona SDK 处理服务器 URL 配置。
 - **Singularity** —— 需要 `$PATH` 中有 `apptainer` 或 `singularity`。HPC 集群上常见。
 

@@ -609,6 +609,14 @@ def _extract_configuration_top_cluster(text: str, heading: str) -> str:
     return text[start:]
 
 
+def _extract_configuration_backend_cluster(
+    text: str, start_heading: str, end_heading: str
+) -> str:
+    start = text.index(start_heading)
+    end = text.index(end_heading, start)
+    return text[start:end]
+
+
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
     plugins = EN_PLUGINS_DOC.read_text(encoding="utf-8")
     guide = EN_BUILD_GUIDE.read_text(encoding="utf-8")
@@ -864,6 +872,56 @@ def test_configuration_top_cluster_prefer_doppel_customer_facing_and_keep_runtim
     assert "~/.doppel/.env" in zh_cluster
     assert "~/.doppel/" in en_cluster
     assert "~/.doppel/" in zh_cluster
+
+
+def test_configuration_terminal_backend_cluster_prefer_doppel_and_preserve_runtime_terms():
+    en = EN_CONFIGURATION_DOC.read_text(encoding="utf-8")
+    zh = ZH_CONFIGURATION_DOC.read_text(encoding="utf-8")
+
+    en_cluster = _extract_configuration_backend_cluster(
+        en, "### SSH Backend", "### Remote-to-Host File Sync on Teardown"
+    )
+    zh_cluster = _extract_configuration_backend_cluster(
+        zh, "### SSH 后端", "### 拆卸时远程到宿主文件同步"
+    )
+
+    assert "### Common Terminal Backend Issues" in en_cluster
+    assert "### 常见终端后端问题" in zh_cluster
+    assert "### Remote-to-Host File Sync on Teardown" not in en_cluster
+    assert "### 拆卸时远程到宿主文件同步" not in zh_cluster
+    assert "Doppel Agent logs a clear error" in en_cluster
+    assert "Doppel Agent 会记录清晰的错误" in zh_cluster
+    assert "Run `doppel doctor` to check." in en_cluster
+    assert "运行 `doppel doctor` 检查。" in zh_cluster
+    assert "Run `hermes doctor` to check." not in en_cluster
+    assert "运行 `hermes doctor`" not in zh_cluster
+    assert "hermes doctor" not in en_cluster
+    assert "`hermes doctor`" not in zh_cluster
+    assert "doppel doctor" in en_cluster
+    assert "doppel doctor" in zh_cluster
+    assert "doppel config set terminal.backend local" in en_cluster
+    assert "doppel config set terminal.backend local" in zh_cluster
+    assert "`~/.doppel/modal_snapshots.json`" in en_cluster
+    assert "`~/.doppel/modal_snapshots.json`" in zh_cluster
+    assert "`~/.doppel/`" in en_cluster
+    assert "`~/.doppel/`" in zh_cluster
+    assert "Hermes logs a clear error" not in en_cluster
+    assert "Hermes 会记录清晰的错误" not in zh_cluster
+
+    for literal in (
+        "TERMINAL_SSH_HOST",
+        "TERMINAL_SSH_USER",
+        "hermes-{task_id}",
+        "/scratch/$USER/hermes-agent",
+        "~/.hermes/sandboxes/singularity",
+        "BatchMode=yes",
+        "StrictHostKeyChecking=accept-new",
+        "bash -l",
+    ):
+        assert literal in en_cluster
+        assert literal in zh_cluster
+
+    assert "~/.hermes/modal_snapshots.json" in zh_cluster
 
 
 def test_mcp_config_reference_docs_prefer_doppel_branding_and_keep_runtime_literals():

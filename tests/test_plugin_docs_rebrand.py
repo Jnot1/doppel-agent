@@ -29,6 +29,7 @@ ZH_BUILD_GUIDE = (
 )
 EN_BUILTIN_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "built-in-plugins.md"
 EN_INTEGRATIONS_DOC = REPO_ROOT / "website" / "docs" / "integrations" / "index.md"
+EN_INTEGRATIONS_PROVIDERS_DOC = REPO_ROOT / "website" / "docs" / "integrations" / "providers.md"
 ZH_BUILTIN_DOC = (
     REPO_ROOT
     / "website"
@@ -49,6 +50,16 @@ ZH_INTEGRATIONS_DOC = (
     / "current"
     / "integrations"
     / "index.md"
+)
+ZH_INTEGRATIONS_PROVIDERS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "integrations"
+    / "providers.md"
 )
 EN_DEV_GUIDE_DIR = REPO_ROOT / "website" / "docs" / "developer-guide"
 ZH_DEV_GUIDE_DIR = (
@@ -863,6 +874,48 @@ def test_built_in_and_integration_plugin_docs_prefer_doppel_surfaces():
     assert "Doppel 插件的分步指南" in zh_integrations
     assert "扩展 Hermes" not in zh_integrations
     assert "Hermes 插件的分步指南" not in zh_integrations
+
+
+def test_integrations_providers_docs_prefer_doppel_customer_facing_wording_and_preserve_runtime_literals():
+    en = EN_INTEGRATIONS_PROVIDERS_DOC.read_text(encoding="utf-8")
+    zh = ZH_INTEGRATIONS_PROVIDERS_DOC.read_text(encoding="utf-8")
+    en_preview = "\n".join(en.splitlines()[:220])
+    zh_preview = "\n".join(zh.splitlines()[:220])
+
+    assert "AI Providers" in en_preview
+    assert "AI 提供商" in zh_preview
+    assert "Doppel Agent" in en
+    assert "Doppel Agent" in zh
+    assert "recommended way to run Doppel Agent" in en_preview
+    assert "运行 Doppel Agent 的推荐方式" in zh_preview
+    assert "`doppel setup --portal`" in en_preview
+    assert "`doppel setup --portal`" in zh_preview
+    assert "`doppel model`" in en_preview
+    assert "`doppel model`" in zh_preview
+    assert "hermes model" not in en_preview
+    assert "hermes model" not in zh_preview
+    assert "doppel chat --provider" in en_preview
+    assert "doppel chat --provider" in zh_preview
+    assert "doppel auth add" in en_preview
+    assert "doppel auth add" in zh_preview
+
+    for literal in (
+        "client=hermes-client-v<version>",
+        "HERMES_COPILOT_ACP_COMMAND",
+        "HERMES_COPILOT_ACP_ARGS",
+        "HERMES_QWEN_BASE_URL",
+        "HERMES_GEMINI_PROJECT_ID",
+        "--tool-call-parser hermes",
+    ):
+        assert literal in en
+        assert literal in zh
+
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/auth.json" in en
+    assert "~/.doppel/auth.json" in zh
 
 
 def test_provider_plugin_developer_guides_prefer_doppel_surfaces():

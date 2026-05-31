@@ -1965,7 +1965,7 @@ def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_se
     top = zh_cli_commands.split("## `doppel chat`", 1)[0]
     pre_model = zh_cli_commands.split("## `doppel model`", 1)[0]
     model = zh_cli_commands.split("## `doppel model`", 1)[1].split("## `hermes gateway`", 1)[0]
-    support = zh_cli_commands.split("## `doppel dump`", 1)[1].split("## `hermes checkpoints`", 1)[0]
+    support = zh_cli_commands.split("## `doppel dump`", 1)[1].split("## `doppel checkpoints`", 1)[0]
     update = zh_cli_commands.split("## `doppel update`", 1)[1].split("## 维护命令", 1)[0]
 
     assert "doppel [global-options] <command> [subcommand/options]" in top
@@ -2002,6 +2002,46 @@ def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_se
     assert "`doppel backup restore --state pre-update`" in update
     assert "## `hermes update`" not in zh_cli_commands
     assert "hermes update [--check] [--backup] [--restart-gateway]" not in update
+
+
+def test_zh_reference_cli_commands_rebrand_checkpoints_promptsize_and_skills_cluster():
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    section = zh_cli_commands.split("## `doppel checkpoints`", 1)[1].split("## `hermes hooks`", 1)[0]
+
+    assert "doppel checkpoints [COMMAND]" in section
+    assert "~/.doppel/checkpoints/" in section
+    assert "doppel import ~/hermes-backup-20260423.zip" in section
+    assert "doppel logs [log_name] [options]" in section
+    assert "~/.doppel/logs/" in section
+    assert "## `doppel prompt-size`" in section
+    assert "doppel prompt-size --platform telegram" in section
+    assert "`doppel tools`" in section
+    assert "doppel config <subcommand>" in section
+    assert "doppel pairing <list|approve|revoke|clear-pending>" in section
+    assert "doppel skills browse" in section
+    assert "doppel bundles create backend-dev" in section
+    assert "~/.doppel/skill-bundles/<slug>.yaml" in section
+    assert "doppel curator run --dry-run" in section
+    assert "从快照恢复 `~/.doppel/skills/`" in section
+    assert "与 `doppel model` 相同的选择器" in section
+    assert "## `hermes checkpoints`" not in section
+    assert "hermes import ~/hermes-backup-20260423.zip" not in section
+    assert "hermes logs [log_name] [options]" not in section
+    assert "## `hermes config`" not in section
+    assert "hermes skills browse" not in section
+    assert "## `hermes bundles`" not in section
+    assert "hermes curator run --dry-run" not in section
+    assert "与 `hermes model` 相同的选择器" not in section
 
 
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():

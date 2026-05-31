@@ -630,17 +630,17 @@ doppel backup --quick                   # 仅状态快速快照
 doppel backup --quick --label "pre-upgrade"  # 带标签的快速快照
 ```
 
-## `hermes checkpoints`
+## `doppel checkpoints`
 
 ```bash
-hermes checkpoints [COMMAND]
+doppel checkpoints [COMMAND]
 ```
 
-检查和管理 `~/.hermes/checkpoints/` 处的影子 git 存储——会话内 `/rollback` 命令的存储层。可随时安全运行；不需要 agent 正在运行。
+检查和管理 `~/.doppel/checkpoints/` 处的影子 git 存储——会话内 `/rollback` 命令背后的存储层。可随时安全运行；不需要 agent 正在运行。
 
 | 子命令 | 说明 |
 |------------|-------------|
-| `status`（默认） | 显示总大小、项目数量和每个项目的详情。裸 `hermes checkpoints` 等同于此。 |
+| `status`（默认） | 显示总大小、项目数量和每个项目的详情。裸 `doppel checkpoints` 等同于此。 |
 | `list` | `status` 的别名。 |
 | `prune` | 强制执行清理——删除孤立和过期项目，GC 存储，强制执行大小上限。忽略 24 小时幂等性标记。 |
 | `clear` | 删除整个 checkpoint 基础存储。不可逆；除非使用 `-f` 否则要求确认。 |
@@ -659,22 +659,22 @@ hermes checkpoints [COMMAND]
 ### 示例
 
 ```bash
-hermes checkpoints                                  # 状态概览
-hermes checkpoints prune --retention-days 3         # 激进清理
-hermes checkpoints prune --max-size-mb 200          # 一次性收紧大小上限
-hermes checkpoints clear-legacy -f                  # 删除 v1 归档目录
-hermes checkpoints clear -f                         # 清除所有内容
+doppel checkpoints                                  # 状态概览
+doppel checkpoints prune --retention-days 3         # 激进清理
+doppel checkpoints prune --max-size-mb 200          # 一次性收紧大小上限
+doppel checkpoints clear-legacy -f                  # 删除 v1 归档目录
+doppel checkpoints clear -f                         # 清除所有内容
 ```
 
 完整架构和会话内命令，请参阅 [Checkpoints 与 `/rollback`](../user-guide/checkpoints-and-rollback.md)。
 
-## `hermes import`
+## `doppel import`
 
 ```bash
-hermes import <zipfile> [options]
+doppel import <zipfile> [options]
 ```
 
-将之前创建的 Hermes 备份恢复到 Hermes 主目录。归档中的所有文件会覆盖 Hermes 主目录中的现有文件；`--force` 仅跳过当目标已有 Hermes 安装时触发的确认提示。
+将之前创建的 Doppel 备份恢复到 Doppel 主目录。归档中的所有文件会覆盖 Doppel 主目录中的现有文件；`--force` 仅跳过当目标已有 Doppel 安装时触发的确认提示。
 
 | 选项 | 说明 |
 |--------|-------------|
@@ -686,17 +686,17 @@ hermes import <zipfile> [options]
 
 ### 示例
 ```bash
-hermes import ~/hermes-backup-20260423.zip           # 覆盖现有配置前提示确认
-hermes import ~/hermes-backup-20260423.zip --force   # 不提示直接覆盖
+doppel import ~/hermes-backup-20260423.zip           # 覆盖现有配置前提示确认
+doppel import ~/hermes-backup-20260423.zip --force   # 不提示直接覆盖
 ```
 
-## `hermes logs`
+## `doppel logs`
 
 ```bash
-hermes logs [log_name] [options]
+doppel logs [log_name] [options]
 ```
 
-查看、跟踪和过滤 Hermes 日志文件。所有日志存储在 `~/.hermes/logs/`（非默认 profile 存储在 `<profile>/logs/`）。
+查看、跟踪和过滤 Doppel 日志文件。所有日志存储在 `~/.doppel/logs/`（非默认 profile 存储在 `<profile>/logs/`）。
 
 ### 日志文件
 
@@ -722,25 +722,25 @@ hermes logs [log_name] [options]
 
 ```bash
 # 查看 agent.log 的最后 50 行（默认）
-hermes logs
+doppel logs
 
 # 实时跟踪 agent.log
-hermes logs -f
+doppel logs -f
 
 # 查看 gateway.log 的最后 100 行
-hermes logs gateway -n 100
+doppel logs gateway -n 100
 
 # 仅显示最近一小时的警告和错误
-hermes logs --level WARNING --since 1h
+doppel logs --level WARNING --since 1h
 
 # 按特定会话过滤
-hermes logs --session abc123
+doppel logs --session abc123
 
 # 从 30 分钟前开始跟踪 errors.log
-hermes logs errors --since 30m -f
+doppel logs errors --since 30m -f
 
 # 列出所有日志文件及其大小
-hermes logs list
+doppel logs list
 ```
 
 ### 过滤
@@ -749,19 +749,52 @@ hermes logs list
 
 ```bash
 # 最近 2 小时内包含会话 "tg-12345" 的 WARNING+ 行
-hermes logs --level WARNING --since 2h --session tg-12345
+doppel logs --level WARNING --since 2h --session tg-12345
 ```
 
 当 `--since` 激活时，没有可解析时间戳的行会被包含（它们可能是多行日志条目的续行）。当 `--level` 激活时，没有可检测级别的行会被包含。
 
 ### 日志轮转
 
-Hermes 使用 Python 的 `RotatingFileHandler`。旧日志会自动轮转——查找 `agent.log.1`、`agent.log.2` 等。`hermes logs list` 子命令显示所有日志文件，包括已轮转的。
+Doppel 使用 Python 的 `RotatingFileHandler`。旧日志会自动轮转——查找 `agent.log.1`、`agent.log.2` 等。`doppel logs list` 子命令会显示所有日志文件，包括已轮转的。
 
-## `hermes config`
+## `doppel prompt-size`
 
 ```bash
-hermes config <subcommand>
+doppel prompt-size [--platform <name>] [--json]
+```
+
+报告全新会话的固定提示预算——也就是每次 API 调用在任何对话内容之前就会发送的部分。当下游适配器或代理的提示预算比模型上下文窗口更紧，或者你想看清哪个块（skills 索引、memory、profile）占用最多时，这会很有用。
+
+它会构建与 agent 实际使用相同的系统提示，然后进行拆分：
+
+- **系统提示总量** —— 完整组装后的提示（身份、指导、skills 索引、上下文文件、memory、profile、时间戳）。
+- **Skills 索引** —— `<available_skills>` 块。安装很多 skill 时，这通常是最大的单个块。
+- **Memory** 和 **用户 profile** —— 你的 `MEMORY.md` / `USER.md` 快照。
+- **提示层级** —— stable / context / volatile，对应 Doppel 为提高缓存友好性而分层提示的方式。
+- **工具 schema** —— 所有已启用工具的 JSON（每次调用固定载荷的另一半）。
+
+完全离线运行——不发起 API 调用，也不需要配置任何凭据。
+
+```bash
+# CLI 平台的人类可读拆分（默认）
+doppel prompt-size
+
+# 模拟消息平台的提示（不同的平台提示）
+doppel prompt-size --platform telegram
+
+# 面向脚本的机器可读输出
+doppel prompt-size --json
+```
+
+:::tip
+skills 索引和工具 schema 会随着已启用 skill 与工具数量增加而变大。若要缩小提示，可禁用未使用的工具集（`doppel tools`），或卸载不需要的 skill（`doppel skills`）。当前目录中的上下文文件（`AGENTS.md`、`.cursorrules`）也会计入总量。
+:::
+
+## `doppel config`
+
+```bash
+doppel config <subcommand>
 ```
 
 子命令：
@@ -776,10 +809,10 @@ hermes config <subcommand>
 | `check` | 检查缺失或过期的 config。 |
 | `migrate` | 交互式添加新引入的选项。 |
 
-## `hermes pairing`
+## `doppel pairing`
 
 ```bash
-hermes pairing <list|approve|revoke|clear-pending>
+doppel pairing <list|approve|revoke|clear-pending>
 ```
 
 | 子命令 | 说明 |
@@ -789,10 +822,10 @@ hermes pairing <list|approve|revoke|clear-pending>
 | `revoke <platform> <user-id>` | 撤销用户的访问权限。 |
 | `clear-pending` | 清除待处理的配对码。 |
 
-## `hermes skills`
+## `doppel skills`
 
 ```bash
-hermes skills <subcommand>
+doppel skills <subcommand>
 ```
 
 子命令：
@@ -817,12 +850,12 @@ hermes skills <subcommand>
 常用示例：
 
 ```bash
-hermes skills browse
-hermes skills browse --source official
-hermes skills search react --source skills-sh
-hermes skills search https://mintlify.com/docs --source well-known
-hermes skills inspect official/security/1password
-hermes skills inspect skills-sh/vercel-labs/json-render/json-render-react
+doppel skills browse
+doppel skills browse --source official
+doppel skills search react --source skills-sh
+doppel skills search https://mintlify.com/docs --source well-known
+doppel skills inspect official/security/1password
+doppel skills inspect skills-sh/vercel-labs/json-render/json-render-react
 doppel skills install official/migration/openclaw-migration
 doppel skills install skills-sh/anthropics/skills/pdf --force
 doppel skills install https://sharethis.chat/SKILL.md                     # 直接 URL（单文件 SKILL.md）
@@ -842,13 +875,13 @@ doppel skills reset google-workspace --restore --yes
 - `--source browse-sh` 搜索 [browse.sh](https://browse.sh) 包含 200+ 站点特定浏览器自动化 skill 的目录。标识符形如 `browse-sh/airbnb.com/search-listings-ddgioa`。
 - 传入 `http(s)://…/*.md` URL 可直接安装单文件 SKILL.md。当 frontmatter 没有 `name:` 且 URL slug 不是有效标识符时，交互式终端会提示输入名称；非交互式界面（TUI 内的 `/skills install`、gateway 平台）需要改用 `--name <x>`。
 
-## `hermes bundles`
+## `doppel bundles`
 
 ```bash
-hermes bundles <subcommand>
+doppel bundles <subcommand>
 ```
 
-Skill bundle 将多个 skill 归组到一个 `/<bundle-name>` 斜杠命令下。调用 bundle 会将每个引用的 skill 加载到单个合并的用户消息中。存储位置：`~/.hermes/skill-bundles/<slug>.yaml`。YAML schema 和行为请参阅 [Skill Bundles](../user-guide/features/skills.md#skill-bundles)。
+Skill bundle 将多个 skill 归组到一个 `/<bundle-name>` 斜杠命令下。调用 bundle 会将每个引用的 skill 加载到单个合并的用户消息中。存储位置：`~/.doppel/skill-bundles/<slug>.yaml`。YAML schema 和行为请参阅 [Skill Bundles](../user-guide/features/skills.md#skill-bundles)。
 
 子命令：
 
@@ -858,28 +891,28 @@ Skill bundle 将多个 skill 归组到一个 `/<bundle-name>` 斜杠命令下。
 | `show <name>` | 显示某个 bundle 的名称、描述、skill 和文件路径 |
 | `create <name>` | 创建新 bundle。传入 `--skill <id>`（可重复）或省略以进行交互式输入。支持 `--description`、`--instruction`、`--force`。 |
 | `delete <name>` | 删除 bundle 文件 |
-| `reload` | 重新扫描 `~/.hermes/skill-bundles/` 并报告新增/删除的 bundle |
+| `reload` | 重新扫描 `~/.doppel/skill-bundles/` 并报告新增/删除的 bundle |
 
 示例：
 
 ```bash
-hermes bundles create backend-dev \
+doppel bundles create backend-dev \
   --skill github-code-review \
   --skill test-driven-development \
   --skill github-pr-workflow \
   -d "Backend feature work"
 
-hermes bundles list
-hermes bundles show backend-dev
-hermes bundles delete backend-dev
+doppel bundles list
+doppel bundles show backend-dev
+doppel bundles delete backend-dev
 ```
 
 在聊天会话中，`/bundles` 列出已安装的 bundle，`/<bundle-name>` 加载某个 bundle。
 
-## `hermes curator`
+## `doppel curator`
 
 ```bash
-hermes curator <subcommand>
+doppel curator <subcommand>
 ```
 
 Curator 是一个辅助模型后台任务，定期审查 agent 创建的 skill，修剪过期的，合并重叠的，并归档过时的。捆绑和通过 hub 安装的 skill 不会被触及。归档可恢复；不会发生自动删除。
@@ -890,8 +923,8 @@ Curator 是一个辅助模型后台任务，定期审查 agent 创建的 skill�
 | `run` | 立即触发 curator 审查（阻塞直到 LLM 处理完成） |
 | `run --background` | 在后台线程中启动 LLM 处理并立即返回 |
 | `run --dry-run` | 仅预览——生成审查报告但不进行任何修改 |
-| `backup` | 手动对 `~/.hermes/skills/` 进行 tar.gz 快照（curator 在每次真实运行前也会自动快照） |
-| `rollback` | 从快照恢复 `~/.hermes/skills/`（默认使用最新快照） |
+| `backup` | 手动对 `~/.doppel/skills/` 进行 tar.gz 快照（curator 在每次真实运行前也会自动快照） |
+| `rollback` | 从快照恢复 `~/.doppel/skills/`（默认使用最新快照） |
 | `rollback --list` | 列出可用快照 |
 | `rollback --id <ts>` | 按 id 恢复特定快照 |
 | `rollback -y` | 跳过确认提示 |
@@ -904,14 +937,14 @@ Curator 是一个辅助模型后台任务，定期审查 agent 创建的 skill�
 | `prune` | 手动修剪 curator 通常会清理的 skill |
 | `list-archived` | 列出已归档的 skill（可通过 `restore` 恢复） |
 
-在全新安装时，第一次计划运行会延迟一个完整的 `interval_hours`（默认 7 天）——gateway 不会在 `hermes update` 后的第一次 tick 时立即执行 curator。使用 `hermes curator run --dry-run` 在此之前预览。
+在全新安装时，第一次计划运行会延迟一个完整的 `interval_hours`（默认 7 天）——gateway 不会在 `doppel update` 后的第一次 tick 时立即执行 curator。使用 `doppel curator run --dry-run` 在此之前预览。
 
 行为和配置请参阅 [Curator](../user-guide/features/curator.md)。
 
-## `hermes fallback`
+## `doppel fallback`
 
 ```bash
-hermes fallback <subcommand>
+doppel fallback <subcommand>
 ```
 
 管理 fallback provider 链。当主模型因速率限制、过载或连接错误而失败时，按顺序尝试 fallback provider。
@@ -919,7 +952,7 @@ hermes fallback <subcommand>
 | 子命令 | 说明 |
 |------------|-------------|
 | `list`（别名：`ls`） | 显示当前 fallback 链（不带子命令时的默认行为） |
-| `add` | 选择 provider + 模型（与 `hermes model` 相同的选择器）并追加到链末尾 |
+| `add` | 选择 provider + 模型（与 `doppel model` 相同的选择器）并追加到链末尾 |
 | `remove`（别名：`rm`） | 选择要从链中删除的条目 |
 | `clear` | 删除所有 fallback 条目 |
 

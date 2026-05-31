@@ -26,6 +26,11 @@ def _clear_provider_env(monkeypatch):
         monkeypatch.delenv(key, raising=False)
 
 
+def _set_test_home(monkeypatch, tmp_path):
+    monkeypatch.setenv("DOPPEL_HOME", str(tmp_path))
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+
+
 def _stub_tts(monkeypatch):
     """Stub out TTS prompts so setup_model_provider doesn't block."""
     monkeypatch.setattr("hermes_cli.setup.prompt_choice", lambda q, c, d=0: (
@@ -52,7 +57,7 @@ def _write_model_config(tmp_path, provider, base_url="", model_name="test-model"
 
 def test_setup_delegates_to_select_provider_and_model(tmp_path, monkeypatch):
     """setup_model_provider calls select_provider_and_model and syncs config."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    _set_test_home(monkeypatch, tmp_path)
     _clear_provider_env(monkeypatch)
     _stub_tts(monkeypatch)
 
@@ -76,7 +81,7 @@ def test_setup_delegates_to_select_provider_and_model(tmp_path, monkeypatch):
 def test_setup_syncs_openrouter_from_disk(tmp_path, monkeypatch):
     """When select_provider_and_model saves OpenRouter config to disk,
     the wizard's config dict picks it up."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    _set_test_home(monkeypatch, tmp_path)
     _clear_provider_env(monkeypatch)
     _stub_tts(monkeypatch)
 
@@ -98,7 +103,7 @@ def test_setup_syncs_openrouter_from_disk(tmp_path, monkeypatch):
 
 def test_setup_syncs_nous_from_disk(tmp_path, monkeypatch):
     """Nous OAuth writes config to disk; wizard config dict must pick it up."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    _set_test_home(monkeypatch, tmp_path)
     _clear_provider_env(monkeypatch)
     _stub_tts(monkeypatch)
 
@@ -120,7 +125,7 @@ def test_setup_syncs_nous_from_disk(tmp_path, monkeypatch):
 
 def test_setup_custom_providers_synced(tmp_path, monkeypatch):
     """custom_providers written by select_provider_and_model must survive."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    _set_test_home(monkeypatch, tmp_path)
     _clear_provider_env(monkeypatch)
     _stub_tts(monkeypatch)
 
@@ -176,7 +181,7 @@ def test_setup_gateway_skips_service_install_when_systemctl_missing(monkeypatch,
     out = capsys.readouterr().out
     assert "Messaging platforms configured!" in out
     assert "Start the gateway to bring your bots online:" in out
-    assert "hermes gateway" in out
+    assert "doppel gateway" in out
 
 
 def test_setup_gateway_in_container_shows_docker_guidance(monkeypatch, capsys):
@@ -224,7 +229,7 @@ def test_setup_gateway_in_container_shows_docker_guidance(monkeypatch, capsys):
 
 def test_setup_syncs_custom_provider_removal_from_disk(tmp_path, monkeypatch):
     """Removing the last custom provider in model setup should persist."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    _set_test_home(monkeypatch, tmp_path)
     _clear_provider_env(monkeypatch)
     _stub_tts(monkeypatch)
 
@@ -249,7 +254,7 @@ def test_setup_syncs_custom_provider_removal_from_disk(tmp_path, monkeypatch):
 
 def test_setup_cancel_preserves_existing_config(tmp_path, monkeypatch):
     """When the user cancels provider selection, existing config is preserved."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    _set_test_home(monkeypatch, tmp_path)
     _clear_provider_env(monkeypatch)
     _stub_tts(monkeypatch)
 

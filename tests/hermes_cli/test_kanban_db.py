@@ -21,6 +21,7 @@ def kanban_home(tmp_path, monkeypatch):
     """Isolated HERMES_HOME with an empty kanban DB."""
     home = tmp_path / ".hermes"
     home.mkdir()
+    monkeypatch.setenv("DOPPEL_HOME", str(home))
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     kb.init_db()
@@ -92,6 +93,7 @@ def test_connect_rejects_tls_record_in_sqlite_header(tmp_path, monkeypatch):
     """Kanban should classify TLS-looking page-0 clobbers before WAL setup."""
     home = tmp_path / ".hermes"
     home.mkdir()
+    monkeypatch.setenv("DOPPEL_HOME", str(home))
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.delenv("HERMES_KANBAN_DB", raising=False)
     monkeypatch.delenv("HERMES_KANBAN_HOME", raising=False)
@@ -1784,6 +1786,7 @@ def test_cleanup_workspace_honors_workspaces_root_env_override(tmp_path, monkeyp
     """
     home = tmp_path / ".hermes"
     home.mkdir()
+    monkeypatch.setenv("DOPPEL_HOME", str(home))
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     workspaces_override = tmp_path / "ext-workspaces"
@@ -2011,6 +2014,7 @@ class TestSharedBoardPaths:
 
     def _set_home(self, monkeypatch, tmp_path, hermes_home):
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(hermes_home))
         monkeypatch.setenv("HERMES_HOME", str(hermes_home))
         monkeypatch.delenv("HERMES_KANBAN_HOME", raising=False)
 
@@ -2075,6 +2079,7 @@ class TestSharedBoardPaths:
         dispatcher_log = kb.worker_log_path("t_handoff")
 
         # Worker's perspective (profile activated by `hermes -p coder`).
+        monkeypatch.setenv("DOPPEL_HOME", str(profile_home))
         monkeypatch.setenv("HERMES_HOME", str(profile_home))
         worker_db = kb.kanban_db_path()
         worker_ws = kb.workspaces_root()
@@ -2124,6 +2129,7 @@ class TestSharedBoardPaths:
         override.mkdir()
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(profile_home))
         monkeypatch.setenv("HERMES_HOME", str(profile_home))
         monkeypatch.setenv("HERMES_KANBAN_HOME", str(override))
 
@@ -2136,6 +2142,7 @@ class TestSharedBoardPaths:
         default_home = tmp_path / ".hermes"
         default_home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(default_home))
         monkeypatch.setenv("HERMES_HOME", str(default_home))
         monkeypatch.setenv("HERMES_KANBAN_HOME", "   ")
 
@@ -2159,6 +2166,7 @@ class TestSharedBoardPaths:
             task_id = kb.create_task(conn, title="cross-profile")
 
         # Worker switches to the profile HERMES_HOME and reads.
+        monkeypatch.setenv("DOPPEL_HOME", str(profile_home))
         monkeypatch.setenv("HERMES_HOME", str(profile_home))
         with kb.connect() as conn:
             task = kb.get_task(conn, task_id)
@@ -2179,6 +2187,7 @@ class TestSharedBoardPaths:
         pinned_db.parent.mkdir()
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(default_home))
         monkeypatch.setenv("HERMES_HOME", str(default_home))
         monkeypatch.setenv("HERMES_KANBAN_HOME", str(umbrella))
         monkeypatch.setenv("HERMES_KANBAN_DB", str(pinned_db))
@@ -2200,6 +2209,7 @@ class TestSharedBoardPaths:
         pinned_ws.mkdir()
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(default_home))
         monkeypatch.setenv("HERMES_HOME", str(default_home))
         monkeypatch.setenv("HERMES_KANBAN_HOME", str(umbrella))
         monkeypatch.setenv("HERMES_KANBAN_WORKSPACES_ROOT", str(pinned_ws))
@@ -2216,6 +2226,7 @@ class TestSharedBoardPaths:
         default_home = tmp_path / ".hermes"
         default_home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(default_home))
         monkeypatch.setenv("HERMES_HOME", str(default_home))
         monkeypatch.setenv("HERMES_KANBAN_DB", "   ")
         monkeypatch.setenv("HERMES_KANBAN_WORKSPACES_ROOT", "")
@@ -2377,6 +2388,7 @@ def test_connect_falls_back_to_delete_on_locking_protocol(tmp_path, monkeypatch,
 
     home = tmp_path / ".hermes"
     home.mkdir()
+    monkeypatch.setenv("DOPPEL_HOME", str(home))
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
@@ -2723,7 +2735,7 @@ def test_resolve_hermes_argv_module_actually_runs():
         f"`{' '.join(argv)} --version` failed (rc={r.returncode}); "
         f"stderr={r.stderr[:200]!r}"
     )
-    assert "Hermes Agent" in r.stdout, f"unexpected output: {r.stdout[:200]!r}"
+    assert "Doppel Agent" in r.stdout, f"unexpected output: {r.stdout[:200]!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -2834,6 +2846,7 @@ def test_task_dict_survives_corrupt_created_at(tmp_path, monkeypatch):
     # Set up an isolated kanban home so we can write a corrupt created_at.
     home = tmp_path / ".hermes"
     home.mkdir()
+    monkeypatch.setenv("DOPPEL_HOME", str(home))
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
     kb._INITIALIZED_PATHS.clear()

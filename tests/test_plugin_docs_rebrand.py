@@ -6095,3 +6095,103 @@ def test_python_library_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_voice_mode_guide_pair_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "use-voice-mode-with-hermes.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "use-voice-mode-with-hermes.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Use Voice Mode with Doppel Agent" in en
+    assert "在 Doppel Agent 中使用语音模式" in zh
+    assert "using Doppel Agent voice mode" in en
+    assert "使用 Doppel Agent 语音模式" in zh
+    assert "you want Doppel Agent sitting in a Discord voice channel" in en
+    assert "希望 Doppel Agent 加入 Discord 语音频道进行实时对话" in zh
+    assert "three different voice experiences in Doppel Agent" in en
+    assert "Doppel Agent 中实际上有三种不同的语音体验" in zh
+    assert "make sure normal Doppel Agent works first" in en
+    assert "确保普通 Doppel Agent 先正常运行" in zh
+    assert "\n```bash\ndoppel\n```" in en
+    assert "\n```bash\ndoppel\n```" in zh
+    assert "Doppel Agent supports both local and cloud speech stacks." in en
+    assert "Doppel Agent 同时支持本地和云端语音处理方案。" in zh
+    assert "`~/.doppel/.env` on fresh installs. Legacy `~/.hermes/.env` still works" in en
+    assert "`~/.doppel/.env`（旧安装仍兼容 `~/.hermes/.env`）" in zh
+    assert "### If you use `doppel setup tts`" in en
+    assert "### 如果使用 `doppel setup tts`" in zh
+    assert "Doppel Agent checks whether `neutts` is already installed" in en
+    assert "Doppel Agent 会检查 `neutts` 是否已安装" in zh
+    assert "Doppel Agent transcribes and responds" in en
+    assert "Doppel Agent 转录并回复" in zh
+    assert "asking Doppel Agent to structure your thoughts in real time" in en
+    assert "让 Doppel Agent 实时整理你的思路" in zh
+    assert "stay in the full Doppel loop" in en
+    assert "保持完整 Doppel 工作流" in zh
+    assert "If Doppel Agent starts/stops too aggressively" in en
+    assert "如果 Doppel Agent 开始/停止过于激进" in zh
+    assert "Doppel Agent stays a normal chat bot" in en
+    assert "Doppel Agent 仍作为普通聊天机器人运行" in zh
+    assert "\n```bash\ndoppel gateway\n```" in en
+    assert "\n```bash\ndoppel gateway\n```" in zh
+    assert "you want Doppel Agent to function like a portable research or ops assistant" in en
+    assert "希望 Doppel Agent 充当便携式研究或运维助手" in zh
+    assert "Doppel Agent joins a Discord VC" in en
+    assert "Doppel Agent 加入 Discord 语音频道" in zh
+    assert "Doppel Agent detects speech boundaries" in en
+    assert "Doppel Agent 检测语音边界" in zh
+    assert "Doppel Agent responds in text and audio" in en
+    assert "Doppel Agent 以文字和音频形式回复" in zh
+
+    for stale in (
+        "Use Voice Mode with Hermes",
+        "在 Hermes 中使用语音模式",
+        "using Hermes voice mode",
+        "使用 Hermes 语音模式",
+        "you want Hermes sitting in a Discord voice channel",
+        "希望 Hermes 加入 Discord 语音频道进行实时对话",
+        "three different voice experiences in Hermes",
+        "Hermes 中实际上有三种不同的语音体验",
+        "make sure normal Hermes works first",
+        "确保普通 Hermes 先正常运行",
+        "\n```bash\nhermes\n```",
+        "Hermes supports both local and cloud speech stacks.",
+        "Hermes 同时支持本地和云端语音处理方案。",
+        "Add to `~/.hermes/.env`:",
+        "添加到 `~/.hermes/.env`：",
+        "### If you use `hermes setup`",
+        "### 如果使用 `hermes setup`",
+        "Hermes checks whether `neutts` is already installed",
+        "Hermes 会检查 `neutts` 是否已安装",
+        "Hermes transcribes and responds",
+        "Hermes 转录并回复",
+        "asking Hermes to structure your thoughts in real time",
+        "让 Hermes 实时整理你的思路",
+        "stay in the full Hermes loop",
+        "保持完整 Hermes 工作流",
+        "If Hermes starts/stops too aggressively",
+        "如果 Hermes 开始/停止过于激进",
+        "Hermes stays a normal chat bot",
+        "Hermes 仍作为普通聊天机器人运行",
+        "\n```bash\nhermes gateway\n```",
+        "you want Hermes to function like a portable research or ops assistant",
+        "希望 Hermes 充当便携式研究或运维助手",
+        "Hermes joins a Discord VC",
+        "Hermes 加入 Discord 语音频道",
+        "Hermes detects speech boundaries",
+        "Hermes 检测语音边界",
+        "Hermes responds in text and audio",
+        "Hermes 以文字和音频形式回复",
+    ):
+        assert stale not in en
+        assert stale not in zh

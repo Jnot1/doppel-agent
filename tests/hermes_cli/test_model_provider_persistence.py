@@ -70,6 +70,16 @@ class TestSaveModelChoiceAlwaysDict:
 
 
 class TestProviderPersistsAfterModelSave:
+    def test_azure_foundry_intro_is_doppel_first(self, config_home, capsys):
+        from hermes_cli.main import _model_flow_azure_foundry
+
+        with patch("builtins.input", side_effect=EOFError):
+            _model_flow_azure_foundry({}, "old-model")
+
+        out = capsys.readouterr().out
+        assert "Doppel Agent will probe your" in out
+        assert "Hermes will probe your" not in out
+
     def test_update_config_for_provider_uses_atomic_yaml_write(self, config_home):
         """Provider switches should delegate config writes to atomic_yaml_write."""
         from hermes_cli.auth import _update_config_for_provider
@@ -209,7 +219,7 @@ class TestProviderPersistsAfterModelSave:
         assert model.get("base_url") == "https://packy.example.com/v1"
         assert model.get("api_mode") == "codex_responses"
 
-    def test_copilot_acp_provider_saved_when_selected(self, config_home):
+    def test_copilot_acp_provider_saved_when_selected(self, config_home, capsys):
         """_model_flow_copilot_acp should persist provider/base_url/model together."""
         from hermes_cli.main import _model_flow_copilot_acp
         from hermes_cli.config import load_config
@@ -260,6 +270,12 @@ class TestProviderPersistsAfterModelSave:
             "hermes_cli.auth.deactivate_provider",
         ):
             _model_flow_copilot_acp(load_config(), "old-model")
+
+        out = capsys.readouterr().out
+        assert "GitHub Copilot ACP delegates Doppel Agent turns" in out
+        assert "Doppel Agent currently starts its own ACP subprocess" in out
+        assert "Doppel Agent uses your selected model as a hint" in out
+        assert "delegates Hermes turns" not in out
 
         import yaml
 
@@ -391,4 +407,3 @@ class TestBaseUrlValidation:
 
         saved = get_env_value("GLM_BASE_URL") or ""
         assert saved == "", "Empty input should not save a base URL"
-

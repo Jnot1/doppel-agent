@@ -568,6 +568,6 @@ The short version:
 - [Profiles: Running Multiple Agents](./profiles.md) — the base concept
 - [Profile Commands reference](../reference/profile-commands.md) — every flag, every option
 - [`hermes profile export` / `import`](../reference/profile-commands.md#hermes-profile-export) — local backup / restore (not distribution)
-- [Using SOUL with Hermes](../guides/use-soul-with-hermes.md) — authoring personalities
+- [Using SOUL with Doppel Agent](/guides/use-soul-with-doppel-agent) — authoring personalities
 - [Personality & SOUL](./features/personality.md) — how SOUL fits into the agent
 - [Skills catalog](../reference/skills-catalog.md) — skills you can bundle

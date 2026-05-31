@@ -127,7 +127,7 @@ SECTIONS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
         ("guides/python-library", "Use Doppel Agent as a Python Library", None),
         ("guides/use-mcp-with-hermes", "Use MCP with Doppel Agent", None),
         ("guides/use-voice-mode-with-hermes", "Use Voice Mode with Doppel Agent", None),
-        ("guides/use-soul-with-hermes", "Use SOUL.md with Doppel Agent", None),
+        ("guides/use-soul-with-doppel-agent", "Use SOUL.md with Doppel Agent", None),
         ("guides/build-a-hermes-plugin", "Build a Doppel Agent Plugin", None),
         ("guides/automate-with-cron", "Automate with Cron", None),
         ("guides/work-with-skills", "Work with Skills", None),

@@ -72,6 +72,20 @@ const config: Config = {
     ],
   ],
 
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects: [
+          {
+            from: '/guides/use-soul-with-hermes',
+            to: '/guides/use-soul-with-doppel-agent',
+          },
+        ],
+      },
+    ],
+  ],
+
   presets: [
     [
       'classic',

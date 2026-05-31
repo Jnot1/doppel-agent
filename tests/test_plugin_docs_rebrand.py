@@ -2061,14 +2061,14 @@ def test_context_files_and_soul_guide_prefer_doppel_surfaces_but_keep_literals()
     assert "你的 Doppel Agent 实例的**主要身份标识**" in zh_soul
     assert "replace the built-in default persona entirely with your own" in en_soul
     assert "完全替换内置默认人设" in zh_soul
-    assert "Doppel Agent now uses only the global SOUL file" in en_soul
-    assert "Doppel Agent 目前仅使用当前实例的全局 SOUL 文件" in zh_soul
+    assert "Doppel Agent uses the global SOUL file" in en_soul
+    assert "Doppel Agent 使用当前实例的全局 SOUL 文件" in zh_soul
+    assert "slug: /guides/use-soul-with-doppel-agent" in en_soul
+    assert "slug: /guides/use-soul-with-doppel-agent" in zh_soul
     assert "~/.doppel/SOUL.md" in en_soul
     assert "~/.doppel/SOUL.md" in zh_soul
     assert "$DOPPEL_HOME/SOUL.md" in en_soul
     assert "$DOPPEL_HOME/SOUL.md" in zh_soul
-    assert "$HERMES_HOME/SOUL.md" in en_soul
-    assert "$HERMES_HOME/SOUL.md" in zh_soul
     assert "Doppel Agent automatically seeds a starter `SOUL.md`" in en_soul
     assert "Doppel Agent 会自动为你生成一个初始文件" in zh_soul
     assert "When Doppel Agent starts a session" in en_soul
@@ -2091,8 +2091,10 @@ def test_context_files_and_soul_guide_prefer_doppel_surfaces_but_keep_literals()
     assert "Doppel Agent 忽略了我 SOUL.md 中的部分内容" in zh_soul
     assert "/personality" in en_soul
     assert "/personality" in zh_soul
-    assert "~/.hermes/SOUL.md" in en_soul
-    assert "~/.hermes/SOUL.md" in zh_soul
+    assert "~/.hermes/SOUL.md" not in en_soul
+    assert "~/.hermes/SOUL.md" not in zh_soul
+    assert "$HERMES_HOME/SOUL.md" not in en_soul
+    assert "$HERMES_HOME/SOUL.md" not in zh_soul
 
 
 def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
@@ -2117,8 +2119,10 @@ def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
     assert "影响 Doppel Agent 的说话方式" in zh
 
     assert "HERMES_HOME" in en and "HERMES_HOME" in zh
-    assert "~/.hermes/SOUL.md" in en and "~/.hermes/SOUL.md" in zh
-    assert "$HERMES_HOME/SOUL.md" in en and "$HERMES_HOME/SOUL.md" in zh
+    assert "/guides/use-soul-with-doppel-agent" in en
+    assert "/guides/use-soul-with-doppel-agent" in zh
+    assert "/guides/use-soul-with-hermes" not in en
+    assert "/guides/use-soul-with-hermes" not in zh
     assert "/personality" in en and "/personality" in zh
     assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." in en
     assert "You are Hermes Agent, an intelligent AI assistant created by Nous Research..." in zh
@@ -2129,6 +2133,65 @@ def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
     assert "自定义 Hermes Agent 的个性" not in zh
     assert "Hermes Agent's personality is fully customizable" not in en
     assert "Hermes Agent 的个性完全可自定义" not in zh
+
+
+def test_soul_guide_route_graph_uses_doppel_slug_and_legacy_redirect():
+    config = (REPO_ROOT / "website" / "docusaurus.config.ts").read_text(encoding="utf-8")
+    package_json = (REPO_ROOT / "website" / "package.json").read_text(encoding="utf-8")
+    llms = (
+        REPO_ROOT / "website" / "scripts" / "generate-llms-txt.py"
+    ).read_text(encoding="utf-8")
+    linked_docs = [
+        REPO_ROOT / "website" / "docs" / "guides" / "team-telegram-assistant.md",
+        REPO_ROOT / "website" / "docs" / "guides" / "tips.md",
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "personality.md",
+        REPO_ROOT / "website" / "docs" / "user-guide" / "profile-distributions.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "team-telegram-assistant.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "tips.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "personality.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "profile-distributions.md",
+    ]
+
+    assert '"@docusaurus/plugin-client-redirects": "^3.9.2"' in package_json
+    assert "@docusaurus/plugin-client-redirects" in config
+    assert "from: '/guides/use-soul-with-hermes'" in config
+    assert "to: '/guides/use-soul-with-doppel-agent'" in config
+    assert '("guides/use-soul-with-doppel-agent", "Use SOUL.md with Doppel Agent", None)' in llms
+    assert '("guides/use-soul-with-hermes", "Use SOUL.md with Doppel Agent", None)' not in llms
+
+    for doc in linked_docs:
+        text = doc.read_text(encoding="utf-8")
+        assert "/guides/use-soul-with-doppel-agent" in text
+        assert "/guides/use-soul-with-hermes" not in text
 
 
 def test_goals_feature_docs_prefer_doppel_surfaces_and_keep_goal_literals():
@@ -5807,8 +5870,8 @@ def test_tips_guides_prefer_doppel_customer_facing_surfaces():
     assert "`~/.doppel/SOUL.md`" in zh
     assert "`$DOPPEL_HOME/SOUL.md`" in en
     assert "`$DOPPEL_HOME/SOUL.md`" in zh
-    assert "[Use SOUL.md with Doppel Agent](/guides/use-soul-with-hermes)" in en
-    assert "[在 Doppel Agent 中使用 SOUL.md](/guides/use-soul-with-hermes)" in zh
+    assert "[Use SOUL.md with Doppel Agent](/guides/use-soul-with-doppel-agent)" in en
+    assert "[在 Doppel Agent 中使用 SOUL.md](/guides/use-soul-with-doppel-agent)" in zh
     assert "Doppel reads those too." in en
     assert "Doppel 同样会读取它们。" in zh
     assert "Doppel loads the top-level `AGENTS.md`" in en
@@ -5825,8 +5888,8 @@ def test_tips_guides_prefer_doppel_customer_facing_surfaces():
     assert "TERMINAL_DOCKER_IMAGE=nikolaik/python-nodejs:python3.11-nodejs20" in zh
     assert "Doppel checks every command" in en
     assert "Doppel 在执行每条命令前都会与一份精心维护的危险模式列表进行比对" in zh
-    assert "Legacy `~/.hermes/SOUL.md` and `$HERMES_HOME/SOUL.md` still work" in en
-    assert "对于旧安装，`~/.hermes/SOUL.md` 和 `$HERMES_HOME/SOUL.md` 仍可继续使用" in zh
+    assert "Legacy `~/.hermes/SOUL.md` and `$HERMES_HOME/SOUL.md` still work" not in en
+    assert "对于旧安装，`~/.hermes/SOUL.md` 和 `$HERMES_HOME/SOUL.md` 仍可继续使用" not in zh
     assert "GATEWAY_ALLOW_ALL_USERS=true" in en
     assert "GATEWAY_ALLOW_ALL_USERS=true" in zh
     assert "TELEGRAM_ALLOWED_USERS" in en
@@ -5845,6 +5908,8 @@ def test_tips_guides_prefer_doppel_customer_facing_surfaces():
         "想让 Hermes 拥有稳定的默认风格？",
         "[Use SOUL.md with Hermes](/guides/use-soul-with-hermes)",
         "[在 Hermes 中使用 SOUL.md](/guides/use-soul-with-hermes)",
+        "[Use SOUL.md with Doppel Agent](/guides/use-soul-with-hermes)",
+        "[在 Doppel Agent 中使用 SOUL.md](/guides/use-soul-with-hermes)",
         "Hermes reads those too.",
         "Hermes 同样会读取它们。",
         "Hermes loads the top-level `AGENTS.md`",

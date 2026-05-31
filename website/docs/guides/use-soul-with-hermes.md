@@ -1,5 +1,6 @@
 ---
 sidebar_position: 7
+slug: /guides/use-soul-with-doppel-agent
 title: "Use SOUL.md with Doppel Agent"
 description: "How to use SOUL.md to shape Doppel Agent's default voice, what belongs there, and how it differs from AGENTS.md and /personality"
 ---
@@ -41,28 +42,16 @@ A good rule:
 
 ## Where it lives
 
-Doppel Agent now uses only the global SOUL file for the current instance:
+Doppel Agent uses the global SOUL file for the current instance:
 
 ```text
 ~/.doppel/SOUL.md
-```
-
-Legacy installs that already live under `~/.hermes/` keep using:
-
-```text
-~/.hermes/SOUL.md
 ```
 
 If you run Doppel Agent with a custom home directory, it becomes:
 
 ```text
 $DOPPEL_HOME/SOUL.md
-```
-
-Legacy `HERMES_HOME` also works:
-
-```text
-$HERMES_HOME/SOUL.md
 ```
 
 ## First-run behavior
@@ -77,7 +66,7 @@ Important:
 
 ## How Doppel Agent uses it
 
-When Doppel Agent starts a session, it reads `SOUL.md` from the resolved home root, preferring `DOPPEL_HOME` while keeping legacy `HERMES_HOME` support. It scans the file for prompt-injection patterns, truncates it if needed, and uses it as the **agent identity** — slot #1 in the system prompt. This means SOUL.md completely replaces the built-in default identity text.
+When Doppel Agent starts a session, it reads `SOUL.md` from the resolved home root. It scans the file for prompt-injection patterns, truncates it if needed, and uses it as the **agent identity** — slot #1 in the system prompt. This means SOUL.md completely replaces the built-in default identity text.
 
 If SOUL.md is missing, empty, or cannot be loaded, Doppel Agent falls back to a built-in default identity.
 
@@ -250,7 +239,7 @@ That iterative approach works better than trying to design the perfect personali
 ### I edited SOUL.md but Doppel Agent still sounds the same
 
 Check:
-- you edited `~/.doppel/SOUL.md`, `~/.hermes/SOUL.md`, `$DOPPEL_HOME/SOUL.md`, or legacy `$HERMES_HOME/SOUL.md`
+- you edited `~/.doppel/SOUL.md` or `$DOPPEL_HOME/SOUL.md`
 - not some repo-local `SOUL.md`
 - the file is not empty
 - your session was restarted after the edit

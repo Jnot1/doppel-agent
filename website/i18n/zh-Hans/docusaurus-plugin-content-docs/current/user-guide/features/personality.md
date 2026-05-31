@@ -284,7 +284,7 @@ agent:
 - [上下文文件](/user-guide/features/context-files)
 - [配置](/user-guide/configuration)
 - [技巧与最佳实践](/guides/tips)
-- [在 Doppel Agent 中使用 SOUL.md](/guides/use-soul-with-hermes)
+- [在 Doppel Agent 中使用 SOUL.md](/guides/use-soul-with-doppel-agent)
 
 ## CLI 外观与对话个性
 

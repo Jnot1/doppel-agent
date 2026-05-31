@@ -82,9 +82,9 @@ Create an `AGENTS.md` in your project root with architecture decisions, coding c
 
 ### SOUL.md: Customize Personality
 
-Want Doppel to have a stable default voice? Edit `~/.doppel/SOUL.md` (or `$DOPPEL_HOME/SOUL.md` if you use a custom Doppel home). Doppel now seeds a starter SOUL automatically and uses that global file as the instance-wide personality source. Legacy `~/.hermes/SOUL.md` and `$HERMES_HOME/SOUL.md` still work for older installs.
+Want Doppel to have a stable default voice? Edit `~/.doppel/SOUL.md` (or `$DOPPEL_HOME/SOUL.md` if you use a custom Doppel home). Doppel now seeds a starter SOUL automatically and uses that global file as the instance-wide personality source.
 
-For a full walkthrough, see [Use SOUL.md with Doppel Agent](/guides/use-soul-with-hermes).
+For a full walkthrough, see [Use SOUL.md with Doppel Agent](/guides/use-soul-with-doppel-agent).
 
 ```markdown
 # Soul

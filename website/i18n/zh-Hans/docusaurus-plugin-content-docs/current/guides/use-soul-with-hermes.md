@@ -1,5 +1,6 @@
 ---
 sidebar_position: 7
+slug: /guides/use-soul-with-doppel-agent
 title: "在 Doppel Agent 中使用 SOUL.md"
 description: "如何使用 SOUL.md 塑造 Doppel Agent 的默认风格，哪些内容应放在其中，以及它与 AGENTS.md 和 /personality 的区别"
 ---
@@ -41,28 +42,16 @@ description: "如何使用 SOUL.md 塑造 Doppel Agent 的默认风格，哪些�
 
 ## 文件位置
 
-Doppel Agent 目前仅使用当前实例的全局 SOUL 文件：
+Doppel Agent 使用当前实例的全局 SOUL 文件：
 
 ```text
 ~/.doppel/SOUL.md
-```
-
-已经部署在 `~/.hermes/` 下的 legacy 安装会继续使用：
-
-```text
-~/.hermes/SOUL.md
 ```
 
 如果你使用自定义主目录运行 Doppel Agent，路径变为：
 
 ```text
 $DOPPEL_HOME/SOUL.md
-```
-
-legacy `HERMES_HOME` 也仍然可用：
-
-```text
-$HERMES_HOME/SOUL.md
 ```
 
 ## 首次运行行为
@@ -77,7 +66,7 @@ $HERMES_HOME/SOUL.md
 
 ## Doppel Agent 如何使用它
 
-Doppel Agent 启动会话时，会从解析后的 home 根目录读取 `SOUL.md`，优先使用 `DOPPEL_HOME`，同时保留 legacy `HERMES_HOME` 支持。它会扫描其中的提示词注入（prompt-injection）模式，必要时进行截断，并将其作为 **Agent 身份标识**——系统提示词中的第 1 个槽位。这意味着 `SOUL.md` 会完全替换内置的默认身份文本。
+Doppel Agent 启动会话时，会从解析后的 home 根目录读取 `SOUL.md`。它会扫描其中的提示词注入（prompt-injection）模式，必要时进行截断，并将其作为 **Agent 身份标识**——系统提示词中的第 1 个槽位。这意味着 `SOUL.md` 会完全替换内置的默认身份文本。
 
 如果 `SOUL.md` 缺失、为空或无法加载，Doppel Agent 将回退到内置的默认身份。
 
@@ -250,7 +239,7 @@ vim ~/.doppel/SOUL.md
 ### 我编辑了 SOUL.md，但 Doppel Agent 听起来还是一样
 
 检查：
-- 你编辑的是 `~/.doppel/SOUL.md`、`~/.hermes/SOUL.md`、`$DOPPEL_HOME/SOUL.md` 或 legacy `$HERMES_HOME/SOUL.md`
+- 你编辑的是 `~/.doppel/SOUL.md` 或 `$DOPPEL_HOME/SOUL.md`
 - 而不是某个仓库本地的 `SOUL.md`
 - 文件不为空
 - 编辑后已重启会话

@@ -48,6 +48,21 @@ HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
 DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
 DOCKER_IMAGE_TAGS_URL = f"https://hub.docker.com/r/{DOCKER_IMAGE_NAME}/tags"
 DOCS_SITE_BASE_URL = "https://hermes-agent.nousresearch.com/docs"
+NOUS_PORTAL_BASE_URL = "https://portal.nousresearch.com"
+NOUS_PORTAL_SUBSCRIPTION_URL = f"{NOUS_PORTAL_BASE_URL}/manage-subscription"
+DOCS_PAGE_PATHS: dict[str, str] = {
+    "configuration": "user-guide/configuration",
+    "developer_environments": "developer-guide/environments",
+    "fallback_providers": "user-guide/features/fallback-providers",
+    "integrations_providers": "integrations/providers",
+    "messaging_slack": "user-guide/messaging/slack",
+    "messaging_webhooks": "user-guide/messaging/webhooks",
+    "oauth_over_ssh": "guides/oauth-over-ssh",
+    "spotify": "user-guide/features/spotify",
+    "tool_gateway": "user-guide/features/tool-gateway",
+    "tools": "user-guide/features/tools",
+    "xai_grok_oauth": "guides/xai-grok-oauth",
+}
 MANAGED_CHECKOUT_NAMES = ("doppel-agent", "hermes-agent")
 GATEWAY_SERVICE_BASE = "doppel-gateway"
 LEGACY_GATEWAY_SERVICE_BASES = ("hermes-gateway",)
@@ -125,6 +140,33 @@ def get_docker_image_tags_url() -> str:
 def get_docs_site_base_url() -> str:
     """Return the current hosted docs base URL for this project."""
     return DOCS_SITE_BASE_URL
+
+
+def get_docs_url(path: str = "") -> str:
+    """Return a URL under the current hosted docs base."""
+    normalized = str(path or "").strip().lstrip("/")
+    if not normalized:
+        return DOCS_SITE_BASE_URL
+    return f"{DOCS_SITE_BASE_URL}/{normalized}"
+
+
+def get_docs_page_url(page_key: str, fragment: str | None = None) -> str:
+    """Return a named docs page URL, optionally with a fragment."""
+    path = DOCS_PAGE_PATHS[page_key]
+    url = get_docs_url(path)
+    if fragment:
+        return f"{url}#{str(fragment).lstrip('#')}"
+    return url
+
+
+def get_nous_portal_base_url() -> str:
+    """Return the current Nous Portal host used by this project."""
+    return NOUS_PORTAL_BASE_URL
+
+
+def get_nous_portal_subscription_url() -> str:
+    """Return the current Nous Portal subscription-management URL."""
+    return NOUS_PORTAL_SUBSCRIPTION_URL
 
 
 def get_model_catalog_url() -> str:

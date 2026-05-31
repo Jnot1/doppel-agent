@@ -16,6 +16,8 @@ from hermes_constants import (
     get_default_hermes_root,
     get_docker_image_name,
     get_docker_image_tags_url,
+    get_docs_page_url,
+    get_docs_url,
     get_gateway_launchd_label,
     get_gateway_launchd_plist_path,
     get_gateway_service_name,
@@ -27,6 +29,8 @@ from hermes_constants import (
     get_model_catalog_docs_url,
     get_model_catalog_fallback_urls,
     get_model_catalog_url,
+    get_nous_portal_base_url,
+    get_nous_portal_subscription_url,
     get_official_repo_urls,
     get_official_upstream_repo_url,
     find_managed_checkout_dir,
@@ -231,6 +235,22 @@ class TestDistributionIdentity:
         assert get_model_catalog_fallback_urls() == (
             "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/api/model-catalog.json",
         )
+
+    def test_docs_base_url(self):
+        assert get_docs_url() == "https://hermes-agent.nousresearch.com/docs"
+
+    def test_docs_page_url(self):
+        assert get_docs_page_url("spotify") == "https://hermes-agent.nousresearch.com/docs/user-guide/features/spotify"
+
+    def test_docs_page_url_with_fragment(self):
+        assert (
+            get_docs_page_url("messaging_webhooks", "configuring-routes")
+            == "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/webhooks#configuring-routes"
+        )
+
+    def test_nous_portal_urls(self):
+        assert get_nous_portal_base_url() == "https://portal.nousresearch.com"
+        assert get_nous_portal_subscription_url() == "https://portal.nousresearch.com/manage-subscription"
 
 
 class TestUpstreamIdentity:

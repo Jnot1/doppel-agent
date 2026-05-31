@@ -16,10 +16,15 @@ import webbrowser
 
 from hermes_cli.colors import Colors, color
 from hermes_cli.config import load_config
+from hermes_constants import (
+    get_docs_page_url,
+    get_nous_portal_base_url,
+    get_nous_portal_subscription_url,
+)
 
-DEFAULT_PORTAL_URL = "https://portal.nousresearch.com"
-SUBSCRIPTION_URL = "https://portal.nousresearch.com/manage-subscription"
-DOCS_URL = "https://hermes-agent.nousresearch.com/docs/user-guide/features/tool-gateway"
+DEFAULT_PORTAL_URL = get_nous_portal_base_url()
+SUBSCRIPTION_URL = get_nous_portal_subscription_url()
+DOCS_URL = get_docs_page_url("tool_gateway")
 
 
 def _cmd_status(args) -> int:

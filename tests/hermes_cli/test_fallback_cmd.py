@@ -176,6 +176,7 @@ class TestListCommand:
         assert "Hermes-4" in out
         # Primary should be shown too
         assert "claude-sonnet-4-6" in out
+        assert "fallback-providers" in out
 
     def test_list_migrates_legacy_for_display(self, isolated_home, capsys):
         _write_config(isolated_home, {

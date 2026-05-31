@@ -59,7 +59,11 @@ class CopilotACPClientSafetyTests(unittest.TestCase):
 
             with patch.dict(
                 os.environ,
-                {"HOME": str(home), "HERMES_HOME": str(home / ".hermes")},
+                {
+                    "HOME": str(home),
+                    "HERMES_HOME": str(home / ".hermes"),
+                    "DOPPEL_HOME": str(home / ".hermes"),
+                },
                 clear=False,
             ):
                 response = self._dispatch(
@@ -180,6 +184,7 @@ def test_run_prompt_prefers_profile_home_when_available(monkeypatch, tmp_path):
     profile_home.mkdir(parents=True)
 
     monkeypatch.delenv("HOME", raising=False)
+    monkeypatch.delenv("DOPPEL_HOME", raising=False)
     monkeypatch.setenv("HERMES_HOME", str(hermes_home))
 
     captured = {}
@@ -194,6 +199,7 @@ def test_run_prompt_prefers_profile_home_when_available(monkeypatch, tmp_path):
 
 def test_run_prompt_passes_home_when_parent_env_is_clean(monkeypatch, tmp_path):
     monkeypatch.delenv("HOME", raising=False)
+    monkeypatch.delenv("DOPPEL_HOME", raising=False)
     monkeypatch.delenv("HERMES_HOME", raising=False)
 
     captured = {}

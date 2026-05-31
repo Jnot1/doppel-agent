@@ -107,6 +107,7 @@ EN_FEATURE_SKILLS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "feature
 EN_FEATURE_ACP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "acp.md"
 EN_TTS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tts.md"
 EN_SPOTIFY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "spotify.md"
+EN_WEB_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "web-search.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -331,6 +332,17 @@ ZH_SPOTIFY_DOC = (
     / "user-guide"
     / "features"
     / "spotify.md"
+)
+ZH_WEB_SEARCH_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "web-search.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1914,3 +1926,63 @@ def test_spotify_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "~/.hermes/auth.json" not in zh
     assert "~/.hermes/.env" not in en
     assert "~/.hermes/.env" not in zh
+
+
+def test_web_search_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_WEB_SEARCH_DOC.read_text(encoding="utf-8")
+    zh = ZH_WEB_SEARCH_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent includes two model-callable web tools" in en
+    assert "Doppel Agent 内置两个可供模型调用的网页工具" in zh
+    assert "`doppel tools`" in en
+    assert "`doppel tools`" in zh
+    assert "`doppel setup --portal`" in en
+    assert "`doppel setup --portal`" in zh
+    assert "`doppel model`" in en
+    assert "`doppel model`" in zh
+    assert "`doppel setup`" in en
+    assert "`doppel setup`" in zh
+    assert "doppel auth add xai-oauth --type oauth" in en
+    assert "doppel auth add xai-oauth --type oauth" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "source ~/.doppel/doppel-agent/.venv/bin/activate" in en
+    assert "source ~/.doppel/doppel-agent/.venv/bin/activate" in zh
+    assert "doppel skills install official/research/searxng-search" in en
+    assert "doppel skills install official/research/searxng-search" in zh
+
+    for fixed in (
+        "web_extract",
+        "web_search",
+        "FIRECRAWL_API_KEY",
+        "SEARXNG_URL",
+        "XAI_API_KEY",
+        "Tool Gateway",
+        "Nous Portal",
+        "Legacy installs may still keep the same config and env files under `~/.hermes`.",
+        "旧安装仍可能将相同的配置和环境变量文件保存在 `~/.hermes` 下。",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "Hermes Agent includes two model-callable web tools" not in en
+    assert "Hermes Agent 内置两个可供模型调用的网页工具" not in zh
+    assert "`hermes tools`" not in en
+    assert "`hermes tools`" not in zh
+    assert "`hermes setup --portal`" not in en
+    assert "`hermes setup --portal`" not in zh
+    assert "`hermes model`" not in en
+    assert "`hermes model`" not in zh
+    assert "`hermes setup`" not in en
+    assert "`hermes setup`" not in zh
+    assert "hermes auth login xai-oauth" not in en
+    assert "hermes auth login xai-oauth" not in zh
+    assert "~/.hermes/config.yaml" not in en
+    assert "~/.hermes/config.yaml" not in zh
+    assert "~/.hermes/.env" not in en
+    assert "~/.hermes/.env" not in zh
+    assert "source ~/.hermes/hermes-agent/.venv/bin/activate" not in en
+    assert "source ~/.hermes/hermes-agent/.venv/bin/activate" not in zh
+    assert "hermes skills install official/research/searxng-search" not in en
+    assert "hermes skills install official/research/searxng-search" not in zh

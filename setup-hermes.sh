@@ -1,8 +1,10 @@
 #!/bin/bash
 # ============================================================================
-# Hermes Agent Setup Script
+# Doppel Agent Setup Script
 # ============================================================================
 # Quick setup for developers who cloned the repo manually.
+# Kept under the historical filename for compatibility with existing docs,
+# checkouts, and support instructions.
 # Uses uv for desktop/server setup and Python's stdlib venv + pip on Termux.
 #
 # Usage:
@@ -13,7 +15,8 @@
 # 2. Creates a Python 3.11 virtual environment
 # 3. Installs the appropriate dependency set for the platform
 # 4. Creates .env from template (if not exists)
-# 5. Symlinks the 'hermes' CLI command into a user-facing bin dir
+# 5. Symlinks the 'doppel' CLI command into a user-facing bin dir
+#    and keeps 'hermes' as a compatibility alias
 # 6. Runs the setup wizard (optional)
 # ============================================================================
 
@@ -56,7 +59,7 @@ get_command_link_display_dir() {
 }
 
 echo ""
-echo -e "${CYAN}⚕ Hermes Agent Setup${NC}"
+echo -e "${CYAN}⚕ Doppel Agent Setup${NC}"
 echo ""
 
 # ============================================================================
@@ -87,8 +90,8 @@ else
         # full, etc.) instead of "✗ Failed to install uv" with zero
         # diagnostic.  Two-stage to avoid `curl | sh` masking curl
         # failures (sh exits 0 on empty stdin under no pipefail).
-        _uv_log="$(mktemp 2>/dev/null || echo "/tmp/hermes-uv-install.$$.log")"
-        _uv_installer="$(mktemp 2>/dev/null || echo "/tmp/hermes-uv-installer.$$.sh")"
+        _uv_log="$(mktemp 2>/dev/null || echo "/tmp/doppel-uv-install.$$.log")"
+        _uv_installer="$(mktemp 2>/dev/null || echo "/tmp/doppel-uv-installer.$$.sh")"
         if ! curl -LsSf https://astral.sh/uv/install.sh -o "$_uv_installer" 2>"$_uv_log"; then
             echo -e "${RED}✗${NC} Failed to download uv installer."
             sed 's/^/    /' "$_uv_log" >&2
@@ -342,17 +345,20 @@ else
 fi
 
 # ============================================================================
-# PATH setup — symlink hermes into a user-facing bin dir
+# PATH setup — symlink Doppel CLI launchers into a user-facing bin dir
 # ============================================================================
 
-echo -e "${CYAN}→${NC} Setting up hermes command..."
+echo -e "${CYAN}→${NC} Setting up doppel command..."
 
+DOPPEL_BIN="$SCRIPT_DIR/venv/bin/doppel"
 HERMES_BIN="$SCRIPT_DIR/venv/bin/hermes"
 COMMAND_LINK_DIR="$(get_command_link_dir)"
 COMMAND_LINK_DISPLAY_DIR="$(get_command_link_display_dir)"
 mkdir -p "$COMMAND_LINK_DIR"
+ln -sf "$DOPPEL_BIN" "$COMMAND_LINK_DIR/doppel"
 ln -sf "$HERMES_BIN" "$COMMAND_LINK_DIR/hermes"
-echo -e "${GREEN}✓${NC} Symlinked hermes → $COMMAND_LINK_DISPLAY_DIR/hermes"
+echo -e "${GREEN}✓${NC} Symlinked doppel → $COMMAND_LINK_DISPLAY_DIR/doppel"
+echo -e "${GREEN}✓${NC} Symlinked hermes → $COMMAND_LINK_DISPLAY_DIR/hermes (compatibility alias)"
 
 if is_termux; then
     export PATH="$COMMAND_LINK_DIR:$PATH"
@@ -383,7 +389,7 @@ else
         if ! echo "$PATH" | tr ':' '\n' | grep -q "^$HOME/.local/bin$"; then
             if ! grep -q '\.local/bin' "$SHELL_CONFIG" 2>/dev/null; then
                 echo "" >> "$SHELL_CONFIG"
-                echo "# Hermes Agent — ensure ~/.local/bin is on PATH" >> "$SHELL_CONFIG"
+                echo "# Doppel Agent — ensure ~/.local/bin is on PATH" >> "$SHELL_CONFIG"
                 echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$SHELL_CONFIG"
                 echo -e "${GREEN}✓${NC} Added ~/.local/bin to PATH in $SHELL_CONFIG"
             else
@@ -403,7 +409,7 @@ HERMES_SKILLS_DIR="${HERMES_HOME:-$HOME/.hermes}/skills"
 mkdir -p "$HERMES_SKILLS_DIR"
 
 echo ""
-echo "Syncing bundled skills to ~/.hermes/skills/ ..."
+echo "Syncing bundled skills to the active agent home..."
 if "$SCRIPT_DIR/venv/bin/python" "$SCRIPT_DIR/tools/skills_sync.py" 2>/dev/null; then
     echo -e "${GREEN}✓${NC} Skills synced"
 else
@@ -425,31 +431,34 @@ echo "Next steps:"
 echo ""
 if is_termux; then
     echo "  1. Run the setup wizard to configure API keys:"
-    echo "     hermes setup"
+    echo "     doppel setup"
     echo ""
     echo "  2. Start chatting:"
-    echo "     hermes"
+    echo "     doppel"
     echo ""
 else
     echo "  1. Reload your shell:"
     echo "     source $SHELL_CONFIG"
     echo ""
     echo "  2. Run the setup wizard to configure API keys:"
-    echo "     hermes setup"
+    echo "     doppel setup"
     echo ""
     echo "  3. Start chatting:"
-    echo "     hermes"
+    echo "     doppel"
     echo ""
 fi
 echo "Other commands:"
-echo "  hermes status        # Check configuration"
+echo "  doppel status        # Check configuration"
 if is_termux; then
-    echo "  hermes gateway       # Run gateway in foreground"
+    echo "  doppel gateway       # Run gateway in foreground"
 else
-    echo "  hermes gateway install # Install gateway service (messaging + cron)"
+    echo "  doppel gateway install # Install gateway service (messaging + cron)"
 fi
-echo "  hermes cron list     # View scheduled jobs"
-echo "  hermes doctor        # Diagnose issues"
+echo "  doppel cron list     # View scheduled jobs"
+echo "  doppel doctor        # Diagnose issues"
+echo ""
+echo "Compatibility alias:"
+echo "  hermes               # Still available for legacy scripts"
 echo ""
 
 # Ask if they want to run setup wizard now

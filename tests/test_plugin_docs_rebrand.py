@@ -67,6 +67,8 @@ EN_GATEWAY_INTERNALS_DOC = EN_DEV_GUIDE_DIR / "gateway-internals.md"
 EN_CONTEXT_COMPRESSION_DOC = EN_DEV_GUIDE_DIR / "context-compression-and-caching.md"
 EN_ADDING_PLATFORM_ADAPTERS_DOC = EN_DEV_GUIDE_DIR / "adding-platform-adapters.md"
 EN_CREATING_SKILLS_DOC = EN_DEV_GUIDE_DIR / "creating-skills.md"
+EN_ACP_INTERNALS_DOC = EN_DEV_GUIDE_DIR / "acp-internals.md"
+EN_EXTENDING_CLI_DOC = EN_DEV_GUIDE_DIR / "extending-the-cli.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
@@ -75,6 +77,8 @@ ZH_GATEWAY_INTERNALS_DOC = ZH_DEV_GUIDE_DIR / "gateway-internals.md"
 ZH_CONTEXT_COMPRESSION_DOC = ZH_DEV_GUIDE_DIR / "context-compression-and-caching.md"
 ZH_ADDING_PLATFORM_ADAPTERS_DOC = ZH_DEV_GUIDE_DIR / "adding-platform-adapters.md"
 ZH_CREATING_SKILLS_DOC = ZH_DEV_GUIDE_DIR / "creating-skills.md"
+ZH_ACP_INTERNALS_DOC = ZH_DEV_GUIDE_DIR / "acp-internals.md"
+ZH_EXTENDING_CLI_DOC = ZH_DEV_GUIDE_DIR / "extending-the-cli.md"
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -520,3 +524,56 @@ def test_platform_adapter_and_skill_docs_prefer_doppel_surfaces():
     assert "${HERMES_SESSION_ID}" in zh_skills
     assert "~/.hermes/.env" in zh_skills
     assert "~/.hermes/config.yaml" in zh_skills
+
+
+def test_acp_and_cli_extension_docs_prefer_doppel_surfaces():
+    en_acp = EN_ACP_INTERNALS_DOC.read_text(encoding="utf-8")
+    en_cli = EN_EXTENDING_CLI_DOC.read_text(encoding="utf-8")
+    zh_acp = ZH_ACP_INTERNALS_DOC.read_text(encoding="utf-8")
+    zh_cli = ZH_EXTENDING_CLI_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent" in en_acp
+    assert "Doppel ACP adapter" in en_acp
+    assert "Doppel `once`" in en_acp
+    assert "Doppel `always`" in en_acp
+    assert "Doppel `deny`" in en_acp
+    assert "Doppel Agent tools" in en_acp
+    assert "Doppel Agent's runtime resolver" in en_acp
+    assert "Doppel Agent's interactive model/provider configuration" in en_acp
+    assert "hermes-acp" in en_acp
+    assert "`hermes-setup`" in en_acp
+    assert "~/.hermes/.env" in en_acp
+    assert "~/.hermes/state.db" in en_acp
+    assert "hermes_cli/runtime_provider.py" in en_acp
+    assert "hermes_cli/main.py" in en_acp
+
+    assert "Doppel Agent" in zh_acp
+    assert "Doppel ACP 适配器" in zh_acp
+    assert "Doppel `once`" in zh_acp
+    assert "Doppel `always`" in zh_acp
+    assert "Doppel `deny`" in zh_acp
+    assert "Doppel Agent 工具" in zh_acp
+    assert "Doppel Agent 的运行时解析器" in zh_acp
+    assert "Doppel Agent 的交互式模型/provider 配置" in zh_acp
+    assert "hermes-acp" in zh_acp
+    assert "`hermes-setup`" in zh_acp
+    assert "~/.hermes/.env" in zh_acp
+    assert "~/.hermes/state.db" in zh_acp
+    assert "hermes_cli/runtime_provider.py" in zh_acp
+    assert "hermes_cli/main.py" in zh_acp
+
+    assert "Doppel TUI" in en_cli
+    assert "Doppel Agent exposes protected extension hooks" in en_cli
+    assert "extends Doppel" in en_cli
+    assert "Doppel Agent registers its own keybindings" in en_cli
+    assert "HermesCLI" in en_cli
+    assert "cd ~/.hermes/hermes-agent" in en_cli
+    assert "Hermes TUI" not in en_cli
+
+    assert "Doppel TUI" in zh_cli
+    assert "Doppel Agent 在 `HermesCLI` 上暴露了受保护的扩展 hook" in zh_cli
+    assert "extends Doppel" in zh_cli
+    assert "在 Doppel Agent 注册自身快捷键之后" in zh_cli
+    assert "HermesCLI" in zh_cli
+    assert "cd ~/.hermes/hermes-agent" in zh_cli
+    assert "Hermes TUI" not in zh_cli

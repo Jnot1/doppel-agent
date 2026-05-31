@@ -5555,3 +5555,94 @@ def test_work_with_skills_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_github_pr_review_agent_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "github-pr-review-agent.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "github-pr-review-agent.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Doppel Agent" in en
+    assert "Doppel Agent" in zh
+    assert "GitHub pushes events to Doppel instantly" in en
+    assert "立即向 Doppel 推送事件" in zh
+    assert "doppel gateway install" in en
+    assert "doppel gateway install" in zh
+    assert "doppel gateway" in en
+    assert "doppel gateway" in zh
+    assert "`~/.doppel/cron/output/`" in en
+    assert "`~/.doppel/cron/output/`" in zh
+    assert "Make sure Doppel can access GitHub." in en
+    assert "确保 Doppel 可以访问 GitHub。" in zh
+    assert "\n```bash\ndoppel\n```" in en
+    assert "\n```bash\ndoppel\n```" in zh
+    assert "gh pr list --repo myorg/backend-api --state open --limit 3" in en
+    assert "gh pr list --repo myorg/backend-api --state open --limit 3" in zh
+    assert "gh pr diff 123 --repo myorg/backend-api" in en
+    assert "gh pr diff 123 --repo myorg/backend-api" in zh
+    assert "Doppel will:" in en
+    assert "Doppel 将会：" in zh
+    assert "`~/.doppel/skills/code-review/SKILL.md`" in en
+    assert "`~/.doppel/skills/code-review/SKILL.md`" in zh
+    assert "start `doppel` and you should see `code-review`" in en
+    assert "启动 `doppel`，你应该能在启动时的 skill 列表中看到 `code-review`" in zh
+    assert "teach Doppel your team's standards" in en
+    assert "向 Doppel 传授你的团队标准" in zh
+    assert "doppel cron create" in en
+    assert "doppel cron create" in zh
+    assert "doppel cron list" in en
+    assert "doppel cron list" in zh
+    assert "doppel cron run pr-review" in en
+    assert "doppel cron run pr-review" in zh
+    assert "Teach Doppel your conventions via memory" in en
+    assert "向 Doppel 传授你的团队规范" in zh
+    assert "doppel gateway status" in en
+    assert "doppel gateway status" in zh
+    assert "[Build a Doppel Plugin](/guides/build-a-hermes-plugin)" in en
+    assert "[构建 Doppel Plugin](/guides/build-a-hermes-plugin)" in zh
+
+    for stale in (
+        "Hermes Agent",
+        "GitHub pushes events to Hermes instantly",
+        "立即向 Hermes 推送事件",
+        "已安装 Hermes Agent",
+        "Make sure Hermes can access GitHub.",
+        "确保 Hermes 可以访问 GitHub。",
+        "Still in the chat, ask Hermes to review a real PR:",
+        "仍在对话中，让 Hermes 审查一个真实的 PR：",
+        "Hermes will:",
+        "Hermes 将会：",
+        "A skill gives Hermes consistent review guidelines",
+        "Skill 为 Hermes 提供一致的审查准则",
+        "teach Hermes your team's standards",
+        "向 Hermes 传授你的团队标准",
+        "Teach Hermes your conventions via memory",
+        "向 Hermes 传授你的团队规范",
+        "hermes gateway install",
+        "hermes gateway",
+        "`~/.hermes/cron/output/`",
+        "hermes\n```",
+        "NousResearch/hermes-agent",
+        "mkdir -p ~/.hermes/skills/code-review",
+        "`~/.hermes/skills/code-review/SKILL.md`",
+        "start `hermes` and you should see `code-review`",
+        "启动 `hermes`，你应该能在启动时的 skill 列表中看到 `code-review`",
+        "hermes cron create",
+        "hermes cron list",
+        "hermes cron run pr-review",
+        "hermes gateway status",
+        "[Build a Plugin](/guides/build-a-hermes-plugin)",
+        "[构建 Plugin](/guides/build-a-hermes-plugin)",
+    ):
+        assert stale not in en
+        assert stale not in zh

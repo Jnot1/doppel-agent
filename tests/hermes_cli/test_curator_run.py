@@ -49,7 +49,9 @@ def test_run_background_opts_into_async(monkeypatch, capsys):
     assert curator_cli._cmd_run(_args(background=True)) == 0
 
     assert calls[0]["synchronous"] is False
-    assert "llm pass running in background" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "llm pass running in background" in out
+    assert "`doppel curator status`" in out
 
 
 def test_run_sync_wins_over_background(monkeypatch):
@@ -84,4 +86,23 @@ def test_dry_run_default_reports_synchronous_wording(monkeypatch, capsys):
 
     out = capsys.readouterr().out
     assert "When the report lands" not in out
-    assert "Read the report with `hermes curator status`" in out
+    assert "Read the report with `doppel curator status`" in out
+
+
+def test_dry_run_background_reports_doppel_followup(monkeypatch, capsys):
+    import agent.curator as curator_state
+    import hermes_cli.curator as curator_cli
+
+    monkeypatch.setattr(curator_state, "is_enabled", lambda: True)
+    monkeypatch.setattr(
+        curator_state,
+        "run_curator_review",
+        lambda **kwargs: {"auto_transitions": {}},
+    )
+
+    assert curator_cli._cmd_run(_args(dry_run=True, background=True)) == 0
+
+    out = capsys.readouterr().out
+    assert "When the report lands" in out
+    assert "`doppel curator status`" in out
+    assert "`doppel curator run`" in out

@@ -695,7 +695,9 @@ async def test_no_allowlist_still_pairs_by_default(monkeypatch):
     assert result is None
     runner.pairing_store.generate_code.assert_called_once()
     adapter.send.assert_awaited_once()
-    assert "PAIR1234" in adapter.send.await_args.args[1]
+    pairing_text = adapter.send.await_args.args[1]
+    assert "PAIR1234" in pairing_text
+    assert "doppel pairing approve" in pairing_text
 
 
 def test_explicit_pair_config_overrides_allowlist_default(monkeypatch):

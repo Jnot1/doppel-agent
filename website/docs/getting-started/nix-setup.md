@@ -15,7 +15,7 @@ Doppel Agent ships a Nix flake with three levels of integration:
 | **NixOS module (container)** | Agents that need self-modification | Everything above, plus a persistent Ubuntu container where the agent can `apt`/`pip`/`npm install` |
 
 :::note Current Nix package and binary surface
-The Nix package name and service/module identifiers still stay on the existing `hermes-agent` contract in this phase. Packaged installs now expose the preferred `doppel`, `doppel-agent`, and `doppel-acp` entrypoints alongside the legacy `hermes`, `hermes-agent`, and `hermes-acp` aliases, so command examples below use Doppel-first CLI names while keeping the package-manager identifiers explicit where they are still real contracts.
+The Nix service/module identifiers still stay on the existing `hermes-agent` contract in this phase. Fresh flake installs can now use the preferred `#doppel-agent` package alias (and `pkgs.doppel-agent` in overlays) while `#hermes-agent` / `pkgs.hermes-agent` remain compatibility aliases. Packaged installs also expose the preferred `doppel`, `doppel-agent`, and `doppel-acp` entrypoints alongside the legacy `hermes`, `hermes-agent`, and `hermes-acp` aliases, so command examples below use Doppel-first CLI names while keeping the still-live compatibility contracts explicit.
 :::
 
 :::info What's different from the standard install
@@ -42,13 +42,13 @@ No clone needed. Nix fetches, builds, and runs everything:
 nix run github:Jnot1/doppel-agent -- setup
 nix run github:Jnot1/doppel-agent -- chat
 
-# Or install persistently
-nix profile install github:Jnot1/doppel-agent
+# Or install persistently (preferred explicit package alias)
+nix profile install github:Jnot1/doppel-agent#doppel-agent
 doppel setup
 doppel chat
 ```
 
-After `nix profile install`, `doppel`, `doppel-agent`, and `doppel-acp` are on your PATH, with `hermes`, `hermes-agent`, and `hermes-acp` kept as compatibility aliases. From here, the workflow is identical to the [standard installation](./installation.md) — `doppel setup` walks you through provider selection, `doppel gateway install` sets up a launchd (macOS) or systemd user service, and fresh installs keep config in `~/.doppel/` (legacy `~/.hermes/` trees still work).
+After `nix profile install`, `doppel`, `doppel-agent`, and `doppel-acp` are on your PATH, with `hermes`, `hermes-agent`, and `hermes-acp` kept as compatibility aliases. If you already reference `github:Jnot1/doppel-agent` (default output) or `#hermes-agent`, those still resolve to the same package. From here, the workflow is identical to the [standard installation](./installation.md) — `doppel setup` walks you through provider selection, `doppel gateway install` sets up a launchd (macOS) or systemd user service, and fresh installs keep config in `~/.doppel/` (legacy `~/.hermes/` trees still work).
 
 :::warning Messaging platforms (Discord, Telegram, Slack)
 The default package doesn't include messaging platform libraries — they were moved to on-demand installation, which can't work in Nix's read-only environment. If you plan to connect the agent to Discord, Telegram, or Slack, install the `messaging` variant:
@@ -95,14 +95,14 @@ This module requires NixOS. For non-NixOS systems (macOS, other Linux distros), 
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    hermes-agent.url = "github:Jnot1/doppel-agent";
+    doppel-agent.url = "github:Jnot1/doppel-agent";
   };
 
-  outputs = { nixpkgs, hermes-agent, ... }: {
+  outputs = { nixpkgs, doppel-agent, ... }: {
     nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        hermes-agent.nixosModules.default
+        doppel-agent.nixosModules.default
         ./configuration.nix
       ];
     };
@@ -734,12 +734,14 @@ External flakes can override the package directly:
 
 ```nix
 {
-  inputs.hermes-agent.url = "github:Jnot1/doppel-agent";
-  outputs = { hermes-agent, nixpkgs, ... }: {
-    nixpkgs.overlays = [ hermes-agent.overlays.default ];
+  inputs.doppel-agent.url = "github:Jnot1/doppel-agent";
+  outputs = { doppel-agent, nixpkgs, ... }: {
+    nixpkgs.overlays = [ doppel-agent.overlays.default ];
     # Then:
-    #   pkgs.hermes-agent.override { extraPythonPackages = [...]; }
-    #   pkgs.hermes-agent.override { extraDependencyGroups = [ "hindsight" ]; }
+    #   pkgs.doppel-agent.override { extraPythonPackages = [...]; }
+    #   pkgs.doppel-agent.override { extraDependencyGroups = [ "hindsight" ]; }
+    # Legacy compatibility:
+    #   pkgs.hermes-agent.override { ... }
   };
 }
 ```
@@ -944,7 +946,7 @@ Same layout, mounted into the container:
 
 ```bash
 # Update the flake input (run from the directory containing flake.nix)
-cd /etc/nixos && nix flake update hermes-agent
+cd /etc/nixos && nix flake update doppel-agent
 
 # Rebuild
 sudo nixos-rebuild switch

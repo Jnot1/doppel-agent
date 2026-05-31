@@ -219,14 +219,14 @@ Rolling back may cause config incompatibilities if new options were added. Run `
 If you installed via Nix flake, updates are managed through the Nix package manager:
 
 ```bash
-# Update the flake input
-nix flake update hermes-agent
+# Update the flake input (use whatever input name your flake chose)
+nix flake update doppel-agent
 
 # Or rebuild with the latest
 nix profile upgrade hermes-agent
 ```
 
-The package-manager identifiers stay `hermes-agent` in this phase even though packaged installs now prefer the `doppel` CLI entrypoints and keep `hermes` as a compatibility alias.
+The preferred flake package alias is now `#doppel-agent`, but upgrades still stay on `hermes-agent` in this phase because the underlying derivation/package-manager contract has not moved yet. Packaged installs still prefer the `doppel` CLI entrypoints and keep `hermes` as a compatibility alias.
 
 Nix installations are immutable — rollback is handled by Nix's generation system:
 

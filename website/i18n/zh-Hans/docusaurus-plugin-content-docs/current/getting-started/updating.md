@@ -219,14 +219,14 @@ uv pip install -e ".[all]"
 如果你通过 Nix flake 安装，更新由 Nix 包管理器负责：
 
 ```bash
-# Update the flake input
-nix flake update hermes-agent
+# Update the flake input（使用你自己的 flake input 名称）
+nix flake update doppel-agent
 
 # Or rebuild with the latest
 nix profile upgrade hermes-agent
 ```
 
-在这个阶段，Nix 包名与服务/模块标识仍保持 `hermes-agent`。尽管 packaged 安装已采用 `doppel` 首选入口点并保留 `hermes` 历史别名，但这里仍保留 `hermes-agent` 作为真实包管理契约名。
+首选 flake 包别名现已变为 `#doppel-agent`，但在这个阶段升级命令仍保持 `hermes-agent`，因为底层 derivation / 包管理契约尚未迁移。packaged 安装仍然默认使用 `doppel` 入口点，并保留 `hermes` 作为兼容别名。
 
 Nix 安装是不可变的 — 回滚由 Nix 的 generation 系统处理：
 

@@ -243,14 +243,28 @@ _MANAGED_SYSTEM_NAMES = {
 }
 
 
+def _parse_managed_install_descriptor(raw: str) -> tuple[Optional[str], Optional[str]]:
+    """Return (managed_system, detail) parsed from HERMES_MANAGED."""
+    normalized_raw = (raw or "").strip()
+    if not normalized_raw:
+        return None, None
+
+    lowered = normalized_raw.lower()
+    if lowered in _MANAGED_TRUE_VALUES:
+        return "NixOS", None
+
+    head, sep, tail = normalized_raw.partition(":")
+    managed_system = _MANAGED_SYSTEM_NAMES.get(head.strip().lower(), normalized_raw)
+    detail = tail.strip().lower() if sep and tail.strip() else None
+    return managed_system, detail
+
+
 def get_managed_system() -> Optional[str]:
     """Return the package manager owning this install, if any."""
     raw = os.getenv("HERMES_MANAGED", "").strip()
     if raw:
-        normalized = raw.lower()
-        if normalized in _MANAGED_TRUE_VALUES:
-            return "NixOS"
-        return _MANAGED_SYSTEM_NAMES.get(normalized, raw)
+        managed_system, _detail = _parse_managed_install_descriptor(raw)
+        return managed_system
 
     managed_marker = get_hermes_home() / ".managed"
     if managed_marker.exists():
@@ -271,11 +285,19 @@ def is_managed() -> bool:
 _NIX_UPDATE_MSG = "Update your Nix flake input and rebuild (e.g. nix flake update, nixos-rebuild, or home-manager switch)"
 
 
+def _get_managed_homebrew_formula_name() -> str:
+    """Return the formula name encoded in HERMES_MANAGED, if valid."""
+    _managed_system, detail = _parse_managed_install_descriptor(os.getenv("HERMES_MANAGED", ""))
+    if detail and detail in hermes_constants.get_homebrew_formula_names():
+        return detail
+    return hermes_constants.get_homebrew_formula_name()
+
+
 def get_managed_update_command() -> Optional[str]:
     """Return the preferred upgrade command for a managed install."""
     managed_system = get_managed_system()
     if managed_system == "Homebrew":
-        return f"brew upgrade {hermes_constants.get_homebrew_formula_name()}"
+        return f"brew upgrade {_get_managed_homebrew_formula_name()}"
     if managed_system == "NixOS":
         return _NIX_UPDATE_MSG
     return None
@@ -461,7 +483,7 @@ def format_managed_message(action: str = "modify this Doppel Agent installation"
             f"Cannot {action}: this Doppel Agent installation is managed by Homebrew "
             f"(HERMES_MANAGED={env_hint}).\n"
             "Use:\n"
-            f"  brew upgrade {hermes_constants.get_homebrew_formula_name()}"
+            f"  brew upgrade {_get_managed_homebrew_formula_name()}"
         )
 
     return (

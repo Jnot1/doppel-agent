@@ -33,7 +33,7 @@ class HermesAgent < Formula
         libexec/"bin"/exe,
         HERMES_BUNDLED_SKILLS: pkgshare/"skills",
         HERMES_OPTIONAL_SKILLS: pkgshare/"optional-skills",
-        HERMES_MANAGED: "homebrew"
+        HERMES_MANAGED: "homebrew:hermes-agent"
       )
     end
   end

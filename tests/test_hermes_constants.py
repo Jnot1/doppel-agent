@@ -24,15 +24,19 @@ from hermes_constants import (
     get_gateway_systemd_unit_path,
     get_hermes_home,
     get_homebrew_formula_name,
+    get_homebrew_formula_names,
     get_managed_checkout_dir,
     get_managed_checkout_names,
     get_model_catalog_docs_url,
     get_model_catalog_fallback_urls,
     get_model_catalog_url,
+    get_nix_package_names,
     get_nous_portal_base_url,
     get_nous_portal_subscription_url,
     get_official_repo_urls,
     get_official_upstream_repo_url,
+    get_preferred_homebrew_formula_name,
+    get_preferred_nix_package_name,
     find_managed_checkout_dir,
     is_container,
     is_managed_checkout_name,
@@ -218,6 +222,18 @@ class TestDistributionIdentity:
 
     def test_homebrew_formula_name(self):
         assert get_homebrew_formula_name() == "hermes-agent"
+
+    def test_preferred_homebrew_formula_name(self):
+        assert get_preferred_homebrew_formula_name() == "doppel-agent"
+
+    def test_homebrew_formula_names(self):
+        assert get_homebrew_formula_names() == ("doppel-agent", "hermes-agent")
+
+    def test_preferred_nix_package_name(self):
+        assert get_preferred_nix_package_name() == "doppel-agent"
+
+    def test_nix_package_names(self):
+        assert get_nix_package_names() == ("doppel-agent", "hermes-agent")
 
     def test_docker_image_name(self):
         assert get_docker_image_name() == "nousresearch/hermes-agent"

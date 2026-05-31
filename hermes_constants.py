@@ -44,7 +44,17 @@ API_SERVER_RUN_OBJECT = "hermes.run"
 API_SERVER_RUN_APPROVAL_RESPONSE_OBJECT = "hermes.run.approval_response"
 API_SERVER_TOOL_PROGRESS_EVENT = "hermes.tool.progress"
 PACKAGE_DISTRIBUTION_NAME = "hermes-agent"
+PREFERRED_HOMEBREW_FORMULA_NAME = "doppel-agent"
 HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
+HOMEBREW_FORMULA_NAMES = (
+    PREFERRED_HOMEBREW_FORMULA_NAME,
+    HOMEBREW_FORMULA_NAME,
+)
+PREFERRED_NIX_PACKAGE_NAME = "doppel-agent"
+NIX_PACKAGE_NAMES = (
+    PREFERRED_NIX_PACKAGE_NAME,
+    PACKAGE_DISTRIBUTION_NAME,
+)
 DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
 DOCKER_IMAGE_TAGS_URL = f"https://hub.docker.com/r/{DOCKER_IMAGE_NAME}/tags"
 DOCS_SITE_BASE_URL = "https://hermes-agent.nousresearch.com/docs"
@@ -135,6 +145,26 @@ def get_api_server_model_owner() -> str:
 def get_homebrew_formula_name() -> str:
     """Return the Homebrew formula name for this distribution."""
     return HOMEBREW_FORMULA_NAME
+
+
+def get_preferred_homebrew_formula_name() -> str:
+    """Return the preferred Homebrew formula alias for fresh installs."""
+    return PREFERRED_HOMEBREW_FORMULA_NAME
+
+
+def get_homebrew_formula_names() -> tuple[str, ...]:
+    """Return all supported Homebrew formula names for this distribution."""
+    return HOMEBREW_FORMULA_NAMES
+
+
+def get_preferred_nix_package_name() -> str:
+    """Return the preferred flake package alias for fresh Nix installs."""
+    return PREFERRED_NIX_PACKAGE_NAME
+
+
+def get_nix_package_names() -> tuple[str, ...]:
+    """Return all supported flake package names for this distribution."""
+    return NIX_PACKAGE_NAMES
 
 
 def get_docker_image_name() -> str:

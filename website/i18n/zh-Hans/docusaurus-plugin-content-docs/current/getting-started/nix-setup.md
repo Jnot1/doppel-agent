@@ -23,7 +23,7 @@ Doppel Agent 提供了一个 Nix flake，支持三个层级的集成：
 :::
 
 :::note 当前 Nix 包与二进制入口
-Nix 包名与服务/模块标识在当前阶段仍保持 `hermes-agent`。打包安装会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，同时保留历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 `doppel*`，并将 `hermes*` 作为兼容入口保留。
+Nix 服务/模块标识在当前阶段仍保持 `hermes-agent`。新的 flake 安装现在可以使用首选包别名 `#doppel-agent`（overlay 中可用 `pkgs.doppel-agent`），同时保留 `#hermes-agent` / `pkgs.hermes-agent` 作为兼容别名。打包安装也会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，以及历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 Doppel 优先的写法，同时明确保留仍然有效的兼容契约。
 :::
 
 ## 前提条件
@@ -42,13 +42,13 @@ Nix 包名与服务/模块标识在当前阶段仍保持 `hermes-agent`。打包
 nix run github:Jnot1/doppel-agent -- setup
 nix run github:Jnot1/doppel-agent -- chat
 
-# 或持久化安装
-nix profile install github:Jnot1/doppel-agent
+# 或持久化安装（首选显式包别名）
+nix profile install github:Jnot1/doppel-agent#doppel-agent
 doppel setup
 doppel chat
 ```
 
-执行 `nix profile install` 后，`doppel`、`doppel-agent` 和 `doppel-acp` 将出现在你的 PATH 中，`hermes`、`hermes-agent`、`hermes-acp` 保留为兼容别名。之后的工作流与[标准安装](./installation.md)完全相同——`doppel setup` 引导你完成提供商选择，`doppel gateway install` 设置 launchd（macOS）或 systemd 用户服务，配置存放在 `~/.doppel/`（`~/.hermes/` 旧目录仍兼容）。
+执行 `nix profile install` 后，`doppel`、`doppel-agent` 和 `doppel-acp` 将出现在你的 PATH 中，`hermes`、`hermes-agent`、`hermes-acp` 保留为兼容别名。如果你已经在使用 `github:Jnot1/doppel-agent`（默认输出）或 `#hermes-agent`，它们仍会解析到同一个包。之后的工作流与[标准安装](./installation.md)完全相同——`doppel setup` 引导你完成提供商选择，`doppel gateway install` 设置 launchd（macOS）或 systemd 用户服务，配置存放在 `~/.doppel/`（`~/.hermes/` 旧目录仍兼容）。
 
 :::warning 消息平台能力（Discord、Telegram、Slack）
 默认包不包含消息平台依赖库，它们已迁移到按需安装。若你要连接 Discord、Telegram 或 Slack，需要安装 `messaging` 变体：
@@ -95,14 +95,14 @@ nix build
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    hermes-agent.url = "github:Jnot1/doppel-agent";
+    doppel-agent.url = "github:Jnot1/doppel-agent";
   };
 
-  outputs = { nixpkgs, hermes-agent, ... }: {
+  outputs = { nixpkgs, doppel-agent, ... }: {
     nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        hermes-agent.nixosModules.default
+        doppel-agent.nixosModules.default
         ./configuration.nix
       ];
     };
@@ -705,12 +705,14 @@ services.hermes-agent = {
 
 ```nix
 {
-  inputs.hermes-agent.url = "github:Jnot1/doppel-agent";
-  outputs = { hermes-agent, nixpkgs, ... }: {
-    nixpkgs.overlays = [ hermes-agent.overlays.default ];
+  inputs.doppel-agent.url = "github:Jnot1/doppel-agent";
+  outputs = { doppel-agent, nixpkgs, ... }: {
+    nixpkgs.overlays = [ doppel-agent.overlays.default ];
     # 然后：
-    #   pkgs.hermes-agent.override { extraPythonPackages = [...]; }
-    #   pkgs.hermes-agent.override { extraDependencyGroups = [ "hindsight" ]; }
+    #   pkgs.doppel-agent.override { extraPythonPackages = [...]; }
+    #   pkgs.doppel-agent.override { extraDependencyGroups = [ "hindsight" ]; }
+    # 历史兼容写法：
+    #   pkgs.hermes-agent.override { ... }
   };
 }
 ```
@@ -915,7 +917,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 
 ```bash
 # 更新 flake 输入（在包含 flake.nix 的目录中运行）
-cd /etc/nixos && nix flake update hermes-agent
+cd /etc/nixos && nix flake update doppel-agent
 
 # 重建
 sudo nixos-rebuild switch

@@ -9,7 +9,7 @@ Key choices:
 - Stable builds should target the semver-named sdist asset attached to each GitHub release, not the CalVer tag tarball.
 - `faster-whisper` now lives in the `voice` extra, which keeps wheel-only transitive dependencies out of the base Homebrew formula.
 - The formula now exports both the preferred `doppel*` entrypoints and the legacy `hermes*` aliases from the same venv so packaged installs stay Doppel-first without breaking existing automation.
-- The wrapper exports `HERMES_BUNDLED_SKILLS`, `HERMES_OPTIONAL_SKILLS`, and `HERMES_MANAGED=homebrew` so packaged installs keep runtime assets and defer upgrades to Homebrew.
+- The wrapper exports `HERMES_BUNDLED_SKILLS`, `HERMES_OPTIONAL_SKILLS`, and `HERMES_MANAGED=homebrew:hermes-agent` so packaged installs keep runtime assets and can surface the exact Homebrew formula name in update guidance.
 
 Typical update flow:
 1. Bump the formula `url`, `version`, and `sha256`.

@@ -74,6 +74,8 @@ EN_ARCHITECTURE_DOC = EN_DEV_GUIDE_DIR / "architecture.md"
 EN_PROMPT_ASSEMBLY_DOC = EN_DEV_GUIDE_DIR / "prompt-assembly.md"
 EN_SESSION_STORAGE_DOC = EN_DEV_GUIDE_DIR / "session-storage.md"
 EN_TRAJECTORY_DOC = EN_DEV_GUIDE_DIR / "trajectory-format.md"
+EN_CONTEXT_FILES_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "context-files.md"
+EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
@@ -88,6 +90,27 @@ ZH_ARCHITECTURE_DOC = ZH_DEV_GUIDE_DIR / "architecture.md"
 ZH_PROMPT_ASSEMBLY_DOC = ZH_DEV_GUIDE_DIR / "prompt-assembly.md"
 ZH_SESSION_STORAGE_DOC = ZH_DEV_GUIDE_DIR / "session-storage.md"
 ZH_TRAJECTORY_DOC = ZH_DEV_GUIDE_DIR / "trajectory-format.md"
+ZH_CONTEXT_FILES_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "context-files.md"
+)
+ZH_USE_SOUL_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "guides"
+    / "use-soul-with-hermes.md"
+)
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -710,3 +733,75 @@ def test_prompt_assembly_docs_prefer_doppel_surfaces_but_keep_runtime_literals()
     assert "~/.hermes/" in en_prompt and "~/.hermes/" in zh_prompt
     assert "build_context_files_prompt(skip_soul=True)" in en_prompt
     assert "build_context_files_prompt(skip_soul=True)" in zh_prompt
+
+
+def test_context_files_and_soul_guide_prefer_doppel_surfaces_but_keep_literals():
+    en_context = EN_CONTEXT_FILES_DOC.read_text(encoding="utf-8")
+    zh_context = ZH_CONTEXT_FILES_DOC.read_text(encoding="utf-8")
+    en_soul = EN_USE_SOUL_DOC.read_text(encoding="utf-8")
+    zh_soul = ZH_USE_SOUL_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent automatically discovers and loads context files" in en_context
+    assert "Doppel Agent 会自动发现并加载上下文文件" in zh_context
+    assert "Hermes Agent automatically discovers and loads context files" not in en_context
+    assert "Hermes Agent 会自动发现并加载上下文文件" not in zh_context
+    assert "current Doppel Agent instance" in en_context
+    assert "当前 Doppel Agent 实例" in zh_context
+    assert "Doppel Agent loads the `AGENTS.md`" in en_context
+    assert "Doppel Agent 将工作目录中的 `AGENTS.md`" in zh_context
+    assert "Doppel Agent is compatible with Cursor IDE" in en_context
+    assert "Doppel Agent 兼容 Cursor IDE" in zh_context
+    assert "~/.doppel/SOUL.md" in en_context
+    assert "~/.doppel/SOUL.md" in zh_context
+    assert "DOPPEL_HOME" in en_context
+    assert "DOPPEL_HOME" in zh_context
+    assert "HERMES_HOME" in en_context
+    assert "HERMES_HOME" in zh_context
+    assert ".hermes.md" in en_context
+    assert ".hermes.md" in zh_context
+    assert "HERMES.md" in en_context
+    assert "HERMES.md" in zh_context
+    assert "build_context_files_prompt()" in en_context
+    assert "SubdirectoryHintTracker" in en_context
+    assert "agent/subdirectory_hints.py" in en_context
+
+    assert 'title: "Use SOUL.md with Doppel Agent"' in en_soul
+    assert "# Use SOUL.md with Doppel Agent" in en_soul
+    assert 'title: "在 Doppel Agent 中使用 SOUL.md"' in zh_soul
+    assert "# 在 Doppel Agent 中使用 SOUL.md" in zh_soul
+    assert "**primary identity** for your Doppel Agent instance" in en_soul
+    assert "你的 Doppel Agent 实例的**主要身份标识**" in zh_soul
+    assert "replace the built-in default persona entirely with your own" in en_soul
+    assert "完全替换内置默认人设" in zh_soul
+    assert "Doppel Agent now uses only the global SOUL file" in en_soul
+    assert "Doppel Agent 目前仅使用当前实例的全局 SOUL 文件" in zh_soul
+    assert "~/.doppel/SOUL.md" in en_soul
+    assert "~/.doppel/SOUL.md" in zh_soul
+    assert "$DOPPEL_HOME/SOUL.md" in en_soul
+    assert "$DOPPEL_HOME/SOUL.md" in zh_soul
+    assert "$HERMES_HOME/SOUL.md" in en_soul
+    assert "$HERMES_HOME/SOUL.md" in zh_soul
+    assert "Doppel Agent automatically seeds a starter `SOUL.md`" in en_soul
+    assert "Doppel Agent 会自动为你生成一个初始文件" in zh_soul
+    assert "When Doppel Agent starts a session" in en_soul
+    assert "Doppel Agent 启动会话时" in zh_soul
+    assert "Doppel Agent already tries to be helpful and clear" in en_soul
+    assert "Doppel Agent 本身已经尽力做到有帮助且清晰" in zh_soul
+    assert "Who Doppel Agent is." in en_soul
+    assert "Who Doppel Agent is." in zh_soul
+    assert "How Doppel Agent should sound." in en_soul
+    assert "How Doppel Agent should sound." in zh_soul
+    assert "nano ~/.doppel/SOUL.md" in en_soul
+    assert "nano ~/.doppel/SOUL.md" in zh_soul
+    assert "restart Doppel Agent or start a new session" in en_soul
+    assert "重启 Doppel Agent 或开启新会话" in zh_soul
+    assert "Talk to Doppel Agent for a while" in en_soul
+    assert "与 Doppel Agent 交谈一段时间" in zh_soul
+    assert "I edited SOUL.md but Doppel Agent still sounds the same" in en_soul
+    assert "我编辑了 SOUL.md，但 Doppel Agent 听起来还是一样" in zh_soul
+    assert "Doppel Agent is ignoring parts of my SOUL.md" in en_soul
+    assert "Doppel Agent 忽略了我 SOUL.md 中的部分内容" in zh_soul
+    assert "/personality" in en_soul
+    assert "/personality" in zh_soul
+    assert "~/.hermes/SOUL.md" in en_soul
+    assert "~/.hermes/SOUL.md" in zh_soul

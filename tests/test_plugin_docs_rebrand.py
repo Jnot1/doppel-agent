@@ -5209,6 +5209,95 @@ def test_image_generation_docs_prefer_doppel_customer_facing_surfaces():
         assert unexpected not in zh
 
 
+def test_vision_docs_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "vision.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "vision.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "Paste images from your clipboard into the Doppel CLI for multimodal vision analysis.",
+        "Doppel Agent supports **multimodal vision**",
+        "Images are saved to `~/.doppel/images/`",
+        "Doppel checks your clipboard for an image and attaches it.",
+        "Doppel now treats paste as a layered flow:",
+        "Doppel can install the recommended `workbench.action.terminal.sendSequence` bindings",
+        "Doppel uses `osascript`",
+        "Doppel detects WSL2 automatically",
+        "Doppel tries the PowerShell path first",
+        "the Doppel CLI runs on the remote host",
+        "Send images to Doppel via Telegram, Discord, Slack, or WhatsApp.",
+        "This is why Doppel uses a separate clipboard check",
+        "Doppel routes it based on whether your current model actually supports vision:",
+        "Doppel looks up your current model's capability in the provider metadata",
+    ):
+        assert expected in en
+
+    for unexpected in (
+        "Paste images from your clipboard into the Hermes CLI for multimodal vision analysis.",
+        "Hermes Agent supports **multimodal vision**",
+        "Images are saved to `~/.hermes/images/`",
+        "Hermes checks your clipboard for an image and attaches it.",
+        "Hermes now treats paste as a layered flow:",
+        "Hermes can install the recommended `workbench.action.terminal.sendSequence` bindings",
+        "Hermes uses `osascript`",
+        "Hermes detects WSL2 automatically",
+        "Hermes tries the PowerShell path first",
+        "the Hermes CLI runs on the remote host",
+        "Send images to Hermes via Telegram, Discord, Slack, or WhatsApp.",
+        "This is why Hermes uses a separate clipboard check",
+        "Hermes routes it based on whether your current model actually supports vision:",
+        "Hermes looks up your current model's capability in the provider metadata",
+    ):
+        assert unexpected not in en
+
+    for expected in (
+        "将剪贴板中的图像粘贴到 Doppel CLI，进行多模态视觉分析。",
+        "Doppel Agent 支持**多模态视觉**",
+        "图像以带时间戳的 PNG 文件名保存至 `~/.doppel/images/`。",
+        "Doppel 会检查剪贴板中是否有图像并附加。",
+        "Doppel 现在将粘贴处理为分层流程：",
+        "Doppel 可以安装推荐的 `workbench.action.terminal.sendSequence` 绑定",
+        "Doppel 使用 `osascript`",
+        "Doppel 通过 `/proc/version` 自动检测 WSL2",
+        "Doppel 会优先尝试 PowerShell 路径",
+        "Doppel CLI 运行在远程主机上",
+        "通过 Telegram、Discord、Slack 或 WhatsApp 向 Doppel 发送图像。",
+        "这就是为什么 Doppel 使用独立的剪贴板检查",
+        "Doppel 会根据当前模型是否支持视觉进行路由：",
+        "Doppel 在提供商元数据中查找当前模型的能力并自动选择正确路径。",
+    ):
+        assert expected in zh
+
+    for unexpected in (
+        "将剪贴板中的图像粘贴到 Hermes CLI，进行多模态视觉分析。",
+        "Hermes Agent 支持**多模态视觉**",
+        "图像以带时间戳的 PNG 文件名保存至 `~/.hermes/images/`。",
+        "Hermes 会检查剪贴板中是否有图像并附加。",
+        "Hermes 现在将粘贴处理为分层流程：",
+        "Hermes 可以安装推荐的 `workbench.action.terminal.sendSequence` 绑定",
+        "Hermes 使用 `osascript`",
+        "Hermes 通过 `/proc/version` 自动检测 WSL2",
+        "Hermes 会优先尝试 PowerShell 路径",
+        "Hermes CLI 运行在远程主机上",
+        "通过 Telegram、Discord、Slack 或 WhatsApp 向 Hermes 发送图像。",
+        "这就是为什么 Hermes 使用独立的剪贴板检查",
+        "Hermes 会根据当前模型是否支持视觉进行路由：",
+        "Hermes 在提供商元数据中查找当前模型的能力并自动选择正确路径。",
+    ):
+        assert unexpected not in zh
+
+
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
     zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

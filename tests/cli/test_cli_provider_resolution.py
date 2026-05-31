@@ -172,6 +172,50 @@ def test_runtime_resolution_failure_is_not_sticky(monkeypatch):
     assert shell.agent is not None
 
 
+def test_runtime_resolution_empty_api_key_uses_doppel_setup_hint(monkeypatch, capsys):
+    cli = _import_cli()
+
+    def _runtime_resolve(**kwargs):
+        return {
+            "provider": "openrouter",
+            "api_mode": "chat_completions",
+            "base_url": "https://openrouter.ai/api/v1",
+            "api_key": "",
+            "source": "env/config",
+        }
+
+    monkeypatch.setattr("hermes_cli.runtime_provider.resolve_runtime_provider", _runtime_resolve)
+    monkeypatch.setattr("hermes_cli.runtime_provider.format_runtime_provider_error", lambda exc: str(exc))
+
+    shell = cli.HermesCLI(model="gpt-5", compact=True, max_turns=1)
+
+    assert shell._init_agent() is False
+    out = capsys.readouterr().out
+    assert "Set OPENROUTER_API_KEY or run: doppel setup" in out
+
+
+def test_runtime_resolution_empty_base_url_uses_doppel_setup_hint(monkeypatch, capsys):
+    cli = _import_cli()
+
+    def _runtime_resolve(**kwargs):
+        return {
+            "provider": "openrouter",
+            "api_mode": "chat_completions",
+            "base_url": "",
+            "api_key": "test-key",
+            "source": "env/config",
+        }
+
+    monkeypatch.setattr("hermes_cli.runtime_provider.resolve_runtime_provider", _runtime_resolve)
+    monkeypatch.setattr("hermes_cli.runtime_provider.format_runtime_provider_error", lambda exc: str(exc))
+
+    shell = cli.HermesCLI(model="gpt-5", compact=True, max_turns=1)
+
+    assert shell._init_agent() is False
+    out = capsys.readouterr().out
+    assert "Check your provider config or run: doppel setup" in out
+
+
 def test_runtime_resolution_rebuilds_agent_on_routing_change(monkeypatch):
     cli = _import_cli()
 

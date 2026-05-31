@@ -1060,6 +1060,7 @@ class TestTypingLifecycle:
         )
         await adapter.send_typing("spaces/S")
         sent_body = adapter._create_message.call_args.args[1]
+        assert sent_body["text"] == "Doppel is thinking…"
         assert "thread" not in sent_body
 
     @pytest.mark.asyncio
@@ -1535,6 +1536,68 @@ class TestUserOAuthHelper:
         (tmp_path / "google_chat_user_token.json").write_text("not json")
         from plugins.platforms.google_chat.oauth import load_user_credentials
         assert load_user_credentials() is None
+
+    def test_install_deps_failure_prints_doppel_extra_hint(self, monkeypatch, capsys):
+        from plugins.platforms.google_chat import oauth as helper
+
+        monkeypatch.setattr(
+            helper.subprocess,
+            "check_call",
+            MagicMock(side_effect=helper.subprocess.CalledProcessError(1, "pip")),
+        )
+        monkeypatch.setitem(sys.modules, "googleapiclient", None)
+        monkeypatch.setitem(sys.modules, "google_auth_oauthlib", None)
+
+        assert helper.install_deps() is False
+        out = capsys.readouterr().out
+        assert "pip install 'doppel-agent[google_chat]'" in out
+        assert "hermes-agent[google_chat]" not in out
+
+    def test_oauth_main_parser_description_prefers_doppel(self, monkeypatch):
+        from plugins.platforms.google_chat import oauth as helper
+
+        seen = {}
+
+        class _FakeGroup:
+            def add_argument(self, *args, **kwargs):
+                return None
+
+        class _FakeParser:
+            def __init__(self, *args, **kwargs):
+                seen["description"] = kwargs.get("description")
+
+            def add_mutually_exclusive_group(self, **kwargs):
+                return _FakeGroup()
+
+            def add_argument(self, *args, **kwargs):
+                return None
+
+            def parse_args(self):
+                return type(
+                    "_Args",
+                    (),
+                    {
+                        "check": True,
+                        "client_secret": None,
+                        "auth_url": False,
+                        "auth_code": None,
+                        "revoke": False,
+                        "install_deps": False,
+                        "email": None,
+                    },
+                )()
+
+        monkeypatch.setattr(helper.argparse, "ArgumentParser", _FakeParser)
+        monkeypatch.setattr(helper, "check_auth", lambda email=None: True)
+
+        with pytest.raises(SystemExit) as exc:
+            helper.main()
+
+        assert exc.value.code == 0
+        assert (
+            seen["description"]
+            == "Google Chat user-OAuth setup for Doppel Agent (native attachment delivery)"
+        )
 
     def test_scopes_are_minimal(self):
         """The OAuth flow should request ONLY chat.messages.create — no
@@ -2780,6 +2843,27 @@ class TestCronSchedulerRegistry:
         from cron.scheduler import _resolve_home_env_var
 
         assert _resolve_home_env_var("google_chat") == "GOOGLE_CHAT_HOME_CHANNEL"
+
+    def test_google_chat_registration_prefers_doppel_customer_surfaces(self):
+        from plugins.platforms.google_chat.adapter import register as _register
+
+        captured = {}
+
+        class _Ctx:
+            class _M:
+                name = "google_chat-platform"
+
+            manifest = _M()
+            _manager = type("_Mgr", (), {"_plugin_platform_names": set()})()
+
+            def register_platform(self, **kwargs):
+                captured.update(kwargs)
+
+        _register(_Ctx())
+
+        assert captured["install_hint"] == "pip install 'doppel-agent[google_chat]'"
+        assert "a 'Doppel is thinking…' marker message" in captured["platform_hint"]
+        assert "Hermes is thinking…" not in captured["platform_hint"]
 
 
 # ── _standalone_send (out-of-process cron delivery) ──────────────────────

@@ -2237,7 +2237,7 @@ class GoogleChatAdapter(BasePlatformAdapter):
         return SendResult(success=True, message_id=resp.get("name"))
 
     async def send_typing(self, chat_id: str, metadata: Any = None) -> None:
-        """Post a visible 'Hermes is thinking…' marker message.
+        """Post a visible 'Doppel is thinking…' marker message.
 
         NOT ephemeral (Google Chat has no ephemeral text messages outside
         slash command responses). ``send()`` PATCHes this marker in-place
@@ -2261,7 +2261,7 @@ class GoogleChatAdapter(BasePlatformAdapter):
         keeps running and creates a card in Chat that we have NO way to
         track (the storage line never runs). Next ``_keep_typing`` tick
         sees an empty slot and creates a SECOND card. Result: one orphan
-        "Hermes is thinking…" stuck in chat forever, plus one card that
+        "Doppel is thinking…" stuck in chat forever, plus one card that
         gets patched into the reply.
 
         Fix: reserve the slot with an in-flight ``Event``, run the
@@ -2290,7 +2290,7 @@ class GoogleChatAdapter(BasePlatformAdapter):
         thread_id = self._resolve_thread_id(
             reply_to=None, metadata=metadata, chat_id=chat_id,
         )
-        body: Dict[str, Any] = {"text": "Hermes is thinking…"}
+        body: Dict[str, Any] = {"text": "Doppel is thinking…"}
         if thread_id:
             body["thread"] = {"name": thread_id}
 
@@ -3110,8 +3110,8 @@ def interactive_setup() -> None:
         save_env_value("GOOGLE_CHAT_HOME_CHANNEL", home.strip())
 
     print()
-    print_success("Google Chat configuration saved to ~/.hermes/.env")
-    print_info("Restart the gateway: hermes gateway restart")
+    print_success("Google Chat configuration saved to ~/.doppel/.env")
+    print_info("Restart the gateway: doppel gateway restart")
 
 
 # Strict resource-name pattern.  ``spaces/<id>`` and ``users/<id>`` must
@@ -3293,7 +3293,7 @@ def register(ctx) -> None:
             "GOOGLE_CHAT_SUBSCRIPTION_NAME",
             "GOOGLE_CHAT_SERVICE_ACCOUNT_JSON",
         ],
-        install_hint="pip install 'hermes-agent[google_chat]'",
+        install_hint="pip install 'doppel-agent[google_chat]'",
         setup_fn=interactive_setup,
         # Env-driven auto-configuration — the core env-populator hook calls
         # this during ``_apply_env_overrides`` and seeds
@@ -3331,7 +3331,7 @@ def register(ctx) -> None:
             "to a text notice with the host path. Do NOT generate interactive "
             "Card v2 buttons — Google Chat interactivity is not yet supported "
             "by this gateway; ask for typed confirmations instead. While you "
-            "are generating a response, a 'Hermes is thinking…' marker message "
+            "are generating a response, a 'Doppel is thinking…' marker message "
             "appears in the space and is deleted once your response is ready. "
             "You do NOT have access to Google Chat-specific APIs — you cannot "
             "search space history, list space members, or manage spaces. Do "

@@ -5527,6 +5527,45 @@ def test_memory_docs_prefer_doppel_customer_facing_surfaces():
         assert unexpected not in zh
 
 
+def test_platform_plugin_manifests_prefer_doppel_customer_facing_descriptions():
+    discord_manifest = (
+        REPO_ROOT / "plugins" / "platforms" / "discord" / "plugin.yaml"
+    ).read_text(encoding="utf-8")
+    google_chat_manifest = (
+        REPO_ROOT / "plugins" / "platforms" / "google_chat" / "plugin.yaml"
+    ).read_text(encoding="utf-8")
+
+    assert "Discord gateway adapter for Doppel Agent." in discord_manifest
+    assert "between Discord guilds/DMs and the Doppel agent." in discord_manifest
+    assert "Discord gateway adapter for Hermes Agent." not in discord_manifest
+    assert "between Discord guilds/DMs and the Hermes agent." not in discord_manifest
+
+    assert "Google Chat gateway adapter for Doppel Agent." in google_chat_manifest
+    assert "Google Chat gateway adapter for Hermes Agent." not in google_chat_manifest
+
+
+def test_platform_gateway_setup_copy_prefers_doppel_customer_facing_strings():
+    discord_adapter = (
+        REPO_ROOT / "plugins" / "platforms" / "discord" / "adapter.py"
+    ).read_text(encoding="utf-8")
+    google_chat_adapter = (
+        REPO_ROOT / "plugins" / "platforms" / "google_chat" / "adapter.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'install_hint="pip install \'doppel-agent[messaging]\'"' in discord_adapter
+    assert "📬 Home Channel: where Doppel delivers cron job results," in discord_adapter
+    assert 'install_hint="pip install \'hermes-agent[messaging]\'"' not in discord_adapter
+    assert "📬 Home Channel: where Hermes delivers cron job results," not in discord_adapter
+
+    assert 'install_hint="pip install \'doppel-agent[google_chat]\'"' in google_chat_adapter
+    assert "Google Chat configuration saved to ~/.doppel/.env" in google_chat_adapter
+    assert "Restart the gateway: doppel gateway restart" in google_chat_adapter
+    assert "a 'Doppel is thinking…' marker message" in google_chat_adapter
+    assert 'install_hint="pip install \'hermes-agent[google_chat]\'"' not in google_chat_adapter
+    assert "Google Chat configuration saved to ~/.hermes/.env" not in google_chat_adapter
+    assert "Restart the gateway: hermes gateway restart" not in google_chat_adapter
+
+
 def test_deliverable_mode_docs_prefer_doppel_customer_facing_surfaces():
     en = (
         REPO_ROOT

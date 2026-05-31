@@ -320,6 +320,7 @@ class TestDiscordSendClarify:
         kwargs = channel.send.call_args.kwargs
         assert "embed" in kwargs
         assert "view" in kwargs
+        assert kwargs["embed"].title == "❓ Doppel needs your input"
         assert isinstance(kwargs["view"], ClarifyChoiceView)
         # 3 choice buttons + 1 Other
         assert len(kwargs["view"].children) == 4
@@ -346,6 +347,7 @@ class TestDiscordSendClarify:
         kwargs = channel.send.call_args.kwargs
         # Open-ended path renders embed but no view (text-capture handles reply)
         assert "embed" in kwargs
+        assert kwargs["embed"].title == "❓ Doppel needs your input"
         assert "view" not in kwargs
 
     @pytest.mark.asyncio

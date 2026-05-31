@@ -1,5 +1,6 @@
 """Tests for native Discord slash command fast-paths (thread creation & auto-thread)."""
 
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 import sys
@@ -114,6 +115,11 @@ def adapter():
     return adapter
 
 
+@pytest.fixture(autouse=True)
+def _stub_plugin_command_iteration(monkeypatch):
+    monkeypatch.setattr("hermes_cli.commands._iter_plugin_command_entries", lambda: [])
+
+
 # ------------------------------------------------------------------
 # /thread slash command registration
 # ------------------------------------------------------------------
@@ -156,6 +162,36 @@ async def test_registers_native_restart_slash_command(adapter):
         "/restart",
         "Restart requested~",
     )
+
+
+def test_registers_doppel_first_customer_facing_slash_descriptions(adapter):
+    body = Path("/Users/macshelton/Documents/DoppelFork/plugins/platforms/discord/adapter.py").read_text(encoding="utf-8")
+
+    for expected in (
+        'description="Reset your Doppel session"',
+        'description="Show Doppel session status"',
+        'description="Stop the running Doppel agent"',
+        'description="Update Doppel Agent to the latest version"',
+        'description="Gracefully restart the Doppel gateway"',
+        'description="Create a new thread and start a Doppel session in it"',
+        'description="Re-scan ~/.doppel/skills/ for new or removed skills"',
+        'description="Run a Doppel skill"',
+        'reason = "Doppel session handoff"',
+    ):
+        assert expected in body
+
+    for unexpected in (
+        'description="Reset your Hermes session"',
+        'description="Show Hermes session status"',
+        'description="Stop the running Hermes agent"',
+        'description="Update Hermes Agent to the latest version"',
+        'description="Gracefully restart the Hermes gateway"',
+        'description="Create a new thread and start a Hermes session in it"',
+        'description="Re-scan ~/.hermes/skills/ for new or removed skills"',
+        'description="Run a Hermes skill"',
+        'reason = "Hermes session handoff"',
+    ):
+        assert unexpected not in body
 
 
 # ------------------------------------------------------------------
@@ -215,15 +251,10 @@ async def test_auto_registers_plugin_commands_for_discord(adapter):
     adapter._run_simple_slash = AsyncMock()
 
     with patch(
-        "hermes_cli.plugins.get_plugin_commands",
-        return_value={
-            "metricas": {
-                "handler": lambda _a: "ok",
-                "description": "Metrics dashboard",
-                "args_hint": "dias:7 formato:json",
-                "plugin": "metrics-plugin",
-            }
-        },
+        "hermes_cli.commands._iter_plugin_command_entries",
+        return_value=[
+            ("metricas", "Metrics dashboard", "dias:7 formato:json"),
+        ],
     ):
         adapter._register_slash_commands()
 
@@ -244,15 +275,10 @@ async def test_auto_registered_plugin_command_without_args_hint(adapter):
     adapter._run_simple_slash = AsyncMock()
 
     with patch(
-        "hermes_cli.plugins.get_plugin_commands",
-        return_value={
-            "ping": {
-                "handler": lambda _a: "pong",
-                "description": "Ping the plugin",
-                "args_hint": "",
-                "plugin": "ping-plugin",
-            }
-        },
+        "hermes_cli.commands._iter_plugin_command_entries",
+        return_value=[
+            ("ping", "Ping the plugin", ""),
+        ],
     ):
         adapter._register_slash_commands()
 
@@ -269,15 +295,10 @@ async def test_plugin_command_name_conflict_skipped(adapter):
     adapter._run_simple_slash = AsyncMock()
 
     with patch(
-        "hermes_cli.plugins.get_plugin_commands",
-        return_value={
-            "status": {
-                "handler": lambda _a: "plugin-status",
-                "description": "Plugin status",
-                "args_hint": "",
-                "plugin": "shadow-plugin",
-            }
-        },
+        "hermes_cli.commands._iter_plugin_command_entries",
+        return_value=[
+            ("status", "Plugin status", ""),
+        ],
     ):
         adapter._register_slash_commands()
 
@@ -537,10 +558,10 @@ async def test_auto_create_thread_strips_mention_syntax_from_name(adapter):
 
 
 @pytest.mark.asyncio
-async def test_auto_create_thread_falls_back_to_hermes_when_only_mentions(adapter):
+async def test_auto_create_thread_falls_back_to_doppel_when_only_mentions(adapter):
     """If a message contains only mention syntax, the stripped content is
-    empty — fall back to the 'Hermes' default rather than ''."""
-    thread = SimpleNamespace(id=999, name="Hermes")
+    empty — fall back to the 'Doppel' default rather than ''."""
+    thread = SimpleNamespace(id=999, name="Doppel")
     message = SimpleNamespace(
         content="<@&1490963422786093149>",
         create_thread=AsyncMock(return_value=thread),
@@ -551,7 +572,7 @@ async def test_auto_create_thread_falls_back_to_hermes_when_only_mentions(adapte
     await adapter._auto_create_thread(message)
 
     name = message.create_thread.await_args[1]["name"]
-    assert name == "Hermes"
+    assert name == "Doppel"
 
 
 @pytest.mark.asyncio
@@ -586,7 +607,7 @@ async def test_auto_create_thread_falls_back_to_seed_message(adapter):
 
     result = await adapter._auto_create_thread(message)
     assert result is thread
-    message.channel.send.assert_awaited_once_with("🧵 Thread created by Hermes: **Hello**")
+    message.channel.send.assert_awaited_once_with("🧵 Thread created by Doppel: **Hello**")
     seed_message.create_thread.assert_awaited_once_with(
         name="Hello",
         auto_archive_duration=1440,
@@ -994,4 +1015,3 @@ def test_register_skill_command_autocomplete_filters_by_name_and_description(ada
     # (covered in other tests). The autocomplete filter itself is exercised
     # via direct function call in the real-discord integration path.
     assert skill_cmd.callback is not None
-

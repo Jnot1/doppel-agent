@@ -587,6 +587,38 @@ def test_add_upstream_remote_uses_shared_upstream_repo_url(mock_run, monkeypatch
     ]
 
 
+def test_sync_with_upstream_decline_prompt_is_doppel_first(monkeypatch, tmp_path, capsys):
+    from hermes_cli import main as hm
+
+    prompts = []
+    marked = {"called": False}
+
+    monkeypatch.setattr(hm, "_has_upstream_remote", lambda *_: False)
+    monkeypatch.setattr(hm, "_should_skip_upstream_prompt", lambda: False)
+    monkeypatch.setattr(hm, "_mark_skip_upstream_prompt", lambda: marked.__setitem__("called", True))
+    monkeypatch.setattr(hm, "_official_upstream_repo_slug", lambda: "NousResearch/hermes-agent")
+    monkeypatch.setattr(
+        hm,
+        "_official_upstream_repo_url",
+        lambda: "https://github.com/NousResearch/hermes-agent.git",
+    )
+
+    def fake_input(prompt=""):
+        prompts.append(prompt)
+        return "n"
+
+    monkeypatch.setattr("builtins.input", fake_input)
+
+    hm._sync_with_upstream_if_needed(["git"], tmp_path)
+
+    out = capsys.readouterr().out
+    assert "official upstream repository" in out
+    assert "official Hermes repository" not in out
+    assert "NousResearch/hermes-agent" in out
+    assert prompts == ["Add official upstream repo as 'upstream' remote? [Y/n]: "]
+    assert marked["called"] is True
+
+
 class TestCmdUpdateCheckBranchFlag:
     """``hermes update --check --branch <name>`` honors the branch override.
 

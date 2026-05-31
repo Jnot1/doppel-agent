@@ -232,7 +232,7 @@ def rewrite_relative_links(body: str, meta: dict[str, Any]) -> str:
     pointing to the file in the repo.
     """
     source_dir = "skills" if meta["source_kind"] == "bundled" else "optional-skills"
-    base = f"https://github.com/NousResearch/hermes-agent/blob/main/{source_dir}/{meta['rel_path']}"
+    base = f"https://github.com/Jnot1/doppel-agent/blob/main/{source_dir}/{meta['rel_path']}"
 
     def sub_link(m: re.Match) -> str:
         text = m.group(1)
@@ -272,6 +272,31 @@ def sanitize_yaml_string(s: str) -> str:
     # Collapse newlines to spaces.
     s = re.sub(r"\s+", " ", s).strip()
     return s
+
+
+def skill_name(fm: dict[str, Any], meta: dict[str, Any]) -> str:
+    return str(fm.get("name", meta["slug"]))
+
+
+def skill_brand_metadata(fm: dict[str, Any]) -> dict[str, Any]:
+    return (fm.get("metadata") or {}).get("hermes") or {}
+
+
+def skill_docs_display_name(fm: dict[str, Any], meta: dict[str, Any]) -> str:
+    brand_meta = skill_brand_metadata(fm)
+    override = brand_meta.get("docs_display_name") or brand_meta.get("display_name")
+    if isinstance(override, str) and override.strip():
+        return override.strip()
+    name = skill_name(fm, meta)
+    return name.replace("-", " ").replace("_", " ").title()
+
+
+def skill_catalog_label(fm: dict[str, Any], meta: dict[str, Any]) -> str:
+    brand_meta = skill_brand_metadata(fm)
+    override = brand_meta.get("docs_display_name") or brand_meta.get("display_name")
+    if isinstance(override, str) and override.strip():
+        return override.strip()
+    return skill_name(fm, meta)
 
 
 def derive_skill_meta(skill_path: Path, source_dir: Path, source_kind: str) -> dict[str, Any]:
@@ -331,17 +356,15 @@ def render_skill_page(
     body: str,
     skill_index: dict[str, dict[str, Any]] | None = None,
 ) -> str:
-    name = fm.get("name", meta["slug"])
+    name = skill_name(fm, meta)
     description = fm.get("description", "").strip()
     short_desc = description.split(".")[0].strip() if description else name
     if len(short_desc) > 160:
         short_desc = short_desc[:157] + "..."
 
-    title = f"{name}"
-    # Heuristic nicer title from name
-    display_name = name.replace("-", " ").replace("_", " ").title()
+    display_name = skill_docs_display_name(fm, meta)
 
-    hermes_meta = (fm.get("metadata") or {}).get("hermes") or {}
+    hermes_meta = skill_brand_metadata(fm)
     tags = hermes_meta.get("tags") or []
     related = hermes_meta.get("related_skills") or []
     platforms = fm.get("platforms")
@@ -358,7 +381,7 @@ def render_skill_page(
         info_rows.append(
             (
                 "Source",
-                "Optional — install with `hermes skills install official/"
+                "Optional — install with `doppel skills install official/"
                 + meta["category"]
                 + "/"
                 + meta["slug"]
@@ -442,7 +465,7 @@ def render_skill_page(
         "## Reference: full SKILL.md\n"
         "\n"
         ":::info\n"
-        "The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.\n"
+        "The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.\n"
         ":::\n"
         "\n"
         f"{body_clean}\n"
@@ -472,14 +495,16 @@ def build_catalog_md_bundled(entries: list[tuple[dict[str, Any], dict[str, Any]]
         "---",
         "sidebar_position: 5",
         'title: "Bundled Skills Catalog"',
-        'description: "Catalog of bundled skills that ship with Hermes Agent"',
+        'description: "Catalog of bundled skills that ship with Doppel Agent"',
         "---",
         "",
         "# Bundled Skills Catalog",
         "",
-        "Hermes ships with a large built-in skill library copied into `~/.hermes/skills/` on install. Each skill below links to a dedicated page with its full definition, setup, and usage.",
+        "Doppel Agent ships with a large built-in skill library copied into `~/.doppel/skills/` on fresh installs. Legacy `~/.hermes/skills/` trees are still supported. Each skill below links to a dedicated page with its full definition, setup, and usage.",
         "",
-        "Hermes also syncs bundled skills on `hermes update`, but the sync manifest respects local deletions and user edits. If a skill listed here is missing from your profile's `~/.hermes/skills/` tree, it is still shipped with Hermes; restore it with `hermes skills reset <name> --restore`.",
+        "Doppel Agent also syncs bundled skills on `doppel update`, but the sync manifest respects local deletions and user edits. If a skill listed here is missing from your profile's agent-home skill tree (`~/.doppel/skills/` on fresh installs; legacy `~/.hermes/skills/` still supported), it is still shipped with Doppel Agent; restore it with `doppel skills reset <name> --restore`.",
+        "",
+        "Some bundled skill ids still retain historical `hermes-` prefixes for compatibility and contributor workflows.",
         "",
         "If a skill is missing from this list but present in the repo, the catalog is regenerated by `website/scripts/generate-skill-docs.py`.",
         "",
@@ -491,7 +516,7 @@ def build_catalog_md_bundled(entries: list[tuple[dict[str, Any], dict[str, Any]]
         lines.append("|-------|-------------|------|")
         for meta, parsed in by_cat[category]:
             fm = parsed["frontmatter"]
-            name = fm.get("name", meta["slug"])
+            name = skill_catalog_label(fm, meta)
             desc = (fm.get("description") or "").strip()
             if len(desc) > 240:
                 desc = desc[:237].rstrip() + "..."
@@ -518,22 +543,22 @@ def build_catalog_md_optional(entries: list[tuple[dict[str, Any], dict[str, Any]
         "---",
         "sidebar_position: 9",
         'title: "Optional Skills Catalog"',
-        'description: "Official optional skills shipped with hermes-agent — install via hermes skills install official/<category>/<skill>"',
+        'description: "Official optional skills shipped with Doppel Agent — install via doppel skills install official/<category>/<skill>"',
         "---",
         "",
         "# Optional Skills Catalog",
         "",
-        "Optional skills ship with hermes-agent under `optional-skills/` but are **not active by default**. Install them explicitly:",
+        "Optional skills ship with Doppel Agent under `optional-skills/` but are **not active by default**. Install them explicitly:",
         "",
         "```bash",
-        "hermes skills install official/<category>/<skill>",
+        "doppel skills install official/<category>/<skill>",
         "```",
         "",
         "For example:",
         "",
         "```bash",
-        "hermes skills install official/blockchain/solana",
-        "hermes skills install official/mlops/flash-attention",
+        "doppel skills install official/blockchain/solana",
+        "doppel skills install official/mlops/flash-attention",
         "```",
         "",
         "Each skill below links to a dedicated page with its full definition, setup, and usage.",
@@ -541,7 +566,7 @@ def build_catalog_md_optional(entries: list[tuple[dict[str, Any], dict[str, Any]
         "To uninstall:",
         "",
         "```bash",
-        "hermes skills uninstall <skill-name>",
+        "doppel skills uninstall <skill-name>",
         "```",
         "",
     ]
@@ -552,7 +577,7 @@ def build_catalog_md_optional(entries: list[tuple[dict[str, Any], dict[str, Any]
         lines.append("|-------|-------------|")
         for meta, parsed in by_cat[category]:
             fm = parsed["frontmatter"]
-            name = fm.get("name", meta["slug"])
+            name = skill_catalog_label(fm, meta)
             desc = (fm.get("description") or "").strip()
             if len(desc) > 240:
                 desc = desc[:237].rstrip() + "..."

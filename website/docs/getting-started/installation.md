@@ -30,7 +30,7 @@ Open PowerShell and run:
 iex (irm https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1)
 ```
 
-The installer handles **everything**: `uv`, Python 3.11, Node.js 22, `ripgrep`, `ffmpeg`, **and a portable Git Bash** (PortableGit — a self-contained Git-for-Windows distribution that ships `bash.exe` and the full POSIX toolchain Doppel uses for shell commands; on 32-bit Windows the installer falls back to MinGit, which lacks bash and disables terminal-tool / agent-browser features). It keeps user data under `%LOCALAPPDATA%\doppel`, clones the repo checkout under `%LOCALAPPDATA%\doppel\hermes-agent` for compatibility, creates a virtualenv, and adds `doppel` to your **User PATH**. Restart your terminal (or open a new PowerShell window) after the install so PATH picks up.
+The installer handles **everything**: `uv`, Python 3.11, Node.js 22, `ripgrep`, `ffmpeg`, **and a portable Git Bash** (PortableGit — a self-contained Git-for-Windows distribution that ships `bash.exe` and the full POSIX toolchain Doppel uses for shell commands; on 32-bit Windows the installer falls back to MinGit, which lacks bash and disables terminal-tool / agent-browser features). It keeps user data under `%LOCALAPPDATA%\doppel`, clones the repo checkout under `%LOCALAPPDATA%\doppel\doppel-agent`, creates a virtualenv, and adds `doppel` to your **User PATH**. Older installs under `%LOCALAPPDATA%\doppel\hermes-agent` are still detected and migrated forward. Restart your terminal (or open a new PowerShell window) after the install so PATH picks up.
 
 **How Git is handled:**
 1. If `git` is already on your PATH, the installer uses your existing install.
@@ -177,7 +177,7 @@ Running Doppel as a dedicated unprivileged user (e.g. a `doppel` systemd service
    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 
    # Option B — symlink system-wide (run as an admin)
-   sudo ln -s /home/doppel/.doppel/hermes-agent/venv/bin/doppel /usr/local/bin/doppel
+   sudo ln -s /home/doppel/.doppel/doppel-agent/venv/bin/doppel /usr/local/bin/doppel
    ```
 
 4. **Verify:** `doppel doctor` should now run cleanly. If you get `ModuleNotFoundError: No module named 'dotenv'`, you're invoking the repo source `hermes` file (`~/.doppel/doppel-agent/hermes`) with system Python instead of the venv launcher (`~/.doppel/doppel-agent/venv/bin/doppel`) — fix step 3. Older installs may still have the same files under `~/.doppel/hermes-agent/`.

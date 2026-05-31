@@ -93,6 +93,10 @@ const config: Config = {
             from: '/guides/run-hermes-with-nous-portal',
             to: '/guides/run-doppel-agent-with-nous-portal',
           },
+          {
+            from: '/guides/build-a-hermes-plugin',
+            to: '/guides/build-a-doppel-plugin',
+          },
         ],
       },
     ],

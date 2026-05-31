@@ -3,6 +3,7 @@ sidebar_position: 9
 sidebar_label: "Build a Plugin"
 title: "Build a Doppel Plugin"
 description: "Step-by-step guide to building a complete Doppel plugin with tools, hooks, data files, and skills"
+slug: /guides/build-a-doppel-plugin
 ---
 
 # Build a Doppel Plugin

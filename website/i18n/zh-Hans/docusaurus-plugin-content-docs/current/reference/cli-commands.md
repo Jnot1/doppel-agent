@@ -1068,7 +1068,7 @@ Provider plugin 选择保存到 `config.yaml`：
 
 通用 plugin 禁用列表存储在 `config.yaml` 的 `plugins.disabled` 下。
 
-参见 [Plugins](../user-guide/features/plugins.md) 和 [构建 Doppel Plugin](../guides/build-a-hermes-plugin.md)。
+参见 [Plugins](../user-guide/features/plugins.md) 和 [构建 Doppel Plugin](/guides/build-a-doppel-plugin)。
 
 ## `doppel tools`
 

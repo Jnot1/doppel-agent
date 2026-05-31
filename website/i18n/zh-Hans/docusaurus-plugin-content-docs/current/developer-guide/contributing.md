@@ -22,7 +22,7 @@ description: "如何为 Doppel Agent 做贡献 — 开发环境配置、代码�
 
 ## 常见贡献路径
 
-- 构建自定义/本地工具而不修改 Doppel 核心？从 [构建 Doppel 插件](../guides/build-a-hermes-plugin.md) 开始
+- 构建自定义/本地工具而不修改 Doppel 核心？从 [构建 Doppel 插件](/guides/build-a-doppel-plugin) 开始
 - 为 Doppel Agent 本身构建新的内置核心工具？从 [添加工具](./adding-tools.md) 开始
 - 构建新的 skill？从 [创建 Skill](./creating-skills.md) 开始
 - 构建新的推理提供商？从 [添加提供商](./adding-providers.md) 开始

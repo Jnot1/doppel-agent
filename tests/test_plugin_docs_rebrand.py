@@ -753,6 +753,7 @@ def test_build_plugin_guide_pair_prefer_doppel_paths_commands_and_package_surfac
     zh = ZH_BUILD_GUIDE.read_text(encoding="utf-8")
 
     for text in (en, zh):
+        assert "slug: /guides/build-a-doppel-plugin" in text
         assert "~/.doppel/plugins/calculator" in text
         assert "~/.doppel/plugins/my-plugin/" in text
         assert "`~/.doppel/logs/agent.log`" in text
@@ -788,6 +789,54 @@ def test_build_plugin_guide_pair_prefer_doppel_paths_commands_and_package_surfac
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_build_plugin_guide_route_graph_uses_doppel_slug_and_legacy_redirect():
+    en = EN_BUILD_GUIDE.read_text(encoding="utf-8")
+    zh = ZH_BUILD_GUIDE.read_text(encoding="utf-8")
+    config = (REPO_ROOT / "website" / "docusaurus.config.ts").read_text(
+        encoding="utf-8"
+    )
+    llms = (REPO_ROOT / "website" / "scripts" / "generate-llms-txt.py").read_text(
+        encoding="utf-8"
+    )
+    docs = [
+        (REPO_ROOT / "website" / "docs" / "integrations" / "index.md").read_text(
+            encoding="utf-8"
+        ),
+        (REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "plugins.md").read_text(
+            encoding="utf-8"
+        ),
+        (
+            REPO_ROOT
+            / "website"
+            / "i18n"
+            / "zh-Hans"
+            / "docusaurus-plugin-content-docs"
+            / "current"
+            / "guides"
+            / "work-with-skills.md"
+        ).read_text(encoding="utf-8"),
+        (
+            REPO_ROOT
+            / "website"
+            / "i18n"
+            / "zh-Hans"
+            / "docusaurus-plugin-content-docs"
+            / "current"
+            / "getting-started"
+            / "learning-path.md"
+        ).read_text(encoding="utf-8"),
+    ]
+
+    assert "slug: /guides/build-a-doppel-plugin" in en
+    assert "slug: /guides/build-a-doppel-plugin" in zh
+    assert "to: '/guides/build-a-doppel-plugin'" in config
+    assert '("guides/build-a-doppel-plugin", "Build a Doppel Agent Plugin", None)' in llms
+
+    for text in docs:
+        assert "/guides/build-a-doppel-plugin" in text
+        assert "/guides/build-a-hermes-plugin" not in text
 
 
 def test_local_ollama_guides_prefer_doppel_branding_and_keep_runtime_literals():
@@ -3455,7 +3504,7 @@ def test_zh_reference_cli_commands_rebrand_hooks_mcp_and_sessions_cluster():
     assert "doppel mcp install n8n" in section
     assert "[在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent)" in section
     assert "doppel plugins [subcommand]" in section
-    assert "[构建 Doppel Plugin](../guides/build-a-hermes-plugin.md)" in section
+    assert "[构建 Doppel Plugin](/guides/build-a-doppel-plugin)" in section
     assert "doppel tools [--summary]" in section
     assert "doppel computer-use <subcommand>" in section
     assert "`doppel computer-use install`" in section
@@ -5944,8 +5993,8 @@ def test_work_with_skills_guides_prefer_doppel_customer_facing_surfaces():
     assert "skills_list" in zh
     assert "skill_manage" in en
     assert "skill_manage" in zh
-    assert "/guides/build-a-hermes-plugin#bundle-skills" in en
-    assert "/guides/build-a-hermes-plugin#bundle-skills" in zh
+    assert "/guides/build-a-doppel-plugin#bundle-skills" in en
+    assert "/guides/build-a-doppel-plugin#bundle-skills" in zh
 
     for stale in (
         "teaches Hermes new workflows",
@@ -6026,8 +6075,8 @@ def test_github_pr_review_agent_guides_prefer_doppel_customer_facing_surfaces():
     assert "向 Doppel 传授你的团队规范" in zh
     assert "doppel gateway status" in en
     assert "doppel gateway status" in zh
-    assert "[Build a Doppel Plugin](/guides/build-a-hermes-plugin)" in en
-    assert "[构建 Doppel Plugin](/guides/build-a-hermes-plugin)" in zh
+    assert "[Build a Doppel Plugin](/guides/build-a-doppel-plugin)" in en
+    assert "[构建 Doppel Plugin](/guides/build-a-doppel-plugin)" in zh
 
     for stale in (
         "Hermes Agent",
@@ -6059,8 +6108,8 @@ def test_github_pr_review_agent_guides_prefer_doppel_customer_facing_surfaces():
         "hermes cron list",
         "hermes cron run pr-review",
         "hermes gateway status",
-        "[Build a Plugin](/guides/build-a-hermes-plugin)",
-        "[构建 Plugin](/guides/build-a-hermes-plugin)",
+        "[Build a Plugin](/guides/build-a-doppel-plugin)",
+        "[构建 Plugin](/guides/build-a-doppel-plugin)",
     ):
         assert stale not in en
         assert stale not in zh
@@ -6115,8 +6164,8 @@ def test_webhook_github_pr_review_guides_prefer_doppel_customer_facing_surfaces(
     assert "Doppel 会自动处理两者" in zh
     assert "Doppel will then pass the full payload" in en
     assert "Doppel 将把完整 payload 作为格式化 JSON 直接传递给 agent" in zh
-    assert "[Build a Doppel Plugin](/guides/build-a-hermes-plugin)" in en
-    assert "[构建 Doppel Plugin](/guides/build-a-hermes-plugin)" in zh
+    assert "[Build a Doppel Plugin](/guides/build-a-doppel-plugin)" in en
+    assert "[构建 Doppel Plugin](/guides/build-a-doppel-plugin)" in zh
     assert "## 使用 ngrok 进行本地测试 {#local-testing-with-ngrok}" in zh
     assert "## 安全说明 {#security-notes}" in zh
 
@@ -6147,8 +6196,8 @@ def test_webhook_github_pr_review_guides_prefer_doppel_customer_facing_surfaces(
         "Hermes 会自动处理两者",
         "Hermes will then pass the full payload",
         "Hermes 将把完整 payload 作为格式化 JSON 直接传递给 agent",
-        "[Build a Plugin](/guides/build-a-hermes-plugin)",
-        "[构建 Plugin](/guides/build-a-hermes-plugin)",
+        "[Build a Plugin](/guides/build-a-doppel-plugin)",
+        "[构建 Plugin](/guides/build-a-doppel-plugin)",
     ):
         assert stale not in en
         assert stale not in zh
@@ -6648,8 +6697,8 @@ def test_learning_path_pair_prefer_doppel_customer_facing_surfaces():
     assert "Cron 任务让 Doppel Agent 按计划执行任务" in zh
     assert "Extend Doppel Agent with your own tools" in en
     assert "通过自定义工具和可复用技能包扩展 Doppel Agent" in zh
-    assert "[Build a Doppel Plugin](/guides/build-a-hermes-plugin)" in en
-    assert "[构建 Doppel 插件](/guides/build-a-hermes-plugin)" in zh
+    assert "[Build a Doppel Plugin](/guides/build-a-doppel-plugin)" in en
+    assert "[构建 Doppel 插件](/guides/build-a-doppel-plugin)" in zh
     assert "Use reinforcement learning to fine-tune model behavior with Doppel Agent" in en
     assert "通过 Doppel Agent 内置的 RL 训练流水线对模型行为进行微调" in zh
     assert "Integrate Doppel Agent into your own Python applications" in en
@@ -6664,7 +6713,7 @@ def test_learning_path_pair_prefer_doppel_customer_facing_surfaces():
         "[在 Hermes 中使用语音模式](/guides/use-voice-mode-with-hermes)",
         "Cron 任务让 Hermes Agent 按计划执行任务",
         "通过自定义工具和可复用技能包扩展 Hermes Agent",
-        "[构建 Hermes 插件](/guides/build-a-hermes-plugin)",
+        "[构建 Hermes 插件](/guides/build-a-doppel-plugin)",
         "通过 Hermes Agent 内置的 RL 训练流水线对模型行为进行微调",
         "强化学习训练在您已了解 Hermes Agent 如何处理对话和工具调用的基础上效果最佳。",
         "将 Hermes Agent 集成到您自己的 Python 应用中",

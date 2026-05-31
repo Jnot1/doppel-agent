@@ -3,6 +3,7 @@ sidebar_position: 9
 sidebar_label: "Build a Plugin"
 title: "构建 Doppel 插件"
 description: "逐步指南：构建包含工具、钩子、数据文件和技能的完整 Doppel 插件"
+slug: /guides/build-a-doppel-plugin
 ---
 
 # 构建 Doppel 插件

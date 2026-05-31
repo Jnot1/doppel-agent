@@ -803,7 +803,7 @@ def my_callback(session_id: str, platform: str, **kwargs):
 
 ---
 
-See the **[Build a Plugin guide](/guides/build-a-hermes-plugin)** for the full walkthrough including tool schemas, handlers, and advanced hook patterns.
+See the **[Build a Plugin guide](/guides/build-a-doppel-plugin)** for the full walkthrough including tool schemas, handlers, and advanced hook patterns.
 
 ---
 

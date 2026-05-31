@@ -1950,6 +1950,60 @@ def test_zh_reference_skill_docs_mirror_doppel_skill_commands():
     assert "hermes skills reset google-workspace" not in zh_cli_commands
 
 
+def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_sections():
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    top = zh_cli_commands.split("## `doppel chat`", 1)[0]
+    pre_model = zh_cli_commands.split("## `doppel model`", 1)[0]
+    model = zh_cli_commands.split("## `doppel model`", 1)[1].split("## `hermes gateway`", 1)[0]
+    support = zh_cli_commands.split("## `doppel dump`", 1)[1].split("## `hermes checkpoints`", 1)[0]
+    update = zh_cli_commands.split("## `doppel update`", 1)[1].split("## 维护命令", 1)[0]
+
+    assert "doppel [global-options] <command> [subcommand/options]" in top
+    assert "~/.doppel/config.yaml" in top
+    assert "`doppel send`" in top
+    assert "`doppel backup`" in top
+    assert "`doppel update`" in top
+    assert "hermes [global-options] <command> [subcommand/options]" not in top
+    assert "| `hermes chat` |" not in top
+    assert "| `hermes model` |" not in top
+
+    assert "doppel -z " in pre_model
+    assert "`doppel chat -q`" in pre_model
+    assert "`doppel model`" in model
+    assert "活跃的 Doppel 聊天会话" in model
+    assert "hermes -z " not in pre_model
+    assert "`hermes chat -q`" not in pre_model
+    assert "`hermes model`" not in model
+
+    assert "--- doppel dump ---" in support
+    assert "DOPPEL_HOME 路径" in support
+    assert "`doppel doctor`" in support
+    assert "doppel debug share" in support
+    assert "doppel backup" in support
+    assert "`~/hermes-backup-<timestamp>.zip`" in support
+    assert "`hermes-backup-*`" in support
+    assert "--- hermes dump ---" not in support
+    assert "hermes debug share" not in support
+    assert "## `hermes backup`" not in support
+
+    assert "doppel update [--gateway] [--check] [--no-backup] [--backup] [--yes]" in update
+    assert "`pip install --upgrade hermes-agent`" in update
+    assert "`hermes.service`" in update
+    assert "`doppel backup restore --state pre-update`" in update
+    assert "## `hermes update`" not in zh_cli_commands
+    assert "hermes update [--check] [--backup] [--restart-gateway]" not in update
+
+
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():
     en = EN_FEATURE_ACP_DOC.read_text(encoding="utf-8")
     zh = ZH_FEATURE_ACP_DOC.read_text(encoding="utf-8")

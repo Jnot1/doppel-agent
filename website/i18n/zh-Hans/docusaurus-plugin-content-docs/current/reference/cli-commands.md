@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "CLI 命令参考"
-description: "Hermes 终端命令及命令族的权威参考"
+description: "Doppel 终端命令及命令族的权威参考"
 ---
 
 # CLI 命令参考
@@ -13,7 +13,7 @@ description: "Hermes 终端命令及命令族的权威参考"
 ## 全局入口
 
 ```bash
-hermes [global-options] <command> [subcommand/options]
+doppel [global-options] <command> [subcommand/options]
 ```
 
 ### 全局选项
@@ -21,13 +21,13 @@ hermes [global-options] <command> [subcommand/options]
 | 选项 | 说明 |
 |--------|-------------|
 | `--version`, `-V` | 显示版本并退出。 |
-| `--profile <name>`, `-p <name>` | 选择本次调用使用的 Hermes profile（配置文件）。覆盖 `hermes profile use` 设置的粘性默认值。 |
+| `--profile <name>`, `-p <name>` | 选择本次调用使用的 Doppel profile（配置文件）。覆盖 `doppel profile use` 设置的粘性默认值。 |
 | `--resume <session>`, `-r <session>` | 通过 ID 或标题恢复之前的会话。 |
 | `--continue [name]`, `-c [name]` | 恢复最近的会话，或恢复最近一个匹配标题的会话。 |
 | `--worktree`, `-w` | 在隔离的 git worktree 中启动，用于并行 agent 工作流。 |
 | `--yolo` | 跳过危险命令的审批提示。 |
 | `--pass-session-id` | 在 agent 的 system prompt（系统提示词）中包含会话 ID。 |
-| `--ignore-user-config` | 忽略 `~/.hermes/config.yaml`，回退到内置默认值。`.env` 中的凭据仍会加载。 |
+| `--ignore-user-config` | 忽略 `~/.doppel/config.yaml`，回退到内置默认值。`.env` 中的凭据仍会加载。 |
 | `--ignore-rules` | 跳过 `AGENTS.md`、`SOUL.md`、`.cursorrules`、memory（记忆）和预加载 skill 的自动注入。 |
 | `--tui` | 启动 [TUI](../user-guide/tui.md) 而非经典 CLI。等同于 `HERMES_TUI=1`。 |
 | `--dev` | 与 `--tui` 配合使用：通过 `tsx` 直接运行 TypeScript 源码而非预构建包（供 TUI 贡献者使用）。 |
@@ -36,56 +36,60 @@ hermes [global-options] <command> [subcommand/options]
 
 | 命令 | 用途 |
 |---------|---------|
-| `hermes chat` | 与 agent 进行交互式或单次聊天。 |
-| `hermes model` | 交互式选择默认 provider 和模型。 |
-| `hermes fallback` | 管理主模型出错时依次尝试的 fallback provider。 |
-| `hermes gateway` | 运行或管理消息 gateway 服务。 |
-| `hermes proxy` | 本地 OpenAI 兼容代理，附加 OAuth provider 凭据。参见 [订阅代理](../user-guide/features/subscription-proxy.md)。 |
-| `hermes lsp` | 管理 Language Server Protocol 集成（为 write_file/patch 提供语义诊断）。 |
-| `hermes setup` | 全部或部分配置的交互式设置向导。 |
-| `hermes whatsapp` | 配置并配对 WhatsApp 桥接。 |
-| `hermes slack` | Slack 辅助工具（当前功能：生成将每条命令注册为原生斜杠命令的 app manifest）。 |
-| `hermes auth` | 管理凭据——添加、列出、删除、重置、设置策略。处理 Codex/Nous/Anthropic 的 OAuth 流程。 |
-| `hermes login` / `logout` | **已弃用** — 请改用 `hermes auth`。 |
-| `hermes status` | 显示 agent、auth 和平台状态。 |
-| `hermes cron` | 检查并触发 cron 调度器。 |
-| `hermes kanban` | 多 profile 协作看板（任务、链接、调度器）。 |
-| `hermes webhook` | 管理用于事件驱动激活的动态 webhook 订阅。 |
-| `hermes hooks` | 检查、审批或删除 `config.yaml` 中声明的 shell 脚本 hook。 |
-| `hermes doctor` | 诊断配置和依赖问题。 |
-| `hermes security audit` | 对 venv、plugin 依赖和固定 MCP 服务器进行按需供应链审计（OSV.dev）。 |
-| `hermes dump` | 可直接复制粘贴的设置摘要，用于支持/调试。 |
-| `hermes debug` | 调试工具——上传日志和系统信息以获取支持。 |
-| `hermes backup` | 将 Hermes 主目录备份为 zip 文件。 |
-| `hermes checkpoints` | 检查/修剪/清除 `~/.hermes/checkpoints/`（`/rollback` 使用的影子存储）。不带参数运行可查看状态概览。 |
-| `hermes import` | 从 zip 文件恢复 Hermes 备份。 |
-| `hermes logs` | 查看、跟踪和过滤 agent/gateway/错误日志文件。 |
-| `hermes config` | 显示、编辑、迁移和查询配置文件。 |
-| `hermes pairing` | 审批或撤销消息配对码。 |
-| `hermes skills` | 浏览、安装、发布、审计和配置 skill。 |
-| `hermes bundles` | 将多个 skill 归组到单个 `/<name>` 斜杠命令下。参见 [Skill Bundles](../user-guide/features/skills.md#skill-bundles)。 |
-| `hermes curator` | 后台 skill 维护——状态、运行、暂停、固定。参见 [Curator](../user-guide/features/curator.md)。 |
-| `hermes memory` | 配置外部 memory provider。当对应 provider 激活时，特定于 plugin 的子命令（如 `hermes honcho`）会自动注册。 |
-| `hermes acp` | 将 Hermes 作为 ACP 服务器运行，用于编辑器集成。 |
-| `hermes mcp` | 管理 MCP 服务器配置，并将 Hermes 作为 MCP 服务器运行。 |
-| `hermes plugins` | 管理 Hermes Agent plugin（安装、启用、禁用、删除）。 |
-| `hermes portal` | Nous Portal 状态、订阅链接和 Tool Gateway 路由。参见 [Tool Gateway](../user-guide/features/tool-gateway.md)。 |
-| `hermes tools` | 按平台配置已启用的工具。 |
-| `hermes computer-use` | 安装或检查 cua-driver 后端（macOS Computer Use）。 |
-| `hermes sessions` | 浏览、导出、修剪、重命名和删除会话。 |
-| `hermes insights` | 显示 token/费用/活动分析。 |
-| `hermes claw` | OpenClaw 迁移辅助工具。 |
-| `hermes dashboard` | 启动用于管理配置、API 密钥和会话的 Web 控制台。 |
-| `hermes profile` | 管理 profile——多个隔离的 Hermes 实例。 |
-| `hermes completion` | 打印 shell 补全脚本（bash/zsh/fish）。 |
-| `hermes version` | 显示版本信息。 |
-| `hermes update` | 拉取最新代码并重新安装依赖（git 安装），或检查 PyPI 并执行 `pip install --upgrade`（pip 安装）。`--check` 预览而不安装；`--backup` 在拉取前对 `HERMES_HOME` 进行快照。 |
-| `hermes uninstall` | 从系统中删除 Hermes。 |
+| `doppel chat` | 与 agent 进行交互式或单次聊天。 |
+| `doppel model` | 交互式选择默认 provider 和模型。 |
+| `doppel fallback` | 管理主模型出错时依次尝试的 fallback provider。 |
+| `doppel gateway` | 运行或管理消息 gateway 服务。 |
+| `doppel proxy` | 本地 OpenAI 兼容代理，附加 OAuth provider 凭据。参见 [订阅代理](../user-guide/features/subscription-proxy.md)。 |
+| `doppel lsp` | 管理 Language Server Protocol 集成（为 write_file/patch 提供语义诊断）。 |
+| `doppel setup` | 全部或部分配置的交互式设置向导。 |
+| `doppel whatsapp` | 配置并配对 WhatsApp 桥接。 |
+| `doppel slack` | Slack 辅助工具（当前功能：生成将每条命令注册为原生斜杠命令的 app manifest）。 |
+| `doppel auth` | 管理凭据——添加、列出、删除、重置、设置策略。处理 Codex/Nous/Anthropic 的 OAuth 流程。 |
+| `doppel login` / `logout` | **已弃用** — 请改用 `doppel auth`。 |
+| `doppel send` | 向已配置的消息平台发送一次性消息（Telegram、Discord、Slack、Signal、SMS 等）。适用于 shell 脚本、cron 作业、CI hook 和监控守护进程——无 agent 循环、无 LLM。 |
+| `doppel secrets` | 管理外部密钥源（当前为 Bitwarden Secrets Manager），在进程启动时拉取 API 密钥，而不是从 `~/.doppel/.env` 读取。 |
+| `doppel migrate` | 诊断并（可选）重写 `config.yaml`，以替换已退役模型或已弃用设置引用（如 `migrate xai`）。 |
+| `doppel status` | 显示 agent、auth 和平台状态。 |
+| `doppel cron` | 检查并触发 cron 调度器。 |
+| `doppel kanban` | 多 profile 协作看板（任务、链接、调度器）。 |
+| `doppel webhook` | 管理用于事件驱动激活的动态 webhook 订阅。 |
+| `doppel hooks` | 检查、审批或删除 `config.yaml` 中声明的 shell 脚本 hook。 |
+| `doppel doctor` | 诊断配置和依赖问题。 |
+| `doppel security audit` | 对 venv、plugin 依赖和固定 MCP 服务器进行按需供应链审计（OSV.dev）。 |
+| `doppel dump` | 可直接复制粘贴的设置摘要，用于支持/调试。 |
+| `doppel prompt-size` | 显示 system prompt 和工具 schema 的字节拆分（skills 索引、memory、profile）。离线运行。 |
+| `doppel debug` | 调试工具——上传日志和系统信息以获取支持。 |
+| `doppel backup` | 将 Doppel 主目录备份为 zip 文件。 |
+| `doppel checkpoints` | 检查/修剪/清除 `~/.doppel/checkpoints/`（`/rollback` 使用的影子存储）。不带参数运行可查看状态概览。 |
+| `doppel import` | 从 zip 文件恢复 Doppel 备份。 |
+| `doppel logs` | 查看、跟踪和过滤 agent/gateway/错误日志文件。 |
+| `doppel config` | 显示、编辑、迁移和查询配置文件。 |
+| `doppel pairing` | 审批或撤销消息配对码。 |
+| `doppel skills` | 浏览、安装、发布、审计和配置 skill。 |
+| `doppel bundles` | 将多个 skill 归组到单个 `/<name>` 斜杠命令下。参见 [Skill Bundles](../user-guide/features/skills.md#skill-bundles)。 |
+| `doppel curator` | 后台 skill 维护——状态、运行、暂停、固定。参见 [Curator](../user-guide/features/curator.md)。 |
+| `doppel memory` | 配置外部 memory provider。当对应 provider 激活时，特定于 plugin 的子命令（如 `doppel honcho`）会自动注册。 |
+| `doppel acp` | 将 Doppel 作为 ACP 服务器运行，用于编辑器集成。 |
+| `doppel mcp` | 管理 MCP 服务器配置，并将 Doppel 作为 MCP 服务器运行。 |
+| `doppel plugins` | 管理 Doppel plugin（安装、启用、禁用、删除）。 |
+| `doppel portal` | Nous Portal 状态、订阅链接和 Tool Gateway 路由。参见 [Tool Gateway](../user-guide/features/tool-gateway.md)。 |
+| `doppel tools` | 按平台配置已启用的工具。 |
+| `doppel computer-use` | 安装或检查 cua-driver 后端（macOS Computer Use）。 |
+| `doppel sessions` | 浏览、导出、修剪、重命名和删除会话。 |
+| `doppel insights` | 显示 token/费用/活动分析。 |
+| `doppel claw` | OpenClaw 迁移辅助工具。 |
+| `doppel dashboard` | 启动用于管理配置、API 密钥和会话的 Web 控制台。 |
+| `doppel profile` | 管理 profile——多个隔离的 Doppel 实例。 |
+| `doppel completion` | 打印 shell 补全脚本（bash/zsh/fish）。 |
+| `doppel version` | 显示版本信息。 |
+| `doppel update` | 拉取最新代码并重新安装依赖（git 安装），或检查 PyPI 并执行 `pip install --upgrade`（pip 安装）。`--check` 仅预览；`--backup` 会在拉取前为 agent home 创建快照（首选 `DOPPEL_HOME`，同时仍兼容旧版 `HERMES_HOME`）。 |
+| `doppel uninstall` | 从系统中删除 Doppel 安装。 |
 
-## `hermes chat`
+## `doppel chat`
 
 ```bash
-hermes chat [options]
+doppel chat [options]
 ```
 
 常用选项：
@@ -122,16 +126,16 @@ hermes chat --worktree -q "Review this repo and open a PR"
 hermes chat --ignore-user-config --ignore-rules -q "Repro without my personal setup"
 ```
 
-### `hermes -z <prompt>` — 脚本化单次调用
+### `doppel -z <prompt>` — 脚本化单次调用
 
-对于程序化调用方（shell 脚本、CI、cron、通过管道传入 prompt 的父进程），`hermes -z` 是最纯粹的单次入口：**单个 prompt 输入，最终响应文本输出，stdout 和 stderr 上不输出任何其他内容。** 无横幅、无 spinner、无工具预览、无 `Session:` 行——只有 agent 的最终回复纯文本。
+对于程序化调用方（shell 脚本、CI、cron、通过管道传入 prompt 的父进程），`doppel -z` 是最纯粹的单次入口：**单个 prompt 输入，最终响应文本输出，stdout 和 stderr 上不输出任何其他内容。** 无横幅、无 spinner、无工具预览、无 `Session:` 行——只有 agent 的最终回复纯文本。
 
 ```bash
-hermes -z "What's the capital of France?"
+doppel -z "What's the capital of France?"
 # → Paris.
 
 # 父脚本可以干净地捕获响应：
-answer=$(hermes -z "summarize this" < /path/to/file.txt)
+answer=$(doppel -z "summarize this" < /path/to/file.txt)
 ```
 
 单次运行覆盖（不修改 `~/.hermes/config.yaml`）：
@@ -142,19 +146,19 @@ answer=$(hermes -z "summarize this" < /path/to/file.txt)
 | `--provider <provider>` | _(无)_ | 覆盖本次运行的 provider |
 
 ```bash
-hermes -z "…" --provider openrouter --model openai/gpt-5.5
+doppel -z "…" --provider openrouter --model openai/gpt-5.5
 # 或：
-HERMES_INFERENCE_MODEL=anthropic/claude-sonnet-4.6 hermes -z "…"
+HERMES_INFERENCE_MODEL=anthropic/claude-sonnet-4.6 doppel -z "…"
 ```
 
-相同的 agent、相同的工具、相同的 skill——只是剥离了所有交互式/装饰性层。如果你还需要在记录中包含工具输出，请改用 `hermes chat -q`；`-z` 专门用于"我只需要最终答案"的场景。
+相同的 agent、相同的工具、相同的 skill——只是剥离了所有交互式/装饰性层。如果你还需要在记录中包含工具输出，请改用 `doppel chat -q`；`-z` 专门用于“我只需要最终答案”的场景。
 
-## `hermes model`
+## `doppel model`
 
-交互式 provider + 模型选择器。**这是添加新 provider、设置 API 密钥和运行 OAuth 流程的命令。** 从终端运行——不要在活跃的 Hermes 聊天会话内部运行。
+交互式 provider + 模型选择器。**这是添加新 provider、设置 API 密钥和运行 OAuth 流程的命令。** 从终端运行——不要在活跃的 Doppel 聊天会话内部运行。
 
 ```bash
-hermes model
+doppel model
 ```
 
 在以下情况使用此命令：
@@ -165,12 +169,12 @@ hermes model
 - 配置自定义/自托管端点
 - 将新默认值保存到 config
 
-:::warning hermes model 与 /model——了解区别
-**`hermes model`**（从终端运行，在任何 Hermes 会话外部）是**完整的 provider 设置向导**。它可以添加新 provider、运行 OAuth 流程、提示输入 API 密钥并配置端点。
+:::warning doppel model 与 /model——了解区别
+**`doppel model`**（从终端运行，在任何 Doppel 会话外部）是**完整的 provider 设置向导**。它可以添加新 provider、运行 OAuth 流程、提示输入 API 密钥并配置端点。
 
-**`/model`**（在活跃的 Hermes 聊天会话中输入）只能**在已设置好的 provider 和模型之间切换**。它无法添加新 provider、运行 OAuth 或提示输入 API 密钥。
+**`/model`**（在活跃的 Doppel 聊天会话中输入）只能**在已设置好的 provider 和模型之间切换**。它无法添加新 provider、运行 OAuth 或提示输入 API 密钥。
 
-**如果需要添加新 provider：** 先退出 Hermes 会话（`Ctrl+C` 或 `/quit`），然后从终端提示符运行 `hermes model`。
+**如果需要添加新 provider：** 先退出 Doppel 会话（`Ctrl+C` 或 `/quit`），然后从终端提示符运行 `doppel model`。
 :::
 
 ### `/model` 斜杠命令（会话中途）
@@ -194,7 +198,7 @@ hermes model
 ```
 
 :::info 如果我只看到 OpenRouter 模型怎么办？
-如果你只配置了 OpenRouter，`/model` 将只显示 OpenRouter 模型。要添加其他 provider（Anthropic、DeepSeek、Copilot 等），请退出会话并从终端运行 `hermes model`。
+如果你只配置了 OpenRouter，`/model` 将只显示 OpenRouter 模型。要添加其他 provider（Anthropic、DeepSeek、Copilot 等），请退出会话并从终端运行 `doppel model`。
 :::
 
 Provider 和 base URL 的更改会自动持久化到 `config.yaml`。从自定义端点切换走时，过时的 base URL 会被清除，以防止其泄漏到其他 provider。
@@ -490,13 +494,13 @@ hermes doctor [--fix]
 |--------|-------------|
 | `--fix` | 尽可能尝试自动修复。 |
 
-## `hermes dump`
+## `doppel dump`
 
 ```bash
-hermes dump [--show-keys]
+doppel dump [--show-keys]
 ```
 
-输出整个 Hermes 设置的紧凑纯文本摘要。专为复制粘贴到 Discord、GitHub issue 或 Telegram 寻求支持而设计——无 ANSI 颜色、无特殊格式，只有数据。
+输出整个 Doppel 设置的紧凑纯文本摘要。专为复制粘贴到 Discord、GitHub issue 或 Telegram 寻求支持而设计——无 ANSI 颜色、无特殊格式，只有数据。
 
 | 选项 | 说明 |
 |--------|-------------|
@@ -506,9 +510,9 @@ hermes dump [--show-keys]
 
 | 部分 | 详情 |
 |---------|---------|
-| **Header** | Hermes 版本、发布日期、git commit hash |
+| **Header** | Doppel 版本、发布日期、git commit hash |
 | **Environment** | 操作系统、Python 版本、OpenAI SDK 版本 |
-| **Identity** | 活跃 profile 名称、HERMES_HOME 路径 |
+| **Identity** | 活跃 profile 名称、DOPPEL_HOME 路径 |
 | **Model** | 已配置的默认模型和 provider |
 | **Terminal** | 后端类型（local、docker、ssh 等） |
 | **API keys** | 所有 22 个 provider/工具 API 密钥的存在性检查 |
@@ -520,13 +524,13 @@ hermes dump [--show-keys]
 ### 示例输出
 
 ```
---- hermes dump ---
+--- doppel dump ---
 version:          0.8.0 (2026.4.8) [af4abd2f]
 os:               Linux 6.14.0-37-generic x86_64
 python:           3.11.14
 openai_sdk:       2.24.0
 profile:          default
-hermes_home:      ~/.hermes
+hermes_home:      ~/.doppel
 model:            anthropic/claude-opus-4.6
 provider:         openrouter
 terminal:         local
@@ -563,13 +567,13 @@ config_overrides:
 - 出现问题时快速进行健全性检查
 
 :::tip
-`hermes dump` 专为分享而设计。交互式诊断请使用 `hermes doctor`。可视化概览请使用 `hermes status`。
+`doppel dump` 专为分享而设计。交互式诊断请使用 `doppel doctor`。可视化概览请使用 `doppel status`。
 :::
 
-## `hermes debug`
+## `doppel debug`
 
 ```bash
-hermes debug share [options]
+doppel debug share [options]
 ```
 
 将调试报告（系统信息 + 近期日志）上传到粘贴服务并获取可分享的 URL。适用于快速支持请求——包含帮助者诊断问题所需的一切信息。
@@ -580,26 +584,26 @@ hermes debug share [options]
 | `--expire <days>` | 粘贴过期天数（默认：7）。 |
 | `--local` | 在本地打印报告而非上传。 |
 
-报告包含系统信息（操作系统、Python 版本、Hermes 版本）、近期 agent 和 gateway 日志（每文件 512 KB 限制）以及脱敏的 API 密钥状态。密钥始终脱敏——不会上传任何密钥。
+报告包含系统信息（操作系统、Python 版本、Doppel 版本）、近期 agent 和 gateway 日志（每文件 512 KB 限制）以及脱敏的 API 密钥状态。密钥始终脱敏——不会上传任何密钥。
 
 依次尝试的粘贴服务：paste.rs、dpaste.com。
 
 ### 示例
 
 ```bash
-hermes debug share              # 上传调试报告，打印 URL
-hermes debug share --lines 500  # 包含更多日志行
-hermes debug share --expire 30  # 粘贴保留 30 天
-hermes debug share --local      # 在终端打印报告（不上传）
+doppel debug share              # 上传调试报告，打印 URL
+doppel debug share --lines 500  # 包含更多日志行
+doppel debug share --expire 30  # 粘贴保留 30 天
+doppel debug share --local      # 在终端打印报告（不上传）
 ```
 
-## `hermes backup`
+## `doppel backup`
 
 ```bash
-hermes backup [options]
+doppel backup [options]
 ```
 
-创建 Hermes 配置、skill、会话和数据的 zip 归档。备份不包含 hermes-agent 代码库本身。
+创建 Doppel 配置、skill、会话和数据的 zip 归档。备份不包含受管的 `hermes-agent` 代码检出本身。
 
 | 选项 | 说明 |
 |--------|-------------|
@@ -607,21 +611,23 @@ hermes backup [options]
 | `-q`, `--quick` | 快速快照：仅包含关键状态文件（config.yaml、state.db、.env、auth、cron 任务）。比完整备份快得多。 |
 | `-l`, `--label <name>` | 快照标签（仅与 `--quick` 配合使用）。 |
 
-备份使用 SQLite 的 `backup()` API 进行安全复制，因此即使 Hermes 正在运行也能正确工作（WAL 模式安全）。
+备份使用 SQLite 的 `backup()` API 进行安全复制，因此即使 Doppel 正在运行也能正确工作（WAL 模式安全）。
+
+在这一阶段，归档文件名仍故意保留 `hermes-backup-*`，以兼容现有工具链。
 
 **zip 中排除的内容：**
 
 - `*.db-wal`、`*.db-shm`、`*.db-journal` — SQLite 的 WAL/共享内存/日志附属文件。`*.db` 文件已通过 `sqlite3.backup()` 获得一致快照；将活跃附属文件一并打包会导致恢复时看到半提交状态。
 - `checkpoints/` — 每会话轨迹缓存。以 hash 为键，每次会话重新生成；无论如何都无法干净地移植到其他安装。
-- `hermes-agent` 代码本身（这是用户数据备份，不是仓库快照）。
+- 受管的 `hermes-agent` 代码检出本身（这是用户数据备份，不是仓库快照）。
 
 ### 示例
 
 ```bash
-hermes backup                           # 完整备份到 ~/hermes-backup-*.zip
-hermes backup -o /tmp/hermes.zip        # 完整备份到指定路径
-hermes backup --quick                   # 仅状态快速快照
-hermes backup --quick --label "pre-upgrade"  # 带标签的快速快照
+doppel backup                           # 完整备份到 ~/hermes-backup-*.zip
+doppel backup -o /tmp/doppel.zip        # 完整备份到指定路径
+doppel backup --quick                   # 仅状态快速快照
+doppel backup --quick --label "pre-upgrade"  # 带标签的快速快照
 ```
 
 ## `hermes checkpoints`
@@ -1225,35 +1231,39 @@ hermes completion zsh >> ~/.zshrc
 hermes completion fish > ~/.config/fish/completions/hermes.fish
 ```
 
-## `hermes update`
+## `doppel update`
 
 ```bash
-hermes update [--check] [--backup] [--restart-gateway]
+doppel update [--gateway] [--check] [--no-backup] [--backup] [--yes]
 ```
 
-拉取最新的 `hermes-agent` 代码并在 venv 中重新安装依赖，然后重新运行安装后 hook（MCP 服务器、skill 同步、补全安装）。可在运行中的安装上安全执行。
+拉取最新的受管 Doppel 代码检出并在 venv 中重新安装依赖，然后重新运行安装后 hook（MCP 服务器、skill 同步、补全安装）。可在运行中的安装上安全执行。
 
-**pip 安装：** `hermes update` 自动检测基于 pip 的安装——查询 PyPI 获取最新版本并运行 `pip install --upgrade hermes-agent`，而非 `git pull`。PyPI 发布跟踪标记版本（主要/次要版本），而非 `main` 上的每个 commit。使用 `--check` 查看是否有更新的 PyPI 版本可用，而不安装。
+**pip 安装：** `doppel update` 会自动检测基于 pip 的安装——查询 PyPI 获取最新版本并运行 `pip install --upgrade hermes-agent`，而非 `git pull`。PyPI 发布跟踪标记版本（主要/次要版本），而非 `main` 上的每个 commit。在这个阶段，包名仍保持为 `hermes-agent`，即使命令行已经是 `doppel`。使用 `--check` 可在不安装的情况下查看是否有更新的 PyPI 版本。
 
 | 选项 | 说明 |
 |--------|-------------|
-| `--check` | 并排打印当前 commit 和最新 `origin/main` commit，同步时退出码为 0，落后时为 1。不拉取、不安装、不重启任何内容。 |
-| `--backup` | 在拉取前创建 `HERMES_HOME` 的带标签预更新快照（config、auth、会话、skill、配对数据）。默认**关闭**——之前的始终备份行为在大型主目录上每次更新会增加数分钟。通过 `config.yaml` 中的 `update.backup: true` 永久开启。 |
-| `--restart-gateway` | 成功更新后重启正在运行的 gateway 服务。如果安装了多个 profile，隐含 `--all` 语义。 |
+| `--gateway` | 由消息 `/update` 命令使用的内部模式。使用基于文件的 IPC 处理提示和进度流，而不是从终端 stdin 读取。不是 gateway 重启开关。 |
+| `--check` | 仅检查是否有更新，不拉取、不安装依赖，也不重启任何内容。 |
+| `--no-backup` | 即使 `config.yaml` 中启用了 `updates.pre_update_backup`，本次也跳过预更新备份。 |
+| `--backup` | 在拉取前为活跃的 agent home 创建带标签的预更新快照（首选 `DOPPEL_HOME`，同时仍兼容旧版 `HERMES_HOME`）。包含 config、auth、会话、skill 和配对数据。默认**关闭**——之前始终备份的行为会让大型主目录上的每次更新都增加数分钟。可通过 `config.yaml` 中的 `updates.pre_update_backup: true` 永久开启。 |
+| `--yes`, `-y` | 对 config 迁移和 stash 恢复等交互提示默认回答“是”。会跳过 API key 输入；需要时请单独运行 `doppel config migrate`。 |
 
 附加行为：
 
-- **配对数据快照。** 即使 `--backup` 关闭，`hermes update` 也会在 `git pull` 前对 `~/.hermes/pairing/` 和 Feishu 评论规则进行轻量快照。如果拉取覆盖了你正在编辑的文件，可以用 `hermes backup restore --state pre-update` 回滚。
-- **旧版 `hermes.service` 警告。** 如果 Hermes 检测到预重命名的 `hermes.service` systemd 单元（而非当前的 `hermes-gateway.service`），会打印一次性迁移提示，帮助你避免循环重启问题。
+- **Gateway 重启。** 成功更新后，Doppel 会自动尝试重启所有正在运行的 gateway profile，以便它们加载新代码。如果只想重启 gateway 而不执行更新，请使用 `doppel gateway restart`。
+- **配对数据快照。** 即使 `--backup` 关闭，`doppel update` 也会在 `git pull` 前对 `~/.doppel/pairing/` 和 Feishu 评论规则进行轻量快照。如果拉取覆盖了你正在编辑的文件，可以用 `doppel backup restore --state pre-update` 回滚。
+- **旧版 `hermes.service` 警告。** 如果 Doppel 检测到预重命名的 `hermes.service` systemd 单元（而非当前的 `hermes-gateway.service`），会打印一次性迁移提示，帮助你避免循环重启问题。
 - **退出码。** 成功时为 `0`，拉取/安装/安装后错误时为 `1`，阻止 `git pull` 的意外工作树变更时为 `2`。
 
 ## 维护命令
 
 | 命令 | 说明 |
 |---------|-------------|
-| `hermes version` | 打印版本信息。 |
-| `hermes update` | 拉取最新变更并重新安装依赖。 |
-| `hermes uninstall [--full] [--yes]` | 删除 Hermes，可选择删除所有 config/数据。 |
+| `doppel version` | 打印版本信息。 |
+| `doppel update` | 拉取最新变更并重新安装依赖。 |
+| `doppel postinstall` | 内部 bootstrap。会在 `pip install hermes-agent` 后（或基于 pip 的安装执行 `doppel update` 后）运行一次，用于安装 pip 无法提供的非 Python 依赖——Node.js 运行时、headless 浏览器、ripgrep、ffmpeg——然后在 profile 尚未完成配置时触发 `doppel setup`。可安全重复运行。 |
+| `doppel uninstall [--full] [--yes]` | 删除 Doppel，可选择删除所有 config/数据。 |
 
 ## 另请参阅
 

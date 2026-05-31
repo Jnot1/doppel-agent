@@ -1083,6 +1083,95 @@ def test_configuration_skill_and_compression_cluster_prefer_doppel_and_keep_runt
         assert literal in zh_cluster
 
 
+def test_configuration_context_engine_and_auxiliary_cluster_prefer_doppel_and_keep_runtime_terms():
+    en = EN_CONFIGURATION_DOC.read_text(encoding="utf-8")
+    zh = ZH_CONFIGURATION_DOC.read_text(encoding="utf-8")
+
+    en_cluster = _extract_configuration_middle_cluster(
+        en, "## Context Engine", "## Reasoning Effort"
+    )
+    zh_cluster = _extract_configuration_middle_cluster(
+        zh, "## 上下文引擎", "## 推理努力程度"
+    )
+
+    assert "doppel plugins" in en_cluster
+    assert "doppel plugins" in zh_cluster
+    assert "Doppel Agent retries a provider API call" in en_cluster
+    assert "Doppel Agent 在回退 provider 切换启动" in zh_cluster
+    assert "Doppel Agent has separate timeout layers" in en_cluster
+    assert "Doppel Agent 对流式传输有单独的超时层" in zh_cluster
+    assert "Doppel Agent turns on cross-session prompt caching automatically" in en_cluster
+    assert "Doppel Agent 自动开启跨会话 prompt 缓存" in zh_cluster
+    assert "across Doppel sessions" in en_cluster
+    assert "跨 Doppel 会话" in zh_cluster
+    assert 'Doppel Agent uses "auxiliary" models' in en_cluster
+    assert 'Doppel Agent 使用"辅助"模型' in zh_cluster
+    assert "doppel model" in en_cluster
+    assert "doppel model" in zh_cluster
+    assert "doppel auth" in en_cluster
+    assert "doppel auth" in zh_cluster
+    assert "doppel config" in en_cluster
+    assert "doppel config" in zh_cluster
+    assert "doppel kanban specify <id>" in en_cluster
+    assert "doppel kanban specify <id>" in zh_cluster
+    assert "doppel kanban decompose <id>" in en_cluster
+    assert "doppel kanban decompose <id>" in zh_cluster
+    assert "### Auxiliary config reference {#auxiliary-config-reference}" in en_cluster
+    assert "### 辅助配置参考 {#auxiliary-config-reference}" in zh_cluster
+    assert "OpenRouter → Nous → custom → Codex → API-key providers" in en_cluster
+    assert "OpenRouter → Nous → custom → Codex → API 密钥 providers" in zh_cluster
+    assert "Or via environment variable (in `~/.doppel/.env`; legacy `~/.hermes/.env` also works):" in en_cluster
+    assert "或通过环境变量（在 `~/.doppel/.env` 中；旧版 `~/.hermes/.env` 也可用）：" in zh_cluster
+    assert "# In ~/.doppel/.env (legacy ~/.hermes/.env also works):" in en_cluster
+    assert "# 在 ~/.doppel/.env 中（旧版 ~/.hermes/.env 也可用）：" in zh_cluster
+    assert "AUXILIARY_APPROVAL_PROVIDER" in en_cluster
+    assert "AUXILIARY_APPROVAL_PROVIDER" in zh_cluster
+    assert "AUXILIARY_APPROVAL_MODEL" in en_cluster
+    assert "AUXILIARY_APPROVAL_MODEL" in zh_cluster
+    assert "AUXILIARY_APPROVAL_BASE_URL" in en_cluster
+    assert "AUXILIARY_APPROVAL_BASE_URL" in zh_cluster
+    assert "AUXILIARY_APPROVAL_API_KEY" in en_cluster
+    assert "AUXILIARY_APPROVAL_API_KEY" in zh_cluster
+    assert "title_generation:" in en_cluster
+    assert "title_generation:" in zh_cluster
+    assert "kanban_decomposer:" in en_cluster
+    assert "kanban_decomposer:" in zh_cluster
+    assert "profile_describer:" in en_cluster
+    assert "profile_describer:" in zh_cluster
+    assert "curator:" in en_cluster
+    assert "curator:" in zh_cluster
+
+    assert "hermes plugins" not in en_cluster
+    assert "hermes plugins" not in zh_cluster
+    assert "hermes auth" not in en_cluster
+    assert "hermes auth" not in zh_cluster
+    assert "hermes config" not in en_cluster
+    assert "hermes config" not in zh_cluster
+    assert "hermes kanban specify <id>" not in en_cluster
+    assert "hermes kanban specify <id>" not in zh_cluster
+    assert "hermes kanban decompose <id>" not in en_cluster
+    assert "hermes kanban decompose <id>" not in zh_cluster
+    assert "Full auxiliary config reference" not in en_cluster
+    assert "完整辅助配置参考" not in zh_cluster
+
+    for literal in (
+        "HERMES_STREAM_READ_TIMEOUT",
+        "HERMES_STREAM_STALE_TIMEOUT",
+        "HERMES_API_CALL_STALE_TIMEOUT",
+        "HERMES_API_TIMEOUT",
+        "cache_control",
+        'ttl: "1h"',
+        "OPENROUTER_API_KEY",
+        "OPENAI_BASE_URL",
+        "OPENAI_API_KEY",
+        "fallback_providers:",
+        "fallback_model:",
+        "gpt-5.3-codex",
+    ):
+        assert literal in en_cluster
+        assert literal in zh_cluster
+
+
 def test_mcp_config_reference_docs_prefer_doppel_branding_and_keep_runtime_literals():
     en = EN_MCP_CONFIG_REFERENCE_DOC.read_text(encoding="utf-8")
     zh = ZH_MCP_CONFIG_REFERENCE_DOC.read_text(encoding="utf-8")

@@ -49,6 +49,16 @@ ZH_INTEGRATIONS_DOC = (
     / "integrations"
     / "index.md"
 )
+EN_DEV_GUIDE_DIR = REPO_ROOT / "website" / "docs" / "developer-guide"
+ZH_DEV_GUIDE_DIR = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "developer-guide"
+)
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -151,3 +161,66 @@ def test_built_in_and_integration_plugin_docs_prefer_doppel_surfaces():
     assert "Doppel 插件的分步指南" in zh_integrations
     assert "扩展 Hermes" not in zh_integrations
     assert "Hermes 插件的分步指南" not in zh_integrations
+
+
+def test_provider_plugin_developer_guides_prefer_doppel_surfaces():
+    en_context = (EN_DEV_GUIDE_DIR / "context-engine-plugin.md").read_text(encoding="utf-8")
+    en_image = (EN_DEV_GUIDE_DIR / "image-gen-provider-plugin.md").read_text(encoding="utf-8")
+    en_memory = (EN_DEV_GUIDE_DIR / "memory-provider-plugin.md").read_text(encoding="utf-8")
+    en_model = (EN_DEV_GUIDE_DIR / "model-provider-plugin.md").read_text(encoding="utf-8")
+    en_video = (EN_DEV_GUIDE_DIR / "video-gen-provider-plugin.md").read_text(encoding="utf-8")
+    en_web = (EN_DEV_GUIDE_DIR / "web-search-provider-plugin.md").read_text(encoding="utf-8")
+
+    zh_context = (ZH_DEV_GUIDE_DIR / "context-engine-plugin.md").read_text(encoding="utf-8")
+    zh_image = (ZH_DEV_GUIDE_DIR / "image-gen-provider-plugin.md").read_text(encoding="utf-8")
+    zh_memory = (ZH_DEV_GUIDE_DIR / "memory-provider-plugin.md").read_text(encoding="utf-8")
+    zh_model = (ZH_DEV_GUIDE_DIR / "model-provider-plugin.md").read_text(encoding="utf-8")
+    zh_video = (ZH_DEV_GUIDE_DIR / "video-gen-provider-plugin.md").read_text(encoding="utf-8")
+    zh_web = (ZH_DEV_GUIDE_DIR / "web-search-provider-plugin.md").read_text(encoding="utf-8")
+
+    assert "doppel plugins" in en_context
+    assert "hermes plugins" not in en_context
+    assert "doppel tools" in en_image
+    assert "Build a Doppel Plugin" in en_image
+    assert 'doppel -z "Generate an image of a corgi in a spacesuit"' in en_image
+    assert "How to build an image-generation backend plugin for Hermes Agent" not in en_image
+    assert "hermes plugins enable my-backend" not in en_image
+    assert "doppel memory setup" in en_memory
+    assert "Usage: doppel my-provider <status|config>" in en_memory
+    assert "How to build a memory provider plugin for Hermes Agent" not in en_memory
+    assert "hermes my-provider status" not in en_memory
+    assert "doppel doctor" in en_model
+    assert "Building a Doppel Plugin" in en_model
+    assert 'doppel -z "hello" --provider my-provider -m some-model' in en_model
+    assert "How to build a model provider (inference backend) plugin for Hermes Agent" not in en_model
+    assert "hermes doctor" not in en_model
+    assert "doppel tools" in en_video
+    assert "How to build a video-generation backend plugin for Hermes Agent" not in en_video
+    assert "hermes tools" not in en_video
+    assert "doppel tools" in en_web
+    assert "Build a Doppel Plugin" in en_web
+    assert "How to build a web-search/extract/crawl backend plugin for Hermes Agent" not in en_web
+    assert "hermes plugins enable <name>" not in en_web
+
+    assert "doppel plugins" in zh_context
+    assert "hermes plugins" not in zh_context
+    assert "构建 Doppel 插件" in zh_image
+    assert "doppel tools" in zh_image
+    assert "如何为 Hermes Agent 构建图像生成后端插件" not in zh_image
+    assert "hermes plugins enable my-backend" not in zh_image
+    assert "doppel memory setup" in zh_memory
+    assert "Usage: doppel my-provider <status|config>" in zh_memory
+    assert "如何为 Hermes Agent 构建 memory provider 插件" not in zh_memory
+    assert "hermes my-provider status" not in zh_memory
+    assert "构建 Doppel 插件" in zh_model
+    assert "doppel doctor" in zh_model
+    assert 'doppel -z "hello" --provider my-provider -m some-model' in zh_model
+    assert "如何为 Hermes Agent 构建模型提供商（推理后端）插件" not in zh_model
+    assert "hermes doctor" not in zh_model
+    assert "doppel tools" in zh_video
+    assert "如何为 Hermes Agent 构建视频生成后端插件" not in zh_video
+    assert "hermes tools" not in zh_video
+    assert "构建 Doppel 插件" in zh_web
+    assert "doppel tools" in zh_web
+    assert "如何为 Hermes Agent 构建网页搜索/提取/爬取后端插件" not in zh_web
+    assert "hermes plugins enable <name>" not in zh_web

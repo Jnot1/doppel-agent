@@ -141,6 +141,7 @@ EN_SKINS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "ski
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 EN_LOCAL_OLLAMA_GUIDE = REPO_ROOT / "website" / "docs" / "guides" / "local-ollama-setup.md"
+EN_CONFIGURATION_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "configuration.md"
 EN_MICROSOFT_GRAPH_APP_REG_DOC = (
     REPO_ROOT
     / "website"
@@ -561,6 +562,16 @@ ZH_LOCAL_OLLAMA_GUIDE = (
     / "guides"
     / "local-ollama-setup.md"
 )
+ZH_CONFIGURATION_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "configuration.md"
+)
 ZH_MICROSOFT_GRAPH_APP_REG_DOC = (
     REPO_ROOT
     / "website"
@@ -581,6 +592,21 @@ ZH_MCP_CONFIG_REFERENCE_DOC = (
     / "reference"
     / "mcp-config-reference.md"
 )
+
+
+def _extract_configuration_top_cluster(text: str, heading: str) -> str:
+    start = text.index(heading)
+    end_markers = (
+        "### SSH Backend",
+        "### SSH 后端",
+        "### Modal 后端",
+        "### Modal Backend",
+    )
+    for marker in end_markers:
+        end = text.find(marker, start)
+        if end != -1:
+            return text[start:end]
+    return text[start:]
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -786,6 +812,58 @@ def test_microsoft_graph_app_registration_guides_prefer_doppel_branding_and_keep
     ):
         assert fixed in en
         assert fixed in zh
+
+
+def test_configuration_top_cluster_prefer_doppel_customer_facing_and_keep_runtime_literals():
+    en = EN_CONFIGURATION_DOC.read_text(encoding="utf-8")
+    zh = ZH_CONFIGURATION_DOC.read_text(encoding="utf-8")
+
+    en_cluster = _extract_configuration_top_cluster(en, "# Configuration")
+    zh_cluster = _extract_configuration_top_cluster(zh, "# 配置")
+
+    assert "doppel setup --portal" in en_cluster
+    assert "doppel setup --portal" in zh_cluster
+    assert "doppel config" in en_cluster
+    assert "doppel config" in zh_cluster
+    assert "doppel config set" in en_cluster
+    assert "doppel config set" in zh_cluster
+    assert "hermes config set" not in en_cluster
+    assert "hermes config set" not in zh_cluster
+    assert "`~/.doppel/config.yaml`" in en_cluster
+    assert "`~/.doppel/config.yaml`" in zh_cluster
+    assert "~/.hermes/" in en_cluster
+    assert "~/.hermes/" in zh_cluster
+
+    assert "`doppel chat --model anthropic/claude-sonnet-4`" in en_cluster
+    assert "`doppel chat --model anthropic/claude-sonnet-4`" in zh_cluster
+    assert "hermes chat --model anthropic/claude-sonnet-4" not in en_cluster
+    assert "hermes chat --model anthropic/claude-sonnet-4" not in zh_cluster
+
+    assert "supports six terminal backends" in en_cluster
+    assert "Doppel" in en_cluster
+    assert "六种终端后端" in zh_cluster
+    assert "Doppel" in zh_cluster
+    assert "Hermes supports six terminal backends." not in en_cluster
+    assert "Hermes 支持六种终端后端" not in zh_cluster
+    assert "doppel tools" in en_cluster
+    assert "doppel tools" in zh_cluster
+
+    assert "providers.<id>.request_timeout_seconds" in en_cluster
+    assert "providers.<id>.request_timeout_seconds" in zh_cluster
+    assert "HERMES_API_TIMEOUT" in en_cluster
+    assert "HERMES_API_TIMEOUT" in zh_cluster
+    assert "HERMES_API_CALL_STALE_TIMEOUT" in en_cluster
+    assert "HERMES_API_CALL_STALE_TIMEOUT" in zh_cluster
+    assert "HERMES_DOCKER_BINARY" in en_cluster
+    assert "HERMES_DOCKER_BINARY" in zh_cluster
+    assert "~/.hermes/.env" in en_cluster
+    assert "~/.hermes/.env" in zh_cluster
+    assert "~/.hermes/config.yaml" in en_cluster
+    assert "~/.hermes/config.yaml" in zh_cluster
+    assert "~/.doppel/.env" in en_cluster
+    assert "~/.doppel/.env" in zh_cluster
+    assert "~/.doppel/" in en_cluster
+    assert "~/.doppel/" in zh_cluster
 
 
 def test_mcp_config_reference_docs_prefer_doppel_branding_and_keep_runtime_literals():

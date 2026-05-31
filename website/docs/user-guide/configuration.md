@@ -50,9 +50,9 @@ The `doppel config set` command automatically routes values to the right file �
 
 Settings are resolved in this order (highest priority first):
 
-1. **CLI arguments** — e.g., `hermes chat --model anthropic/claude-sonnet-4` (per-invocation override)
-2. **`~/.doppel/config.yaml`** — the primary config file for all non-secret settings
-3. **`~/.doppel/.env`** — fallback for env vars; **required** for secrets (API keys, tokens, passwords)
+1. **CLI arguments** — e.g., `doppel chat --model anthropic/claude-sonnet-4` (per-invocation override)
+2. **`~/.doppel/config.yaml`** — the primary config file for all non-secret settings on fresh installs; legacy `~/.hermes/config.yaml` still works
+3. **`~/.doppel/.env`** — fallback for env vars on fresh installs; legacy `~/.hermes/.env` still works and remains **required** for secrets (API keys, tokens, passwords)
 4. **Built-in defaults** — hardcoded safe defaults when nothing else is set
 
 :::info Rule of Thumb
@@ -87,7 +87,7 @@ Leaving these unset keeps the legacy defaults (`HERMES_API_TIMEOUT=1800`s, `HERM
 
 ## Terminal Backend Configuration
 
-Hermes supports six terminal backends. Each determines where the agent's shell commands actually execute — your local machine, a Docker container, a remote server via SSH, a Modal cloud sandbox (direct or via the Nous-managed gateway), a Daytona workspace, or a Singularity/Apptainer container.
+Doppel Agent supports six terminal backends. Each determines where the agent's shell commands actually execute — your local machine, a Docker container, a remote server via SSH, a Modal cloud sandbox (direct or via the Nous-managed gateway), a Daytona workspace, or a Singularity/Apptainer container.
 
 ```yaml
 terminal:
@@ -100,7 +100,7 @@ terminal:
   daytona_image: "nikolaik/python-nodejs:python3.11-nodejs20"               # Container image for Daytona backend
 ```
 
-For cloud sandboxes such as Modal and Daytona, `container_persistent: true` means Hermes will try to preserve filesystem state across sandbox recreation. It does not promise that the same live sandbox, PID space, or background processes will still be running later.
+For cloud sandboxes such as Modal and Daytona, `container_persistent: true` means Doppel Agent will try to preserve filesystem state across sandbox recreation. It does not promise that the same live sandbox, PID space, or background processes will still be running later.
 
 ### Backend Overview
 
@@ -123,14 +123,14 @@ terminal:
 ```
 
 :::warning
-The agent has the same filesystem access as your user account. Use `hermes tools` to disable tools you don't want, or switch to Docker for sandboxing.
+The agent has the same filesystem access as your user account. Use `doppel tools` to disable tools you don't want, or switch to Docker for sandboxing.
 :::
 
 ### Docker Backend
 
 Runs commands inside a Docker container with security hardening (all capabilities dropped, no privilege escalation, PID limits).
 
-**Single persistent container, shared across Hermes processes.** Hermes starts ONE long-lived container on first use and routes every terminal, file, and `execute_code` call through `docker exec` into that same container — across sessions, `/new`, `/reset`, and `delegate_task` subagents. Working-directory changes, installed packages, files in `/workspace`, and **background processes** all carry over from one tool call to the next, and from one Hermes process to the next. When you close a TUI session, run `/quit`, or start a new `hermes` invocation, the container keeps running and the next Hermes process reuses it via a labeled lookup. See **Container lifecycle** below for the exact teardown rules.
+**Single persistent container, shared across Doppel Agent processes.** Doppel Agent starts ONE long-lived container on first use and routes every terminal, file, and `execute_code` call through `docker exec` into that same container — across sessions, `/new`, `/reset`, and `delegate_task` subagents. Working-directory changes, installed packages, files in `/workspace`, and **background processes** all carry over from one tool call to the next, and from one Doppel Agent process to the next. When you close a TUI session, run `/quit`, or start a new `doppel` invocation, the container keeps running and the next Doppel Agent process reuses it via a labeled lookup. See **Container lifecycle** below for the exact teardown rules.
 
 ```yaml
 terminal:
@@ -158,7 +158,7 @@ terminal:
 
   # Cross-process container reuse (defaults match the "one long-lived
   # container shared across sessions" contract — see Container lifecycle).
-  docker_persist_across_processes: true   # Reuse container across Hermes restarts
+  docker_persist_across_processes: true   # Reuse container across Doppel restarts
   docker_orphan_reaper: true              # Sweep abandoned Exited containers at startup
 
   # Cross-backend lifecycle settings (apply to docker as well)
@@ -168,21 +168,21 @@ terminal:
 
 **`docker_env`** vs **`docker_forward_env`**: the former injects literal `KEY=value` pairs you specify in the config (the values live in your `config.yaml` or are passed as a JSON dict via `TERMINAL_DOCKER_ENV='{"DEBUG":"1"}'`). The latter forwards values from your shell or `~/.doppel/.env`, so the actual secret never appears in the config file. Use `docker_forward_env` for tokens and `docker_env` for static knobs the container needs.
 
-**`terminal.docker_extra_args`** (also overridable via `TERMINAL_DOCKER_EXTRA_ARGS='["--gpus=all"]'`) lets you pass arbitrary `docker run` flags that Hermes doesn't surface as first-class keys — `--gpus`, `--network`, `--add-host`, alternative `--security-opt` overrides, etc. Each entry must be a string; the list is appended last to the assembled `docker run` invocation so it can override Hermes' defaults if needed. Use sparingly — flags that conflict with the sandbox hardening (capability drops, `--user`, the workspace bind mount) will silently weaken isolation.
+**`terminal.docker_extra_args`** (also overridable via `TERMINAL_DOCKER_EXTRA_ARGS='["--gpus=all"]'`) lets you pass arbitrary `docker run` flags that Doppel Agent doesn't surface as first-class keys — `--gpus`, `--network`, `--add-host`, alternative `--security-opt` overrides, etc. Each entry must be a string; the list is appended last to the assembled `docker run` invocation so it can override Doppel Agent defaults if needed. Use sparingly — flags that conflict with the sandbox hardening (capability drops, `--user`, the workspace bind mount) will silently weaken isolation.
 
-**Requirements:** Docker Desktop or Docker Engine installed and running. Hermes probes `$PATH` plus common macOS install locations (`/usr/local/bin/docker`, `/opt/homebrew/bin/docker`, Docker Desktop app bundle). Podman is supported out of the box: set `HERMES_DOCKER_BINARY=podman` (or the full path) to force it when both are installed.
+**Requirements:** Docker Desktop or Docker Engine installed and running. Doppel Agent probes `$PATH` plus common macOS install locations (`/usr/local/bin/docker`, `/opt/homebrew/bin/docker`, Docker Desktop app bundle). Podman is supported out of the box: set `HERMES_DOCKER_BINARY=podman` (or the full path) to force it when both are installed.
 
 #### Container lifecycle
 
-Every Hermes-managed container is tagged with three labels so subsequent processes (and the orphan reaper) can identify it:
+Every Doppel-managed container is tagged with three labels so subsequent processes (and the orphan reaper) can identify it:
 
-- `hermes-agent=1` — marks it as Hermes-managed
+- `hermes-agent=1` — marks it as Doppel-managed
 - `hermes-task-id=<sanitized task_id>` — keys the per-task reuse probe
-- `hermes-profile=<sanitized profile name>` — scopes reuse and reaping to the active Hermes profile
+- `hermes-profile=<sanitized profile name>` — scopes reuse and reaping to the active Doppel profile
 
-On startup, Hermes runs `docker ps --filter label=hermes-task-id=<id> --filter label=hermes-profile=<profile>` and **attaches to the existing container** when it finds one. If the container is `exited` (e.g. after a Docker daemon restart), it's `docker start`'d and reused — filesystem state and any installed packages survive, but in-container background processes do not.
+On startup, Doppel Agent runs `docker ps --filter label=hermes-task-id=<id> --filter label=hermes-profile=<profile>` and **attaches to the existing container** when it finds one. If the container is `exited` (e.g. after a Docker daemon restart), it's `docker start`'d and reused — filesystem state and any installed packages survive, but in-container background processes do not.
 
-When a Hermes process exits — `/quit`, closing a TUI session, gateway shutdown, even SIGKILL — the cleanup path is a **no-op for the container in default mode**. The container keeps running. The next Hermes process attaches to it in milliseconds via the label probe. This is the behavior the "one long-lived container shared across sessions" contract requires: it's the only way background processes (npm watchers, dev servers, long-running pytest) survive across sessions.
+When a Doppel Agent process exits — `/quit`, closing a TUI session, gateway shutdown, even SIGKILL — the cleanup path is a **no-op for the container in default mode**. The container keeps running. The next Doppel Agent process attaches to it in milliseconds via the label probe. This is the behavior the "one long-lived container shared across sessions" contract requires: it's the only way background processes (npm watchers, dev servers, long-running pytest) survive across sessions.
 
 **The container is only torn down (stopped and `docker rm -f`'d) in these cases:**
 
@@ -196,7 +196,7 @@ When a Hermes process exits — `/quit`, closing a TUI session, gateway shutdown
 Edge cases worth knowing:
 
 - **OOM kill of in-container PID 1** transitions the container to `Exited`. Next reuse will `docker start` it; filesystem state survives, bg processes do not.
-- **Switching profiles** isolates containers from each other — a container labeled `hermes-profile=work` is invisible to a Hermes process running under `hermes-profile=research`. The orphan reaper is profile-scoped too, so cross-profile containers don't get reaped accidentally, but they also won't get cleaned up automatically until you start Hermes again under their original profile.
+- **Switching profiles** isolates containers from each other — a container labeled `hermes-profile=work` is invisible to a Doppel Agent process running under `hermes-profile=research`. The orphan reaper is profile-scoped too, so cross-profile containers don't get reaped accidentally, but they also won't get cleaned up automatically until you start Doppel Agent again under their original profile.
 
 Parallel subagents spawned via `delegate_task(tasks=[...])` share this one container — concurrent `cd`, env mutations, and writes to the same path will collide. If a subagent needs an isolated sandbox, it must register a per-task image override via `register_task_env_overrides()`, which RL and benchmark environments (TerminalBench2, HermesSweEnv, etc.) do automatically for their per-task Docker images.
 

@@ -1,17 +1,21 @@
 ---
 sidebar_position: 2
 title: "配置"
-description: "配置 Hermes Agent — config.yaml、providers、模型、API 密钥等"
+description: "配置 Doppel Agent — config.yaml、providers、模型、API 密钥等"
 ---
 
 # 配置
 
-所有设置均存储在 `~/.hermes/` 目录中，便于访问。
+所有设置都存储在代理主目录中，便于访问：全新安装默认使用 `~/.doppel/`，而旧版 `~/.hermes/` 安装仍然受支持。
+
+:::tip 最快拿到可用 `config.yaml` 的方式
+运行 `doppel setup --portal`。一次 OAuth 登录即可拿到一个模型提供商和全部四个 Tool Gateway 工具，无需手工编辑 YAML。Portal 订阅者还能在按 token 计费的提供商上获得 10% 折扣。参见 [Nous Portal](/integrations/nous-portal)。
+:::
 
 ## 目录结构
 
 ```text
-~/.hermes/
+~/.doppel/
 ├── config.yaml     # 设置（模型、终端、TTS、压缩等）
 ├── .env            # API 密钥和机密
 ├── auth.json       # OAuth provider 凭据（Nous Portal 等）
@@ -26,29 +30,29 @@ description: "配置 Hermes Agent — config.yaml、providers、模型、API 密
 ## 管理配置
 
 ```bash
-hermes config              # 查看当前配置
-hermes config edit         # 在编辑器中打开 config.yaml
-hermes config set KEY VAL  # 设置特定值
-hermes config check        # 检查缺失选项（更新后使用）
-hermes config migrate      # 交互式添加缺失选项
+doppel config              # 查看当前配置
+doppel config edit         # 在编辑器中打开 config.yaml
+doppel config set KEY VAL  # 设置特定值
+doppel config check        # 检查缺失选项（更新后使用）
+doppel config migrate      # 交互式添加缺失选项
 
 # 示例：
-hermes config set model anthropic/claude-opus-4
-hermes config set terminal.backend docker
-hermes config set OPENROUTER_API_KEY sk-or-...  # 保存到 .env
+doppel config set model anthropic/claude-opus-4
+doppel config set terminal.backend docker
+doppel config set OPENROUTER_API_KEY sk-or-...  # 保存到 .env
 ```
 
 :::tip
-`hermes config set` 命令会自动将值路由到正确的文件 —— API 密钥保存到 `.env`，其他所有内容保存到 `config.yaml`。
+`doppel config set` 命令会自动将值路由到正确的文件 —— API 密钥保存到 `.env`，其他所有内容保存到 `config.yaml`。
 :::
 
 ## 配置优先级
 
 设置按以下顺序解析（优先级从高到低）：
 
-1. **CLI 参数** —— 例如 `hermes chat --model anthropic/claude-sonnet-4`（单次调用覆盖）
-2. **`~/.hermes/config.yaml`** —— 所有非机密设置的主配置文件
-3. **`~/.hermes/.env`** —— 环境变量的回退；机密（API 密钥、token、密码）**必须**放这里
+1. **CLI 参数** —— 例如 `doppel chat --model anthropic/claude-sonnet-4`（单次调用覆盖）
+2. **`~/.doppel/config.yaml`** —— 全新安装中所有非机密设置的主配置文件；旧版 `~/.hermes/config.yaml` 仍然可用
+3. **`~/.doppel/.env`** —— 全新安装中环境变量的回退；旧版 `~/.hermes/.env` 仍然可用，并且仍然是机密（API 密钥、token、密码）的**必填位置**
 4. **内置默认值** —— 未设置任何内容时的硬编码安全默认值
 
 :::info 经验法则
@@ -83,7 +87,7 @@ delegation:
 
 ## 终端后端配置
 
-Hermes 支持六种终端后端。每种后端决定 agent 的 shell 命令实际在哪里执行 —— 本地机器、Docker 容器、通过 SSH 的远程服务器、Modal 云沙箱（直接或通过 Nous 托管的 gateway）、Daytona 工作区，或 Singularity/Apptainer 容器。
+Doppel Agent 支持六种终端后端。每种后端决定 agent 的 shell 命令实际在哪里执行 —— 本地机器、Docker 容器、通过 SSH 的远程服务器、Modal 云沙箱（直接或通过 Nous 托管的 gateway）、Daytona 工作区，或 Singularity/Apptainer 容器。
 
 ```yaml
 terminal:
@@ -96,7 +100,7 @@ terminal:
   daytona_image: "nikolaik/python-nodejs:python3.11-nodejs20"               # Daytona 后端的容器镜像
 ```
 
-对于 Modal 和 Daytona 等云沙箱，`container_persistent: true` 表示 Hermes 将尝试在沙箱重建后保留文件系统状态。这并不保证相同的活跃沙箱、PID 空间或后台进程之后仍在运行。
+对于 Modal 和 Daytona 等云沙箱，`container_persistent: true` 表示 Doppel Agent 将尝试在沙箱重建后保留文件系统状态。这并不保证相同的活跃沙箱、PID 空间或后台进程之后仍在运行。
 
 ### 后端概览
 
@@ -119,14 +123,14 @@ terminal:
 ```
 
 :::warning
-Agent 拥有与您的用户账户相同的文件系统访问权限。使用 `hermes tools` 禁用不需要的工具，或切换到 Docker 进行沙箱隔离。
+Agent 拥有与您的用户账户相同的文件系统访问权限。使用 `doppel tools` 禁用不需要的工具，或切换到 Docker 进行沙箱隔离。
 :::
 
 ### Docker 后端
 
 在具有安全加固的 Docker 容器内运行命令（所有权限已删除、无权限提升、PID 限制）。
 
-**单个持久容器，而非每条命令一个容器。** Hermes 在首次使用时启动一个长期运行的容器，并通过 `docker exec` 将每个终端、文件和 `execute_code` 调用路由到同一容器中 —— 跨会话、`/new`、`/reset` 和 `delegate_task` 子 agent，贯穿 Hermes 进程的整个生命周期。工作目录更改、已安装的包以及 `/workspace` 中的文件会从一次工具调用延续到下一次，就像本地 shell 一样。容器在关闭时停止并删除。详情请参阅下方的**容器生命周期**。
+**单个持久容器，跨 Doppel Agent 进程共享。** Doppel Agent 在首次使用时启动一个长期运行的容器，并通过 `docker exec` 将每个终端、文件和 `execute_code` 调用路由到同一容器中 —— 跨会话、`/new`、`/reset` 和 `delegate_task` 子 agent。工作目录更改、已安装的包、`/workspace` 中的文件以及**后台进程**都会从一次工具调用延续到下一次，也会从一个 Doppel Agent 进程延续到下一个。关闭 TUI 会话、运行 `/quit`，或启动新的 `doppel` 调用时，容器会继续运行，下一个 Doppel Agent 进程会通过标签查找复用它。确切的拆除规则见下方的**容器生命周期**。
 
 ```yaml
 terminal:
@@ -136,6 +140,9 @@ terminal:
   docker_run_as_host_user: false   # 参见下方"以宿主用户身份运行容器"
   docker_forward_env:              # 转发到容器的环境变量
     - "GITHUB_TOKEN"
+  docker_env:                      # 注入的字面量环境变量（KEY=value）
+    DEBUG: "1"
+    PYTHONUNBUFFERED: "1"
   docker_volumes:                  # 宿主目录挂载
     - "/home/user/projects:/workspace/projects"
     - "/home/user/data:/data:ro"   # :ro 表示只读
@@ -147,14 +154,48 @@ terminal:
   container_cpu: 1                 # CPU 核心数（0 = 不限制）
   container_memory: 5120           # MB（0 = 不限制）
   container_disk: 51200            # MB（需要 XFS+pquota 上的 overlay2）
-  container_persistent: true       # 跨会话持久化 /workspace 和 /root
+  container_persistent: true       # 持久化 /workspace 和 /root 绑定挂载目录
+
+  # 跨进程容器复用（默认值符合“跨会话共享一个长期运行容器”的契约）
+  docker_persist_across_processes: true   # 在 Doppel 重启后复用容器
+  docker_orphan_reaper: true              # 启动时清理遗留的 Exited 容器
+
+  # 跨后端生命周期设置（也适用于 docker）
+  timeout: 180                     # 每条命令的超时时间（秒）
+  lifetime_seconds: 300            # 空闲清理窗口；也用于 2× orphan-reaper 阈值
 ```
 
-**`terminal.docker_extra_args`**（也可通过 `TERMINAL_DOCKER_EXTRA_ARGS='["--gpus=all"]'` 覆盖）允许传递 Hermes 未作为一级键公开的任意 `docker run` 标志 —— `--gpus`、`--network`、`--add-host`、替代 `--security-opt` 覆盖等。每个条目必须是字符串；该列表最后附加到组装好的 `docker run` 调用中，因此可以在需要时覆盖 Hermes 的默认值。请谨慎使用 —— 与沙箱加固（权限删除、`--user`、workspace 绑定挂载）冲突的标志将悄然削弱隔离性。
+**`docker_env`** 与 **`docker_forward_env`**：前者把配置中写明的字面量 `KEY=value` 注入容器（这些值可以保存在 `config.yaml` 中，或通过 `TERMINAL_DOCKER_ENV='{"DEBUG":"1"}'` 这样的 JSON 字典传入）。后者则从当前 shell 或 `~/.doppel/.env` 转发值，因此实际机密不会出现在配置文件里。令牌请优先用 `docker_forward_env`，静态开关再用 `docker_env`。
 
-**要求：** 已安装并运行 Docker Desktop 或 Docker Engine。Hermes 会探测 `$PATH` 以及常见的 macOS 安装位置（`/usr/local/bin/docker`、`/opt/homebrew/bin/docker`、Docker Desktop 应用包）。开箱即用支持 Podman：设置 `HERMES_DOCKER_BINARY=podman`（或完整路径）以在两者都安装时强制使用它。
+**`terminal.docker_extra_args`**（也可通过 `TERMINAL_DOCKER_EXTRA_ARGS='["--gpus=all"]'` 覆盖）允许传递 Doppel Agent 未作为一级键公开的任意 `docker run` 标志 —— `--gpus`、`--network`、`--add-host`、替代 `--security-opt` 覆盖等。每个条目必须是字符串；该列表最后附加到组装好的 `docker run` 调用中，因此可以在需要时覆盖 Doppel Agent 的默认值。请谨慎使用 —— 与沙箱加固（权限删除、`--user`、workspace 绑定挂载）冲突的标志将悄然削弱隔离性。
 
-**容器生命周期：** Hermes 为每个终端和文件工具调用重用单个长期运行的容器（`docker run -d ... sleep 2h`），跨会话、`/new`、`/reset` 和 `delegate_task` 子 agent，贯穿 Hermes 进程的整个生命周期。命令通过带登录 shell 的 `docker exec` 运行，因此工作目录更改、已安装的包以及 `/workspace` 中的文件都会从一次工具调用延续到下一次。容器在 Hermes 关闭时（或空闲清理回收时）停止并删除。
+**要求：** 已安装并运行 Docker Desktop 或 Docker Engine。Doppel Agent 会探测 `$PATH` 以及常见的 macOS 安装位置（`/usr/local/bin/docker`、`/opt/homebrew/bin/docker`、Docker Desktop 应用包）。开箱即用支持 Podman：设置 `HERMES_DOCKER_BINARY=podman`（或完整路径）以在两者都安装时强制使用它。
+
+#### 容器生命周期
+
+每个由 Doppel 管理的容器都会打上三个标签，后续进程（以及 orphan reaper）就能识别它：
+
+- `hermes-agent=1` —— 标记为 Doppel 管理
+- `hermes-task-id=<sanitized task_id>` —— 作为按任务复用探针的键
+- `hermes-profile=<sanitized profile name>` —— 将复用与清理限定在当前 Doppel profile
+
+启动时，Doppel Agent 会运行 `docker ps --filter label=hermes-task-id=<id> --filter label=hermes-profile=<profile>`，找到已有容器时就会**附着到该容器**。如果容器已经 `exited`（例如 Docker daemon 重启后），系统会执行 `docker start` 并复用它 —— 文件系统状态和已安装的软件包会保留下来，但容器内的后台进程不会。
+
+当 Doppel Agent 进程退出时 —— `/quit`、关闭 TUI 会话、gateway 关闭，甚至 SIGKILL —— 默认模式下容器清理路径对容器来说是**空操作**。容器会继续运行。下一个 Doppel Agent 进程会通过标签探针在毫秒级重新附着。这正是“跨会话共享一个长期运行容器”这一契约所要求的行为：只有这样，后台进程（npm watcher、开发服务器、长时间运行的 pytest）才能跨会话存活。
+
+**只有在以下情况下，容器才会被拆除（停止并执行 `docker rm -f`）：**
+
+| 触发条件 | 触发时机 |
+|---|---|
+| `docker_persist_across_processes: false` | 显式要求按进程隔离。每次 `cleanup()` 都会执行 `stop` + `rm -f`。 |
+| 空闲回收器（`lifetime_seconds`，默认 300 秒） | 仅在 `persist_across_processes=false` 时生效。持久化模式不会在空闲清理时删除容器。 |
+| 下次启动时的 orphan reaper | 清理当前 profile 下、年龄超过 `2 × lifetime_seconds`（默认 600 秒）的 **Exited** hermes 标记容器。**运行中的容器绝不会被碰**。 |
+| 用户直接操作 | 例如 `docker rm -f`、`docker system prune` 或 Docker Desktop 重启。我们不会设置 `--restart=always`，所以主机重启后容器会变成 `Exited`。 |
+
+几个值得知道的边界情况：
+
+- **容器内 PID 1 被 OOM kill** 时，容器会转为 `Exited`。下次复用会执行 `docker start`；文件系统状态会保留，但后台进程不会。
+- **切换 profile** 会让容器彼此隔离 —— 带有 `hermes-profile=work` 标签的容器，对运行在 `hermes-profile=research` 下的 Doppel Agent 进程来说是不可见的。orphan reaper 也按 profile 限定，因此不会误删跨 profile 容器，但在原 profile 下再次启动 Doppel Agent 之前，它们也不会被自动清理。
 
 通过 `delegate_task(tasks=[...])` 生成的并行子 agent 共享这一个容器 —— 并发的 `cd`、环境变量修改以及对同一路径的写入会发生冲突。如果子 agent 需要隔离的沙箱，必须通过 `register_task_env_overrides()` 注册每任务镜像覆盖，RL 和基准测试环境（TerminalBench2、HermesSweEnv 等）会自动为其每任务 Docker 镜像执行此操作。
 
@@ -164,7 +205,7 @@ terminal:
 - `--pids-limit 256`
 - `/tmp`（512MB）、`/var/tmp`（256MB）、`/run`（64MB）的大小限制 tmpfs
 
-**凭据转发：** `docker_forward_env` 中列出的环境变量首先从您的 shell 环境解析，然后回退到 `~/.hermes/.env`。技能也可以声明 `required_environment_variables`，这些变量会自动合并。
+**凭据转发：** `docker_forward_env` 中列出的环境变量首先从您的 shell 环境解析，然后回退到 `~/.doppel/.env`。技能也可以声明 `required_environment_variables`，这些变量会自动合并。
 
 ### SSH 后端
 

@@ -5734,3 +5734,86 @@ def test_webhook_github_pr_review_guides_prefer_doppel_customer_facing_surfaces(
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_tips_guides_prefer_doppel_customer_facing_surfaces():
+    en = (REPO_ROOT / "website" / "docs" / "guides" / "tips.md").read_text(
+        encoding="utf-8"
+    )
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "tips.md"
+    ).read_text(encoding="utf-8")
+
+    assert "get the most out of Doppel Agent" in en
+    assert "充分发挥 Doppel Agent 潜力" in zh
+    assert "more effective with Doppel Agent" in en
+    assert "提升使用 Doppel Agent 的效率" in zh
+    assert "Run `doppel setup --portal`" in en
+    assert "运行 `doppel setup --portal`" in zh
+    assert "`doppel -c`" in en
+    assert "`doppel -c`" in zh
+    assert '`doppel -r "my research project"`' in en
+    assert '`doppel -r "my research project"`' in zh
+    assert "`~/.doppel/SOUL.md`" in en
+    assert "`~/.doppel/SOUL.md`" in zh
+    assert "`$DOPPEL_HOME/SOUL.md`" in en
+    assert "`$DOPPEL_HOME/SOUL.md`" in zh
+    assert "[Use SOUL.md with Doppel Agent](/guides/use-soul-with-hermes)" in en
+    assert "[在 Doppel Agent 中使用 SOUL.md](/guides/use-soul-with-hermes)" in zh
+    assert "Doppel reads those too." in en
+    assert "Doppel 同样会读取它们。" in zh
+    assert "Doppel loads the top-level `AGENTS.md`" in en
+    assert "Doppel 在会话启动时从当前工作目录加载顶层 `AGENTS.md`" in zh
+    assert "`doppel sessions list`" in en
+    assert "`doppel sessions list`" in zh
+    assert '`doppel -r "auth-refactor"`' in en
+    assert '`doppel -r "auth-refactor"`' in zh
+    assert "`doppel pairing approve telegram XKGH5N7P`" in en
+    assert "`doppel pairing approve telegram XKGH5N7P`" in zh
+    assert "`~/.doppel/config.yaml`" in en
+    assert "`~/.doppel/config.yaml`" in zh
+    assert "TERMINAL_DOCKER_IMAGE=nikolaik/python-nodejs:python3.11-nodejs20" in en
+    assert "TERMINAL_DOCKER_IMAGE=nikolaik/python-nodejs:python3.11-nodejs20" in zh
+    assert "Doppel checks every command" in en
+    assert "Doppel 在执行每条命令前都会与一份精心维护的危险模式列表进行比对" in zh
+    assert "Legacy `~/.hermes/SOUL.md` and `$HERMES_HOME/SOUL.md` still work" in en
+    assert "对于旧安装，`~/.hermes/SOUL.md` 和 `$HERMES_HOME/SOUL.md` 仍可继续使用" in zh
+    assert "GATEWAY_ALLOW_ALL_USERS=true" in en
+    assert "GATEWAY_ALLOW_ALL_USERS=true" in zh
+    assert "TELEGRAM_ALLOWED_USERS" in en
+    assert "TELEGRAM_ALLOWED_USERS" in zh
+
+    for stale in (
+        "get the most out of Hermes Agent",
+        "充分发挥 Hermes Agent 潜力",
+        "more effective with Hermes Agent",
+        "提升使用 Hermes Agent 的效率",
+        "Run `hermes setup --portal`",
+        "运行 `hermes setup --portal`",
+        "`hermes -c`",
+        '`hermes -r "my research project"`',
+        "Want Hermes to have a stable default voice?",
+        "想让 Hermes 拥有稳定的默认风格？",
+        "[Use SOUL.md with Hermes](/guides/use-soul-with-hermes)",
+        "[在 Hermes 中使用 SOUL.md](/guides/use-soul-with-hermes)",
+        "Hermes reads those too.",
+        "Hermes 同样会读取它们。",
+        "Hermes loads the top-level `AGENTS.md`",
+        "Hermes 在会话启动时从当前工作目录加载顶层 `AGENTS.md`",
+        "`hermes sessions list`",
+        '`hermes -r "auth-refactor"`',
+        "`hermes pairing approve telegram XKGH5N7P`",
+        "`~/.hermes/config.yaml`",
+        "TERMINAL_DOCKER_IMAGE=hermes-sandbox:latest",
+        "Hermes checks every command",
+        "Hermes 在执行每条命令前都会与一份精心维护的危险模式列表进行比对",
+    ):
+        assert stale not in en
+        assert stale not in zh

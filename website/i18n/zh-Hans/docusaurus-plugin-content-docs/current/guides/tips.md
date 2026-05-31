@@ -1,12 +1,16 @@
 ---
 sidebar_position: 1
 title: "技巧与最佳实践"
-description: "充分发挥 Hermes Agent 潜力的实用建议——prompt 技巧、CLI 快捷键、上下文文件、记忆、成本优化与安全"
+description: "充分发挥 Doppel Agent 潜力的实用建议——prompt 技巧、CLI 快捷键、上下文文件、记忆、成本优化与安全"
 ---
 
 # 技巧与最佳实践
 
-一份实用技巧速查集，帮助你立即提升使用 Hermes Agent 的效率。每个章节针对不同方面——扫描标题，直接跳到相关内容。
+一份实用技巧速查集，帮助你立即提升使用 Doppel Agent 的效率。每个章节针对不同方面——扫描标题，直接跳到相关内容。
+
+:::tip 不确定该选哪个模型？
+运行 `doppel setup --portal`——你可以在一个订阅下使用 300+ 个模型，包括 Claude、GPT-5 和 Gemini。参见 [Nous Portal](/integrations/nous-portal)。
+:::
 
 ---
 
@@ -48,7 +52,7 @@ CLI 会自动检测多行粘贴。直接粘贴代码块或错误堆栈——不�
 
 ### 使用 `-c` 恢复会话
 
-上次会话有遗漏？运行 `hermes -c` 可精确恢复到上次离开的位置，完整对话历史全部还原。也可以按标题恢复：`hermes -r "my research project"`。
+上次会话有遗漏？运行 `doppel -c` 可精确恢复到上次离开的位置，完整对话历史全部还原。也可以按标题恢复：`doppel -r "my research project"`。
 
 ### 剪贴板图片粘贴
 
@@ -78,9 +82,9 @@ CLI 会自动检测多行粘贴。直接粘贴代码块或错误堆栈——不�
 
 ### SOUL.md：自定义个性
 
-想让 Hermes 拥有稳定的默认风格？编辑 `~/.hermes/SOUL.md`（如果使用自定义 Hermes home，则为 `$HERMES_HOME/SOUL.md`）。Hermes 现在会自动生成一个初始 SOUL 文件，并将该全局文件作为实例级个性来源。
+想让 Doppel 拥有稳定的默认风格？编辑 `~/.doppel/SOUL.md`（如果使用自定义 Doppel home，则为 `$DOPPEL_HOME/SOUL.md`）。Doppel 现在会自动生成一个初始 SOUL 文件，并将该全局文件作为实例级个性来源。对于旧安装，`~/.hermes/SOUL.md` 和 `$HERMES_HOME/SOUL.md` 仍可继续使用。
 
-完整说明请参阅 [在 Hermes 中使用 SOUL.md](/guides/use-soul-with-hermes)。
+完整说明请参阅 [在 Doppel Agent 中使用 SOUL.md](/guides/use-soul-with-hermes)。
 
 ```markdown
 # Soul
@@ -93,11 +97,11 @@ Always consider error handling and edge cases.
 
 ### .cursorrules 兼容性
 
-已有 `.cursorrules` 或 `.cursor/rules/*.mdc` 文件？Hermes 同样会读取它们。无需重复编写编码规范——这些文件会从工作目录自动加载。
+已有 `.cursorrules` 或 `.cursor/rules/*.mdc` 文件？Doppel 同样会读取它们。无需重复编写编码规范——这些文件会从工作目录自动加载。
 
 ### 发现机制
 
-Hermes 在会话启动时从当前工作目录加载顶层 `AGENTS.md`。子目录中的 `AGENTS.md` 文件在工具调用期间通过 `subdirectory_hints.py` 延迟发现，并注入工具结果——不会在启动时预先加载到系统 prompt 中。
+Doppel 在会话启动时从当前工作目录加载顶层 `AGENTS.md`。子目录中的 `AGENTS.md` 文件在工具调用期间通过 `subdirectory_hints.py` 延迟发现，并注入工具结果——不会在启动时预先加载到系统 prompt 中。
 
 :::tip
 保持上下文文件简洁聚焦。每个字符都会消耗 token 配额，因为它们会注入到每一条消息中。
@@ -159,18 +163,18 @@ Hermes 在会话启动时从当前工作目录加载顶层 `AGENTS.md`。子目�
 
 ### 使用 /title 整理会话
 
-用 `/title auth-refactor` 或 `/title research-llm-quantization` 为会话命名。命名后的会话可通过 `hermes sessions list` 轻松找到，并用 `hermes -r "auth-refactor"` 恢复。未命名的会话会堆积起来，难以区分。
+用 `/title auth-refactor` 或 `/title research-llm-quantization` 为会话命名。命名后的会话可通过 `doppel sessions list` 轻松找到，并用 `doppel -r "auth-refactor"` 恢复。未命名的会话会堆积起来，难以区分。
 
 ### DM 配对实现团队访问
 
-不要手动收集用户 ID 来维护白名单，而是启用 DM 配对。当团队成员向 bot 发送私信时，他们会收到一次性配对码。你用 `hermes pairing approve telegram XKGH5N7P` 批准即可——简单且安全。
+不要手动收集用户 ID 来维护白名单，而是启用 DM 配对。当团队成员向 bot 发送私信时，他们会收到一次性配对码。你用 `doppel pairing approve telegram XKGH5N7P` 批准即可——简单且安全。
 
 ### 工具进度显示模式
 
 使用 `/verbose` 控制工具活动的显示详细程度。在消息平台上，通常越简洁越好——保持"new"模式只查看新的工具调用。在 CLI 中，"all" 模式可以实时查看 agent 的所有操作。
 
 :::tip
-在消息平台上，会话会在空闲一段时间后自动重置（默认 24 小时），或每天凌晨 4 点重置。如需更长的会话时间，可在 `~/.hermes/config.yaml` 中按平台调整。
+在消息平台上，会话会在空闲一段时间后自动重置（默认 24 小时），或每天凌晨 4 点重置。如需更长的会话时间，可在 `~/.doppel/config.yaml` 中按平台调整。
 :::
 
 ## 安全
@@ -182,7 +186,7 @@ Hermes 在会话启动时从当前工作目录加载顶层 `AGENTS.md`。子目�
 ```bash
 # In your .env:
 TERMINAL_BACKEND=docker
-TERMINAL_DOCKER_IMAGE=hermes-sandbox:latest
+TERMINAL_DOCKER_IMAGE=nikolaik/python-nodejs:python3.11-nodejs20
 ```
 
 ### 避免 Windows 编码陷阱
@@ -210,7 +214,7 @@ $OutputEncoding = [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 
 ### 命令审批是你的安全防线
 
-Hermes 在执行每条命令前都会与一份精心维护的危险模式列表进行比对，包括递归删除、SQL DROP、curl 管道到 shell 等。不要在生产环境中禁用此功能——它的存在有充分的理由。
+Doppel 在执行每条命令前都会与一份精心维护的危险模式列表进行比对，包括递归删除、SQL DROP、curl 管道到 shell 等。不要在生产环境中禁用此功能——它的存在有充分的理由。
 
 :::warning
 在容器后端（Docker、Singularity、Modal、Daytona）中运行时，危险命令检查会被**跳过**，因为容器本身就是安全边界。请确保你的容器镜像已妥善加固。

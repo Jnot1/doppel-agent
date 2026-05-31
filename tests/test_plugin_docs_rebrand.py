@@ -5051,6 +5051,102 @@ def test_windows_wsl_quickstart_pair_prefer_doppel_customer_facing_surfaces():
         assert unexpected not in zh
 
 
+def test_checkpoints_and_rollback_docs_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "checkpoints-and-rollback.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "checkpoints-and-rollback.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "Doppel Agent can automatically snapshot your project",
+        "doppel chat --checkpoints",
+        "~/.doppel/config.yaml",
+        "~/.doppel/checkpoints/store/",
+        "`doppel checkpoints`",
+        "Doppel detects when tools are about to **modify files**",
+        "User command\\n(doppel, gateway)",
+        "doppel checkpoints prune",
+        "Checkpoint base: /home/you/.doppel/checkpoints",
+        "Clear with: doppel checkpoints clear-legacy",
+        "Behind the scenes, Doppel:",
+        "Doppel skips overly broad directories",
+        "~/.doppel/checkpoints/",
+        "refs/<project-hash>",
+        "doppel checkpoints clear-legacy",
+        "keep each Doppel session",
+    ):
+        assert expected in en
+
+    for unexpected in (
+        "Hermes Agent can automatically snapshot your project",
+        "hermes chat --checkpoints",
+        "~/.hermes/config.yaml",
+        "~/.hermes/checkpoints/store/",
+        "`hermes checkpoints`",
+        "Hermes detects when tools are about to **modify files**",
+        "User command\\n(hermes, gateway)",
+        "hermes checkpoints prune",
+        "Checkpoint base: /home/you/.hermes/checkpoints",
+        "Clear with: hermes checkpoints clear-legacy",
+        "Behind the scenes, Hermes:",
+        "Hermes skips overly broad directories",
+        "~/.hermes/checkpoints/",
+        "refs/hermes/<hash>",
+        "hermes checkpoints clear-legacy",
+        "keep each Hermes session",
+    ):
+        assert unexpected not in en
+
+    for expected in (
+        "Doppel Agent 可以在**破坏性操作**之前自动为你的项目创建快照",
+        "doppel chat --checkpoints",
+        "~/.doppel/config.yaml",
+        "~/.doppel/checkpoints/store/",
+        "`doppel checkpoints`",
+        "Doppel 检测到工具即将**修改**工作树中的文件。",
+        "User command\\n(doppel, gateway)",
+        "doppel checkpoints prune",
+        "Checkpoint base: /home/you/.doppel/checkpoints",
+        "Clear with: doppel checkpoints clear-legacy",
+        "Doppel 在后台执行：",
+        "Doppel 跳过过于宽泛的目录",
+        "~/.doppel/checkpoints/",
+        "refs/<project-hash>",
+        "doppel checkpoints clear-legacy",
+        "将每个 Doppel 会话保持在独立的 worktree/分支中",
+    ):
+        assert expected in zh
+
+    for unexpected in (
+        "Hermes Agent 可以在**破坏性操作**之前自动为你的项目创建快照",
+        "hermes chat --checkpoints",
+        "~/.hermes/config.yaml",
+        "~/.hermes/checkpoints/store/",
+        "`hermes checkpoints`",
+        "Hermes 检测到工具即将**修改**工作树中的文件。",
+        "User command\\n(hermes, gateway)",
+        "hermes checkpoints prune",
+        "Checkpoint base: /home/you/.hermes/checkpoints",
+        "Clear with: hermes checkpoints clear-legacy",
+        "Hermes 在后台执行：",
+        "Hermes 跳过过于宽泛的目录",
+        "~/.hermes/checkpoints/",
+        "refs/hermes/<hash>",
+        "hermes checkpoints clear-legacy",
+        "将每个 Hermes 会话保持在独立的 worktree/分支中",
+    ):
+        assert unexpected not in zh
+
+
 def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
     en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
     zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")

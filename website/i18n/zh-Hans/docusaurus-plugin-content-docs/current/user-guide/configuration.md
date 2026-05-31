@@ -459,21 +459,21 @@ skills:
 
 **技能设置的工作原理：**
 
-- `hermes config migrate` 扫描所有已启用的技能，找到未配置的设置，并提供提示
-- `hermes config show` 在"技能设置"下显示所有技能设置及其所属技能
+- `doppel config migrate` 扫描所有已启用的技能，找到未配置的设置，并提供提示
+- `doppel config show` 在“技能设置”下显示所有技能设置及其所属技能
 - 技能加载时，其解析的配置值会自动注入到技能上下文中
 
 **手动设置值：**
 
 ```bash
-hermes config set skills.config.myplugin.path ~/myplugin-data
+doppel config set skills.config.myplugin.path ~/myplugin-data
 ```
 
 有关在您自己的技能中声明配置设置的详细信息，请参阅[创建技能 — 配置设置](/developer-guide/creating-skills#config-settings-configyaml)。
 
 ### Agent 创建技能写入的守卫
 
-当 agent 使用 `skill_manage` 创建、编辑、修补或删除技能时，Hermes 可以选择扫描新/更新的内容以查找危险关键字模式（凭据收集、明显的 prompt 注入、数据外泄指令）。扫描器**默认关闭** —— 合法触及 `~/.ssh/` 或提及 `$OPENAI_API_KEY` 的真实 agent 工作流触发启发式规则过于频繁。如果您希望扫描器在 agent 的技能写入落地前提示您，请重新开启：
+当 agent 使用 `skill_manage` 创建、编辑、修补或删除技能时，Doppel Agent 可以选择扫描新/更新的内容以查找危险关键字模式（凭据收集、明显的 prompt 注入、数据外泄指令）。扫描器**默认关闭** —— 合法触及 `~/.ssh/` 或提及 `$OPENAI_API_KEY` 的真实 agent 工作流触发启发式规则过于频繁。如果您希望扫描器在 agent 的技能写入落地前提示您，请重新开启：
 
 ```yaml
 skills:
@@ -514,7 +514,7 @@ Agent 还会自动去重文件读取 —— 如果同一文件区域被读取两
 
 ## 工具输出截断限制
 
-三个相关的上限控制工具在 Hermes 截断之前可以返回多少原始输出：
+三个相关的上限控制工具在 Doppel Agent 截断之前可以返回多少原始输出：
 
 ```yaml
 tool_output:
@@ -523,7 +523,7 @@ tool_output:
   max_line_length: 2000   # read_file 行号视图中的每行上限
 ```
 
-- **`max_bytes`** —— 当 `terminal` 命令产生超过此字符数的合并 stdout/stderr 时，Hermes 保留前 40% 和后 60%，并在中间插入 `[OUTPUT TRUNCATED]` 通知。默认 `50000`（典型分词器约 12-15K tokens）。
+- **`max_bytes`** —— 当 `terminal` 命令产生超过此字符数的合并 stdout/stderr 时，Doppel Agent 保留前 40% 和后 60%，并在中间插入 `[OUTPUT TRUNCATED]` 通知。默认 `50000`（典型分词器约 12-15K tokens）。
 - **`max_lines`** —— 单次 `read_file` 调用的 `limit` 参数上限。超过此值的请求将被截断，以防单次读取淹没上下文窗口。默认 `2000`。
 - **`max_line_length`** —— `read_file` 发出行号视图时应用的每行上限。超过此长度的行将被截断为此字符数，后跟 `... [truncated]`。默认 `2000`。
 
@@ -552,7 +552,7 @@ agent:
     - web          # 任何地方都不使用 web_search / web_extract
 ```
 
-这在每个平台的工具配置（由 `hermes tools` 写入的 `platform_toolsets`）**之后**应用，因此此处列出的工具集始终被删除 —— 即使平台的已保存配置仍然列出它。当您希望有一个"到处关闭 X"的单一开关而不是编辑 `hermes tools` UI 中的 15+ 个平台行时，请使用此选项。
+这在每个平台的工具配置（由 `doppel tools` 写入的 `platform_toolsets`）**之后**应用，因此此处列出的工具集始终被删除 —— 即使平台的已保存配置仍然列出它。当您希望有一个“到处关闭 X”的单一开关而不是编辑 `doppel tools` UI 中的 15+ 个平台行时，请使用此选项。
 
 留空列表或省略键不会产生任何效果。
 
@@ -561,7 +561,7 @@ agent:
 启用隔离的 git worktree，以便在同一仓库上并行运行多个 agent：
 
 ```yaml
-worktree: true    # 始终创建 worktree（与 hermes -w 相同）
+worktree: true    # 始终创建 worktree（与 doppel -w 相同）
 # worktree: false # 默认 —— 仅在传递 -w 标志时
 ```
 
@@ -578,7 +578,7 @@ node_modules/
 
 ## 上下文压缩
 
-Hermes 自动压缩长对话以保持在模型的上下文窗口内。压缩摘要器是一个单独的 LLM 调用 —— 您可以将其指向任何 provider 或端点。
+Doppel Agent 自动压缩长对话以保持在模型的上下文窗口内。压缩摘要器是一个单独的 LLM 调用 —— 您可以将其指向任何 provider 或端点。
 
 所有压缩设置都在 `config.yaml` 中（无环境变量）。
 
@@ -590,6 +590,7 @@ compression:
   threshold: 0.50                                   # 在上下文限制的此百分比时压缩
   target_ratio: 0.20                                # 保留为最近尾部的阈值分数
   protect_last_n: 20                                # 保持未压缩的最少最近消息数
+  protect_first_n: 3                                # 在每次压缩中固定保留的非系统开头消息数（0 = 不固定任何内容）
   hygiene_hard_message_limit: 400                   # Gateway 安全阀 —— 见下文
 
 # 摘要模型/provider 在 auxiliary: 下配置：
@@ -604,7 +605,9 @@ auxiliary:
 带有 `compression.summary_model`、`compression.summary_provider` 和 `compression.summary_base_url` 的旧版配置在首次加载时自动迁移到 `auxiliary.compression.*`（配置版本 17）。无需手动操作。
 :::
 
-`hygiene_hard_message_limit` 是仅限 gateway 的**预压缩安全阀**。拥有数千条消息的失控会话可能在正常的上下文百分比阈值触发之前就达到模型上下文限制；当消息数超过此上限时，Hermes 强制压缩，无论 token 使用情况如何。默认 `400` —— 对于非常长的会话正常的平台，请调高；要强制更积极的压缩，请降低。在运行中的 gateway 上编辑此值将在下一条消息时生效（见下文）。
+`hygiene_hard_message_limit` 是仅限 gateway 的**预压缩安全阀**。拥有数千条消息的失控会话可能在正常的上下文百分比阈值触发之前就达到模型上下文限制；当消息数超过此上限时，Doppel Agent 会强制压缩，无论 token 使用情况如何。默认 `400` —— 对于非常长的会话正常的平台，请调高；要强制更积极的压缩，请降低。在运行中的 gateway 上编辑此值将在下一条消息时生效（见下文）。
+
+`protect_first_n` 控制每次压缩时要固定保留多少条**非系统**开头消息。默认 `3` —— 初始的用户/assistant 往返在每次摘要压缩中都会保留下来，从而让原始目标持续可见。在长时间运行的滚动压缩会话中，如果开头回合已经不再重要，可将 `protect_first_n: 0` 设为除了 system prompt、summary 和最近尾部之外不再固定任何内容。无论该设置为何值，system prompt 本身始终会被保留。
 
 :::tip Gateway 热重载压缩和上下文长度
 从最近的版本开始，在运行中的 gateway 上编辑 `config.yaml` 中的 `model.context_length` 或任何 `compression.*` 键将在下一条消息时生效 —— 无需 gateway 重启、`/reset` 或会话轮换。缓存的 agent 签名包含这些键，因此 gateway 在检测到更改时会透明地重建 agent。API 密钥和工具/技能配置仍需要通常的重载路径。

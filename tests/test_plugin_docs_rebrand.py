@@ -617,6 +617,14 @@ def _extract_configuration_backend_cluster(
     return text[start:end]
 
 
+def _extract_configuration_middle_cluster(
+    text: str, start_heading: str, end_heading: str
+) -> str:
+    start = text.index(start_heading)
+    end = text.index(end_heading, start)
+    return text[start:end]
+
+
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
     plugins = EN_PLUGINS_DOC.read_text(encoding="utf-8")
     guide = EN_BUILD_GUIDE.read_text(encoding="utf-8")
@@ -999,6 +1007,80 @@ def test_configuration_remote_sync_and_persistent_shell_cluster_prefer_doppel_an
     assert "~/.hermes/" in en_cluster
     assert "~/.hermes/" in zh_cluster
     assert "~/.hermes/.env" in zh_cluster
+
+
+def test_configuration_skill_and_compression_cluster_prefer_doppel_and_keep_runtime_terms():
+    en = EN_CONFIGURATION_DOC.read_text(encoding="utf-8")
+    zh = ZH_CONFIGURATION_DOC.read_text(encoding="utf-8")
+
+    en_cluster = _extract_configuration_middle_cluster(
+        en, "## Skill Settings", "## Context Engine"
+    )
+    zh_cluster = _extract_configuration_middle_cluster(
+        zh, "## 技能设置", "## 上下文引擎"
+    )
+
+    assert "doppel config migrate" in en_cluster
+    assert "doppel config migrate" in zh_cluster
+    assert "doppel config show" in en_cluster
+    assert "doppel config show" in zh_cluster
+    assert "doppel config set skills.config.myplugin.path ~/myplugin-data" in en_cluster
+    assert "doppel config set skills.config.myplugin.path ~/myplugin-data" in zh_cluster
+    assert "Doppel Agent can optionally scan" in en_cluster
+    assert "Doppel Agent 可以选择扫描" in zh_cluster
+    assert "before Doppel Agent truncates it" in en_cluster
+    assert "在 Doppel Agent 截断之前" in zh_cluster
+    assert "`doppel tools`" in en_cluster
+    assert "`doppel tools`" in zh_cluster
+    assert "same as doppel -w" in en_cluster
+    assert "与 doppel -w 相同" in zh_cluster
+    assert "Doppel Agent automatically compresses long conversations" in en_cluster
+    assert "Doppel Agent 自动压缩长对话" in zh_cluster
+    assert "Doppel Agent forces compression" in en_cluster
+    assert "Doppel Agent 会强制压缩" in zh_cluster
+    assert "protect_first_n: 3" in en_cluster
+    assert "protect_first_n: 3" in zh_cluster
+    assert "`protect_first_n` controls how many **non-system** head messages" in en_cluster
+    assert "`protect_first_n` 控制每次压缩时要固定保留多少条**非系统**开头消息" in zh_cluster
+
+    assert "hermes config migrate" not in en_cluster
+    assert "hermes config migrate" not in zh_cluster
+    assert "hermes config show" not in en_cluster
+    assert "hermes config show" not in zh_cluster
+    assert "hermes config set skills.config.myplugin.path" not in en_cluster
+    assert "hermes config set skills.config.myplugin.path" not in zh_cluster
+    assert "Hermes can optionally scan" not in en_cluster
+    assert "Hermes 可以选择扫描" not in zh_cluster
+    assert "before Hermes truncates it" not in en_cluster
+    assert "在 Hermes 截断之前" not in zh_cluster
+    assert "`hermes tools`" not in en_cluster
+    assert "`hermes tools`" not in zh_cluster
+    assert "same as hermes -w" not in en_cluster
+    assert "与 hermes -w 相同" not in zh_cluster
+    assert "Hermes automatically compresses long conversations" not in en_cluster
+    assert "Hermes 自动压缩长对话" not in zh_cluster
+
+    for literal in (
+        "skills.config",
+        "guard_agent_created",
+        "~/.ssh/",
+        "$OPENAI_API_KEY",
+        "file_read_max_chars",
+        "tool_output:",
+        "max_bytes",
+        "max_lines",
+        "max_line_length",
+        "agent.disabled_toolsets",
+        ".worktrees/",
+        "threshold",
+        "target_ratio",
+        "protect_last_n",
+        "hygiene_hard_message_limit",
+        "auxiliary.compression.provider",
+        "auxiliary.compression.base_url",
+    ):
+        assert literal in en_cluster
+        assert literal in zh_cluster
 
 
 def test_mcp_config_reference_docs_prefer_doppel_branding_and_keep_runtime_literals():

@@ -98,6 +98,7 @@ EN_CREDENTIAL_POOLS_DOC = (
 )
 EN_CRON_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "cron.md"
 EN_BROWSER_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "browser.md"
+EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -244,6 +245,17 @@ ZH_BROWSER_DOC = (
     / "user-guide"
     / "features"
     / "browser.md"
+)
+ZH_HOOKS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "hooks.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -1400,3 +1412,62 @@ def test_browser_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "hermes config set toolsets" not in zh
     assert 'Type "hermes agent" into the search field @e3' not in en
     assert 'Type "hermes agent" into the search field @e3' not in zh
+
+
+def test_hooks_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_HOOKS_DOC.read_text(encoding="utf-8")
+    zh = ZH_HOOKS_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent has three hook systems" in en
+    assert "Doppel Agent 有三套 hook 系统" in zh
+    assert "~/.doppel/hooks/" in en
+    assert "~/.doppel/hooks/" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/BOOT.md" in en
+    assert "~/.doppel/BOOT.md" in zh
+    assert "doppel cron list" in en
+    assert "doppel cron list" in zh
+    assert "doppel gateway restart" in en
+    assert "doppel gateway restart" in zh
+    assert "doppel logs --follow --level INFO | grep boot-md" in en
+    assert "doppel logs --follow --level INFO | grep boot-md" in zh
+    assert "doppel --accept-hooks chat" in en
+    assert "doppel --accept-hooks chat" in zh
+    assert "doppel hooks list" in en
+    assert "doppel hooks list" in zh
+    assert "doppel hooks doctor" in en
+    assert "doppel hooks doctor" in zh
+    assert "Doppel Agent needs approval" in en
+    assert "Doppel Agent needs approval" in zh
+    assert "~/.hermes" in en
+    assert "~/.hermes" in zh
+
+    for fixed in (
+        "HERMES_ACCEPT_HOOKS",
+        "HookRegistry.discover_and_load()",
+        "hooks.emit()",
+        "agent.shell_hooks.register_from_config(cfg)",
+        "run_agent.py",
+        "gateway/run.py",
+        "AIAgent",
+        "pre_tool_call",
+        "command:*",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Hermes has three hook systems" not in en
+    assert "Hermes 有三套 hook 系统" not in zh
+    assert "Hermes needs approval" not in en
+    assert "Hermes needs approval" not in zh
+    assert "Hermes does not ship a built-in BOOT.md hook" not in en
+    assert "Hermes 不内置 BOOT.md hook" not in zh
+    assert "hermes cron list" not in en
+    assert "hermes cron list" not in zh
+    assert "hermes gateway restart" not in en
+    assert "hermes gateway restart" not in zh
+    assert "hermes logs --follow --level INFO | grep boot-md" not in en
+    assert "hermes logs --follow --level INFO | grep boot-md" not in zh
+    assert "hermes hooks list" not in en
+    assert "hermes hooks list" not in zh

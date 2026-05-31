@@ -61,8 +61,12 @@ ZH_DEV_GUIDE_DIR = (
 )
 EN_ADDING_PROVIDERS_DOC = EN_DEV_GUIDE_DIR / "adding-providers.md"
 EN_PROVIDER_RUNTIME_DOC = EN_DEV_GUIDE_DIR / "provider-runtime.md"
+EN_ADDING_TOOLS_DOC = EN_DEV_GUIDE_DIR / "adding-tools.md"
+EN_CONTRIBUTING_DOC = EN_DEV_GUIDE_DIR / "contributing.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
+ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
+ZH_CONTRIBUTING_DOC = ZH_DEV_GUIDE_DIR / "contributing.md"
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -271,3 +275,58 @@ def test_provider_onboarding_docs_prefer_doppel_surfaces():
     assert "`hermes chat`" not in zh_runtime
     assert "Hermes Agent" not in zh_runtime
     assert "OPENROUTER_API_KEY" in zh_runtime
+
+
+def test_tooling_and_contributing_docs_prefer_doppel_surfaces():
+    en_tools = EN_ADDING_TOOLS_DOC.read_text(encoding="utf-8")
+    en_contributing = EN_CONTRIBUTING_DOC.read_text(encoding="utf-8")
+    zh_tools = ZH_ADDING_TOOLS_DOC.read_text(encoding="utf-8")
+    zh_contributing = ZH_CONTRIBUTING_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent" in en_tools
+    assert "built-in Doppel tool" in en_tools
+    assert "Build a Doppel Plugin" in en_tools
+    assert 'doppel chat -q "Use the weather tool for London"' in en_tools
+    assert "Build a Hermes Plugin" not in en_tools
+    assert 'hermes chat -q "Use the weather tool for London"' not in en_tools
+    assert "_HERMES_CORE_TOOLS" in en_tools
+    assert "hermes_cli/config.py" in en_tools
+
+    assert "Doppel Agent" in en_contributing
+    assert "https://github.com/Jnot1/doppel-agent.git" in en_contributing
+    assert "cd doppel-agent" in en_contributing
+    assert "~/.doppel" in en_contributing
+    assert "doppel doctor" in en_contributing
+    assert 'doppel chat -q "Hello"' in en_contributing
+    assert "doppel version" in en_contributing
+    assert "https://github.com/Jnot1/doppel-agent/issues" in en_contributing
+    assert "https://github.com/Jnot1/doppel-agent/blob/main/LICENSE" in en_contributing
+    assert "https://github.com/NousResearch/hermes-agent.git" not in en_contributing
+    assert "hermes doctor" not in en_contributing
+    assert 'hermes chat -q "Hello"' not in en_contributing
+    assert "get_hermes_home()" in en_contributing
+    assert "display_hermes_home()" in en_contributing
+
+    assert "Doppel Agent" in zh_tools
+    assert "Doppel 内置工具" in zh_tools
+    assert "构建 Doppel 插件" in zh_tools
+    assert 'doppel chat -q "Use the weather tool for London"' in zh_tools
+    assert "构建 Hermes 插件" not in zh_tools
+    assert 'hermes chat -q "Use the weather tool for London"' not in zh_tools
+    assert "_HERMES_CORE_TOOLS" in zh_tools
+    assert "hermes_cli/config.py" in zh_tools
+
+    assert "Doppel Agent" in zh_contributing
+    assert "https://github.com/Jnot1/doppel-agent.git" in zh_contributing
+    assert "cd doppel-agent" in zh_contributing
+    assert "~/.doppel" in zh_contributing
+    assert "doppel doctor" in zh_contributing
+    assert 'doppel chat -q "Hello"' in zh_contributing
+    assert "doppel version" in zh_contributing
+    assert "https://github.com/Jnot1/doppel-agent/issues" in zh_contributing
+    assert "https://github.com/Jnot1/doppel-agent/blob/main/LICENSE" in zh_contributing
+    assert "https://github.com/NousResearch/hermes-agent.git" not in zh_contributing
+    assert "hermes doctor" not in zh_contributing
+    assert 'hermes chat -q "Hello"' not in zh_contributing
+    assert "get_hermes_home()" in zh_contributing
+    assert "display_hermes_home()" in zh_contributing

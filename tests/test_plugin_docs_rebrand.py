@@ -90,6 +90,12 @@ EN_SUBSCRIPTION_PROXY_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "subscription-proxy.md"
 )
 EN_TOOLS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tools.md"
+EN_FALLBACK_PROVIDERS_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "fallback-providers.md"
+)
+EN_CREDENTIAL_POOLS_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "credential-pools.md"
+)
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -192,6 +198,28 @@ ZH_TOOLS_DOC = (
     / "user-guide"
     / "features"
     / "tools.md"
+)
+ZH_FALLBACK_PROVIDERS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "fallback-providers.md"
+)
+ZH_CREDENTIAL_POOLS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "credential-pools.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -1150,4 +1178,80 @@ def test_tools_feature_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "Hermes 内置了丰富的工具注册表" not in zh
     assert 'hermes chat --toolsets "web,terminal"' not in zh
     assert "hermes tools" not in zh
+    assert "hermes model" not in zh
+
+
+def test_fallback_provider_docs_prefer_doppel_surfaces_and_keep_legacy_literals():
+    en = EN_FALLBACK_PROVIDERS_DOC.read_text(encoding="utf-8")
+    zh = ZH_FALLBACK_PROVIDERS_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent has three layers of resilience" in en
+    assert "Doppel Agent 具备三层弹性机制" in zh
+    assert "doppel fallback" in en
+    assert "doppel fallback" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel auth add nous" in en
+    assert "doppel auth add nous" in zh
+    assert "doppel setup --portal" in en
+    assert "doppel setup --portal" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.hermes/config.yaml" in en
+    assert "~/.hermes/config.yaml" in zh
+    assert "fallback_providers" in en
+    assert "fallback_providers" in zh
+    assert "fallback_model" in en
+    assert "fallback_model" in zh
+
+    for fixed in ("HERMES_GEMINI_PROJECT_ID", "HERMES_QWEN_BASE_URL", "Auxiliary <task>"):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Hermes Agent has three layers of resilience" not in en
+    assert "Hermes Agent 具备三层弹性机制" not in zh
+    assert "hermes fallback" not in en
+    assert "hermes setup --portal" not in en
+    assert "hermes auth add nous" not in en
+    assert "hermes model" not in en
+    assert "hermes fallback" not in zh
+    assert "hermes setup --portal" not in zh
+    assert "hermes auth add nous" not in zh
+    assert "hermes model" not in zh
+
+
+def test_credential_pool_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_CREDENTIAL_POOLS_DOC.read_text(encoding="utf-8")
+    zh = ZH_CREDENTIAL_POOLS_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent automatically rotates" in en
+    assert "Doppel Agent 会自动轮换到下一个健康密钥" in zh
+    assert "doppel auth add openrouter --api-key" in en
+    assert "doppel auth add openrouter --api-key" in zh
+    assert "doppel auth list" in en
+    assert "doppel auth list" in zh
+    assert "doppel auth" in en
+    assert "doppel auth" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "~/.doppel/auth.json" in en
+    assert "~/.doppel/auth.json" in zh
+    assert "~/.hermes/auth.json" in en
+    assert "~/.hermes/auth.json" in zh
+    assert "fallback_providers" in en
+    assert "fallback_providers" in zh
+    assert "Doppel PKCE OAuth" in en
+    assert "Doppel PKCE OAuth" in zh
+
+    for fixed in ("hermes_pkce", "OPENROUTER_API_KEY", "ANTHROPIC_API_KEY", "credential_pool"):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Hermes automatically rotates" not in en
+    assert "Hermes 会自动轮换到下一个健康密钥" not in zh
+    assert "hermes auth add openrouter" not in en
+    assert "hermes auth list" not in en
+    assert "hermes model" not in en
+    assert "hermes auth add openrouter" not in zh
+    assert "hermes auth list" not in zh
     assert "hermes model" not in zh

@@ -64,6 +64,10 @@ def _nix_workflow_text() -> str:
     return (REPO_ROOT / ".github" / "workflows" / "nix.yml").read_text()
 
 
+def _nix_python_text() -> str:
+    return (REPO_ROOT / "nix" / "python.nix").read_text()
+
+
 def _homebrew_managed_descriptor(name: str) -> str:
     content = _homebrew_formula_text(name)
     match = re.search(r'HERMES_MANAGED:\s*"([^"]+)"', content)
@@ -183,6 +187,12 @@ def test_nix_workflow_evaluates_package_alias_pnames_on_linux_and_macos():
     assert '.#packages.aarch64-darwin.doppel-agent.pname' in content
     assert '.#packages.aarch64-darwin.hermes-agent.pname' in content
     assert '.#checks.aarch64-darwin.package-alias-contracts.drvPath' in content
+
+
+def test_nix_python_virtualenv_tracks_preferred_distribution_name():
+    content = _nix_python_text()
+    assert 'pythonSet.mkVirtualEnv "doppel-agent-env" {' in content
+    assert "  doppel-agent = dependency-groups;" in content
 
 
 def test_nix_docs_mention_preferred_doppel_service_alias():

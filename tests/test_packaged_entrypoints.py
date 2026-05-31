@@ -45,6 +45,17 @@ def _nix_overlay_aliases() -> dict[str, str]:
     )
 
 
+def _nix_pname() -> str:
+    content = (REPO_ROOT / "nix" / "hermes-agent.nix").read_text()
+    match = re.search(r'^\s*pname\s*=\s*"([^"]+)";', content, flags=re.MULTILINE)
+    assert match, "Could not locate Nix pname"
+    return match.group(1)
+
+
+def _nixos_module_text() -> str:
+    return (REPO_ROOT / "nix" / "nixosModules.nix").read_text()
+
+
 def _homebrew_managed_descriptor(name: str) -> str:
     content = _homebrew_formula_text(name)
     match = re.search(r'HERMES_MANAGED:\s*"([^"]+)"', content)
@@ -84,6 +95,10 @@ def test_nix_main_program_prefers_doppel():
     assert 'mainProgram = "doppel";' in content
 
 
+def test_nix_derivation_pname_prefers_doppel_agent():
+    assert _nix_pname() == "doppel-agent"
+
+
 def test_nix_packages_exports_preferred_and_legacy_package_aliases():
     aliases = _nix_packages_aliases()
     assert aliases["default"] == "hermesAgent"
@@ -95,6 +110,12 @@ def test_nix_overlay_exports_preferred_and_legacy_package_aliases():
     aliases = _nix_overlay_aliases()
     assert aliases["doppel-agent"] == "hermesAgent"
     assert aliases["hermes-agent"] == "hermesAgent"
+
+
+def test_nixos_module_keeps_legacy_service_namespace():
+    content = _nixos_module_text()
+    assert "options.services.hermes-agent" in content
+    assert "systemd.services.hermes-agent" in content
 
 
 def test_homebrew_formulae_share_the_same_release_source():

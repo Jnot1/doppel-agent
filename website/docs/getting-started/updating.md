@@ -223,10 +223,10 @@ If you installed via Nix flake, updates are managed through the Nix package mana
 nix flake update doppel-agent
 
 # Or rebuild with the latest
-nix profile upgrade hermes-agent
+nix profile upgrade doppel-agent
 ```
 
-The preferred flake package alias is now `#doppel-agent`, but upgrades still stay on `hermes-agent` in this phase because the underlying derivation/package-manager contract has not moved yet. Packaged installs still prefer the `doppel` CLI entrypoints and keep `hermes` as a compatibility alias.
+The preferred flake package alias and derivation contract now use `doppel-agent`. Legacy installs that were originally added as `#hermes-agent` can keep using that alias as a compatibility path, while packaged installs still prefer the `doppel` CLI entrypoints and keep `hermes` as a compatibility alias. The NixOS service/module namespace remains `services.hermes-agent`.
 
 Nix installations are immutable — rollback is handled by Nix's generation system:
 

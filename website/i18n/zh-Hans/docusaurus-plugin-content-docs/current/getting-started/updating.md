@@ -223,10 +223,10 @@ uv pip install -e ".[all]"
 nix flake update doppel-agent
 
 # Or rebuild with the latest
-nix profile upgrade hermes-agent
+nix profile upgrade doppel-agent
 ```
 
-首选 flake 包别名现已变为 `#doppel-agent`，但在这个阶段升级命令仍保持 `hermes-agent`，因为底层 derivation / 包管理契约尚未迁移。packaged 安装仍然默认使用 `doppel` 入口点，并保留 `hermes` 作为兼容别名。
+首选 flake 包别名和 derivation 契约现已使用 `doppel-agent`。如果某个旧安装最初是通过 `#hermes-agent` 添加的，仍可继续使用该兼容别名升级；packaged 安装仍然默认使用 `doppel` 入口点，并保留 `hermes` 作为兼容别名。NixOS 服务/模块命名空间仍保持 `services.hermes-agent`。
 
 Nix 安装是不可变的 — 回滚由 Nix 的 generation 系统处理：
 

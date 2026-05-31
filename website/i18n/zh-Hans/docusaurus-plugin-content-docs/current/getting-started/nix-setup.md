@@ -23,7 +23,7 @@ Doppel Agent 提供了一个 Nix flake，支持三个层级的集成：
 :::
 
 :::note 当前 Nix 包与二进制入口
-Nix 服务/模块标识在当前阶段仍保持 `hermes-agent`。新的 flake 安装现在可以使用首选包别名 `#doppel-agent`（overlay 中可用 `pkgs.doppel-agent`），同时保留 `#hermes-agent` / `pkgs.hermes-agent` 作为兼容别名。打包安装也会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，以及历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 Doppel 优先的写法，同时明确保留仍然有效的兼容契约。
+Nix derivation 与首选 flake 包契约现已使用 `doppel-agent`。NixOS 服务/模块标识仍保持现有的 `services.hermes-agent` / `systemd.services.hermes-agent` 兼容契约。新的 flake 安装应使用首选包别名 `#doppel-agent`（overlay 中可用 `pkgs.doppel-agent`），同时保留 `#hermes-agent` / `pkgs.hermes-agent` 作为兼容别名。打包安装也会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，以及历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 Doppel 优先的写法，同时明确保留仍然有效的服务兼容契约。
 :::
 
 ## 前提条件
@@ -357,7 +357,7 @@ Nix 用户最常见自定义需求的快速参考：
 Nix 表达式中的值会进入 `/nix/store`，该目录是全局可读的。请始终使用带有密钥管理器的 `environmentFiles`。
 :::
 
-`environment`（非密钥变量）和 `environmentFiles`（密钥文件）在激活时（`nixos-rebuild switch`）都会合并到 `$HERMES_HOME/.env` 中。Doppel 在每次启动时读取此文件，因此更改在 `systemctl restart hermes-agent` 后生效——无需重建容器。
+`environment`（非密钥变量）和 `environmentFiles`（密钥文件）在激活时（`nixos-rebuild switch`）都会合并到 `$HERMES_HOME/.env` 中。Doppel Agent 在每次启动时读取此文件，因此更改在 `systemctl restart hermes-agent` 后生效——无需重建容器。
 
 ### sops-nix
 
@@ -475,7 +475,7 @@ Agent 身份文件是独立的：Doppel 从 `$HERMES_HOME/SOUL.md` 加载其主�
 
 ### 带 OAuth 的 HTTP 传输
 
-对于使用 OAuth 2.1 的服务器，设置 `auth = "oauth"`。Doppel 实现了完整的 PKCE 流程——元数据发现、动态客户端注册、token 交换和自动刷新。
+对于使用 OAuth 2.1 的服务器，设置 `auth = "oauth"`。Doppel Agent 实现了完整的 PKCE 流程——元数据发现、动态客户端注册、token 交换和自动刷新。
 
 ```nix
 {
@@ -491,7 +491,7 @@ Token 存储在 `$HERMES_HOME/mcp-tokens/<server-name>.json` 中，在重启和�
 <details>
 <summary><strong>无头服务器上的初始 OAuth 授权</strong></summary>
 
-首次 OAuth 授权需要基于浏览器的同意流程。在无头部署中，Doppel 将授权 URL 打印到 stdout/日志，而不是打开浏览器。
+首次 OAuth 授权需要基于浏览器的同意流程。在无头部署中，Doppel Agent 会将授权 URL 打印到 stdout/日志，而不是打开浏览器。
 
 **方案 A：交互式引导** — 通过 `docker exec`（容器）或 `sudo -u hermes`（原生）运行一次流程：
 
@@ -640,7 +640,7 @@ services.hermes-agent.extraPlugins = [
 ];
 ```
 
-插件在激活时以符号链接方式安装到 `$HERMES_HOME/plugins/`。Doppel 通过其正常的目录扫描发现它们。从列表中移除插件并运行 `nixos-rebuild switch` 会删除符号链接。
+插件在激活时以符号链接方式安装到 `$HERMES_HOME/plugins/`。Doppel Agent 会通过其正常的目录扫描发现它们。从列表中移除插件并运行 `nixos-rebuild switch` 会删除符号链接。
 
 ### 入口点插件（`extraPythonPackages`）
 
@@ -906,7 +906,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 
 | 容器路径 | 主机路径 | 模式 | 说明 |
 |---|---|---|---|
-| `/nix/store` | `/nix/store` | `ro` | Doppel 二进制文件 + 所有 Nix 依赖 |
+| `/nix/store` | `/nix/store` | `ro` | Doppel Agent 二进制文件 + 所有 Nix 依赖 |
 | `/data` | `/var/lib/hermes` | `rw` | 所有状态、配置、工作区 |
 | `/home/hermes` | `${stateDir}/home` | `rw` | 持久化 Agent home——`pip install --user`、工具缓存 |
 | `/usr`、`/usr/local`、`/tmp` | （可写层） | `rw` | `apt`/`pip`/`npm` 安装——重启后持久，重建后丢失 |

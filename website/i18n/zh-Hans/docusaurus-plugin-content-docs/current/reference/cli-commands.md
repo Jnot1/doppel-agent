@@ -303,63 +303,63 @@ doppel portal [status|open|tools]
 
 关于 gateway 本身的配置，请参阅 [Tool Gateway](../user-guide/features/tool-gateway.md)。关于一键设置路径，请参阅上方的 `doppel setup --portal`。
 
-## `hermes whatsapp`
+## `doppel whatsapp`
 
 ```bash
-hermes whatsapp
+doppel whatsapp
 ```
 
 运行 WhatsApp 配对/设置流程，包括模式选择和二维码配对。
 
-## `hermes slack`
+## `doppel slack`
 
 ```bash
-hermes slack manifest              # 将 manifest 打印到 stdout
-hermes slack manifest --write      # 写入 ~/.hermes/slack-manifest.json
-hermes slack manifest --slashes-only  # 仅输出 features.slash_commands 数组
+doppel slack manifest              # 将 manifest 打印到 stdout
+doppel slack manifest --write      # 写入 ~/.doppel/slack-manifest.json
+doppel slack manifest --slashes-only  # 仅输出 features.slash_commands 数组
 ```
 
 生成一个 Slack app manifest，将 `COMMAND_REGISTRY` 中的每条 gateway 命令（`/btw`、`/stop`、`/model` 等）注册为一等公民 Slack 斜杠命令——与 Discord 和 Telegram 保持一致。将输出粘贴到你的 Slack app 配置中：[https://api.slack.com/apps](https://api.slack.com/apps) → 你的 app → **Features → App Manifest → Edit**，然后点击 **Save**。如果 scope 或斜杠命令有变化，Slack 会提示重新安装。
 
 | 标志 | 默认值 | 用途 |
 |------|---------|---------|
-| `--write [PATH]` | stdout | 写入文件而非 stdout。裸 `--write` 写入 `$HERMES_HOME/slack-manifest.json`。 |
-| `--name NAME` | `Hermes` | Slack 中的机器人显示名称。 |
+| `--write [PATH]` | stdout | 写入文件而非 stdout。裸 `--write` 写入 `$DOPPEL_HOME/slack-manifest.json`（同时仍兼容旧版 `$HERMES_HOME`）。 |
+| `--name NAME` | `Doppel` | Slack 中的机器人显示名称。 |
 | `--description DESC` | 默认简介 | Slack app 目录中显示的机器人描述。 |
 | `--slashes-only` | 关闭 | 仅输出 `features.slash_commands`，用于合并到手动维护的 manifest 中。 |
 
-`hermes update` 后重新运行 `hermes slack manifest --write` 以获取新增命令。
+`doppel update` 后重新运行 `doppel slack manifest --write` 以获取新增命令。
 
 
-## `hermes login` / `hermes logout` *（已弃用）*
+## `doppel login` / `doppel logout` *（已弃用）*
 
 :::caution
-`hermes login` 已被移除。请使用 `hermes auth` 管理 OAuth 凭据，使用 `hermes model` 选择 provider，或使用 `hermes setup` 进行完整的交互式设置。
+`doppel login` 已被移除。请使用 `doppel auth` 管理 OAuth 凭据，使用 `doppel model` 选择 provider，或使用 `doppel setup` 进行完整的交互式设置。
 :::
 
-## `hermes auth`
+## `doppel auth`
 
 管理同一 provider 的密钥轮换凭据池。完整文档请参阅 [凭据池](/user-guide/features/credential-pools)。
 
 ```bash
-hermes auth                                              # 交互式向导
-hermes auth list                                         # 显示所有池
-hermes auth list openrouter                              # 显示特定 provider
-hermes auth add openrouter --api-key sk-or-v1-xxx        # 添加 API 密钥
-hermes auth add anthropic --type oauth                   # 添加 OAuth 凭据
-hermes auth remove openrouter 2                          # 按索引删除
-hermes auth reset openrouter                             # 清除冷却时间
-hermes auth status anthropic                             # 显示某 provider 的认证状态
-hermes auth logout anthropic                             # 登出并清除已存储的认证状态
-hermes auth spotify                                      # 通过 PKCE 将 Hermes 与 Spotify 认证
+doppel auth                                              # 交互式向导
+doppel auth list                                         # 显示所有池
+doppel auth list openrouter                              # 显示特定 provider
+doppel auth add openrouter --api-key sk-or-v1-xxx        # 添加 API 密钥
+doppel auth add anthropic --type oauth                   # 添加 OAuth 凭据
+doppel auth remove openrouter 2                          # 按索引删除
+doppel auth reset openrouter                             # 清除冷却时间
+doppel auth status anthropic                             # 显示某 provider 的认证状态
+doppel auth logout anthropic                             # 登出并清除已存储的认证状态
+doppel auth spotify                                      # 通过 PKCE 将 Doppel 与 Spotify 认证
 ```
 
 子命令：`add`、`list`、`remove`、`reset`、`status`、`logout`、`spotify`。不带子命令调用时，启动交互式管理向导。
 
-## `hermes status`
+## `doppel status`
 
 ```bash
-hermes status [--all] [--deep]
+doppel status [--all] [--deep]
 ```
 
 | 选项 | 说明 |
@@ -367,10 +367,10 @@ hermes status [--all] [--deep]
 | `--all` | 以可分享的脱敏格式显示所有详情。 |
 | `--deep` | 运行可能耗时更长的深度检查。 |
 
-## `hermes cron`
+## `doppel cron`
 
 ```bash
-hermes cron <list|create|edit|pause|resume|run|remove|status|tick>
+doppel cron <list|create|edit|pause|resume|run|remove|status|tick>
 ```
 
 | 子命令 | 说明 |

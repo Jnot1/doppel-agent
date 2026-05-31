@@ -2169,7 +2169,7 @@ def test_zh_reference_cli_commands_rebrand_gateway_setup_and_portal_cluster():
         / "cli-commands.md"
     ).read_text(encoding="utf-8")
 
-    section = zh_cli_commands.split("## `doppel gateway`", 1)[1].split("## `hermes whatsapp`", 1)[0]
+    section = zh_cli_commands.split("## `doppel gateway`", 1)[1].split("## `doppel whatsapp`", 1)[0]
 
     assert "doppel gateway <subcommand>" in section
     assert "活跃的 `DOPPEL_HOME`（同时仍兼容旧版 `HERMES_HOME`）" in section
@@ -2192,6 +2192,51 @@ def test_zh_reference_cli_commands_rebrand_gateway_setup_and_portal_cluster():
     assert "运行 `hermes setup` 现在默认执行此操作" not in section
     assert "## `hermes portal`" not in section
     assert "上方的 `hermes setup --portal`" not in section
+
+
+def test_zh_reference_cli_commands_rebrand_whatsapp_auth_and_cron_cluster():
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    section = zh_cli_commands.split("## `doppel whatsapp`", 1)[1].split("## `hermes kanban`", 1)[0]
+
+    assert "```bash\ndoppel whatsapp\n```" in section
+    assert "## `doppel slack`" in section
+    assert "doppel slack manifest --write" in section
+    assert "~/.doppel/slack-manifest.json" in section
+    assert "$DOPPEL_HOME/slack-manifest.json" in section
+    assert "同时仍兼容旧版 `$HERMES_HOME`" in section
+    assert "| `--name NAME` | `Doppel` |" in section
+    assert "`doppel update` 后重新运行 `doppel slack manifest --write`" in section
+    assert "## `doppel login` / `doppel logout` *（已弃用）*" in section
+    assert "`doppel auth` 管理 OAuth 凭据" in section
+    assert "## `doppel auth`" in section
+    assert "doppel auth spotify                                      # 通过 PKCE 将 Doppel 与 Spotify 认证" in section
+    assert "## `doppel status`" in section
+    assert "doppel status [--all] [--deep]" in section
+    assert "## `doppel cron`" in section
+    assert "doppel cron <list|create|edit|pause|resume|run|remove|status|tick>" in section
+    assert "## `hermes whatsapp`" not in section
+    assert "## `hermes slack`" not in section
+    assert "~/.hermes/slack-manifest.json" not in section
+    assert "| `--name NAME` | `Hermes` |" not in section
+    assert "`hermes update` 后重新运行 `hermes slack manifest --write`" not in section
+    assert "## `hermes login` / `hermes logout` *（已弃用）*" not in section
+    assert "`hermes auth` 管理 OAuth 凭据" not in section
+    assert "## `hermes auth`" not in section
+    assert "通过 PKCE 将 Hermes 与 Spotify 认证" not in section
+    assert "## `hermes status`" not in section
+    assert "hermes status [--all] [--deep]" not in section
+    assert "## `hermes cron`" not in section
+    assert "hermes cron <list|create|edit|pause|resume|run|remove|status|tick>" not in section
 
 
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():

@@ -125,6 +125,7 @@ EN_WEB_DASHBOARD_DOC = (
 EN_SKINS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "skins.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
+EN_LOCAL_OLLAMA_GUIDE = REPO_ROOT / "website" / "docs" / "guides" / "local-ollama-setup.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
 ZH_ADDING_TOOLS_DOC = ZH_DEV_GUIDE_DIR / "adding-tools.md"
@@ -501,6 +502,16 @@ ZH_USE_SOUL_DOC = (
     / "guides"
     / "use-soul-with-hermes.md"
 )
+ZH_LOCAL_OLLAMA_GUIDE = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "guides"
+    / "local-ollama-setup.md"
+)
 
 
 def test_english_plugin_docs_prefer_doppel_branding_and_commands():
@@ -565,6 +576,97 @@ def test_zh_plugin_docs_prefer_doppel_branding_and_commands():
     assert "hermes plugins install" not in guide
     assert "hermes plugins enable <name>" not in guide
     assert "hermes skills tap add myorg/skills-repo" not in guide
+
+
+def test_local_ollama_guides_prefer_doppel_branding_and_keep_runtime_literals():
+    en = EN_LOCAL_OLLAMA_GUIDE.read_text(encoding="utf-8")
+    zh = ZH_LOCAL_OLLAMA_GUIDE.read_text(encoding="utf-8")
+
+    en_title = next(line for line in en.splitlines() if line.startswith("title:"))
+    zh_title = next(line for line in zh.splitlines() if line.startswith("title:"))
+    en_h1 = next(line for line in en.splitlines() if line.startswith("# "))
+    zh_h1 = next(line for line in zh.splitlines() if line.startswith("# "))
+
+    assert "Doppel" in en_title and "Hermes" not in en_title
+    assert "Doppel" in zh_title and "Hermes" not in zh_title
+    assert "Doppel" in en_h1
+    assert "Doppel" in zh_h1
+
+    assert "Run Doppel Agent Locally with Ollama" in en
+    assert "使用 Ollama 在本地运行 Doppel Agent" in zh
+    assert "Doppel Agent connected to Ollama as a custom endpoint" in en
+    assert "Doppel Agent 通过自定义端点连接到 Ollama" in zh
+    assert "Doppel Agent works exactly like it does with OpenRouter or Anthropic" in en
+    assert "Doppel Agent 的使用体验与 OpenRouter 或 Anthropic 完全一致" in zh
+    assert "Doppel Agent is an **agentic** assistant" in en
+    assert "Doppel Agent 是一个**agentic（智能体）**助手" in zh
+    assert "inside Doppel Agent with `/model`" in en
+    assert "在 Doppel Agent 中使用 `/model` 切换" in zh
+    assert "Run the Doppel setup wizard:" in en
+    assert "运行 Doppel 设置向导：" in zh
+    assert "`~/.doppel/.env` on fresh installs; legacy `~/.hermes/.env` still works" in en
+    assert "默认路径为 `~/.doppel/.env`" in zh
+    assert "`~/.doppel/config.yaml` on fresh installs; legacy `~/.hermes/config.yaml` still works" in en
+    assert "默认路径为 `~/.doppel/config.yaml`" in zh
+    assert "doppel setup" in en
+    assert "doppel setup" in zh
+    assert "\ndoppel\n```" in en
+    assert "\ndoppel\n```" in zh
+    assert "doppel gateway" in en
+    assert "doppel gateway" in zh
+    assert "64,000 tokens" in en
+    assert "64,000 token" in zh
+    assert "gemma4-64k" in en
+    assert "gemma4-64k" in zh
+    assert "Doppel Agent has auto-repair" in en
+    assert "Doppel Agent 具备自动修复功能" in zh
+    assert "Doppel Agent falls back to a cloud provider" in en
+    assert "Doppel Agent 将回退到云端提供商" in zh
+    assert "Doppel Agent wraps the command, runs it, and reads output" in en
+    assert "Doppel Agent 封装命令、执行并读取输出" in zh
+    assert "below Doppel Agent's 64K minimum" in en
+    assert "低于 Doppel Agent 所需的 64K 最低值" in zh
+
+    assert "Run Hermes Locally with Ollama" not in en
+    assert "使用 Ollama 在本地运行 Hermes" not in zh
+    assert "Hermes Agent entirely on your own machine" not in en
+    assert "在本机完整运行 Hermes Agent" not in zh
+    assert "Hermes connected to Ollama as a custom endpoint" not in en
+    assert "Hermes 通过自定义端点连接到 Ollama" not in zh
+    assert "Hermes is an **agentic** assistant" not in en
+    assert "Hermes 是一个**agentic（智能体）**助手" not in zh
+    assert "inside Hermes with `/model`" not in en
+    assert "在 Hermes 中使用 `/model` 切换" not in zh
+    assert "hermes setup" not in en
+    assert "hermes setup" not in zh
+    assert "hermes gateway" not in en
+    assert "hermes gateway" not in zh
+    assert "Hermes has auto-repair" not in en
+    assert "Hermes 具备自动修复功能" not in zh
+    assert "Hermes falls back to a cloud provider" not in en
+    assert "Hermes 将回退到云端提供商" not in zh
+    assert "Hermes wraps the command, runs it, reads output" not in en
+    assert "Hermes 封装命令、执行并读取输出" not in zh
+    assert "below Hermes' 64K minimum" not in en
+    assert "16384" not in zh
+    assert "gemma4-16k" not in zh
+
+    for literal in (
+        "HERMES_API_TIMEOUT",
+        "~/.hermes/.env",
+        "~/.hermes/config.yaml",
+        "ollama",
+        "http://localhost:11434/v1",
+        "gemma4:31b",
+        "gemma2:27b",
+        "gemma2:9b",
+        "llama3.2:3b",
+        "OLLAMA_KEEP_ALIVE",
+        "openrouter",
+        "anthropic/claude-sonnet-4",
+    ):
+        assert literal in en
+        assert literal in zh
 
 
 def test_built_in_and_integration_plugin_docs_prefer_doppel_surfaces():

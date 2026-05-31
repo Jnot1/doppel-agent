@@ -2026,6 +2026,27 @@ class TestLegacyGatewayServiceRouting:
         assert "Docker" in out or "docker" in out
         assert "restart" in out.lower()
 
+    def test_install_in_container_with_s6_prints_doppel_profile_guidance(self, monkeypatch, capsys):
+        monkeypatch.setattr(gateway_cli, "is_managed", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_wsl", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_container", lambda: True)
+        monkeypatch.setattr(
+            "hermes_cli.service_manager.detect_service_manager",
+            lambda: "s6",
+        )
+
+        gateway_cli.gateway_command(
+            SimpleNamespace(gateway_command="install", force=False, system=False, run_as_user=None)
+        )
+
+        out = capsys.readouterr().out
+        assert "doppel profile create <name>" in out
+        assert "doppel -p <name> gateway start" in out
+        assert "doppel status" in out
+
     def test_uninstall_in_container_prints_docker_guidance(self, monkeypatch, capsys):
         """'hermes gateway uninstall' inside Docker exits 0 with container guidance."""
         import pytest
@@ -2043,6 +2064,23 @@ class TestLegacyGatewayServiceRouting:
         assert exc_info.value.code == 0
         out = capsys.readouterr().out
         assert "docker" in out.lower()
+
+    def test_uninstall_in_container_with_s6_prints_doppel_profile_guidance(self, monkeypatch, capsys):
+        monkeypatch.setattr(gateway_cli, "is_managed", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_container", lambda: True)
+        monkeypatch.setattr(
+            "hermes_cli.service_manager.detect_service_manager",
+            lambda: "s6",
+        )
+
+        gateway_cli.gateway_command(SimpleNamespace(gateway_command="uninstall", system=False))
+
+        out = capsys.readouterr().out
+        assert "doppel profile delete <name>" in out
+        assert "doppel -p <name> gateway stop" in out
 
     def test_start_in_container_prints_docker_guidance(self, monkeypatch, capsys):
         """'hermes gateway start' inside Docker exits 0 with container guidance."""

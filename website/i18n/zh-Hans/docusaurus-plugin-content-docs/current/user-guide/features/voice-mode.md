@@ -1,29 +1,29 @@
 ---
 sidebar_position: 10
 title: "语音模式"
-description: "与 Hermes Agent 进行实时语音对话 — CLI、Telegram、Discord（私信、文字频道和语音频道）"
+description: "与 Doppel Agent 进行实时语音对话 — CLI、Telegram、Discord（私信、文字频道和语音频道）"
 ---
 
 # 语音模式
 
-Hermes Agent 支持在 CLI 和消息平台上进行完整的语音交互。通过麦克风与 Agent 对话，听取语音回复，并在 Discord 语音频道中进行实时语音对话。
+Doppel Agent 支持在 CLI 和消息平台上进行完整的语音交互。通过麦克风与 Agent 对话，听取语音回复，并在 Discord 语音频道中进行实时语音对话。
 
-如需包含推荐配置和实际使用模式的实践指南，请参阅 [使用 Hermes 的语音模式](/guides/use-voice-mode-with-hermes)。
+如需包含推荐配置和实际使用模式的实践指南，请参阅 [在 Doppel Agent 中使用语音模式](/guides/use-voice-mode-with-hermes)。
 
 ## 前提条件
 
 使用语音功能前，请确保已完成以下准备：
 
-1. **已安装 Hermes Agent** — `pip install hermes-agent`（参见 [安装](/getting-started/installation)）
-2. **已配置 LLM 提供商** — 运行 `hermes model` 或在 `~/.hermes/.env` 中设置首选提供商的凭据
-3. **基础设置正常** — 运行 `hermes` 验证 Agent 能够响应文字消息，再启用语音功能
+1. **已安装 Doppel Agent** — 当前发布的包名仍为 `hermes-agent`，因此请使用 `pip install hermes-agent` 安装（参见 [安装](/getting-started/installation)）
+2. **已配置 LLM 提供商** — 运行 `doppel model`，或在 `~/.doppel/.env` 中设置首选提供商的凭据（legacy 安装仍可能将同样的文件保留在 `~/.hermes/.env` 下）
+3. **基础设置正常** — 运行 `doppel` 验证 Agent 能够响应文字消息，再启用语音功能
 
 :::tip
-`~/.hermes/` 目录和默认的 `config.yaml` 会在首次运行 `hermes` 时自动创建。只需手动创建 `~/.hermes/.env` 来存放 API 密钥。
+首选的 `~/.doppel/` 目录和默认的 `config.yaml` 会在首次运行 `doppel` 时自动创建。legacy 安装仍可能将同样的文件保留在 `~/.hermes/` 下。全新安装时，你只需手动创建 `~/.doppel/.env` 来存放 API 密钥。
 :::
 
 :::tip Nous Portal 同时覆盖两项
-付费的 [Nous Portal](/user-guide/features/tool-gateway) 订阅通过 Tool Gateway 同时提供 LLM（第 2 步）**和** OpenAI TTS — 无需单独的 OpenAI 密钥。全新安装时，`hermes setup --portal` 可一次性完成两项配置。
+付费的 [Nous Portal](/user-guide/features/tool-gateway) 订阅通过 Tool Gateway 同时提供 LLM（第 2 步）**和** OpenAI TTS — 无需单独的 OpenAI 密钥。全新安装时，`doppel setup --portal` 可一次性完成两项配置。
 :::
 
 ## 概览
@@ -88,7 +88,7 @@ sudo apt install espeak-ng   # for NeuTTS
 
 ### API 密钥
 
-添加到 `~/.hermes/.env`：
+添加到 `~/.doppel/.env`（legacy 安装仍可能将同样的文件保留在 `~/.hermes/.env` 下）：
 
 ```bash
 # 语音转文字（STT）— 本地提供商完全不需要密钥
@@ -109,14 +109,14 @@ ELEVENLABS_API_KEY=***           # ElevenLabs — 高级音质
 
 ## CLI 语音模式
 
-语音模式在**经典 CLI**（`hermes chat`）和 **TUI**（`hermes --tui`）中均可使用。两者行为完全一致 — 相同的斜杠命令、相同的 VAD（语音活动检测）静音检测、相同的流式 TTS、相同的幻觉过滤器。TUI 额外将崩溃诊断日志转发至 `~/.hermes/logs/`，以便在异常音频后端出现按键录音失败时提供完整堆栈跟踪，而非静默消失。
+语音模式在**经典 CLI**（`doppel chat`）和 **TUI**（`doppel --tui`）中均可使用。两者行为完全一致 — 相同的斜杠命令、相同的 VAD（语音活动检测）静音检测、相同的流式 TTS、相同的幻觉过滤器。TUI 额外将崩溃诊断日志转发至 `~/.doppel/logs/`，以便在异常音频后端出现按键录音失败时提供完整堆栈跟踪，而非静默消失。legacy 安装仍可能将同样的日志保留在 `~/.hermes/logs/` 下。
 
 ### 快速开始
 
 启动 CLI 并启用语音模式：
 
 ```bash
-hermes                # 启动交互式 CLI
+doppel                # 启动交互式 CLI
 ```
 
 然后在 CLI 中使用以下命令：
@@ -131,7 +131,7 @@ hermes                # 启动交互式 CLI
 
 ### 工作原理
 
-1. 使用 `hermes` 启动 CLI，并通过 `/voice on` 启用语音模式
+1. 使用 `doppel` 启动 CLI，并通过 `/voice on` 启用语音模式
 2. **按下 Ctrl+B** — 播放提示音（880Hz），开始录音
 3. **开始说话** — 实时音频电平条显示输入状态：`● [▁▂▃▅▇▇▅▂] ❯`
 4. **停止说话** — 静音 3 秒后自动停止录音
@@ -143,7 +143,7 @@ hermes                # 启动交互式 CLI
 此循环持续进行，直到在录音过程中按下 **Ctrl+B**（退出连续模式），或连续 3 次录音均未检测到语音为止。
 
 :::tip
-录音键可通过 `~/.hermes/config.yaml` 中的 `voice.record_key` 配置（默认：`ctrl+b`）。
+录音键可通过 `~/.doppel/config.yaml` 中的 `voice.record_key` 配置（默认：`ctrl+b`）。legacy 安装仍可能将同样的设置保留在 `~/.hermes/config.yaml` 下。
 :::
 
 ### 静音检测
@@ -180,8 +180,8 @@ Whisper 有时会从静音或背景噪音中生成幻觉文字（如"Thank you f
 启动 gateway 以连接到消息平台：
 
 ```bash
-hermes gateway        # 启动 gateway（连接到已配置的平台）
-hermes gateway setup  # 首次配置的交互式设置向导
+doppel gateway        # 启动 gateway（连接到已配置的平台）
+doppel gateway setup  # 首次配置的交互式设置向导
 ```
 
 ### Discord：频道与私信
@@ -195,10 +195,10 @@ Bot 在 Discord 上支持两种交互模式：
 
 **私信（个人使用推荐）：** 直接与 Bot 开启私信并发送消息 — 无需 @提及。语音回复和所有命令与在频道中使用完全相同。
 
-**服务器频道：** Bot 仅在被 @提及时响应（例如 `@hermesbyt4 你好`）。请确保从提及弹窗中选择 **Bot 用户**，而非同名角色。
+**服务器频道：** Bot 仅在被 @提及时响应（例如 `@your-bot-name 你好`）。请确保从提及弹窗中选择 **Bot 用户**，而非同名角色。
 
 :::tip
-如需在服务器频道中禁用提及要求，在 `~/.hermes/.env` 中添加：
+如需在服务器频道中禁用提及要求，在 `~/.doppel/.env` 中添加（legacy 安装仍可能将同样的文件保留在 `~/.hermes/.env` 下）：
 ```bash
 DISCORD_REQUIRE_MENTION=false
 ```
@@ -302,14 +302,15 @@ brew install opus
 sudo apt install libopus0
 ```
 
-Bot 会从以下路径自动加载编解码器：
-- **macOS：** `/opt/homebrew/lib/libopus.dylib`
+Bot 会先尝试通过系统库加载器（`find_library("opus")`）加载编解码器。如果失败，则回退到以下路径：
+- **macOS（Apple Silicon）：** `/opt/homebrew/lib/libopus.dylib`
+- **macOS（Intel）：** `/usr/local/lib/libopus.dylib`
 - **Linux：** `libopus.so.0`
 
 #### 4. 环境变量
 
 ```bash
-# ~/.hermes/.env
+# ~/.doppel/.env
 
 # Discord bot（已为文字功能配置）
 DISCORD_BOT_TOKEN=your-bot-token
@@ -326,7 +327,7 @@ DISCORD_ALLOWED_USERS=your-user-id
 ### 启动 Gateway
 
 ```bash
-hermes gateway        # 使用现有配置启动
+doppel gateway        # 使用现有配置启动
 ```
 
 Bot 应在几秒内在 Discord 中上线。
@@ -373,7 +374,7 @@ Bot 在播放 TTS 回复时会自动暂停音频监听，防止听到并重复�
 只有 `DISCORD_ALLOWED_USERS` 中列出的用户才能通过语音进行交互。其他用户的音频会被静默忽略。
 
 ```bash
-# ~/.hermes/.env
+# ~/.doppel/.env
 DISCORD_ALLOWED_USERS=284102345871466496
 ```
 
@@ -485,13 +486,15 @@ brew install portaudio    # macOS
 sudo apt install portaudio19-dev  # Ubuntu
 ```
 
+如果你在 Linux 桌面环境的 Docker 中运行 Doppel Agent，容器还需要访问宿主机的音频套接字。请参阅 [Docker 音频桥接](/user-guide/docker#optional-linux-desktop-audio-bridge) 说明，以获得兼容 PulseAudio/PipeWire 的设置方法。
+
 ### Bot 在 Discord 服务器频道中不响应
 
 Bot 在服务器频道中默认需要 @提及。请确认：
 
 1. 输入 `@` 后选择 **Bot 用户**（带有 #discriminator），而非同名**角色**
 2. 或改用私信 — 无需提及
-3. 或在 `~/.hermes/.env` 中设置 `DISCORD_REQUIRE_MENTION=false`
+3. 或在 `~/.doppel/.env` 中设置 `DISCORD_REQUIRE_MENTION=false`（legacy 安装仍可能将同样的文件保留在 `~/.hermes/.env` 下）
 
 ### Bot 加入语音频道但听不到我说话
 
@@ -503,7 +506,7 @@ Bot 在服务器频道中默认需要 @提及。请确认：
 
 - 验证 STT 是否可用：安装 `faster-whisper`（无需密钥）或设置 `GROQ_API_KEY` / `VOICE_TOOLS_OPENAI_KEY`
 - 检查 LLM 模型是否已配置且可访问
-- 查看 gateway 日志：`tail -f ~/.hermes/logs/gateway.log`
+- 查看 gateway 日志：`tail -f ~/.doppel/logs/gateway.log`（legacy 安装仍可能将同样的日志保留在 `~/.hermes/logs/gateway.log` 下）
 
 ### Bot 有文字回复但语音频道中没有声音
 

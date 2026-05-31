@@ -109,6 +109,7 @@ EN_FEATURE_ACP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" 
 EN_TTS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tts.md"
 EN_SPOTIFY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "spotify.md"
 EN_WEB_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "web-search.md"
+EN_VOICE_MODE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "voice-mode.md"
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
 )
@@ -362,6 +363,17 @@ ZH_WEB_SEARCH_DOC = (
     / "user-guide"
     / "features"
     / "web-search.md"
+)
+ZH_VOICE_MODE_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "voice-mode.md"
 )
 ZH_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT
@@ -2038,6 +2050,73 @@ def test_web_search_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "source ~/.hermes/hermes-agent/.venv/bin/activate" not in zh
     assert "hermes skills install official/research/searxng-search" not in en
     assert "hermes skills install official/research/searxng-search" not in zh
+
+
+def test_voice_mode_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_VOICE_MODE_DOC.read_text(encoding="utf-8")
+    zh = ZH_VOICE_MODE_DOC.read_text(encoding="utf-8")
+
+    assert "Real-time voice conversations with Doppel Agent" in en
+    assert "与 Doppel Agent 进行实时语音对话" in zh
+    assert "Doppel Agent supports full voice interaction" in en
+    assert "Doppel Agent 支持在 CLI 和消息平台上进行完整的语音交互" in zh
+    assert "[Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-hermes)" in en
+    assert "[在 Doppel Agent 中使用语音模式](/guides/use-voice-mode-with-hermes)" in zh
+    assert "`doppel model`" in en
+    assert "`doppel model`" in zh
+    assert "`doppel setup --portal`" in en
+    assert "`doppel setup --portal`" in zh
+    assert "`doppel chat`" in en
+    assert "`doppel chat`" in zh
+    assert "`doppel --tui`" in en
+    assert "`doppel --tui`" in zh
+    assert "doppel gateway" in en
+    assert "doppel gateway" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/logs/" in en
+    assert "~/.doppel/logs/" in zh
+    assert "@your-bot-name hello" in en
+    assert "@your-bot-name 你好" in zh
+
+    for fixed in (
+        "hermes-agent[voice]",
+        "hermes-agent[messaging]",
+        "hermes-agent[tts-premium]",
+        "hermes-agent[all]",
+        "~/.hermes/.env",
+        "~/.hermes/config.yaml",
+        "~/.hermes/logs/",
+        "DISCORD_REQUIRE_MENTION",
+        "DISCORD_FREE_RESPONSE_CHANNELS",
+        "GROQ_API_KEY",
+        "VOICE_TOOLS_OPENAI_KEY",
+        "ELEVENLABS_API_KEY",
+        'find_library("opus")',
+        "/opt/homebrew/lib/libopus.dylib",
+        "/usr/local/lib/libopus.dylib",
+        "libopus.so.0",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "Real-time voice conversations with Hermes Agent" not in en
+    assert "与 Hermes Agent 进行实时语音对话" not in zh
+    assert "Hermes Agent supports full voice interaction" not in en
+    assert "Hermes Agent 支持在 CLI 和消息平台上进行完整的语音交互" not in zh
+    assert "[Use Voice Mode with Hermes](/guides/use-voice-mode-with-hermes)" not in en
+    assert "[使用 Hermes 的语音模式](/guides/use-voice-mode-with-hermes)" not in zh
+    assert "`hermes model`" not in en
+    assert "`hermes model`" not in zh
+    assert "`hermes setup --portal`" not in en
+    assert "`hermes setup --portal`" not in zh
+    assert "`hermes chat`" not in en
+    assert "`hermes chat`" not in zh
+    assert "`hermes --tui`" not in en
+    assert "`hermes --tui`" not in zh
+    assert "@hermesbyt4 hello" not in en
+    assert "@hermesbyt4 你好" not in zh
 
 
 def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():

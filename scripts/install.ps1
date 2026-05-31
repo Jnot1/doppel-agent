@@ -91,8 +91,28 @@ $RepoUrlHttps = "${ForkRepoWebUrl}.git"
 $InstallScriptUrl = "https://raw.githubusercontent.com/$ForkRepoSlug/main/scripts/install.ps1"
 $PythonVersion = "3.11"
 $NodeVersion = "22"
-$DefaultDoppelHome = Join-Path $env:LOCALAPPDATA "doppel"
-$LegacyHermesHome = Join-Path $env:LOCALAPPDATA "hermes"
+$localAppDataRoot = $env:LOCALAPPDATA
+if (-not $localAppDataRoot) {
+    try {
+        $localAppDataRoot = [Environment]::GetFolderPath("LocalApplicationData")
+    } catch {
+        $localAppDataRoot = ""
+    }
+}
+if ($localAppDataRoot) {
+    $DefaultDoppelHome = Join-Path $localAppDataRoot "doppel"
+    $LegacyHermesHome = Join-Path $localAppDataRoot "hermes"
+} else {
+    $fallbackHomeRoot = $env:HOME
+    if (-not $fallbackHomeRoot) {
+        $fallbackHomeRoot = $env:USERPROFILE
+    }
+    if (-not $fallbackHomeRoot) {
+        $fallbackHomeRoot = [System.IO.Path]::GetTempPath()
+    }
+    $DefaultDoppelHome = Join-Path $fallbackHomeRoot ".doppel"
+    $LegacyHermesHome = Join-Path $fallbackHomeRoot ".hermes"
+}
 
 if (-not $PSBoundParameters.ContainsKey("HermesHome")) {
     if ($env:DOPPEL_HOME) {
@@ -983,24 +1003,24 @@ function Migrate-ManagedCheckoutDir {
 
     if (-not (Test-Path "$legacyCheckoutDir\.git")) {
         if (Test-Path "$preferredCheckoutDir\.git") {
-            $InstallDir = $preferredCheckoutDir
+            $script:InstallDir = $preferredCheckoutDir
         }
         return
     }
 
     if (Test-Path $preferredCheckoutDir) {
-        $InstallDir = $preferredCheckoutDir
+        $script:InstallDir = $preferredCheckoutDir
         return
     }
 
     Write-Info "Migrating managed checkout to $preferredCheckoutDir..."
     try {
         Move-Item $legacyCheckoutDir $preferredCheckoutDir -Force
-        $InstallDir = $preferredCheckoutDir
+        $script:InstallDir = $preferredCheckoutDir
         Write-Success "Managed checkout migrated to $InstallDir"
     } catch {
         Write-Warn "Could not migrate managed checkout to $preferredCheckoutDir -- continuing with legacy path."
-        $InstallDir = $legacyCheckoutDir
+        $script:InstallDir = $legacyCheckoutDir
     }
 }
 

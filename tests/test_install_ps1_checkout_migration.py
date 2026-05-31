@@ -34,7 +34,7 @@ def test_install_ps1_defines_managed_checkout_migration_helper() -> None:
     assert "$preferredCheckoutDir = Join-Path $HermesHome $ManagedCheckoutName" in body
     assert "$legacyCheckoutDir = Join-Path $HermesHome $LegacyManagedCheckoutName" in body
     assert "Move-Item $legacyCheckoutDir $preferredCheckoutDir -Force" in body
-    assert "$InstallDir = $preferredCheckoutDir" in body
+    assert "$script:InstallDir = $preferredCheckoutDir" in body
 
 
 def test_install_repository_calls_checkout_migration_before_repo_access() -> None:

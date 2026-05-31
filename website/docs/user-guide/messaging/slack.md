@@ -256,11 +256,11 @@ Then in Slack:
 4. **Save**. Slack will prompt to reinstall the app if scopes or slash
    commands changed.
 
-### Legacy `/hermes <subcommand>` still works
+### `/doppel <subcommand>` also works
 
-For backward compatibility with older manifests, you can still type
-`/hermes btw run the tests` — Doppel routes it the same way as `/btw
-run the tests`. Free-form questions also work: `/hermes what's the
+If you prefer a single catch-all entry point, you can type
+`/doppel btw run the tests` — Doppel routes it the same way as `/btw
+run the tests`. Free-form questions also work: `/doppel what's the
 weather?` is treated as a regular message.
 
 ### Using commands inside threads (the `!cmd` prefix)

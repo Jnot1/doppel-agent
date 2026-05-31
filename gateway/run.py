@@ -8970,14 +8970,10 @@ class GatewayRunner:
             platform_name = source.platform.value
             env_key = _home_target_env_var(platform_name)
             if not os.getenv(env_key):
-                # Slack dispatches all Hermes commands through a single
-                # parent slash command `/hermes`; bare `/sethome` is not
-                # registered and would fail with "app did not respond".
-                sethome_cmd = (
-                    "/hermes sethome"
-                    if source.platform == Platform.SLACK
-                    else "/sethome"
-                )
+                # Slack now registers /sethome natively in generated
+                # manifests, so the same onboarding hint works across
+                # messaging platforms.
+                sethome_cmd = "/sethome"
                 notice = (
                     f"📬 No home channel is set for {platform_name.title()}. "
                     f"A home channel is where Doppel delivers cron job results "

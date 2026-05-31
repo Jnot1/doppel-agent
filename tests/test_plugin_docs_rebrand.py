@@ -140,6 +140,9 @@ EN_EXTENDING_DASHBOARD_DOC = (
 EN_WEB_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "web-dashboard.md"
 )
+EN_SLACK_MESSAGING_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "messaging" / "slack.md"
+)
 EN_WHATSAPP_MESSAGING_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "messaging" / "whatsapp.md"
 )
@@ -226,6 +229,17 @@ ZH_WHATSAPP_MESSAGING_DOC = (
     / "user-guide"
     / "messaging"
     / "whatsapp.md"
+)
+ZH_SLACK_MESSAGING_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "messaging"
+    / "slack.md"
 )
 ZH_MATRIX_MESSAGING_DOC = (
     REPO_ROOT
@@ -5608,6 +5622,35 @@ def test_whatsapp_and_matrix_messaging_docs_prefer_doppel_customer_facing_surfac
     assert '"initial_device_display_name": "Doppel Agent"' in en_matrix
     assert '"initial_device_display_name": "Hermes Agent"' not in en_matrix
     assert '"initial_device_display_name": "Doppel Agent"' in zh_matrix
+
+
+def test_slack_messaging_docs_prefer_doppel_customer_facing_surfaces():
+    en = EN_SLACK_MESSAGING_DOC.read_text(encoding="utf-8")
+    zh = ZH_SLACK_MESSAGING_DOC.read_text(encoding="utf-8")
+
+    for expected in (
+        "### `/doppel <subcommand>` also works",
+        "`/doppel btw run the tests`",
+        "Free-form questions also work: `/doppel what's the",
+        "weather?` is treated as a regular message.",
+    ):
+        assert expected in en
+
+    for expected in (
+        "### `/doppel <子命令>` 同样可用",
+        "`/doppel btw run the tests`",
+        "`/doppel what's the weather?`",
+    ):
+        assert expected in zh
+
+    for unexpected in (
+        "### Legacy `/hermes <subcommand>` still works",
+        "`/hermes btw run the tests`",
+        "`/hermes what's the weather?`",
+        "### 旧版 `/hermes <子命令>` 仍然有效",
+    ):
+        assert unexpected not in en
+        assert unexpected not in zh
 
 
 def test_deliverable_mode_docs_prefer_doppel_customer_facing_surfaces():

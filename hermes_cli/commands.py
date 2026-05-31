@@ -1042,21 +1042,22 @@ def slack_native_slashes() -> list[tuple[str, str, str]]:
     Plugin-registered slash commands are included too.
 
     Commands whose sanitized name collides with a Slack built-in
-    (e.g. ``/status``, ``/me``, ``/join``) are silently skipped.  Users
-    can still reach them via ``/hermes <command>``.
+    (e.g. ``/status``, ``/me``, ``/join``) are silently skipped. Users
+    can still reach them via ``/doppel <command>``.
 
     Results are clamped to Slack's 50-command limit with duplicate-name
-    avoidance. ``/hermes`` is always reserved as the first entry so the
-    legacy ``/hermes <subcommand>`` form keeps working for anything that
-    gets dropped by the clamp or for free-form questions.
+    avoidance. ``/doppel`` is always reserved as the first entry so new
+    manifests advertise the Doppel-first catch-all command. Legacy
+    ``/hermes <subcommand>`` traffic still routes in the Slack adapter
+    for older workspace manifests and free-form questions.
     """
     overrides = _resolve_config_gates()
     entries: list[tuple[str, str, str]] = []
     seen: set[str] = set()
 
-    # Reserve /hermes as the catch-all top-level command.
-    entries.append(("hermes", "Talk to Doppel or run a subcommand", "[subcommand] [args]"))
-    seen.add("hermes")
+    # Reserve /doppel as the catch-all top-level command for new manifests.
+    entries.append(("doppel", "Talk to Doppel or run a subcommand", "[subcommand] [args]"))
+    seen.add("doppel")
 
     def _add(name: str, desc: str, hint: str) -> None:
         slack_name = _sanitize_slack_name(name)
@@ -1092,7 +1093,7 @@ def slack_native_slashes() -> list[tuple[str, str, str]]:
     return entries
 
 
-def slack_app_manifest(request_url: str = "https://hermes-agent.local/slack/commands") -> dict[str, Any]:
+def slack_app_manifest(request_url: str = "https://doppel-agent.local/slack/commands") -> dict[str, Any]:
     """Generate a Slack app manifest with all gateway commands as slashes.
 
     ``request_url`` is required by Slack's manifest schema for every slash

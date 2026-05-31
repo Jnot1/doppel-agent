@@ -11195,7 +11195,7 @@ def cmd_prompt_size(args):
 
 
 def cmd_logs(args):
-    """View and filter Hermes log files."""
+    """View and filter Doppel log files."""
     from hermes_cli.logs import tail_log, list_logs
 
     log_name = getattr(args, "log_name", "agent") or "agent"
@@ -11658,7 +11658,7 @@ def main():
     )
     fallback_subparsers.add_parser(
         "add",
-        help="Pick a provider + model (same picker as `hermes model`) and append to the chain",
+        help="Pick a provider + model (same picker as `doppel model`) and append to the chain",
     )
     fallback_subparsers.add_parser(
         "remove",
@@ -11963,7 +11963,7 @@ def main():
     proxy_start.add_argument(
         "--provider",
         default="nous",
-        help="Upstream provider: nous or xai (default: nous). See `hermes proxy providers`.",
+        help="Upstream provider: nous or xai (default: nous). See `doppel proxy providers`.",
     )
     proxy_start.add_argument(
         "--host",
@@ -13620,7 +13620,7 @@ Examples:
     # ── Catalog (Nous-approved MCPs shipped with the repo) ─────────────────
     mcp_sub.add_parser(
         "picker",
-        help="Interactive catalog picker (also the default for `hermes mcp`)",
+        help="Interactive catalog picker (also the default for `doppel mcp`)",
     )
     mcp_sub.add_parser(
         "catalog",
@@ -13628,7 +13628,7 @@ Examples:
     )
     mcp_install_p = mcp_sub.add_parser(
         "install",
-        help="Install a catalog MCP by name (e.g. `hermes mcp install n8n`)",
+        help="Install a catalog MCP by name (e.g. `doppel mcp install n8n`)",
     )
     mcp_install_p.add_argument(
         "identifier",

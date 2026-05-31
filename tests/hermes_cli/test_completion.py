@@ -95,6 +95,7 @@ class TestGenerateBash:
     def test_contains_completion_function_and_register(self):
         out = generate_bash(_make_parser())
         assert "_hermes_completion()" in out
+        assert "complete -F _hermes_completion doppel" in out
         assert "complete -F _hermes_completion hermes" in out
 
     def test_top_level_commands_present(self):
@@ -127,7 +128,7 @@ class TestGenerateBash:
 class TestGenerateZsh:
     def test_contains_compdef_header(self):
         out = generate_zsh(_make_parser())
-        assert "#compdef hermes" in out
+        assert "#compdef doppel hermes" in out
 
     def test_top_level_commands_present(self):
         out = generate_zsh(_make_parser())
@@ -142,7 +143,7 @@ class TestGenerateZsh:
 
     def test_registers_compdef_instead_of_invoking_completion_function(self):
         out = generate_zsh(_make_parser())
-        assert 'compdef _hermes hermes' in out
+        assert 'compdef _hermes doppel hermes' in out
         assert '_hermes "$@"' not in out
 
     def test_preserves_valid_zsh_arguments_alias_syntax(self):
@@ -178,7 +179,7 @@ class TestGenerateZsh:
                 [
                     "zsh",
                     "-fc",
-                    f"autoload -Uz compinit && compinit -D; source {path}; [[ ${{_comps[hermes]}} == _hermes ]]",
+                    f"autoload -Uz compinit && compinit -D; source {path}; [[ ${{_comps[doppel]}} == _hermes && ${{_comps[hermes]}} == _hermes ]]",
                 ],
                 capture_output=True,
                 text=True,
@@ -196,6 +197,7 @@ class TestGenerateZsh:
 class TestGenerateFish:
     def test_disables_file_completion(self):
         out = generate_fish(_make_parser())
+        assert "complete -c doppel -f" in out
         assert "complete -c hermes -f" in out
 
     def test_top_level_commands_present(self):
@@ -259,6 +261,8 @@ class TestProfileCompletion:
     def test_bash_has_profiles_helper(self):
         out = generate_bash(_make_parser())
         assert "_hermes_profiles()" in out
+        assert 'profiles_dir="${DOPPEL_HOME}/profiles"' in out
+        assert 'profiles_dir="$HOME/.doppel/profiles"' in out
         assert 'profiles_dir="$HOME/.hermes/profiles"' in out
 
     def test_bash_completes_profiles_after_p_flag(self):
@@ -272,7 +276,7 @@ class TestProfileCompletion:
         assert "use|delete|show|alias|rename|export)" in out
 
     def test_bash_profile_actions_complete_profile_names(self):
-        """After 'hermes profile use', complete with profile names."""
+        """After 'doppel profile use', complete with profile names."""
         out = generate_bash(_make_parser())
         # The profile case should have _hermes_profiles for name-taking actions
         lines = out.split("\n")
@@ -289,7 +293,8 @@ class TestProfileCompletion:
     def test_zsh_has_profiles_helper(self):
         out = generate_zsh(_make_parser())
         assert "_hermes_profiles()" in out
-        assert "$HOME/.hermes/profiles" in out
+        assert '$HOME/.doppel/profiles' in out
+        assert '$HOME/.hermes/profiles' in out
 
     def test_zsh_has_profile_flag_completion(self):
         out = generate_zsh(_make_parser())
@@ -303,6 +308,7 @@ class TestProfileCompletion:
     def test_fish_has_profiles_helper(self):
         out = generate_fish(_make_parser())
         assert "__hermes_profiles" in out
+        assert "$HOME/.doppel/profiles" in out
         assert "$HOME/.hermes/profiles" in out
 
     def test_fish_has_profile_flag_completion(self):

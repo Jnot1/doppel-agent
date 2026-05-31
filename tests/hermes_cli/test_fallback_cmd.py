@@ -18,6 +18,7 @@ def isolated_home(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     home = tmp_path / ".hermes"
     home.mkdir(exist_ok=True)
+    monkeypatch.setenv("DOPPEL_HOME", str(home))
     monkeypatch.setenv("HERMES_HOME", str(home))
     return tmp_path
 
@@ -157,7 +158,7 @@ class TestListCommand:
         cmd_fallback_list(types.SimpleNamespace())
         out = capsys.readouterr().out
         assert "No fallback providers configured" in out
-        assert "hermes fallback add" in out
+        assert "doppel fallback add" in out
 
     def test_list_with_entries(self, isolated_home, capsys):
         _write_config(isolated_home, {

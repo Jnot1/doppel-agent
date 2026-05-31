@@ -108,6 +108,9 @@ EN_FEATURE_ACP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" 
 EN_TTS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tts.md"
 EN_SPOTIFY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "spotify.md"
 EN_WEB_SEARCH_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "web-search.md"
+EN_EXTENDING_DASHBOARD_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
+)
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -343,6 +346,17 @@ ZH_WEB_SEARCH_DOC = (
     / "user-guide"
     / "features"
     / "web-search.md"
+)
+ZH_EXTENDING_DASHBOARD_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "extending-the-dashboard.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1986,3 +2000,51 @@ def test_web_search_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "source ~/.hermes/hermes-agent/.venv/bin/activate" not in zh
     assert "hermes skills install official/research/searxng-search" not in en
     assert "hermes skills install official/research/searxng-search" not in zh
+
+
+def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_EXTENDING_DASHBOARD_DOC.read_text(encoding="utf-8")
+    zh = ZH_EXTENDING_DASHBOARD_DOC.read_text(encoding="utf-8")
+
+    assert "Build themes and plugins for the Doppel web dashboard" in en
+    assert "为 Doppel Web Dashboard 构建主题和插件" in zh
+    assert "Doppel Agent's web dashboard (`doppel dashboard`)" in en
+    assert "Doppel Agent Web Dashboard（`doppel dashboard`）" in zh
+    assert "~/.doppel/dashboard-themes/" in en
+    assert "~/.doppel/dashboard-themes/" in zh
+    assert "~/.doppel/plugins/my-plugin/" in en
+    assert "~/.doppel/plugins/my-plugin/" in zh
+    assert "Before the Doppel brand in the top bar." in en
+    assert "顶栏 Doppel 品牌之前。" in zh
+    assert "restart `doppel dashboard`" in en
+    assert "重启 `doppel dashboard`" in zh
+    assert "~/.doppel/logs/errors.log" in en
+    assert "~/.doppel/logs/errors.log" in zh
+
+    for fixed in (
+        "Hermes Teal",
+        "data-hermes-theme-css",
+        "__HERMES_PLUGIN_SDK__",
+        "__HERMES_PLUGINS__",
+        "hermes-example-plugins",
+        "strike-freedom-cockpit",
+        "HERMES_ENABLE_PROJECT_PLUGINS",
+        "Legacy installs may still keep the same dashboard themes, plugins, and logs under `~/.hermes`.",
+        "旧安装仍可能将相同的 dashboard 主题、插件和日志保存在 `~/.hermes` 下。",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "Build themes and plugins for the Hermes web dashboard" not in en
+    assert "为 Hermes Web Dashboard 构建主题和插件" not in zh
+    assert "The Hermes web dashboard (`hermes dashboard`)" not in en
+    assert "Hermes Web Dashboard（`hermes dashboard`）" not in zh
+    assert "~/.hermes/dashboard-themes/" not in en
+    assert "~/.hermes/dashboard-themes/" not in zh
+    assert "~/.hermes/plugins/my-plugin/" not in en
+    assert "~/.hermes/plugins/my-plugin/" not in zh
+    assert "Before the Hermes brand in the top bar." not in en
+    assert "顶栏 Hermes 品牌之前。" not in zh
+    assert "restart `hermes dashboard`" not in en
+    assert "重启 `hermes dashboard`" not in zh
+    assert "~/.hermes/logs/errors.log" not in en
+    assert "~/.hermes/logs/errors.log" not in zh

@@ -100,12 +100,12 @@ MATRIX_REACTIONS=true          # 默认：true——处理过程中发送 emoji 
 register_new_matrix_user -c /etc/synapse/homeserver.yaml http://localhost:8008
 ```
 
-2. 选择一个用户名，例如 `hermes`——完整的用户 ID 将是 `@hermes:your-server.org`。
+2. 选择一个用户名，例如 `doppel`——完整的用户 ID 将是 `@doppel:your-server.org`。
 
 ### 方式 B：使用 matrix.org 或其他公共 Homeserver
 
 1. 前往 [Element Web](https://app.element.io) 创建新账户。
-2. 为机器人选择一个用户名（例如 `hermes-bot`）。
+2. 为机器人选择一个用户名（例如 `doppel-bot`）。
 
 ### 方式 C：使用你自己的账户
 
@@ -132,7 +132,7 @@ curl -X POST https://your-server/_matrix/client/v3/login \
   -H "Content-Type: application/json" \
   -d '{
     "type": "m.login.password",
-    "user": "@hermes:your-server.org",
+    "user": "@doppel:your-server.org",
     "password": "your-password"
   }'
 ```
@@ -148,7 +148,7 @@ curl -X POST https://your-server/_matrix/client/v3/login \
 你可以不提供访问令牌，而是提供机器人的用户 ID 和密码。Doppel Agent 会在启动时自动登录。这种方式更简单，但密码会存储在你的 `.env` 文件中。
 
 ```bash
-MATRIX_USER_ID=@hermes:your-server.org
+MATRIX_USER_ID=@doppel:your-server.org
 MATRIX_PASSWORD=your-password
 ```
 
@@ -190,7 +190,7 @@ MATRIX_HOMESERVER=https://matrix.example.org
 MATRIX_ACCESS_TOKEN=***
 
 # 可选：用户 ID（如省略则从令牌自动检测）
-# MATRIX_USER_ID=@hermes:matrix.example.org
+# MATRIX_USER_ID=@doppel:matrix.example.org
 
 # 安全：限制可与机器人交互的用户
 MATRIX_ALLOWED_USERS=@alice:matrix.example.org
@@ -204,7 +204,7 @@ MATRIX_ALLOWED_USERS=@alice:matrix.example.org
 ```bash
 # 必填
 MATRIX_HOMESERVER=https://matrix.example.org
-MATRIX_USER_ID=@hermes:matrix.example.org
+MATRIX_USER_ID=@doppel:matrix.example.org
 MATRIX_PASSWORD=***
 
 # 安全
@@ -264,7 +264,7 @@ sudo dnf install libolm-devel
 
 ### 启用 E2EE
 
-在 `~/.hermes/.env` 中添加：
+在你的 agent-home `.env` 文件中添加（全新安装默认为 `~/.doppel/.env`；旧版 `~/.hermes/.env` 仍兼容）：
 
 ```bash
 MATRIX_ENCRYPTION=true
@@ -302,24 +302,24 @@ Doppel 会在启动时检测到此情况并拒绝启用 E2EE，日志显示：`d
    ```bash
    sudo systemctl stop matrix-synapse
    sudo sqlite3 /var/lib/matrix-synapse/homeserver.db "
-     DELETE FROM e2e_device_keys_json WHERE device_id = 'DEVICE_ID' AND user_id = '@hermes:your-server';
-     DELETE FROM e2e_one_time_keys_json WHERE device_id = 'DEVICE_ID' AND user_id = '@hermes:your-server';
-     DELETE FROM e2e_fallback_keys_json WHERE device_id = 'DEVICE_ID' AND user_id = '@hermes:your-server';
-     DELETE FROM devices WHERE device_id = 'DEVICE_ID' AND user_id = '@hermes:your-server';
+     DELETE FROM e2e_device_keys_json WHERE device_id = 'DEVICE_ID' AND user_id = '@doppel:your-server';
+     DELETE FROM e2e_one_time_keys_json WHERE device_id = 'DEVICE_ID' AND user_id = '@doppel:your-server';
+     DELETE FROM e2e_fallback_keys_json WHERE device_id = 'DEVICE_ID' AND user_id = '@doppel:your-server';
+     DELETE FROM devices WHERE device_id = 'DEVICE_ID' AND user_id = '@doppel:your-server';
    "
    sudo systemctl start matrix-synapse
    ```
    或通过 Synapse 管理员 API（注意 URL 编码的用户 ID）：
    ```bash
    curl -X DELETE -H "Authorization: Bearer ADMIN_TOKEN" \
-     'https://your-server/_synapse/admin/v2/users/%40hermes%3Ayour-server/devices/DEVICE_ID'
+     'https://your-server/_synapse/admin/v2/users/%40doppel%3Ayour-server/devices/DEVICE_ID'
    ```
    注意：通过管理员 API 删除设备也可能使关联的访问令牌失效。之后你可能需要生成新令牌。
 
-2. 删除本地加密存储并重启 Doppel：
+2. 删除本地加密存储并重启 Doppel Agent：
    ```bash
    rm -f ~/.hermes/platforms/matrix/store/crypto.db*
-   # 重启 hermes
+   # 重启 doppel gateway
    ```
 
 其他 Matrix 客户端（Element、matrix-commander）可能缓存了旧的设备密钥。恢复后，在 Element 中输入 `/discardsession` 以强制与机器人建立新的加密会话。
@@ -339,7 +339,7 @@ Doppel 会在启动时检测到此情况并拒绝启用 E2EE，日志显示：`d
 
 ### 手动配置
 
-在 `~/.hermes/.env` 中添加：
+在你的 agent-home `.env` 文件中添加（全新安装默认为 `~/.doppel/.env`；旧版 `~/.hermes/.env` 仍兼容）：
 
 ```bash
 MATRIX_HOME_ROOM=!abc123def456:matrix.example.org
@@ -461,7 +461,7 @@ pip install 'hermes-agent[matrix]'
      -H "Content-Type: application/json" \
      -d '{
        "type": "m.login.password",
-       "identifier": {"type": "m.id.user", "user": "@hermes:your-server.org"},
+       "identifier": {"type": "m.id.user", "user": "@doppel:your-server.org"},
        "password": "***",
        "initial_device_display_name": "Doppel Agent"
      }'
@@ -514,14 +514,14 @@ Matrix E2EE 需要 `libolm`，而该库无法在 macOS ARM64（Apple Silicon）�
 
 ```
 macOS（主机）：
-  └─ hermes gateway
+  └─ doppel gateway
        ├─ api_server 适配器 ← 监听 0.0.0.0:8642
        ├─ AIAgent ← 单一数据源
        ├─ 会话、记忆、技能
        └─ 本地文件访问（Obsidian、项目等）
 
 Linux 虚拟机（Docker）：
-  └─ hermes gateway（代理模式）
+  └─ doppel gateway（代理模式）
        ├─ Matrix 适配器 ← E2EE 解密/加密
        └─ HTTP 转发 → macOS:8642/v1/chat/completions
            （无 LLM API 密钥，无 agent，无推理）
@@ -533,7 +533,7 @@ Docker 容器仅处理 Matrix 协议和 E2EE。消息到达时，容器解密消
 
 启用 API 服务器，使主机接受来自 Docker 容器的请求。
 
-在 `~/.hermes/.env` 中添加：
+在你的 agent-home `.env` 文件中添加（全新安装默认为 `~/.doppel/.env`；旧版 `~/.hermes/.env` 仍兼容）：
 
 ```bash
 API_SERVER_ENABLED=true
@@ -548,7 +548,7 @@ API_SERVER_HOST=0.0.0.0
 启动 gateway：
 
 ```bash
-hermes gateway
+doppel gateway
 ```
 
 你应该看到 API 服务器与其他已配置的平台一起启动。从虚拟机验证其可达性：
@@ -566,7 +566,7 @@ curl http://<mac-ip>:8642/health
 
 ```yaml
 services:
-  hermes-matrix:
+  doppel-matrix:
     build: .
     environment:
       # Matrix 凭据
@@ -574,7 +574,7 @@ services:
       MATRIX_ACCESS_TOKEN: "syt_..."
       MATRIX_ALLOWED_USERS: "@you:matrix.example.org"
       MATRIX_ENCRYPTION: "true"
-      MATRIX_DEVICE_ID: "HERMES_BOT"
+      MATRIX_DEVICE_ID: "DOPPEL_BOT"
 
       # 代理模式——转发到主机 agent
       GATEWAY_PROXY_URL: "http://192.168.1.100:8642"
@@ -591,7 +591,7 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y libolm-dev && rm -rf /var/lib/apt/lists/*
 RUN pip install 'hermes-agent[matrix]'
 
-CMD ["hermes", "gateway"]
+CMD ["doppel", "gateway"]
 ```
 
 这就是整个容器。无需 OpenRouter、Anthropic 或任何推理提供商的 API 密钥。
@@ -600,7 +600,7 @@ CMD ["hermes", "gateway"]
 
 1. 先启动主机 gateway：
    ```bash
-   hermes gateway
+   doppel gateway
    ```
 
 2. 启动 Docker 容器：

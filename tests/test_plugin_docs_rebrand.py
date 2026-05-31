@@ -101,6 +101,7 @@ EN_BROWSER_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "b
 EN_CODEX_RUNTIME_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "codex-app-server-runtime.md"
 )
+EN_MCP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "mcp.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -259,6 +260,17 @@ ZH_CODEX_RUNTIME_DOC = (
     / "user-guide"
     / "features"
     / "codex-app-server-runtime.md"
+)
+ZH_MCP_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "mcp.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1533,3 +1545,44 @@ def test_codex_runtime_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "hermes logs --since 5m" not in zh
     assert "Hermes Agent 2026.5" not in en
     assert "Hermes Agent 2026.5" not in zh
+
+
+def test_mcp_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_MCP_DOC.read_text(encoding="utf-8")
+    zh = ZH_MCP_DOC.read_text(encoding="utf-8")
+
+    assert "Connect Doppel Agent to external tool servers via MCP" in en
+    assert "通过 MCP 将 Doppel Agent 连接到外部工具服务器" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/doppel-agent" in en
+    assert "~/.doppel/doppel-agent" in zh
+    assert "doppel chat" in en
+    assert "doppel chat" in zh
+    assert "doppel mcp add codex --preset codex" in en
+    assert "doppel mcp add codex --preset codex" in zh
+    assert "doppel mcp serve" in en
+    assert "doppel mcp serve" in zh
+    assert "Use MCP with Doppel" in en
+    assert "在 Doppel 中使用 MCP" in zh
+
+    for fixed in (
+        "~/.hermes/config.yaml",
+        "mcp_servers",
+        "notifications/tools/list_changed",
+        "sampling/createMessage",
+        "codex mcp-server",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Connect Hermes Agent to external tool servers via MCP" not in en
+    assert "MCP lets Hermes Agent connect to external tool servers" not in en
+    assert "hermes chat" not in en
+    assert "hermes chat" not in zh
+    assert "hermes mcp add" not in en
+    assert "hermes mcp add" not in zh
+    assert "hermes mcp serve" not in en
+    assert "hermes mcp serve" not in zh
+    assert "Use MCP with Hermes" not in en
+    assert "在 Hermes 中使用 MCP" not in zh

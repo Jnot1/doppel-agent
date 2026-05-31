@@ -5268,3 +5268,62 @@ def test_pipe_script_output_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_team_telegram_assistant_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "team-telegram-assistant.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "team-telegram-assistant.md"
+    ).read_text(encoding="utf-8")
+
+    assert "powered by Doppel Agent" in en
+    assert "由 Doppel Agent 驱动" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/SOUL.md" in en
+    assert "~/.doppel/SOUL.md" in zh
+    assert "~/.doppel/AGENTS.md" in en
+    assert "~/.doppel/AGENTS.md" in zh
+    assert "doppel gateway setup" in en
+    assert "doppel gateway setup" in zh
+    assert "doppel gateway run" in en
+    assert "doppel gateway run" in zh
+    assert "doppel pairing approve telegram XKGH5N7P" in en
+    assert "doppel pairing approve telegram XKGH5N7P" in zh
+    assert "doppel cron list" in en
+    assert "doppel cron list" in zh
+    assert "doppel-gateway" in en
+    assert "doppel-gateway" in zh
+    assert "Keep Doppel Updated" in en
+    assert "保持 Doppel 更新" in zh
+
+    for stale in (
+        "powered by Hermes Agent",
+        "由 Hermes Agent 驱动",
+        "~/.hermes/.env",
+        "~/.hermes/config.yaml",
+        "~/.hermes/SOUL.md",
+        "~/.hermes/AGENTS.md",
+        "hermes gateway setup",
+        "hermes gateway run",
+        "hermes pairing approve telegram XKGH5N7P",
+        "hermes cron list",
+        "Team Hermes Assistant",
+        "myteam_hermes_bot",
+        "hermes-gateway",
+        "Keep Hermes Updated",
+        "保持 Hermes 更新",
+    ):
+        assert stale not in en
+        assert stale not in zh

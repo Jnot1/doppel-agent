@@ -6195,3 +6195,23 @@ def test_voice_mode_guide_pair_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_local_llm_on_mac_guide_prefers_doppel_customer_facing_surfaces():
+    guide = (
+        REPO_ROOT / "website" / "docs" / "guides" / "local-llm-on-mac.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Doppel Agent works with either one" in guide
+    assert "Doppel Agent's 64K minimum context" in guide
+    assert "## Connect to Doppel Agent" in guide
+    assert "\n```bash\ndoppel model\n```" in guide
+
+    for stale in (
+        "Hermes works with either one",
+        "Hermes' 64K minimum context",
+        "Hermes' 64K minimum",
+        "## Connect to Hermes",
+        "\n```bash\nhermes model\n```",
+    ):
+        assert stale not in guide

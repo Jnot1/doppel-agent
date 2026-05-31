@@ -8,6 +8,7 @@ sibling platform-plugin tests on the same xdist worker.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -344,3 +345,36 @@ def test_register_calls_register_platform():
     assert callable(kwargs["setup_fn"])
     # SimpleX uses opaque IDs only — no PII to redact.
     assert kwargs["pii_safe"] is True
+
+
+def test_customer_facing_simplex_copy_is_doppel_first():
+    repo_root = Path(__file__).resolve().parents[2]
+    adapter = (repo_root / "plugins/platforms/simplex/adapter.py").read_text(encoding="utf-8")
+    manifest = (repo_root / "plugins/platforms/simplex/plugin.yaml").read_text(encoding="utf-8")
+
+    for expected in (
+        "SimpleX Chat gateway adapter for Doppel Agent.",
+        "messages between SimpleX contacts/groups and the Doppel agent.",
+        "discoverable and `doppel setup` can describe it",
+        "e.g. ``doppel cron`` running as a",
+        "process from ``doppel gateway``",
+        "Minimal stdin wizard for ``doppel setup gateway`` → SimpleX.",
+        "Writes to ``~/.doppel/.env`` via ``hermes_cli.config``.",
+        "set SIMPLEX_* vars manually in ~/.doppel/.env",
+        "show up in `doppel gateway status` without",
+    ):
+        assert expected in adapter or expected in manifest
+
+    for unexpected in (
+        "SimpleX Chat gateway adapter for Hermes Agent.",
+        "messages between SimpleX contacts/groups and the Hermes agent.",
+        "discoverable and `hermes setup` can describe it",
+        "e.g. ``hermes cron`` running as a",
+        "process from ``hermes gateway``",
+        "Minimal stdin wizard for ``hermes setup gateway`` → SimpleX.",
+        "Writes to ``~/.hermes/.env`` via ``hermes_cli.config``.",
+        "set SIMPLEX_* vars manually in ~/.hermes/.env",
+        "show up in `hermes gateway status` without",
+    ):
+        assert unexpected not in adapter
+        assert unexpected not in manifest

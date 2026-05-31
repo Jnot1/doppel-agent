@@ -61,19 +61,19 @@ If that is not solid yet, fix text mode first.
 ### CLI microphone + playback
 
 ```bash
-pip install "hermes-agent[voice]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[voice]"
 ```
 
 ### Messaging platforms
 
 ```bash
-pip install "hermes-agent[messaging]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[messaging]"
 ```
 
 ### Premium ElevenLabs TTS
 
 ```bash
-pip install "hermes-agent[tts-premium]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[tts-premium]"
 ```
 
 ### Local NeuTTS (optional)
@@ -85,7 +85,7 @@ python -m pip install -U neutts[all]
 ### Everything
 
 ```bash
-pip install "hermes-agent[all]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[all]"
 ```
 
 ## Step 3: install system dependencies
@@ -443,8 +443,8 @@ By default, the bot needs an `@mention` in Discord server text channels unless c
 
 If you want the shortest path to success:
 
-1. get text Hermes working
-2. install `hermes-agent[voice]`
+1. get text Doppel working
+2. install the voice extra with `cd ~/.doppel/doppel-agent && uv pip install -e ".[voice]"`
 3. use CLI voice mode with local STT + Edge TTS
 4. then enable `/voice on` in Telegram or Discord
 5. only after that, try Discord VC mode

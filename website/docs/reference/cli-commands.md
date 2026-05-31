@@ -738,13 +738,11 @@ Create a zip archive of your Doppel configuration, skills, sessions, and data. T
 
 | Option | Description |
 |--------|-------------|
-| `-o`, `--output <path>` | Output path for the zip file (default: `~/hermes-backup-<timestamp>.zip`). |
+| `-o`, `--output <path>` | Output path for the zip file (default: `~/doppel-backup-<timestamp>.zip`). |
 | `-q`, `--quick` | Quick snapshot: only critical state files (config.yaml, state.db, .env, auth, cron jobs). Much faster than a full backup. |
 | `-l`, `--label <name>` | Label for the snapshot (only used with `--quick`). |
 
 The backup uses SQLite's `backup()` API for safe copying, so it works correctly even when Doppel is running (WAL-mode safe).
-
-The archive filename intentionally remains `hermes-backup-*` in this phase for compatibility with existing tooling.
 
 **What's excluded from the zip:**
 
@@ -755,7 +753,7 @@ The archive filename intentionally remains `hermes-backup-*` in this phase for c
 ### Examples
 
 ```bash
-doppel backup                           # Full backup to ~/hermes-backup-*.zip
+doppel backup                           # Full backup to ~/doppel-backup-*.zip
 doppel backup -o /tmp/doppel.zip        # Full backup to specific path
 doppel backup --quick                   # Quick state-only snapshot
 doppel backup --quick --label "pre-upgrade"  # Quick snapshot with label
@@ -817,8 +815,8 @@ Stop the gateway before importing to avoid conflicts with running processes.
 
 ### Examples
 ```bash
-doppel import ~/hermes-backup-20260423.zip           # Prompts before overwriting existing config
-doppel import ~/hermes-backup-20260423.zip --force   # Overwrite without prompting
+doppel import ~/doppel-backup-20260423.zip           # Prompts before overwriting existing config
+doppel import ~/doppel-backup-20260423.zip --force   # Overwrite without prompting
 ```
 
 ## `doppel logs`

@@ -2892,8 +2892,8 @@ def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_se
     assert "`doppel doctor`" in support
     assert "doppel debug share" in support
     assert "doppel backup" in support
-    assert "`~/hermes-backup-<timestamp>.zip`" in support
-    assert "`hermes-backup-*`" in support
+    assert "`~/doppel-backup-<timestamp>.zip`" in support
+    assert "`hermes-backup-*`" not in support
     assert "--- hermes dump ---" not in support
     assert "hermes debug share" not in support
     assert "## `hermes backup`" not in support
@@ -2922,7 +2922,7 @@ def test_zh_reference_cli_commands_rebrand_checkpoints_promptsize_and_skills_clu
 
     assert "doppel checkpoints [COMMAND]" in section
     assert "~/.doppel/checkpoints/" in section
-    assert "doppel import ~/hermes-backup-20260423.zip" in section
+    assert "doppel import ~/doppel-backup-20260423.zip" in section
     assert "doppel logs [log_name] [options]" in section
     assert "~/.doppel/logs/" in section
     assert "## `doppel prompt-size`" in section
@@ -2937,7 +2937,7 @@ def test_zh_reference_cli_commands_rebrand_checkpoints_promptsize_and_skills_clu
     assert "从快照恢复 `~/.doppel/skills/`" in section
     assert "与 `doppel model` 相同的选择器" in section
     assert "## `hermes checkpoints`" not in section
-    assert "hermes import ~/hermes-backup-20260423.zip" not in section
+    assert "hermes import ~/doppel-backup-20260423.zip" not in section
     assert "hermes logs [log_name] [options]" not in section
     assert "## `hermes config`" not in section
     assert "hermes skills browse" not in section
@@ -3437,10 +3437,11 @@ def test_voice_mode_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "@your-bot-name 你好" in zh
 
     for fixed in (
-        "hermes-agent[voice]",
-        "hermes-agent[messaging]",
-        "hermes-agent[tts-premium]",
-        "hermes-agent[all]",
+        'uv pip install -e ".[voice]"',
+        'uv pip install -e ".[messaging]"',
+        'uv pip install -e ".[tts-premium]"',
+        'uv pip install -e ".[all]"',
+        "~/.doppel/doppel-agent",
         "~/.hermes/.env",
         "~/.hermes/config.yaml",
         "~/.hermes/logs/",
@@ -3472,6 +3473,56 @@ def test_voice_mode_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "`hermes --tui`" not in zh
     assert "@hermesbyt4 hello" not in en
     assert "@hermesbyt4 你好" not in zh
+    assert "hermes-agent[voice]" not in en
+    assert "hermes-agent[voice]" not in zh
+    assert "hermes-agent[messaging]" not in en
+    assert "hermes-agent[messaging]" not in zh
+    assert "hermes-agent[tts-premium]" not in en
+    assert "hermes-agent[tts-premium]" not in zh
+    assert "hermes-agent[all]" not in en
+    assert "hermes-agent[all]" not in zh
+
+
+def test_voice_and_weixin_guides_use_doppel_checkout_install_commands():
+    en_voice_guide = (
+        REPO_ROOT / "website" / "docs" / "guides" / "use-voice-mode-with-hermes.md"
+    ).read_text(encoding="utf-8")
+    zh_voice_guide = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "use-voice-mode-with-hermes.md"
+    ).read_text(encoding="utf-8")
+    en_weixin = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "messaging" / "weixin.md"
+    ).read_text(encoding="utf-8")
+    zh_weixin = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "messaging"
+        / "weixin.md"
+    ).read_text(encoding="utf-8")
+
+    for doc in (en_voice_guide, zh_voice_guide, en_weixin, zh_weixin):
+        assert 'cd ~/.doppel/doppel-agent && uv pip install -e ".[messaging]"' in doc
+        assert "hermes-agent[messaging]" not in doc
+
+    for doc in (en_voice_guide, zh_voice_guide):
+        assert 'cd ~/.doppel/doppel-agent && uv pip install -e ".[voice]"' in doc
+        assert 'cd ~/.doppel/doppel-agent && uv pip install -e ".[tts-premium]"' in doc
+        assert 'cd ~/.doppel/doppel-agent && uv pip install -e ".[all]"' in doc
+        assert "hermes-agent[voice]" not in doc
+        assert "hermes-agent[tts-premium]" not in doc
+        assert "hermes-agent[all]" not in doc
 
 
 def test_honcho_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
@@ -4256,8 +4307,14 @@ def test_reference_faq_prefers_doppel_timeout_and_home_paths():
 
     assert "older installs keeping their legacy home layout in place" in en_export
     assert "旧安装则可能继续保留旧版主目录布局" in zh_export
+    assert "~/doppel-backup-<timestamp>.zip" in en_export
+    assert "~/doppel-backup-<timestamp>.zip" in zh_export
+    assert "cd ~/.doppel/doppel-agent && uv pip install -e \".[messaging]\"" in en
+    assert "cd ~/.doppel/doppel-agent && uv pip install -e \".[messaging]\"" in zh
     assert "~/.hermes/" not in en_export
     assert "~/.hermes/" not in zh_export
+    assert "~/hermes-backup-<timestamp>.zip" not in en_export
+    assert "~/hermes-backup-<timestamp>.zip" not in zh_export
 
 
 def test_reference_cli_commands_active_home_examples_stay_doppel_first():

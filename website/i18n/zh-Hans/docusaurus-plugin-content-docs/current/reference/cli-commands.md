@@ -609,13 +609,11 @@ doppel backup [options]
 
 | 选项 | 说明 |
 |--------|-------------|
-| `-o`, `--output <path>` | zip 文件的输出路径（默认：`~/hermes-backup-<timestamp>.zip`）。 |
+| `-o`, `--output <path>` | zip 文件的输出路径（默认：`~/doppel-backup-<timestamp>.zip`）。 |
 | `-q`, `--quick` | 快速快照：仅包含关键状态文件（config.yaml、state.db、.env、auth、cron 任务）。比完整备份快得多。 |
 | `-l`, `--label <name>` | 快照标签（仅与 `--quick` 配合使用）。 |
 
 备份使用 SQLite 的 `backup()` API 进行安全复制，因此即使 Doppel 正在运行也能正确工作（WAL 模式安全）。
-
-在这一阶段，归档文件名仍故意保留 `hermes-backup-*`，以兼容现有工具链。
 
 **zip 中排除的内容：**
 
@@ -626,7 +624,7 @@ doppel backup [options]
 ### 示例
 
 ```bash
-doppel backup                           # 完整备份到 ~/hermes-backup-*.zip
+doppel backup                           # 完整备份到 ~/doppel-backup-*.zip
 doppel backup -o /tmp/doppel.zip        # 完整备份到指定路径
 doppel backup --quick                   # 仅状态快速快照
 doppel backup --quick --label "pre-upgrade"  # 带标签的快速快照
@@ -688,8 +686,8 @@ doppel import <zipfile> [options]
 
 ### 示例
 ```bash
-doppel import ~/hermes-backup-20260423.zip           # 覆盖现有配置前提示确认
-doppel import ~/hermes-backup-20260423.zip --force   # 不提示直接覆盖
+doppel import ~/doppel-backup-20260423.zip           # 覆盖现有配置前提示确认
+doppel import ~/doppel-backup-20260423.zip --force   # 不提示直接覆盖
 ```
 
 ## `doppel logs`

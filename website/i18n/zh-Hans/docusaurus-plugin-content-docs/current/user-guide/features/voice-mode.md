@@ -40,19 +40,19 @@ Doppel Agent 支持在 CLI 和消息平台上进行完整的语音交互。通�
 
 ```bash
 # CLI 语音模式（麦克风 + 音频播放）
-pip install "hermes-agent[voice]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[voice]"
 
 # Discord + Telegram 消息（包含 discord.py[voice] 以支持语音频道）
-pip install "hermes-agent[messaging]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[messaging]"
 
 # 高级 TTS（ElevenLabs）
-pip install "hermes-agent[tts-premium]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[tts-premium]"
 
 # 本地 TTS（NeuTTS，可选）
 python -m pip install -U neutts[all]
 
 # 一次性安装所有内容
-pip install "hermes-agent[all]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[all]"
 ```
 
 | 扩展包 | 包含的包 | 用途 |

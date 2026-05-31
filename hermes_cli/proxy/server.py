@@ -85,8 +85,9 @@ def create_app(adapter: UpstreamAdapter) -> "web.Application":
     """Build the aiohttp application bound to a specific upstream adapter."""
     if not AIOHTTP_AVAILABLE:
         raise RuntimeError(
-            "aiohttp is required for `hermes proxy`. Install with: "
-            "pip install 'hermes-agent[messaging]' or `pip install aiohttp`."
+            "aiohttp is required for `doppel proxy`. Install with: "
+            "cd ~/.doppel/doppel-agent && uv pip install -e '.[messaging]' "
+            "or `pip install aiohttp`."
         )
 
     app = web.Application()
@@ -252,8 +253,9 @@ async def run_server(
     """
     if not AIOHTTP_AVAILABLE:
         raise RuntimeError(
-            "aiohttp is required for `hermes proxy`. Install with: "
-            "pip install 'hermes-agent[messaging]' or `pip install aiohttp`."
+            "aiohttp is required for `doppel proxy`. Install with: "
+            "cd ~/.doppel/doppel-agent && uv pip install -e '.[messaging]' "
+            "or `pip install aiohttp`."
         )
 
     app = create_app(adapter)

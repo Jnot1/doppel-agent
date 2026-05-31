@@ -446,8 +446,8 @@ Configure it in your agent-home `config.yaml` under your gateway's settings (`~/
 
 **Solution:**
 ```bash
-# Install core messaging gateway dependencies
-pip install "hermes-agent[messaging]"  # current distribution name; Telegram, Discord, Slack, and shared gateway deps
+# Install core messaging gateway dependencies from the managed Doppel checkout
+cd ~/.doppel/doppel-agent && uv pip install -e ".[messaging]"
 
 # Check for port conflicts
 lsof -i :8080
@@ -768,15 +768,15 @@ Skills with very long descriptions are truncated to 40 characters in the Telegra
    ```bash
    doppel backup
    ```
-   This creates a zip of your agent home directory — `~/.doppel/` on fresh installs, with older installs keeping their legacy home layout in place — saved to your home directory. The archive filename intentionally remains `~/hermes-backup-<timestamp>.zip` in this phase for compatibility with existing tooling.
+   This creates a zip of your agent home directory — `~/.doppel/` on fresh installs, with older installs keeping their legacy home layout in place — saved to your home directory as `~/doppel-backup-<timestamp>.zip`.
 
 3. Copy the zip to the new machine and import it:
    ```bash
    # On the source machine
-   scp ~/hermes-backup-<timestamp>.zip newmachine:~/
+   scp ~/doppel-backup-<timestamp>.zip newmachine:~/
 
    # On the new machine
-   doppel import ~/hermes-backup-<timestamp>.zip
+   doppel import ~/doppel-backup-<timestamp>.zip
    ```
 
 4. On the new machine, run `doppel setup` to verify API keys and provider config are working.

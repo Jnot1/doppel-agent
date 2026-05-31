@@ -319,7 +319,7 @@ class TestBackup:
             assert pid_files == []
 
     def test_default_output_path(self, tmp_path, monkeypatch):
-        """When no output path given, zip goes to ~/hermes-backup-*.zip."""
+        """When no output path given, zip goes to ~/doppel-backup-*.zip."""
         hermes_home = tmp_path / ".hermes"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text("model: test\n")
@@ -333,7 +333,7 @@ class TestBackup:
         run_backup(args)
 
         # Should exist in home dir
-        zips = list(tmp_path.glob("hermes-backup-*.zip"))
+        zips = list(tmp_path.glob("doppel-backup-*.zip"))
         assert len(zips) == 1
 
     def test_skips_symlinked_files(self, tmp_path, monkeypatch):
@@ -844,7 +844,7 @@ class TestBackupEdgeCases:
         from hermes_cli.backup import run_backup
         run_backup(args)
 
-        zips = list(out_dir.glob("hermes-backup-*.zip"))
+        zips = list(out_dir.glob("doppel-backup-*.zip"))
         assert len(zips) == 1
 
     def test_output_without_zip_suffix(self, tmp_path, monkeypatch):

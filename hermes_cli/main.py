@@ -12778,7 +12778,7 @@ Examples:
     backup_parser.add_argument(
         "-o",
         "--output",
-        help="Output path for the zip file (default: ~/hermes-backup-<timestamp>.zip)",
+        help="Output path for the zip file (default: ~/doppel-backup-<timestamp>.zip)",
     )
     backup_parser.add_argument(
         "-q",

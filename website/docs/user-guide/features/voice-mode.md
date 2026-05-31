@@ -40,19 +40,19 @@ A paid [Nous Portal](/user-guide/features/tool-gateway) subscription supplies th
 
 ```bash
 # CLI voice mode (microphone + audio playback)
-pip install "hermes-agent[voice]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[voice]"
 
 # Discord + Telegram messaging (includes discord.py[voice] for VC support)
-pip install "hermes-agent[messaging]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[messaging]"
 
 # Premium TTS (ElevenLabs)
-pip install "hermes-agent[tts-premium]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[tts-premium]"
 
 # Local TTS (NeuTTS, optional)
 python -m pip install -U neutts[all]
 
 # Everything at once
-pip install "hermes-agent[all]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[all]"
 ```
 
 | Extra | Packages | Required For |

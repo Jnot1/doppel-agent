@@ -446,8 +446,8 @@ cat ~/.doppel/logs/gateway.log | tail -50
 
 **解决方案：**
 ```bash
-# 安装核心消息网关依赖项
-pip install "hermes-agent[messaging]"  # Telegram、Discord、Slack 及共享网关依赖
+# 从 Doppel 的受管检出目录安装核心消息网关依赖
+cd ~/.doppel/doppel-agent && uv pip install -e ".[messaging]"
 
 # 检查端口冲突
 lsof -i :8080
@@ -767,15 +767,15 @@ skills:
    ```bash
    doppel backup
    ```
-   这会将您的整个智能体主目录打包——新安装通常是 `~/.doppel/`，旧安装则可能继续保留旧版主目录布局。出于兼容性考虑，归档文件名在这一阶段仍保留为 `~/hermes-backup-<timestamp>.zip`。
+   这会将您的整个智能体主目录打包——新安装通常是 `~/.doppel/`，旧安装则可能继续保留旧版主目录布局。生成的文件会保存到您的主目录，文件名为 `~/doppel-backup-<timestamp>.zip`。
 
 3. 将 zip 文件复制到新机器并导入：
    ```bash
    # 在源机器上
-   scp ~/hermes-backup-<timestamp>.zip newmachine:~/
+   scp ~/doppel-backup-<timestamp>.zip newmachine:~/
 
    # 在新机器上
-   doppel import ~/hermes-backup-<timestamp>.zip
+   doppel import ~/doppel-backup-<timestamp>.zip
    ```
 
 4. 在新机器上运行 `doppel setup` 以验证 API key 和提供商配置是否正常工作。

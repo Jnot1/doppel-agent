@@ -57,19 +57,19 @@ What tools do you have available?
 ### CLI 麦克风 + 播放
 
 ```bash
-pip install "hermes-agent[voice]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[voice]"
 ```
 
 ### 消息平台
 
 ```bash
-pip install "hermes-agent[messaging]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[messaging]"
 ```
 
 ### 高级 ElevenLabs TTS
 
 ```bash
-pip install "hermes-agent[tts-premium]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[tts-premium]"
 ```
 
 ### 本地 NeuTTS（可选）
@@ -81,7 +81,7 @@ python -m pip install -U neutts[all]
 ### 全部安装
 
 ```bash
-pip install "hermes-agent[all]"
+cd ~/.doppel/doppel-agent && uv pip install -e ".[all]"
 ```
 
 ## 第三步：安装系统依赖
@@ -439,8 +439,8 @@ Hermes 加入 Discord 语音频道（VC），监听用户语音，转录后运�
 
 如果你想走最短的成功路径：
 
-1. 让文本 Hermes 正常工作
-2. 安装 `hermes-agent[voice]`
+1. 先让文本版 Doppel 正常工作
+2. 使用 `cd ~/.doppel/doppel-agent && uv pip install -e ".[voice]"` 安装 voice 扩展
 3. 使用本地 STT + Edge TTS 的 CLI 语音模式
 4. 然后在 Telegram 或 Discord 中启用 `/voice on`
 5. 只有在此之后，再尝试 Discord 语音频道模式

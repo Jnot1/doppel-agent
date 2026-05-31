@@ -1073,13 +1073,13 @@ pip install hermes-plugin-calculator
 **Entry-point 插件**（推荐用于分发）：
 ```nix
 # User's configuration.nix
-services.hermes-agent.extraPythonPackages = [
+services.doppel-agent.extraPythonPackages = [
   (pkgs.python312Packages.buildPythonPackage {
     pname = "my-plugin";
     version = "1.0.0";
     src = pkgs.fetchFromGitHub {
       owner = "you";
-      repo = "hermes-my-plugin";
+      repo = "doppel-my-plugin";
       rev = "v1.0.0";
       hash = "sha256-...";  # nix-prefetch-url --unpack
     };
@@ -1091,10 +1091,10 @@ services.hermes-agent.extraPythonPackages = [
 
 **目录插件**（无需 `pyproject.toml`）：
 ```nix
-services.hermes-agent.extraPlugins = [
+services.doppel-agent.extraPlugins = [
   (pkgs.fetchFromGitHub {
     owner = "you";
-    repo = "hermes-my-plugin";
+    repo = "doppel-my-plugin";
     rev = "v1.0.0";
     hash = "sha256-...";
   })

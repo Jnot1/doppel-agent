@@ -246,6 +246,63 @@ def test_nixos_module_copy_mentions_doppel_first_cli_and_host_users_behavior():
     assert "legacy hermes alias" in content
 
 
+def test_nix_plugin_docs_prefer_doppel_service_aliases():
+    docs = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "plugins.md"
+    ).read_text()
+    zh_docs = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "plugins.md"
+    ).read_text()
+    build_guide = (REPO_ROOT / "website" / "docs" / "guides" / "build-a-hermes-plugin.md").read_text()
+    zh_build_guide = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "build-a-hermes-plugin.md"
+    ).read_text()
+
+    for content in (docs, zh_docs):
+        assert "services.doppel-agent.extraPlugins" in content
+        assert "doppel plugins install" in content
+
+    for content in (build_guide, zh_build_guide):
+        assert "services.doppel-agent.extraPythonPackages" in content
+        assert "services.doppel-agent.extraPlugins" in content
+        assert 'repo = "doppel-my-plugin";' in content
+
+
+def test_oauth_over_ssh_docs_prefer_doppel_cli_and_service_user_examples():
+    docs = (REPO_ROOT / "website" / "docs" / "guides" / "oauth-over-ssh.md").read_text()
+    zh_docs = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "oauth-over-ssh.md"
+    ).read_text()
+
+    for content in (docs, zh_docs):
+        assert "doppel auth add xai-oauth --no-browser" in content
+        assert "doppel auth add xai-oauth --manual-paste" in content
+        assert "sudo -u doppel -i" in content
+        assert "~/.hermes/auth.json" in content
+
+
 def test_homebrew_formulae_share_the_same_release_source():
     assert _homebrew_formula_source("hermes-agent") == _homebrew_formula_source("doppel-agent")
 

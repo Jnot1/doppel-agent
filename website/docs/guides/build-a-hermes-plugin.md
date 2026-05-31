@@ -1082,13 +1082,13 @@ NixOS users can install your plugin declaratively if you provide a `pyproject.to
 **Entry-point plugins** (recommended for distribution):
 ```nix
 # User's configuration.nix
-services.hermes-agent.extraPythonPackages = [
+services.doppel-agent.extraPythonPackages = [
   (pkgs.python312Packages.buildPythonPackage {
     pname = "my-plugin";
     version = "1.0.0";
     src = pkgs.fetchFromGitHub {
       owner = "you";
-      repo = "hermes-my-plugin";
+      repo = "doppel-my-plugin";
       rev = "v1.0.0";
       hash = "sha256-...";  # nix-prefetch-url --unpack
     };
@@ -1100,10 +1100,10 @@ services.hermes-agent.extraPythonPackages = [
 
 **Directory plugins** (no `pyproject.toml` needed):
 ```nix
-services.hermes-agent.extraPlugins = [
+services.doppel-agent.extraPlugins = [
   (pkgs.fetchFromGitHub {
     owner = "you";
-    repo = "hermes-my-plugin";
+    repo = "doppel-my-plugin";
     rev = "v1.0.0";
     hash = "sha256-...";
   })

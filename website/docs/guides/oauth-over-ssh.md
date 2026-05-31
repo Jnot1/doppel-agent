@@ -19,28 +19,28 @@ The fix is a one-line SSH local-forward — **or**, when you don't have a real S
 ssh -N -L 56121:127.0.0.1:56121 user@remote-host
 
 # In your existing SSH session on the remote machine:
-hermes auth add xai-oauth --no-browser
-# → Hermes prints an authorize URL. Open it in a browser on your laptop.
+doppel auth add xai-oauth --no-browser
+# → Doppel prints an authorize URL. Open it in a browser on your laptop.
 # → Your browser redirects to 127.0.0.1:56121/callback, the tunnel forwards
 #   the request to the remote listener, login completes.
 ```
 
-Port `56121` is what xAI OAuth uses. For Spotify, replace it with `43827`. Hermes prints the exact port it bound to on the `Waiting for callback on ...` line — copy it from there.
+Port `56121` is what xAI OAuth uses. For Spotify, replace it with `43827`. Doppel prints the exact port it bound to on the `Waiting for callback on ...` line — copy it from there.
 
 ## Browser-only remote (Cloud Shell / Codespaces / EC2 Instance Connect)
 
-If you don't have a regular SSH client — for example because you're running Hermes inside GCP Cloud Shell, GitHub Codespaces, AWS EC2 Instance Connect, Gitpod, or another browser-based console — the SSH tunnel above isn't available. Use `--manual-paste` instead:
+If you don't have a regular SSH client — for example because you're running Doppel inside GCP Cloud Shell, GitHub Codespaces, AWS EC2 Instance Connect, Gitpod, or another browser-based console — the SSH tunnel above isn't available. Use `--manual-paste` instead:
 
 ```bash
-hermes auth add xai-oauth --manual-paste
-# → Hermes prints an authorize URL. Open it in a browser on your laptop.
+doppel auth add xai-oauth --manual-paste
+# → Doppel prints an authorize URL. Open it in a browser on your laptop.
 # → Approve in the browser. The redirect to 127.0.0.1:56121/callback fails
 #   to load — that's expected.
 # → Copy the FULL URL from the failed page's address bar.
 # → Paste it back into the terminal at the "Callback URL:" prompt.
 ```
 
-The same flag works on `hermes model --manual-paste` for the integrated model picker. Hermes accepts three callback paste forms interchangeably: the full URL, a bare `?code=...&state=...` query fragment, or — when the upstream consent page renders the authorization code in-page instead of redirecting (xAI's current behavior on browser-based consoles) — just the bare code value on its own.
+The same flag works on `doppel model --manual-paste` for the integrated model picker. Doppel accepts three callback paste forms interchangeably: the full URL, a bare `?code=...&state=...` query fragment, or — when the upstream consent page renders the authorization code in-page instead of redirecting (xAI's current behavior on browser-based consoles) — just the bare code value on its own.
 
 Hermes uses the **same PKCE verifier, state and nonce** for both paths, so the upstream OAuth flow is byte-identical — `--manual-paste` is purely a transport change for the callback hop and is not a security downgrade.
 
@@ -59,7 +59,7 @@ If your provider isn't in the table, you don't need a tunnel.
 
 ## MCP Servers
 
-Remote MCP servers (Linear, Sentry, Atlassian, Asana, Figma, etc.) use the same loopback redirect flow. Hermes auto-picks a free port per server and prints the authorize URL when the OAuth flow kicks off — either at startup (when a new server appears in `mcp_servers:`) or when you run `hermes mcp login <server>`.
+Remote MCP servers (Linear, Sentry, Atlassian, Asana, Figma, etc.) use the same loopback redirect flow. Doppel auto-picks a free port per server and prints the authorize URL when the OAuth flow kicks off — either at startup (when a new server appears in `mcp_servers:`) or when you run `doppel mcp login <server>`.
 
 You have two ways to complete it from a remote host:
 
@@ -86,7 +86,7 @@ ssh -N -L <port>:127.0.0.1:<port> user@remote-host
 
 Then open the authorize URL in your browser as normal; the redirect tunnels through and the listener picks it up. Use this when you need the flow to complete unattended (e.g. scripted re-auth where you can't paste interactively).
 
-**Pitfall — the 30s config-reload race.** If you edit `~/.hermes/config.yaml` to add an OAuth MCP server from inside a running Hermes session, the CLI auto-reloads MCP connections with a 30s timeout. That's not enough time to complete an interactive OAuth flow, and the reload will give up. Use `hermes mcp login <server>` from a fresh terminal instead — it has no such cap and waits the full 5 min for you to paste back.
+**Pitfall — the 30s config-reload race.** If you edit `~/.hermes/config.yaml` to add an OAuth MCP server from inside a running Doppel session, the CLI auto-reloads MCP connections with a 30s timeout. That's not enough time to complete an interactive OAuth flow, and the reload will give up. Use `doppel mcp login <server>` from a fresh terminal instead — it has no such cap and waits the full 5 min for you to paste back.
 
 ## Why the listener can't just bind 0.0.0.0
 
@@ -110,22 +110,22 @@ ssh -N -L 43827:127.0.0.1:43827 user@remote-host
 
 ```bash
 ssh user@remote-host
-hermes auth add xai-oauth --no-browser
+doppel auth add xai-oauth --no-browser
 # or for Spotify:
-# hermes auth add spotify --no-browser
+# doppel auth add spotify --no-browser
 ```
 
-Hermes detects the SSH session, skips the browser auto-open, and prints an authorize URL plus a `Waiting for callback on http://127.0.0.1:<port>/callback` line.
+Doppel detects the SSH session, skips the browser auto-open, and prints an authorize URL plus a `Waiting for callback on http://127.0.0.1:<port>/callback` line.
 
 ### 3. Open the URL in your local browser
 
-Copy the authorize URL from the remote terminal and paste it into the browser on your laptop. Approve the consent screen. The auth server redirects to `http://127.0.0.1:<port>/callback`. Your browser hits the tunnel, the request is forwarded to the remote listener, and Hermes prints `Login successful!`.
+Copy the authorize URL from the remote terminal and paste it into the browser on your laptop. Approve the consent screen. The auth server redirects to `http://127.0.0.1:<port>/callback`. Your browser hits the tunnel, the request is forwarded to the remote listener, and Doppel prints `Login successful!`.
 
 You can tear down the tunnel (Ctrl+C in the first terminal) once you see the success line.
 
 ## Step-by-step: through a jump box
 
-If you reach Hermes through a bastion / jump host, use SSH's built-in `-J` (ProxyJump):
+If you reach Doppel through a bastion / jump host, use SSH's built-in `-J` (ProxyJump):
 
 ```bash
 ssh -N -L 56121:127.0.0.1:56121 -J jump-user@jump-host user@final-host
@@ -157,7 +157,7 @@ ssh -N -L 56121:127.0.0.1:56121 user@remote-host
 
 ### `bind [127.0.0.1]:56121: Address already in use`
 
-Something on your laptop is already using that port. Either the previous tunnel didn't shut down cleanly, or a local Hermes is also listening on it. Find and kill the offender:
+Something on your laptop is already using that port. Either the previous tunnel didn't shut down cleanly, or a local Doppel process is also listening on it. Find and kill the offender:
 
 ```bash
 # macOS / Linux
@@ -169,15 +169,15 @@ Then retry the `ssh -L` command.
 
 ### "Could not establish connection. We couldn't reach your app." (xAI)
 
-xAI's authorize page shows this when its redirect to `127.0.0.1:<port>/callback` doesn't reach a listener. Either the tunnel isn't running, the port is wrong, or you're using the port Hermes printed in a previous run (the port can be auto-bumped if the preferred one is busy — always read the latest `Waiting for callback on ...` line).
+xAI's authorize page shows this when its redirect to `127.0.0.1:<port>/callback` doesn't reach a listener. Either the tunnel isn't running, the port is wrong, or you're using the port Doppel printed in a previous run (the port can be auto-bumped if the preferred one is busy — always read the latest `Waiting for callback on ...` line).
 
 ### `xAI authorization timed out waiting for the local callback`
 
-Same root cause as above — the redirect never made it back. Check the tunnel is still alive (`ssh -N` doesn't show output, so look at the terminal you started it from), restart it if needed, and re-run `hermes auth add xai-oauth --no-browser`.
+Same root cause as above — the redirect never made it back. Check the tunnel is still alive (`ssh -N` doesn't show output, so look at the terminal you started it from), restart it if needed, and re-run `doppel auth add xai-oauth --no-browser`.
 
 ### Tokens land in the wrong `~/.hermes`
 
-The tokens are written under the Linux user that ran `hermes auth add ...`. If your gateway / systemd service runs as a different user (e.g. `root` or a dedicated `hermes` user), authenticate as **that** user so the tokens land in their `~/.hermes/auth.json`. `sudo -u hermes -i` or equivalent.
+The tokens are written under the Linux user that ran `doppel auth add ...`. If your gateway / systemd service runs as a different user (for example, a dedicated `doppel` user on a fresh Doppel-first deploy, or the legacy `hermes` user on an older install), authenticate as **that** user so the tokens land in their `~/.hermes/auth.json`. Use `sudo -u doppel -i` on fresh Doppel-first installs, or `sudo -u hermes -i` if you kept the legacy defaults.
 
 ## See Also
 

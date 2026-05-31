@@ -473,7 +473,8 @@ def format_managed_message(action: str = "modify this Doppel Agent installation"
         return (
             f"Cannot {action}: this Doppel Agent installation is managed by NixOS "
             f"(HERMES_MANAGED={env_hint}).\n"
-            "Edit services.hermes-agent.settings in your configuration.nix and run:\n"
+            "Edit services.doppel-agent.settings in your configuration.nix "
+            "(or the legacy services.hermes-agent path) and run:\n"
             "  sudo nixos-rebuild switch"
         )
 

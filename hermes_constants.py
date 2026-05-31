@@ -52,12 +52,15 @@ NOUS_PORTAL_BASE_URL = "https://portal.nousresearch.com"
 NOUS_PORTAL_SUBSCRIPTION_URL = f"{NOUS_PORTAL_BASE_URL}/manage-subscription"
 DOCS_PAGE_PATHS: dict[str, str] = {
     "configuration": "user-guide/configuration",
+    "curator": "user-guide/features/curator",
     "developer_environments": "developer-guide/environments",
     "fallback_providers": "user-guide/features/fallback-providers",
     "integrations_providers": "integrations/providers",
+    "kanban": "user-guide/features/kanban",
     "messaging_slack": "user-guide/messaging/slack",
     "messaging_webhooks": "user-guide/messaging/webhooks",
     "oauth_over_ssh": "guides/oauth-over-ssh",
+    "secrets_bitwarden": "user-guide/secrets/bitwarden",
     "spotify": "user-guide/features/spotify",
     "tool_gateway": "user-guide/features/tool-gateway",
     "tools": "user-guide/features/tools",

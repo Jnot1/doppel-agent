@@ -6963,6 +6963,8 @@ def _print_curator_first_run_notice() -> None:
     first real pass by one ``interval_hours``; this notice tells the user how
     to preview or disable before then. Silent on steady state.
     """
+    from hermes_constants import get_docs_page_url
+
     try:
         from agent import curator
     except Exception:
@@ -6988,11 +6990,9 @@ def _print_curator_first_run_notice() -> None:
         f"~{days}d after installation; only agent-created skills are in "
         f"scope and nothing is ever auto-deleted (archive is recoverable)."
     )
-    print("  Preview now:  hermes curator run --dry-run")
-    print("  Pause it:     hermes curator pause")
-    print(
-        "  Docs:         https://hermes-agent.nousresearch.com/docs/user-guide/features/curator"
-    )
+    print("  Preview now:  doppel curator run --dry-run")
+    print("  Pause it:     doppel curator pause")
+    print(f"  Docs:         {get_docs_page_url('curator')}")
 
 
 def _print_curator_recent_run_notice() -> None:
@@ -11639,6 +11639,10 @@ def main():
     # fallback command — manage the fallback provider chain
     # =========================================================================
     from hermes_cli.fallback_cmd import cmd_fallback
+    from hermes_constants import get_docs_page_url
+
+    fallback_docs_url = get_docs_page_url("fallback_providers")
+    bitwarden_docs_url = get_docs_page_url("secrets_bitwarden")
 
     fallback_parser = subparsers.add_parser(
         "fallback",
@@ -11646,8 +11650,7 @@ def main():
         description=(
             "Manage the fallback provider chain.  Fallback providers are tried "
             "in order when the primary model fails with rate-limit, overload, or "
-            "connection errors.  See: "
-            "https://hermes-agent.nousresearch.com/docs/user-guide/features/fallback-providers"
+            f"connection errors.  See: {fallback_docs_url}"
         ),
     )
     fallback_subparsers = fallback_parser.add_subparsers(dest="fallback_command")
@@ -11680,8 +11683,7 @@ def main():
         description=(
             "Pull API keys from an external secret manager at process startup "
             "instead of storing them in ~/.doppel/.env.  Currently supports "
-            "Bitwarden Secrets Manager.  See: "
-            "https://hermes-agent.nousresearch.com/docs/user-guide/secrets/bitwarden"
+            f"Bitwarden Secrets Manager.  See: {bitwarden_docs_url}"
         ),
     )
     secrets_subparsers = secrets_parser.add_subparsers(dest="secrets_command")

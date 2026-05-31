@@ -1,9 +1,10 @@
 """Remote model catalog fetcher.
 
-The Hermes docs site hosts a JSON manifest of curated models for providers
-we want to update without shipping a release (currently OpenRouter and
-Nous Portal). This module fetches, validates, and caches that manifest,
-falling back to the in-repo hardcoded lists when the network is unavailable.
+The hosted Doppel Agent docs catalog publishes a JSON manifest of curated
+models for providers we want to update without shipping a release (currently
+OpenRouter and Nous Portal). This module fetches, validates, and caches that
+manifest, falling back to the in-repo hardcoded lists when the network is
+unavailable.
 
 Pipeline
 --------

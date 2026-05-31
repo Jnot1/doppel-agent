@@ -242,6 +242,18 @@ class TestDistributionIdentity:
     def test_docs_page_url(self):
         assert get_docs_page_url("spotify") == "https://hermes-agent.nousresearch.com/docs/user-guide/features/spotify"
 
+    def test_docs_page_url_curator(self):
+        assert get_docs_page_url("curator") == "https://hermes-agent.nousresearch.com/docs/user-guide/features/curator"
+
+    def test_docs_page_url_kanban(self):
+        assert get_docs_page_url("kanban") == "https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban"
+
+    def test_docs_page_url_secrets_bitwarden(self):
+        assert (
+            get_docs_page_url("secrets_bitwarden")
+            == "https://hermes-agent.nousresearch.com/docs/user-guide/secrets/bitwarden"
+        )
+
     def test_docs_page_url_with_fragment(self):
         assert (
             get_docs_page_url("messaging_webhooks", "configuring-routes")

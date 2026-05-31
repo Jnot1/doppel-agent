@@ -78,6 +78,7 @@ FORK_REPO_SLUG = "Jnot1/doppel-agent"
 UPSTREAM_REPO_SLUG = "NousResearch/hermes-agent"
 FORK_REPO_WEB_URL = f"https://github.com/{FORK_REPO_SLUG}"
 FORK_REPO_URL = f"{FORK_REPO_WEB_URL}.git"
+FORK_INSTALLER_RAW_BASE_URL = f"https://raw.githubusercontent.com/{FORK_REPO_SLUG}/main/scripts"
 UPSTREAM_REPO_WEB_URL = f"https://github.com/{UPSTREAM_REPO_SLUG}"
 UPSTREAM_REPO_URL = f"{UPSTREAM_REPO_WEB_URL}.git"
 UPSTREAM_REPO_SSH_URL = f"git@github.com:{UPSTREAM_REPO_SLUG}"
@@ -108,6 +109,12 @@ def get_cli_prog_name(argv0: str | None = None) -> str:
 def get_distribution_package_name() -> str:
     """Return the Python package distribution name used for upgrades."""
     return PACKAGE_DISTRIBUTION_NAME
+
+
+def get_fork_install_script_url(script_name: str = "install.sh") -> str:
+    """Return the current fork-owned installer script URL."""
+    normalized = str(script_name or "install.sh").strip().lstrip("/")
+    return f"{FORK_INSTALLER_RAW_BASE_URL}/{normalized}"
 
 
 def get_default_api_server_model_name() -> str:

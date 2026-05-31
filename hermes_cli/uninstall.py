@@ -11,7 +11,11 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from hermes_constants import get_hermes_home
+from hermes_constants import (
+    get_fork_install_script_url,
+    get_hermes_home,
+    get_managed_checkout_names,
+)
 
 from hermes_cli.colors import Colors, color
 
@@ -50,7 +54,7 @@ def find_shell_configs() -> list:
 
 
 def remove_path_from_shell_configs():
-    """Remove Hermes PATH entries from shell configuration files."""
+    """Remove installer-managed Doppel/Hermes PATH entries from shell configs."""
     configs = find_shell_configs()
     removed_from = []
     
@@ -64,17 +68,25 @@ def remove_path_from_shell_configs():
             skip_next = False
             
             for line in content.split('\n'):
-                # Skip the "# Hermes Agent" comment and following line
-                if '# Hermes Agent' in line or '# hermes-agent' in line:
+                # Skip installer-managed PATH blocks for both the current
+                # Doppel comment and the legacy Hermes comment.
+                if '# Doppel Agent' in line or '# Hermes Agent' in line or '# hermes-agent' in line:
                     skip_next = True
                     continue
-                if skip_next and ('hermes' in line.lower() and 'PATH' in line):
+                if skip_next:
+                    lower_line = line.lower()
+                    if '.local/bin' in lower_line and ('path' in lower_line or 'fish_add_path' in lower_line):
+                        skip_next = False
+                        continue
                     skip_next = False
-                    continue
-                skip_next = False
                 
-                # Remove any PATH line containing hermes
-                if 'hermes' in line.lower() and ('PATH=' in line or 'path=' in line.lower()):
+                # Remove legacy hardcoded PATH exports that still point into
+                # Doppel/Hermes-managed install trees.
+                lower_line = line.lower()
+                if (
+                    ('path=' in lower_line or 'fish_add_path' in lower_line)
+                    and any(marker in lower_line for marker in ('hermes', 'doppel'))
+                ):
                     continue
                     
                 new_lines.append(line)
@@ -96,19 +108,35 @@ def remove_path_from_shell_configs():
 
 
 def remove_wrapper_script():
-    """Remove the hermes wrapper script if it exists."""
+    """Remove managed Doppel/Hermes CLI wrapper scripts if they exist."""
     wrapper_paths = [
+        Path.home() / ".local" / "bin" / "doppel",
         Path.home() / ".local" / "bin" / "hermes",
+        Path("/usr/local/bin/doppel"),
         Path("/usr/local/bin/hermes"),
     ]
     
     removed = []
+    managed_checkout_names = get_managed_checkout_names()
     for wrapper in wrapper_paths:
         if wrapper.exists():
             try:
-                # Check if it's our wrapper (contains hermes_cli reference)
-                content = wrapper.read_text()
-                if 'hermes_cli' in content or 'hermes-agent' in content:
+                if wrapper.is_symlink():
+                    resolved = wrapper.resolve()
+                    if any(name in str(resolved) for name in managed_checkout_names):
+                        wrapper.unlink()
+                        removed.append(wrapper)
+                        continue
+
+                # Check if it's our wrapper (contains hermes_cli or a managed
+                # checkout reference) before deleting it.
+                content = wrapper.read_text(errors="ignore")
+                if (
+                    'hermes_cli' in content
+                    or any(name in content for name in managed_checkout_names)
+                    or 'DOPPEL_HOME' in content
+                    or 'HERMES_HOME' in content
+                ):
                     wrapper.unlink()
                     removed.append(wrapper)
             except Exception as e:
@@ -304,11 +332,12 @@ def uninstall_gateway_service():
 
 
 def _hermes_path_markers(hermes_home: Path) -> list[str]:
-    """Path-entry substrings that identify Hermes-owned User-PATH entries."""
+    """Path-entry substrings that identify Doppel/Hermes-owned User PATH entries."""
     root = str(hermes_home).rstrip("\\/")
     # Match on prefix so sub-entries (git\cmd, git\bin, git\usr\bin, node, etc.)
-    # all get swept.  Also match the bare hermes-agent install dir.
-    markers = [root + "\\hermes-agent", root + "\\git", root + "\\node", root + "\\venv"]
+    # all get swept. Also match both current and legacy checkout names.
+    markers = [root + f"\\{name}" for name in get_managed_checkout_names()]
+    markers.extend([root + "\\git", root + "\\node", root + "\\venv"])
     # Also match if HERMES_HOME was customised to somewhere else — find-and-nuke
     # any entry whose path component contains "hermes".  We don't want to catch
     # unrelated entries like "chermes-foo" or "ephermeral", so we look for
@@ -383,7 +412,9 @@ def remove_hermes_env_vars_windows() -> list[str]:
 
 def remove_portable_tooling_windows(hermes_home: Path) -> list[Path]:
     """Delete PortableGit and Node installs the Windows installer created under
-    ``%LOCALAPPDATA%\\hermes\\``.  Only called on full uninstall; they're
+    ``%LOCALAPPDATA%\\doppel\\``. Only called on full uninstall; legacy
+    ``%LOCALAPPDATA%\\hermes\\`` layouts still resolve through ``hermes_home``.
+    They're
     isolated from any system Git / Node so they cannot break other tools."""
     removed: list[Path] = []
     for sub in ("git", "node", "gateway-service"):
@@ -656,7 +687,7 @@ def run_uninstall(args):
     # We need to be careful here
     try:
         if project_root.exists():
-            # If the install is inside ~/.hermes/, just remove the hermes-agent subdir
+            # If the install is inside the agent home, just remove the managed checkout.
             if hermes_home in project_root.parents or project_root.parent == hermes_home:
                 shutil.rmtree(project_root)
                 log_success(f"Removed {project_root}")
@@ -718,9 +749,9 @@ def run_uninstall(args):
         print()
         print("To reinstall later with your existing settings:")
         if _is_windows():
-            print(color("  iex (irm https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.ps1)", Colors.DIM))
+            print(color(f"  iex (irm {get_fork_install_script_url('install.ps1')})", Colors.DIM))
         else:
-            print(color("  curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash", Colors.DIM))
+            print(color(f"  curl -fsSL {get_fork_install_script_url('install.sh')} | bash", Colors.DIM))
         print()
 
     if _is_windows():

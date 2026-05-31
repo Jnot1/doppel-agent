@@ -295,6 +295,18 @@ class TestUpstreamIdentity:
             == "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
         )
 
+    def test_fork_install_script_url_default(self):
+        assert (
+            hermes_constants.get_fork_install_script_url()
+            == "https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.sh"
+        )
+
+    def test_fork_install_script_url_windows(self):
+        assert (
+            hermes_constants.get_fork_install_script_url("install.ps1")
+            == "https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1"
+        )
+
 
 class TestGatewayNamingHelpers:
     def test_gateway_service_name_default_profile(self):

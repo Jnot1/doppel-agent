@@ -1,15 +1,16 @@
 """
-Configuration management for Hermes Agent.
+Configuration management for Doppel Agent.
 
-Config files are stored in ~/.hermes/ for easy access:
-- ~/.hermes/config.yaml  - All settings (model, toolsets, terminal, etc.)
-- ~/.hermes/.env         - API keys and secrets
+Fresh installs store config files in ~/.doppel/ (legacy ~/.hermes/ still
+works):
+- ~/.doppel/config.yaml  - All settings (model, toolsets, terminal, etc.)
+- ~/.doppel/.env         - API keys and secrets
 
 This module provides:
-- hermes config          - Show current configuration
-- hermes config edit     - Open config in editor
-- hermes config set      - Set a specific value
-- hermes config wizard   - Re-run setup wizard
+- doppel config          - Show current configuration
+- doppel config edit     - Open config in editor
+- doppel config set      - Set a specific value
+- doppel config wizard   - Re-run setup wizard
 """
 
 import copy
@@ -375,7 +376,7 @@ def recommended_update_command_for_method(method: str) -> str:
         if shutil.which("uv"):
             return f"uv pip install --upgrade {package_name}"
         return f"pip install --upgrade {package_name}"
-    return "hermes update"
+    return f"{hermes_constants.PREFERRED_CLI_COMMAND} update"
 
 
 def recommended_update_command() -> str:
@@ -405,7 +406,7 @@ def recommended_update_command() -> str:
 
 
 def format_docker_update_message() -> str:
-    """Return the user-facing message for ``hermes update`` inside Docker.
+    """Return the user-facing message for ``doppel update`` inside Docker.
 
     Centralised so ``cmd_update`` (the apply path) and ``_cmd_update_check``
     (the dry-run path) share the same wording.
@@ -414,9 +415,9 @@ def format_docker_update_message() -> str:
     tags_url = hermes_constants.get_docker_image_tags_url()
     container_name = image_name.rsplit("/", 1)[-1]
     return f"""\
-✗ ``hermes update`` doesn't apply inside the Docker container.
+✗ ``doppel update`` doesn't apply inside the Docker container.
 
-Hermes Agent runs as a published image ({image_name}), not a
+Doppel Agent runs as a published image ({image_name}), not a
 git checkout — the container has no working tree to pull into.  Update by
 pulling a fresh image and restarting your container instead:
 
@@ -440,7 +441,7 @@ Notes:
     and replace the ``docker pull`` step with your build/push pipeline."""
 
 
-def format_managed_message(action: str = "modify this Hermes installation") -> str:
+def format_managed_message(action: str = "modify this Doppel Agent installation") -> str:
     """Build a user-facing error for managed installs."""
     managed_system = get_managed_system() or "a package manager"
     raw = os.getenv("HERMES_MANAGED", "").strip().lower()
@@ -448,7 +449,7 @@ def format_managed_message(action: str = "modify this Hermes installation") -> s
     if managed_system == "NixOS":
         env_hint = "true" if raw in _MANAGED_TRUE_VALUES else raw or "true"
         return (
-            f"Cannot {action}: this Hermes installation is managed by NixOS "
+            f"Cannot {action}: this Doppel Agent installation is managed by NixOS "
             f"(HERMES_MANAGED={env_hint}).\n"
             "Edit services.hermes-agent.settings in your configuration.nix and run:\n"
             "  sudo nixos-rebuild switch"
@@ -457,15 +458,15 @@ def format_managed_message(action: str = "modify this Hermes installation") -> s
     if managed_system == "Homebrew":
         env_hint = raw or "homebrew"
         return (
-            f"Cannot {action}: this Hermes installation is managed by Homebrew "
+            f"Cannot {action}: this Doppel Agent installation is managed by Homebrew "
             f"(HERMES_MANAGED={env_hint}).\n"
             "Use:\n"
             f"  brew upgrade {hermes_constants.get_homebrew_formula_name()}"
         )
 
     return (
-        f"Cannot {action}: this Hermes installation is managed by {managed_system}.\n"
-        "Use your package manager to upgrade or reinstall Hermes."
+        f"Cannot {action}: this Doppel Agent installation is managed by {managed_system}.\n"
+        "Use your package manager to upgrade or reinstall Doppel Agent."
     )
 
 def managed_error(action: str = "modify configuration"):

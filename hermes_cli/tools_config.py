@@ -1,12 +1,13 @@
 """
-Unified tool configuration for Hermes Agent.
+Unified tool configuration for Doppel Agent.
 
-`hermes tools` and `hermes setup tools` both enter this module.
+`doppel tools` and `doppel setup tools` both enter this module.
 Select a platform → toggle toolsets on/off → for newly enabled tools
 that need API keys, run through provider-aware configuration.
 
-Saves per-platform tool configuration to ~/.hermes/config.yaml under
-the `platform_toolsets` key.
+Saves per-platform tool configuration to ~/.doppel/config.yaml on fresh
+installs (legacy ~/.hermes/config.yaml still works) under the
+`platform_toolsets` key.
 """
 
 import json as _json
@@ -29,7 +30,12 @@ from hermes_cli.nous_subscription import (
     get_nous_subscription_features,
 )
 from hermes_cli.nous_account import format_nous_portal_entitlement_message
-from hermes_constants import get_docs_page_url
+from hermes_constants import (
+    PREFERRED_CLI_COMMAND,
+    get_docker_image_name,
+    get_docs_page_url,
+    get_managed_checkout_names,
+)
 from tools.tool_backend_helpers import fal_key_is_configured
 from utils import base_url_hostname, is_truthy_value
 
@@ -372,7 +378,7 @@ TOOL_CATEGORIES = {
         "name": "X (Twitter) Search",
         "setup_title": "Select xAI Credential Source",
         "setup_note": (
-            "Hermes routes X searches through xAI's built-in x_search "
+            "Doppel routes X searches through xAI's built-in x_search "
             "Responses tool. Both credential sources hit the same "
             "https://api.x.ai/v1/responses endpoint — pick whichever you "
             "already have. SuperGrok OAuth is preferred when both are set "
@@ -750,7 +756,7 @@ def _run_cua_driver_installer(label: str = "Installing", verbose: bool = True) -
                 _print_info("    IMPORTANT — grant macOS permissions now:")
                 _print_info("      System Settings > Privacy & Security > Accessibility")
                 _print_info("      System Settings > Privacy & Security > Screen Recording")
-                _print_info("    Both must allow the terminal / Hermes process.")
+                _print_info("    Both must allow the terminal / Doppel process.")
             return True
         _print_warning(f"    cua-driver {label.lower()} did not complete. Re-run manually:")
         _print_info(f"      {install_cmd}")
@@ -786,11 +792,14 @@ def _run_post_setup(post_setup_key: str):
                 _print_success("    Node.js dependencies installed")
             else:
                 from hermes_constants import display_hermes_home
-                _print_warning(f"    npm install failed - run manually: cd {display_hermes_home()}/hermes-agent && npm install")
+                managed_checkout = get_managed_checkout_names()[0]
+                _print_warning(
+                    f"    npm install failed - run manually: cd {display_hermes_home()}/{managed_checkout} && npm install"
+                )
                 if result.stderr:
                     _print_info(f"      {result.stderr.strip()[:200]}")
         elif not node_modules.exists():
-            _print_warning("    Node.js not found - browser tools require: npm install (in hermes-agent directory)")
+            _print_warning("    Node.js not found - browser tools require: npm install (in the doppel-agent directory)")
             return
 
         # Step 2: only the local browser provider actually needs Chromium on
@@ -827,7 +836,7 @@ def _run_post_setup(post_setup_key: str):
                 "    Pull the latest image to get the bundled Chromium:"
             )
             _print_info(
-                "      docker pull ghcr.io/nousresearch/hermes-agent:latest"
+                f"      docker pull {get_docker_image_name()}:latest"
             )
             return
 
@@ -964,7 +973,11 @@ def _run_post_setup(post_setup_key: str):
                 return
         _print_info("    Default voice: en_US-lessac-medium (downloaded on first TTS call)")
         _print_info("    Full voice list: https://github.com/OHF-Voice/piper1-gpl/blob/main/docs/VOICES.md")
-        _print_info("    Switch voices by setting tts.piper.voice in ~/.hermes/config.yaml")
+        from hermes_constants import display_hermes_home
+
+        _print_info(
+            f"    Switch voices by setting tts.piper.voice in {display_hermes_home()}/config.yaml"
+        )
 
     elif post_setup_key == "ddgs":
         try:
@@ -999,7 +1012,7 @@ def _run_post_setup(post_setup_key: str):
             from hermes_cli.auth import login_spotify_command
         except Exception as exc:
             _print_warning(f"    Could not load Spotify auth: {exc}")
-            _print_info("    Run manually: hermes auth spotify")
+            _print_info(f"    Run manually: {PREFERRED_CLI_COMMAND} auth spotify")
             return
         _print_info("    Starting Spotify login...")
         try:
@@ -1010,12 +1023,12 @@ def _run_post_setup(post_setup_key: str):
             _print_success("    Spotify authenticated")
         except SystemExit as exc:
             # User aborted the wizard, or OAuth failed — don't fail the
-            # toolset enable; they can retry with `hermes auth spotify`.
+            # toolset enable; they can retry with `doppel auth spotify`.
             _print_warning(f"    Spotify login did not complete: {exc}")
-            _print_info("    Run later: hermes auth spotify")
+            _print_info(f"    Run later: {PREFERRED_CLI_COMMAND} auth spotify")
         except Exception as exc:
             _print_warning(f"    Spotify login failed: {exc}")
-            _print_info("    Run manually: hermes auth spotify")
+            _print_info(f"    Run manually: {PREFERRED_CLI_COMMAND} auth spotify")
 
     elif post_setup_key == "xai_grok":
         # Shared credential bootstrap for any picker entry that talks to xAI
@@ -1050,7 +1063,9 @@ def _run_post_setup(post_setup_key: str):
             from hermes_cli.config import save_env_value
         except Exception as exc:
             _print_warning(f"    Could not load setup helpers: {exc}")
-            _print_info("    Run later: hermes auth add xai-oauth   (or set XAI_API_KEY)")
+            _print_info(
+                f"    Run later: {PREFERRED_CLI_COMMAND} auth add xai-oauth   (or set XAI_API_KEY)"
+            )
             return
 
         idx = prompt_choice(
@@ -1058,7 +1073,7 @@ def _run_post_setup(post_setup_key: str):
             choices=[
                 "Sign in with xAI Grok OAuth (SuperGrok / Premium+) — browser login",
                 "Paste an xAI API key (console.x.ai)",
-                "Skip — configure later via `hermes auth add xai-oauth`",
+                f"Skip — configure later via `{PREFERRED_CLI_COMMAND} auth add xai-oauth`",
             ],
             default=0,
         )
@@ -1070,7 +1085,7 @@ def _run_post_setup(post_setup_key: str):
             else:
                 _print_warning(
                     "    xAI Grok OAuth login did not complete. "
-                    "Run later: hermes auth add xai-oauth"
+                    f"Run later: {PREFERRED_CLI_COMMAND} auth add xai-oauth"
                 )
         elif idx == 1:
             api_key = _setup_prompt("    xAI API key", password=True)
@@ -1079,7 +1094,7 @@ def _run_post_setup(post_setup_key: str):
                 _print_success("    XAI_API_KEY saved")
             else:
                 _print_warning(
-                    "    No API key provided. Run later: hermes auth add xai-oauth"
+                    f"    No API key provided. Run later: {PREFERRED_CLI_COMMAND} auth add xai-oauth"
                 )
         else:
             _print_info("    xAI will remain inactive until credentials are configured.")
@@ -3069,7 +3084,7 @@ def _reconfigure_simple_requirements(ts_key: str):
 # ─── Main Entry Point ─────────────────────────────────────────────────────────
 
 def tools_command(args=None, first_install: bool = False, config: dict = None):
-    """Entry point for `hermes tools` and `hermes setup tools`.
+    """Entry point for `doppel tools` and `doppel setup tools`.
 
     Args:
         first_install: When True (set by the setup wizard on fresh installs),
@@ -3104,7 +3119,7 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
                 print(color("    (none enabled)", Colors.DIM))
         print()
         return
-    print(color("⚕ Hermes Tool Configuration", Colors.CYAN, Colors.BOLD))
+    print(color("⚕ Doppel Tool Configuration", Colors.CYAN, Colors.BOLD))
     print(color("  Enable or disable tools per platform.", Colors.DIM))
     print(color("  Tools that need API keys will be configured when enabled.", Colors.DIM))
     print(color(f"  Guide: {get_docs_page_url('tools')}", Colors.DIM))

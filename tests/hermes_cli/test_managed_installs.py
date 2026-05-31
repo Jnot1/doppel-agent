@@ -20,13 +20,14 @@ def test_get_managed_system_homebrew(monkeypatch):
 def test_format_managed_message_homebrew(monkeypatch):
     monkeypatch.setenv("HERMES_MANAGED", "homebrew")
 
-    message = format_managed_message("update Hermes Agent")
+    message = format_managed_message("update Doppel Agent")
 
+    assert "Doppel Agent installation" in message
     assert "managed by Homebrew" in message
     assert "brew upgrade hermes-agent" in message
 
 
-def test_recommended_update_command_defaults_to_hermes_update(monkeypatch):
+def test_recommended_update_command_defaults_to_doppel_update(monkeypatch):
     monkeypatch.delenv("HERMES_MANAGED", raising=False)
 
     # Also short-circuit the .managed marker path — CI runners may have an
@@ -36,7 +37,7 @@ def test_recommended_update_command_defaults_to_hermes_update(monkeypatch):
     # detect_install_method().
     with patch("hermes_cli.config.get_managed_update_command", return_value=None), \
          patch("hermes_cli.config.detect_install_method", return_value="git"):
-        assert recommended_update_command() == "hermes update"
+        assert recommended_update_command() == "doppel update"
 
 
 def test_cmd_update_blocks_managed_homebrew(monkeypatch, capsys):

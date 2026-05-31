@@ -85,10 +85,10 @@ Where the installer puts things depends on whether you're installing as a normal
 | Installer | Code lives at | `doppel` binary | Data directory |
 |---|---|---|---|
 | pip install | Python site-packages | `~/.local/bin/doppel` (console_scripts) | `~/.doppel/` |
-| Per-user (git installer) | `~/.doppel/hermes-agent/` | `~/.local/bin/doppel` (symlink) | `~/.doppel/` |
-| Root-mode (`sudo curl … \| sudo bash`) | `/usr/local/lib/hermes-agent/` | `/usr/local/bin/doppel` | `/root/.doppel/` (or `$DOPPEL_HOME`, legacy `$HERMES_HOME`) |
+| Per-user (git installer) | `~/.doppel/doppel-agent/` | `~/.local/bin/doppel` (symlink) | `~/.doppel/` |
+| Root-mode (`sudo curl … \| sudo bash`) | `/usr/local/lib/doppel-agent/` | `/usr/local/bin/doppel` | `/root/.doppel/` (or `$DOPPEL_HOME`, legacy `$HERMES_HOME`) |
 
-The root-mode **FHS layout** (`/usr/local/lib/…`, `/usr/local/bin/doppel`) matches where other system-wide developer tools land on Linux. It's useful for shared-machine deployments where one system install should serve every user. Per-user config (auth, skills, sessions) still lives under each user's `~/.doppel/` or explicit `DOPPEL_HOME` (with `HERMES_HOME` kept as a legacy alias).
+The root-mode **FHS layout** (`/usr/local/lib/…`, `/usr/local/bin/doppel`) matches where other system-wide developer tools land on Linux. It's useful for shared-machine deployments where one system install should serve every user. Per-user config (auth, skills, sessions) still lives under each user's `~/.doppel/` or explicit `DOPPEL_HOME` (with `HERMES_HOME` kept as a legacy alias). Older installs may still reuse a legacy `hermes-agent` checkout directory in place until migrated.
 
 ### After Installation
 
@@ -180,7 +180,7 @@ Running Doppel as a dedicated unprivileged user (e.g. a `doppel` systemd service
    sudo ln -s /home/doppel/.doppel/hermes-agent/venv/bin/doppel /usr/local/bin/doppel
    ```
 
-4. **Verify:** `doppel doctor` should now run cleanly. If you get `ModuleNotFoundError: No module named 'dotenv'`, you're invoking the repo source `hermes` file (`~/.doppel/hermes-agent/hermes`) with system Python instead of the venv launcher (`~/.doppel/hermes-agent/venv/bin/doppel`) — fix step 3.
+4. **Verify:** `doppel doctor` should now run cleanly. If you get `ModuleNotFoundError: No module named 'dotenv'`, you're invoking the repo source `hermes` file (`~/.doppel/doppel-agent/hermes`) with system Python instead of the venv launcher (`~/.doppel/doppel-agent/venv/bin/doppel`) — fix step 3. Older installs may still have the same files under `~/.doppel/hermes-agent/`.
 
 The same pattern works on Arch (the installer uses pacman with the same sudo-detection logic), Fedora/RHEL, and openSUSE — those distros don't support `--with-deps` at all, so an administrator always installs the system libraries separately. The relevant `dnf`/`zypper` commands are printed by the installer.
 
@@ -198,4 +198,4 @@ For more diagnostics, run `doppel doctor` — it will tell you exactly what's mi
 
 ## Install method auto-detection
 
-Doppel auto-detects whether it was installed via `pip`, the git installer, Homebrew, or NixOS, and `doppel update` prints the matching update command for that path. There's no env var to set — the detection is based on the install layout (Python site-packages, `~/.doppel/hermes-agent/`, Homebrew prefix, or Nix store path). `doppel doctor` also surfaces the detected method under its environment summary.
+Doppel auto-detects whether it was installed via `pip`, the git installer, Homebrew, or NixOS, and `doppel update` prints the matching update command for that path. There's no env var to set — the detection is based on the install layout (Python site-packages, `~/.doppel/doppel-agent/`, Homebrew prefix, or Nix store path). Legacy `~/.doppel/hermes-agent/` checkouts are still recognized during the transition. `doppel doctor` also surfaces the detected method under its environment summary.

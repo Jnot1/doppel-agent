@@ -248,13 +248,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Profile override — MUST happen before any hermes module import.
 #
 # Many modules cache HERMES_HOME at import time (module-level constants).
-# We intercept --profile/-p from sys.argv here and set the env var so that
-# every subsequent ``os.getenv("HERMES_HOME", ...)`` resolves correctly.
+# We intercept --profile/-p from sys.argv here and set both home env vars so
+# that legacy and rebrand call sites resolve the same profile directory.
 # The flag is stripped from sys.argv so argparse never sees it.
-# Falls back to ~/.hermes/active_profile for sticky default.
+# Falls back to the selected native root's active_profile for sticky default.
 # ---------------------------------------------------------------------------
 def _apply_profile_override() -> None:
-    """Pre-parse --profile/-p and set HERMES_HOME before module imports."""
+    """Pre-parse --profile/-p and set home env vars before module imports."""
     argv = sys.argv[1:]
     profile_name = None
     consume = 0
@@ -281,18 +281,25 @@ def _apply_profile_override() -> None:
             profile_name = None
             consume = 0
 
-    # 1.5 If HERMES_HOME is already set and no explicit flag was given, trust it
-    # only when it already points to a specific profile directory.  The
+    # 1.5 If a home env is already set and no explicit flag was given, trust it
+    # only when it already points to a specific profile directory. The
     # distinguishing heuristic: a profile path has "profiles" as its immediate
-    # parent directory name (e.g. ~/.hermes/profiles/coder or
+    # parent directory name (e.g. ~/.doppel/profiles/coder,
+    # ~/.hermes/profiles/coder, or
     # /opt/data/profiles/coder).  If HERMES_HOME points to the hermes root
     # instead (e.g. systemd hardcodes HERMES_HOME=/root/.hermes), we must
     # still read active_profile — the user may have switched profiles via
     # `hermes profile use` and the gateway should honour that choice.
     # See issue #22502.
-    hermes_home_env = os.environ.get("HERMES_HOME", "")
-    if profile_name is None and hermes_home_env:
-        if Path(hermes_home_env).parent.name == "profiles":
+    doppel_home_env = os.environ.get("DOPPEL_HOME", "").strip()
+    hermes_home_env = os.environ.get("HERMES_HOME", "").strip()
+    current_home_env = doppel_home_env or hermes_home_env
+    if doppel_home_env and not hermes_home_env:
+        os.environ["HERMES_HOME"] = doppel_home_env
+    elif hermes_home_env and not doppel_home_env:
+        os.environ["DOPPEL_HOME"] = hermes_home_env
+    if profile_name is None and current_home_env:
+        if Path(current_home_env).parent.name == "profiles":
             return
 
     # 2. If no flag, check active_profile in the hermes root
@@ -309,7 +316,7 @@ def _apply_profile_override() -> None:
         except (UnicodeDecodeError, OSError):
             pass  # corrupted file, skip
 
-    # 3. If we found a profile, resolve and set HERMES_HOME
+    # 3. If we found a profile, resolve and set both home env vars
     if profile_name is not None:
         try:
             from hermes_cli.profiles import resolve_profile_env
@@ -325,6 +332,7 @@ def _apply_profile_override() -> None:
                 file=sys.stderr,
             )
             return
+        os.environ["DOPPEL_HOME"] = hermes_home
         os.environ["HERMES_HOME"] = hermes_home
         # Strip the flag from argv so argparse doesn't choke
         if consume > 0:
@@ -1335,7 +1343,13 @@ def _ensure_tui_node() -> None:
     if not helper.is_file():
         return
 
-    hermes_home = os.environ.get("HERMES_HOME") or str(Path.home() / ".hermes")
+    from hermes_constants import get_default_hermes_root
+
+    hermes_home = (
+        os.environ.get("DOPPEL_HOME")
+        or os.environ.get("HERMES_HOME")
+        or str(get_default_hermes_root())
+    )
     try:
         # Helper writes logs to stderr; we ask bash to print `command -v node`
         # on stdout once ensure_node succeeds. Subshell PATH edits don't leak
@@ -10497,7 +10511,7 @@ def cmd_profile(args):
         try:
             set_active_profile(name)
             if name == "default":
-                print(f"Switched to: default (~/.hermes)")
+                print(f"Switched to: default (~/.doppel)")
             else:
                 print(f"Switched to: {name}")
         except (ValueError, FileNotFoundError) as e:
@@ -11665,7 +11679,7 @@ def main():
         help="Manage external secret sources (Bitwarden Secrets Manager)",
         description=(
             "Pull API keys from an external secret manager at process startup "
-            "instead of storing them in ~/.hermes/.env.  Currently supports "
+            "instead of storing them in ~/.doppel/.env.  Currently supports "
             "Bitwarden Secrets Manager.  See: "
             "https://hermes-agent.nousresearch.com/docs/user-guide/secrets/bitwarden"
         ),
@@ -12523,9 +12537,9 @@ def main():
         "hooks",
         help="Inspect and manage shell-script hooks",
         description=(
-            "Inspect shell-script hooks declared in ~/.hermes/config.yaml, "
+            "Inspect shell-script hooks declared in ~/.doppel/config.yaml, "
             "test them against synthetic payloads, and manage the first-use "
-            "consent allowlist at ~/.hermes/shell-hooks-allowlist.json."
+            "consent allowlist at ~/.doppel/shell-hooks-allowlist.json."
         ),
     )
     hooks_subparsers = hooks_parser.add_subparsers(dest="hooks_action")
@@ -13003,7 +13017,7 @@ Examples:
         "reset",
         help="Reset a bundled skill — clears 'user-modified' tracking so updates work again",
         description=(
-            "Clear a bundled skill's entry from the sync manifest (~/.hermes/skills/.bundled_manifest) "
+            "Clear a bundled skill's entry from the sync manifest (~/.doppel/skills/.bundled_manifest) "
             "so future 'hermes update' runs stop marking it as user-modified. Pass --restore to also "
             "replace the current copy with the bundled version."
         ),
@@ -14132,7 +14146,7 @@ Examples:
     acp_parser.add_argument(
         "--setup-browser",
         action="store_true",
-        help="Install agent-browser + Playwright Chromium into ~/.hermes/node/ "
+        help="Install agent-browser + Playwright Chromium into ~/.doppel/node/ "
              "for browser tool support (idempotent).",
     )
     acp_parser.add_argument(

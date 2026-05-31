@@ -83,7 +83,7 @@ doppel [global-options] <command> [subcommand/options]
 | `doppel profile` | Manage profiles — multiple isolated Doppel instances. |
 | `doppel completion` | Print shell completion scripts (bash/zsh/fish). |
 | `doppel version` | Show version information. |
-| `doppel update` | Pull latest code and reinstall dependencies (git installs), or check PyPI and `pip install --upgrade` (pip installs). `--check` previews without installing; `--backup` takes a pre-pull `HERMES_HOME` snapshot. |
+| `doppel update` | Pull latest code and reinstall dependencies (git installs), or check PyPI and `pip install --upgrade` (pip installs). `--check` previews without installing; `--backup` takes a pre-pull agent-home snapshot (`DOPPEL_HOME`, with legacy `HERMES_HOME` still honored). |
 | `doppel uninstall` | Remove the Doppel installation from the system. |
 
 ## `doppel chat`
@@ -227,7 +227,7 @@ Options:
 
 | Option | Description |
 |--------|-------------|
-| `--all` | On `start` / `restart` / `stop`: act on **every profile's** gateway, not just the active `HERMES_HOME`. Useful if you run multiple profiles side-by-side and want to restart them all after `doppel update`. |
+| `--all` | On `start` / `restart` / `stop`: act on **every profile's** gateway, not just the active `DOPPEL_HOME` (legacy `HERMES_HOME` still works). Useful if you run multiple profiles side-by-side and want to restart them all after `doppel update`. |
 | `--no-supervise` | On `run`: inside the s6-overlay Docker image, opt out of auto-supervision and use pre-s6 foreground semantics — gateway runs as the container's main process with no auto-restart. No-op outside the s6 image. Equivalent to setting `HERMES_GATEWAY_NO_SUPERVISE=1`. |
 
 :::tip WSL users
@@ -335,7 +335,7 @@ reinstall if scopes or slash commands changed.
 
 | Flag | Default | Purpose |
 |------|---------|---------|
-| `--write [PATH]` | stdout | Write to a file instead of stdout. Bare `--write` writes `$HERMES_HOME/slack-manifest.json`. |
+| `--write [PATH]` | stdout | Write to a file instead of stdout. Bare `--write` writes `$DOPPEL_HOME/slack-manifest.json` (legacy `$HERMES_HOME` still works). |
 | `--name NAME` | `Doppel` | Bot display name in Slack. |
 | `--description DESC` | default blurb | Bot description shown in the Slack app directory. |
 | `--slashes-only` | off | Emit only `features.slash_commands` for merging into a manually-maintained manifest. |
@@ -643,7 +643,7 @@ Outputs a compact, plain-text summary of your entire Doppel setup. Designed to b
 |---------|---------|
 | **Header** | Doppel version, release date, git commit hash |
 | **Environment** | OS, Python version, OpenAI SDK version |
-| **Identity** | Active profile name, HERMES_HOME path |
+| **Identity** | Active profile name, DOPPEL_HOME path |
 | **Model** | Configured default model and provider |
 | **Terminal** | Backend type (local, docker, ssh, etc.) |
 | **API keys** | Presence check for all 22 provider/tool API keys |
@@ -1430,7 +1430,7 @@ Pulls the latest managed Doppel checkout and reinstalls dependencies in your ven
 | `--gateway` | Internal mode used by the messaging `/update` command. Uses file-based IPC for prompts and progress streaming instead of reading from terminal stdin. Not a gateway restart flag. |
 | `--check` | Check whether an update is available without pulling, installing dependencies, or restarting anything. |
 | `--no-backup` | Skip the pre-update backup for this run, even if `updates.pre_update_backup` is enabled in `config.yaml`. |
-| `--backup` | Create a labeled pre-update snapshot of `HERMES_HOME` (config, auth, sessions, skills, pairing data) before pulling. Default is **off** — the previous always-backup behavior was adding minutes to every update on large homes. Flip it on permanently via `updates.pre_update_backup: true` in `config.yaml`. |
+| `--backup` | Create a labeled pre-update snapshot of the active agent home (`DOPPEL_HOME`, with legacy `HERMES_HOME` still honored) before pulling. This captures config, auth, sessions, skills, and pairing data. Default is **off** — the previous always-backup behavior was adding minutes to every update on large homes. Flip it on permanently via `updates.pre_update_backup: true` in `config.yaml`. |
 | `--yes`, `-y` | Assume yes for interactive prompts such as config migration and stash restore. API-key entry is skipped; run `doppel config migrate` separately for those. |
 
 Additional behavior:

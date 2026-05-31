@@ -76,6 +76,12 @@ def _symlink_file_or_skip(link: Path, target: Path) -> None:
         pytest.skip(f"symlinks unavailable in test environment: {exc}")
 
 
+@pytest.fixture(autouse=True)
+def _clear_doppel_home(monkeypatch):
+    """Legacy-backup tests control HERMES_HOME explicitly unless overridden."""
+    monkeypatch.delenv("DOPPEL_HOME", raising=False)
+
+
 # ---------------------------------------------------------------------------
 # _should_exclude tests
 # ---------------------------------------------------------------------------
@@ -158,6 +164,46 @@ class TestShouldExclude:
 # ---------------------------------------------------------------------------
 
 class TestBackup:
+    def test_creates_zip_from_preferred_native_home_when_env_unset(self, tmp_path, monkeypatch):
+        """Fresh installs with no env override back up ~/.doppel."""
+        hermes_home = tmp_path / ".doppel"
+        hermes_home.mkdir()
+        _make_hermes_tree(hermes_home)
+
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        out_zip = tmp_path / "backup.zip"
+        args = Namespace(output=str(out_zip))
+
+        from hermes_cli.backup import run_backup
+        run_backup(args)
+
+        assert out_zip.exists()
+        with zipfile.ZipFile(out_zip, "r") as zf:
+            assert "config.yaml" in zf.namelist()
+
+    def test_preserves_legacy_native_home_when_env_unset(self, tmp_path, monkeypatch):
+        """Legacy ~/.hermes installs still back up in place when no env is set."""
+        hermes_home = tmp_path / ".hermes"
+        hermes_home.mkdir()
+        _make_hermes_tree(hermes_home)
+
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        out_zip = tmp_path / "backup.zip"
+        args = Namespace(output=str(out_zip))
+
+        from hermes_cli.backup import run_backup
+        run_backup(args)
+
+        assert out_zip.exists()
+        with zipfile.ZipFile(out_zip, "r") as zf:
+            assert "config.yaml" in zf.namelist()
+
     def test_creates_zip(self, tmp_path, monkeypatch):
         """Backup creates a valid zip containing expected files."""
         hermes_home = tmp_path / ".hermes"
@@ -391,6 +437,27 @@ class TestImport:
         assert (hermes_home / "skills" / "my-skill" / "SKILL.md").read_text() == "# My Skill\n"
         assert (hermes_home / "profiles" / "coder" / "config.yaml").exists()
 
+    def test_restores_files_into_preferred_native_home_when_env_unset(self, tmp_path, monkeypatch):
+        """Fresh installs with no env override restore into ~/.doppel."""
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        zip_path = tmp_path / "backup.zip"
+        self._make_backup_zip(zip_path, {
+            "config.yaml": "model:\n  provider: openrouter\n",
+            ".env": "OPENROUTER_API_KEY=sk-test\n",
+        })
+
+        args = Namespace(zipfile=str(zip_path), force=True)
+
+        from hermes_cli.backup import run_import
+        run_import(args)
+
+        doppel_home = tmp_path / ".doppel"
+        assert (doppel_home / "config.yaml").read_text() == "model:\n  provider: openrouter\n"
+        assert (doppel_home / ".env").read_text() == "OPENROUTER_API_KEY=sk-test\n"
+
     def test_strips_hermes_prefix(self, tmp_path, monkeypatch):
         """Import strips .hermes/ prefix if all entries share it."""
         hermes_home = tmp_path / ".hermes"
@@ -411,6 +478,28 @@ class TestImport:
 
         assert (hermes_home / "config.yaml").read_text() == "model: test\n"
         assert (hermes_home / "skills" / "a" / "SKILL.md").read_text() == "# A\n"
+
+    def test_strips_doppel_prefix(self, tmp_path, monkeypatch):
+        """Import strips .doppel/ prefix if all entries share it."""
+        doppel_home = tmp_path / ".doppel"
+        doppel_home.mkdir()
+        monkeypatch.setenv("DOPPEL_HOME", str(doppel_home))
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        zip_path = tmp_path / "backup.zip"
+        self._make_backup_zip(zip_path, {
+            ".doppel/config.yaml": "model: test\n",
+            ".doppel/skills/a/SKILL.md": "# A\n",
+        })
+
+        args = Namespace(zipfile=str(zip_path), force=True)
+
+        from hermes_cli.backup import run_import
+        run_import(args)
+
+        assert (doppel_home / "config.yaml").read_text() == "model: test\n"
+        assert (doppel_home / "skills" / "a" / "SKILL.md").read_text() == "# A\n"
 
     def test_rejects_empty_zip(self, tmp_path, monkeypatch):
         """Import rejects an empty zip."""
@@ -679,6 +768,19 @@ class TestValidation:
         buf.seek(0)
         with zipfile.ZipFile(buf, "r") as zf:
             assert _detect_prefix(zf) == ".hermes/"
+
+    def test_detect_prefix_doppel(self):
+        """Detects .doppel/ prefix wrapping all entries."""
+        import io
+        from hermes_cli.backup import _detect_prefix
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr(".doppel/config.yaml", "test")
+            zf.writestr(".doppel/skills/a/SKILL.md", "skill")
+        buf.seek(0)
+        with zipfile.ZipFile(buf, "r") as zf:
+            assert _detect_prefix(zf) == ".doppel/"
 
     def test_detect_prefix_none(self):
         """No prefix when entries are at root."""

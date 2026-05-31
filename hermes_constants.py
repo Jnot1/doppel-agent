@@ -26,6 +26,8 @@ PREFERRED_CLI_COMMAND = "doppel"
 LEGACY_CLI_COMMAND = "hermes"
 PREFERRED_HOME_ENV = "DOPPEL_HOME"
 LEGACY_HOME_ENV = "HERMES_HOME"
+PREFERRED_NATIVE_HOME_DIR = ".doppel"
+LEGACY_NATIVE_HOME_DIR = ".hermes"
 PACKAGE_DISTRIBUTION_NAME = "hermes-agent"
 HOMEBREW_FORMULA_NAME = PACKAGE_DISTRIBUTION_NAME
 DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
@@ -262,43 +264,95 @@ def get_hermes_home_override() -> str | None:
     return str(override)
 
 
+def _get_env_home_value() -> str:
+    """Return the preferred home override from the process environment."""
+    return (
+        os.environ.get(PREFERRED_HOME_ENV, "").strip()
+        or os.environ.get(LEGACY_HOME_ENV, "").strip()
+    )
+
+
+def _get_native_home_roots(home: Path | None = None) -> tuple[Path, Path]:
+    """Return the preferred and legacy native home roots for *home*."""
+    base = home if home is not None else Path.home()
+    return (
+        base / PREFERRED_NATIVE_HOME_DIR,
+        base / LEGACY_NATIVE_HOME_DIR,
+    )
+
+
+def _select_native_home_root(home: Path | None = None) -> Path:
+    """Choose the native home root when no env override is set.
+
+    Fresh installs use the preferred Doppel root. Existing legacy Hermes roots
+    are preserved in place until explicitly migrated. When both exist, prefer
+    the current Doppel root.
+    """
+    preferred, legacy = _get_native_home_roots(home)
+    if preferred.exists():
+        return preferred
+    if legacy.exists():
+        return legacy
+    return preferred
+
+
+def _display_home_path(path: Path) -> str:
+    """Render *path* using ``~/`` shorthand when it lives under ``Path.home()``."""
+    try:
+        return "~/" + str(path.relative_to(Path.home()))
+    except ValueError:
+        return str(path)
+
+
+def _resolve_env_home_root(env_path: Path) -> Path:
+    """Resolve an env-specified home or profile path to its root directory."""
+    preferred_root, legacy_root = _get_native_home_roots()
+    resolved_env_path = env_path.resolve()
+    for native_root in (preferred_root, legacy_root):
+        try:
+            resolved_env_path.relative_to(native_root.resolve())
+            return native_root
+        except ValueError:
+            continue
+
+    if env_path.parent.name == "profiles":
+        return env_path.parent.parent
+
+    return env_path
+
+
 def get_hermes_home() -> Path:
-    """Return the Hermes home directory (default: ~/.hermes).
+    """Return the Hermes home directory (default: ~/.doppel).
 
     Reads ``DOPPEL_HOME`` first, then ``HERMES_HOME``, and finally falls back
-    to ``~/.hermes`` for legacy installs.
+    to the native Doppel or legacy Hermes root for local installs.
     This is the single source of truth — all other copies should import this.
 
-    When ``HERMES_HOME`` is unset but an ``active_profile`` file indicates
-    a non-default profile is active, logs a loud one-shot warning to
-    ``errors.log`` so cross-profile data corruption is diagnosable instead
-    of silent.  Behavior is unchanged otherwise — we still return
-    ``~/.hermes`` — because raising here would brick 30+ module-level
-    callers that import this at load time.  Subprocess spawners are
-    expected to propagate ``HERMES_HOME`` explicitly (see the systemd
-    template in ``hermes_cli/gateway.py`` and the kanban dispatcher in
-    ``hermes_cli/kanban_db.py``).  See https://github.com/NousResearch/hermes-agent/issues/18594.
+    When neither home env is set but an ``active_profile`` file indicates a
+    non-default profile is active, emits a loud one-shot warning to stderr so
+    cross-profile data corruption is diagnosable instead of silent. Behavior
+    is unchanged otherwise — we still return the selected native root —
+    because raising here would brick 30+ module-level callers that import
+    this at load time. Subprocess spawners are expected to propagate
+    ``DOPPEL_HOME`` explicitly (legacy ``HERMES_HOME`` also works). See
+    https://github.com/NousResearch/hermes-agent/issues/18594.
     """
     override = get_hermes_home_override()
     if override:
         return Path(override)
 
-    val = (
-        os.environ.get(PREFERRED_HOME_ENV, "").strip()
-        or os.environ.get(LEGACY_HOME_ENV, "").strip()
-    )
+    val = _get_env_home_value()
     if val:
         return Path(val)
+
+    native_root = _select_native_home_root()
 
     # Guard: if a non-default profile is sticky-active, warn once that
     # the fallback to the default profile is almost certainly wrong.
     global _profile_fallback_warned
     if not _profile_fallback_warned:
         try:
-            # Inline the default-root resolution from get_default_hermes_root()
-            # to stay import-safe (this function is called from module scope
-            # in 30+ files; we cannot afford to trigger logging setup here).
-            active_path = (Path.home() / ".hermes" / "active_profile")
+            active_path = native_root / "active_profile"
             active = active_path.read_text().strip() if active_path.exists() else ""
         except (UnicodeDecodeError, OSError):
             active = ""
@@ -311,12 +365,14 @@ def get_hermes_home() -> Path:
             # on consoles where a StreamHandler is already attached.
             import sys
             msg = (
-                f"[HERMES_HOME fallback] HERMES_HOME is unset but active "
-                f"profile is {active!r}. Falling back to ~/.hermes, which "
-                f"is the DEFAULT profile — not {active!r}. Any data this "
-                f"process writes will land in the wrong profile. The "
-                f"subprocess spawner should pass HERMES_HOME explicitly "
-                f"(see issue #18594)."
+                f"[{PREFERRED_HOME_ENV} fallback] {PREFERRED_HOME_ENV}/"
+                f"{LEGACY_HOME_ENV} are unset but active profile is "
+                f"{active!r}. Falling back to {_display_home_path(native_root)}, "
+                f"which is the DEFAULT profile root — not {active!r}. Any "
+                f"data this process writes will land in the wrong profile. "
+                f"The subprocess spawner should pass {PREFERRED_HOME_ENV} "
+                f"explicitly (legacy {LEGACY_HOME_ENV} also works; see issue "
+                f"#18594)."
             )
             try:
                 sys.stderr.write(msg + "\n")
@@ -324,49 +380,31 @@ def get_hermes_home() -> Path:
             except Exception:
                 pass
 
-    return Path.home() / ".hermes"
+    return native_root
 
 
 def get_default_hermes_root() -> Path:
     """Return the root Hermes directory for profile-level operations.
 
-    In standard deployments this is ``~/.hermes``.
+    In standard deployments this prefers ``~/.doppel`` while preserving an
+    existing ``~/.hermes`` root in place until migration.
 
-    In Docker or custom deployments where ``HERMES_HOME`` points outside
-    ``~/.hermes`` (e.g. ``/opt/data``), returns ``HERMES_HOME`` directly
+    In Docker or custom deployments where the selected home env points outside
+    the native roots (e.g. ``/opt/data``), returns that env path directly
     — that IS the root.
 
-    In profile mode where ``HERMES_HOME`` is ``<root>/profiles/<name>``,
+    In profile mode where the selected home env is ``<root>/profiles/<name>``,
     returns ``<root>`` so that ``profile list`` can see all profiles.
-    Works both for standard (``~/.hermes/profiles/coder``) and Docker
+    Works both for standard (``~/.doppel/profiles/coder`` or
+    ``~/.hermes/profiles/coder``) and Docker
     (``/opt/data/profiles/coder``) layouts.
 
     Import-safe — no dependencies beyond stdlib.
     """
-    native_home = Path.home() / ".hermes"
-    env_home = (
-        os.environ.get(PREFERRED_HOME_ENV, "").strip()
-        or os.environ.get(LEGACY_HOME_ENV, "").strip()
-    )
+    env_home = _get_env_home_value()
     if not env_home:
-        return native_home
-    env_path = Path(env_home)
-    try:
-        env_path.resolve().relative_to(native_home.resolve())
-        # HERMES_HOME is under ~/.hermes (normal or profile mode)
-        return native_home
-    except ValueError:
-        pass
-
-    # Docker / custom deployment.
-    # Check if this is a profile path: <root>/profiles/<name>
-    # If the immediate parent dir is named "profiles", the root is
-    # the grandparent — this covers Docker profiles correctly.
-    if env_path.parent.name == "profiles":
-        return env_path.parent.parent
-
-    # Not a profile path — HERMES_HOME itself is the root
-    return env_path
+        return _select_native_home_root()
+    return _resolve_env_home_root(Path(env_home))
 
 
 def _get_packaged_data_dir(name: str) -> Path | None:
@@ -468,19 +506,15 @@ def display_hermes_home() -> str:
 
     Uses ``~/`` shorthand for readability::
 
-        default:  ``~/.hermes``
-        profile:  ``~/.hermes/profiles/coder``
-        custom:   ``/opt/hermes-custom``
+        default:  ``~/.doppel``
+        profile:  ``~/.doppel/profiles/coder``
+        custom:   ``/opt/doppel-custom``
 
     Use this in **user-facing** print/log messages instead of hardcoding
-    ``~/.hermes``.  For code that needs a real ``Path``, use
+    ``~/.doppel`` or ``~/.hermes``. For code that needs a real ``Path``, use
     :func:`get_hermes_home` instead.
     """
-    home = get_hermes_home()
-    try:
-        return "~/" + str(home.relative_to(Path.home()))
-    except ValueError:
-        return str(home)
+    return _display_home_path(get_hermes_home())
 
 
 def secure_parent_dir(path: Path) -> None:

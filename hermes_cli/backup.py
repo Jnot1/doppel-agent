@@ -1,11 +1,11 @@
 """
-Backup and import commands for hermes CLI.
+Backup and import commands for the Doppel CLI.
 
-`hermes backup` creates a zip archive of the entire ~/.hermes/ directory
-(excluding the hermes-agent repo and transient files).
+`doppel backup` creates a zip archive of the active Doppel home directory
+(excluding the managed checkout and transient files).
 
-`hermes import` restores from a backup zip, overlaying onto the current
-HERMES_HOME root.
+`doppel import` restores from a backup zip, overlaying onto the current
+home root.
 """
 
 import json
@@ -149,11 +149,11 @@ def _format_size(nbytes: int) -> str:
 
 
 def run_backup(args) -> None:
-    """Create a zip backup of the Hermes home directory."""
+    """Create a zip backup of the active Doppel home directory."""
     hermes_root = get_default_hermes_root()
 
     if not hermes_root.is_dir():
-        print(f"Error: Hermes home directory not found at {hermes_root}")
+        print(f"Error: Doppel home directory not found at {hermes_root}")
         sys.exit(1)
 
     # Determine output path
@@ -299,7 +299,8 @@ def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
 def _detect_prefix(zf: zipfile.ZipFile) -> str:
     """Detect if the zip has a common directory prefix wrapping all entries.
 
-    Some tools zip as `.hermes/config.yaml` instead of `config.yaml`.
+    Some tools zip as `.doppel/config.yaml` or `.hermes/config.yaml` instead
+    of `config.yaml`.
     Returns the prefix to strip (empty string if none).
     """
     names = [n for n in zf.namelist() if not n.endswith("/")]
@@ -313,15 +314,15 @@ def _detect_prefix(zf: zipfile.ZipFile) -> str:
     first_parts = {p[0] for p in parts_list if len(p) > 1}
     if len(first_parts) == 1:
         prefix = first_parts.pop()
-        # Only strip if it looks like a hermes dir name
-        if prefix in {".hermes", "hermes"}:
+        # Only strip if it looks like a known native home dir name
+        if prefix in {".doppel", "doppel", ".hermes", "hermes"}:
             return prefix + "/"
 
     return ""
 
 
 def run_import(args) -> None:
-    """Restore a Hermes backup from a zip file."""
+    """Restore a Doppel backup from a zip file."""
     zip_path = Path(args.zipfile).expanduser().resolve()
 
     if not zip_path.is_file():
@@ -357,7 +358,7 @@ def run_import(args) -> None:
 
         if (has_config or has_env) and not args.force:
             print()
-            print("Warning: Target directory already has Hermes configuration.")
+            print("Warning: Target directory already has Doppel configuration.")
             print("Importing will overwrite existing files with backup contents.")
             print()
             try:
@@ -477,7 +478,7 @@ def run_import(args) -> None:
             for pname in gw_profiles:
                 print(f"  {get_cli_prog_name()} -p {pname} gateway install")
 
-        print("Done. Your Hermes configuration has been restored.")
+        print("Done. Your Doppel configuration has been restored.")
 
 
 # ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@ import pytest
 import hermes_constants
 from hermes_constants import (
     VALID_REASONING_EFFORTS,
+    display_hermes_home,
     get_distribution_package_name,
     get_default_hermes_root,
     get_docker_image_name,
@@ -15,6 +16,7 @@ from hermes_constants import (
     get_gateway_launchd_plist_path,
     get_gateway_service_name,
     get_gateway_systemd_unit_path,
+    get_hermes_home,
     get_homebrew_formula_name,
     get_managed_checkout_dir,
     get_managed_checkout_names,
@@ -36,11 +38,12 @@ class TestGetDefaultHermesRoot:
     """Tests for get_default_hermes_root() — Docker/custom deployment awareness."""
 
     def test_no_hermes_home_returns_native(self, tmp_path, monkeypatch):
-        """When HERMES_HOME is not set, returns ~/.hermes."""
+        """Fresh installs default to ~/.doppel when no override is set."""
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
         monkeypatch.delenv("HERMES_HOME", raising=False)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-        assert get_default_hermes_root() == tmp_path / ".hermes"
+        assert get_default_hermes_root() == tmp_path / ".doppel"
 
     def test_hermes_home_is_native(self, tmp_path, monkeypatch):
         """When HERMES_HOME = ~/.hermes, returns ~/.hermes."""
@@ -49,6 +52,46 @@ class TestGetDefaultHermesRoot:
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(native))
         assert get_default_hermes_root() == native
+
+    def test_doppel_home_is_native(self, tmp_path, monkeypatch):
+        """When DOPPEL_HOME = ~/.doppel, returns ~/.doppel."""
+        native = tmp_path / ".doppel"
+        native.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(native))
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        assert get_default_hermes_root() == native
+
+    def test_existing_legacy_home_is_preserved_when_env_unset(self, tmp_path, monkeypatch):
+        """No env override should keep using ~/.hermes when that install already exists."""
+        legacy = tmp_path / ".hermes"
+        legacy.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        assert get_default_hermes_root() == legacy
+
+    def test_preferred_home_wins_when_both_native_homes_exist(self, tmp_path, monkeypatch):
+        """When both roots exist, prefer the rebrand-native ~/.doppel home."""
+        legacy = tmp_path / ".hermes"
+        current = tmp_path / ".doppel"
+        legacy.mkdir()
+        current.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        assert get_default_hermes_root() == current
+
+    def test_doppel_home_override_beats_legacy_home_override(self, tmp_path, monkeypatch):
+        """DOPPEL_HOME is the preferred override when both env vars are set."""
+        doppel_home = tmp_path / "doppel-home"
+        hermes_home = tmp_path / "hermes-home"
+        doppel_home.mkdir()
+        hermes_home.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(doppel_home))
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        assert get_default_hermes_root() == doppel_home
 
     def test_hermes_home_is_profile(self, tmp_path, monkeypatch):
         """When HERMES_HOME is a profile under ~/.hermes, returns ~/.hermes."""
@@ -84,6 +127,40 @@ class TestGetDefaultHermesRoot:
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(profile))
         assert get_default_hermes_root() == docker_root
+
+
+class TestGetHermesHome:
+    def test_no_env_uses_preferred_native_home(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+
+        assert get_hermes_home() == tmp_path / ".doppel"
+
+    def test_existing_legacy_root_is_preserved_when_env_unset(self, tmp_path, monkeypatch):
+        legacy = tmp_path / ".hermes"
+        legacy.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+
+        assert get_hermes_home() == legacy
+
+    def test_doppel_home_override_wins(self, tmp_path, monkeypatch):
+        preferred = tmp_path / "preferred-home"
+        preferred.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(preferred))
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "legacy-home"))
+
+        assert get_hermes_home() == preferred
+
+    def test_display_hermes_home_uses_preferred_native_path(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+
+        assert display_hermes_home() == "~/.doppel"
 
 
 class TestManagedCheckoutNames:

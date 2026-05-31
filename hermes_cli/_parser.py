@@ -129,7 +129,8 @@ def build_top_level_parser():
         default=None,
         help=(
             "Model override for this invocation (e.g. anthropic/claude-sonnet-4.6). "
-            "Applies to -z/--oneshot and --tui. Also settable via HERMES_INFERENCE_MODEL env var."
+            "Applies to -z/--oneshot and --tui. Also settable via DOPPEL_INFERENCE_MODEL "
+            "(legacy HERMES_INFERENCE_MODEL) env vars."
         ),
     )
     _inherited_flag(
@@ -179,9 +180,9 @@ def build_top_level_parser():
         default=False,
         help=(
             "Auto-approve any unseen shell hooks declared in config.yaml "
-            "without a TTY prompt.  Equivalent to HERMES_ACCEPT_HOOKS=1 or "
-            "hooks_auto_accept: true in config.yaml.  Use on CI / headless "
-            "runs that can't prompt."
+            "without a TTY prompt.  Equivalent to DOPPEL_ACCEPT_HOOKS=1 "
+            "(legacy HERMES_ACCEPT_HOOKS=1) or hooks_auto_accept: true "
+            "in config.yaml.  Use on CI / headless runs that can't prompt."
         ),
     )
     _inherited_flag(
@@ -321,8 +322,8 @@ def build_top_level_parser():
         default=argparse.SUPPRESS,
         help=(
             "Auto-approve any unseen shell hooks declared in config.yaml "
-            "without a TTY prompt (see also HERMES_ACCEPT_HOOKS env var and "
-            "hooks_auto_accept: in config.yaml)."
+            "without a TTY prompt (see also DOPPEL_ACCEPT_HOOKS / "
+            "HERMES_ACCEPT_HOOKS env vars and hooks_auto_accept: in config.yaml)."
         ),
     )
     chat_parser.add_argument(

@@ -638,6 +638,32 @@ def test_oneshot_rejects_invalid_only_toolsets(monkeypatch, capsys):
     assert "did not contain any valid toolsets" in err
 
 
+def test_oneshot_provider_accepts_preferred_inference_model_env(monkeypatch, capsys):
+    _stub_plugin_discovery(monkeypatch)
+    import hermes_cli.oneshot as oneshot_mod
+
+    monkeypatch.setenv("DOPPEL_INFERENCE_MODEL", "anthropic/claude-sonnet-4.6")
+    monkeypatch.delenv("HERMES_INFERENCE_MODEL", raising=False)
+    monkeypatch.setattr(oneshot_mod, "_run_agent", lambda *_args, **_kwargs: "done")
+
+    assert oneshot_mod.run_oneshot("hello", provider="anthropic") == 0
+    captured = capsys.readouterr()
+    assert captured.out == "done\n"
+    assert captured.err == ""
+
+
+def test_oneshot_provider_error_mentions_preferred_inference_model_env(monkeypatch, capsys):
+    _stub_plugin_discovery(monkeypatch)
+    import hermes_cli.oneshot as oneshot_mod
+
+    monkeypatch.delenv("DOPPEL_INFERENCE_MODEL", raising=False)
+    monkeypatch.delenv("HERMES_INFERENCE_MODEL", raising=False)
+
+    assert oneshot_mod.run_oneshot("hello", provider="anthropic") == 2
+    captured = capsys.readouterr()
+    assert "DOPPEL_INFERENCE_MODEL" in captured.err
+
+
 def test_oneshot_fails_closed_on_empty_final_response(monkeypatch, capsys):
     _stub_plugin_discovery(monkeypatch)
     import hermes_cli.oneshot as oneshot_mod

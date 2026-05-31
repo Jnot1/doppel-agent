@@ -29,7 +29,7 @@ doppel [global-options] <command> [subcommand/options]
 | `--pass-session-id` | Include the session ID in the agent's system prompt. |
 | `--ignore-user-config` | Ignore `~/.doppel/config.yaml` and fall back to built-in defaults. Credentials in `.env` are still loaded. |
 | `--ignore-rules` | Skip auto-injection of `AGENTS.md`, `SOUL.md`, `.cursorrules`, memory, and preloaded skills. |
-| `--tui` | Launch the [TUI](../user-guide/tui.md) instead of the classic CLI. Equivalent to `HERMES_TUI=1`. |
+| `--tui` | Launch the [TUI](../user-guide/tui.md) instead of the classic CLI. Equivalent to `DOPPEL_TUI=1` (legacy `HERMES_TUI=1` also works). |
 | `--dev` | With `--tui`: run the TypeScript sources directly via `tsx` instead of the prebuilt bundle (for TUI contributors). |
 
 ## Top-level commands
@@ -142,13 +142,13 @@ Per-run overrides (no mutation to `~/.doppel/config.yaml`):
 
 | Flag | Equivalent env var | Purpose |
 |---|---|---|
-| `-m` / `--model <model>` | `HERMES_INFERENCE_MODEL` | Override the model for this run |
+| `-m` / `--model <model>` | `DOPPEL_INFERENCE_MODEL` | Override the model for this run (legacy `HERMES_INFERENCE_MODEL` also works) |
 | `--provider <provider>` | _(none)_ | Override the provider for this run |
 
 ```bash
 doppel -z "…" --provider openrouter --model openai/gpt-5.5
 # or:
-HERMES_INFERENCE_MODEL=anthropic/claude-sonnet-4.6 doppel -z "…"
+DOPPEL_INFERENCE_MODEL=anthropic/claude-sonnet-4.6 doppel -z "…"
 ```
 
 Same agent, same tools, same skills — just strips every interactive / cosmetic layer. If you need tool output in the transcript too, use `doppel chat -q` instead; `-z` is explicitly for "I only want the final answer".

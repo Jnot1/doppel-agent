@@ -529,19 +529,19 @@ Advanced per-platform knobs for throttling the outbound message batcher. Most us
 
 | Variable | Description |
 |----------|-------------|
-| `HERMES_MAX_ITERATIONS` | Max tool-calling iterations per conversation (default: 90) |
-| `HERMES_INFERENCE_MODEL` | Override model name at process level (takes priority over `config.yaml` for the session). Also settable via `-m`/`--model` flag. |
-| `HERMES_YOLO_MODE` | Set to `1` to bypass dangerous-command approval prompts. Equivalent to `--yolo`. |
-| `HERMES_ACCEPT_HOOKS` | Auto-approve any unseen shell hooks declared in `config.yaml` without a TTY prompt. Equivalent to `--accept-hooks` or `hooks_auto_accept: true`. |
-| `HERMES_IGNORE_USER_CONFIG` | Skip `~/.doppel/config.yaml` and use built-in defaults (credentials in `.env` still load). Equivalent to `--ignore-user-config`. |
-| `HERMES_IGNORE_RULES` | Skip auto-injection of `AGENTS.md`, `SOUL.md`, `.cursorrules`, memory, and preloaded skills. Equivalent to `--ignore-rules`. |
+| `DOPPEL_MAX_ITERATIONS` | Preferred max tool-calling iterations env var per conversation (default: 90). Legacy `HERMES_MAX_ITERATIONS` still works. |
+| `DOPPEL_INFERENCE_MODEL` | Preferred process-level model override (takes priority over `config.yaml` for the session). Also settable via `-m`/`--model`. Legacy `HERMES_INFERENCE_MODEL` still works. |
+| `DOPPEL_YOLO_MODE` | Preferred `1`/`0` env override for bypassing dangerous-command approval prompts. Equivalent to `--yolo`. Legacy `HERMES_YOLO_MODE` still works. |
+| `DOPPEL_ACCEPT_HOOKS` | Preferred env var for auto-approving unseen shell hooks declared in `config.yaml` without a TTY prompt. Equivalent to `--accept-hooks` or `hooks_auto_accept: true`. Legacy `HERMES_ACCEPT_HOOKS` still works. |
+| `DOPPEL_IGNORE_USER_CONFIG` | Preferred env var for skipping `~/.doppel/config.yaml` and using built-in defaults (`.env` credentials still load). Equivalent to `--ignore-user-config`. Legacy `HERMES_IGNORE_USER_CONFIG` still works. |
+| `DOPPEL_IGNORE_RULES` | Preferred env var for skipping auto-injection of `AGENTS.md`, `SOUL.md`, `.cursorrules`, memory, and preloaded skills. Equivalent to `--ignore-rules`. Legacy `HERMES_IGNORE_RULES` still works. |
 | `HERMES_MD_NAMES` | Comma-separated list of rules-file names to auto-inject (default: `AGENTS.md,CLAUDE.md,.cursorrules,SOUL.md`). |
 | `HERMES_TOOL_PROGRESS` | Deprecated compatibility variable for tool progress display. Prefer `display.tool_progress` in `config.yaml`. |
 | `HERMES_TOOL_PROGRESS_MODE` | Deprecated compatibility variable for tool progress mode. Prefer `display.tool_progress` in `config.yaml`. |
 | `HERMES_HUMAN_DELAY_MODE` | Response pacing: `off`/`natural`/`custom` |
 | `HERMES_HUMAN_DELAY_MIN_MS` | Custom delay range minimum (ms) |
 | `HERMES_HUMAN_DELAY_MAX_MS` | Custom delay range maximum (ms) |
-| `HERMES_QUIET` | Suppress non-essential output (`true`/`false`) |
+| `DOPPEL_QUIET` | Preferred env var for suppressing non-essential output (`true`/`false`). Legacy `HERMES_QUIET` still works. |
 | `CODEX_HOME` | When [Codex app-server runtime](../user-guide/features/codex-app-server-runtime) is enabled, override the directory Codex CLI reads its config + auth from (default: `~/.codex`). Doppel's migration writes the managed block to `<CODEX_HOME>/config.toml`. |
 | `HERMES_KANBAN_TASK` | Set by the kanban dispatcher when spawning a worker (task UUID). Workers and the spawned `hermes-tools` MCP subprocess inherit it so kanban tools gate correctly. Don't set manually. |
 | `HERMES_API_TIMEOUT` | LLM API call timeout in seconds (default: `1800`) |
@@ -557,10 +557,10 @@ Advanced per-platform knobs for throttling the outbound message batcher. Most us
 | `HERMES_ENABLE_PROJECT_PLUGINS` | Enable auto-discovery of repo-local plugins from `./.doppel/plugins/` for both the agent loader and the dashboard web server. Accepts the standard truthy set: `1` / `true` / `yes` / `on` (case-insensitive). Everything else — including `0`, `false`, `no`, `off`, and the empty string — is treated as **disabled** (default). Note: as of GHSA-5qr3-c538-wm9j (#29156) the dashboard web server refuses to auto-import a project plugin's Python `api` file even when this var is enabled — project plugins may extend the UI via static JS/CSS but their backend routes are only loaded when moved under `~/.doppel/plugins/`. |
 | `HERMES_PLUGINS_DEBUG` | `1`/`true` to surface verbose plugin-discovery logs on stderr — directories scanned, manifests parsed, skip reasons, and full tracebacks on parse or `register()` failure. Aimed at plugin authors. |
 | `HERMES_BACKGROUND_NOTIFICATIONS` | Background process notification mode in gateway: `all` (default), `result`, `error`, `off` |
-| `HERMES_EPHEMERAL_SYSTEM_PROMPT` | Ephemeral system prompt injected at API-call time (never persisted to sessions) |
+| `DOPPEL_EPHEMERAL_SYSTEM_PROMPT` | Preferred env var for an ephemeral system prompt injected at API-call time (never persisted to sessions). Legacy `HERMES_EPHEMERAL_SYSTEM_PROMPT` still works. |
 | `HERMES_PREFILL_MESSAGES_FILE` | Path to a JSON file of ephemeral prefill messages injected at API-call time. |
 | `HERMES_ALLOW_PRIVATE_URLS` | `true`/`false` — allow tools to fetch localhost/private-network URLs. Off by default in gateway mode. |
-| `HERMES_REDACT_SECRETS` | `true`/`false` — control secret redaction in tool output, logs, and chat responses (default: `true`). |
+| `DOPPEL_REDACT_SECRETS` | Preferred `true`/`false` env var for controlling secret redaction in tool output, logs, and chat responses (default: `true`). Legacy `HERMES_REDACT_SECRETS` still works. |
 | `HERMES_WRITE_SAFE_ROOT` | Optional directory prefix that restricts `write_file`/`patch` writes; paths outside require approval. |
 | `HERMES_DISABLE_FILE_STATE_GUARD` | Set to `1` to turn off the "file changed since you read it" guard on `patch`/`write_file`. |
 | `HERMES_CORE_TOOLS` | Comma-separated override for the canonical core tool list (advanced; rarely needed). |
@@ -579,11 +579,11 @@ Advanced per-platform knobs for throttling the outbound message batcher. Most us
 
 | Variable | Description |
 |----------|-------------|
-| `HERMES_TUI` | Launch the [TUI](../user-guide/tui.md) instead of the classic CLI when set to `1`. Equivalent to passing `--tui`. |
-| `HERMES_TUI_DIR` | Path to a prebuilt `ui-tui/` directory (must contain `dist/entry.js` and populated `node_modules`). Used by distros and Nix to skip the first-launch `npm install`. |
-| `HERMES_TUI_RESUME` | Resume a specific TUI session by ID on launch. When set, `doppel --tui` skips forging a fresh session and picks up the named session instead — useful for re-attaching after a disconnect or terminal crash. |
-| `HERMES_TUI_THEME` | Force the TUI color theme: `light`, `dark`, or a raw 6-character background hex (e.g. `ffffff` or `1a1a2e`). When unset, Doppel auto-detects using `COLORFGBG` and terminal background queries; this variable overrides detection on terminals (Ghostty, Warp, iTerm2, etc.) that don't set `COLORFGBG`. |
-| `HERMES_INFERENCE_MODEL` | Force the model for `doppel -z` / `doppel chat` without mutating `config.yaml`. Pairs with the `--provider` flag. Useful for scripted callers (sweeper, CI, batch runners) that need to override the default model per run. |
+| `DOPPEL_TUI` | Preferred env var for launching the [TUI](../user-guide/tui.md) instead of the classic CLI when set to `1`. Equivalent to passing `--tui`. Legacy `HERMES_TUI` still works. |
+| `DOPPEL_TUI_DIR` | Preferred env var for the path to a prebuilt `ui-tui/` directory (must contain `dist/entry.js` and populated `node_modules`). Used by distros and Nix to skip the first-launch `npm install`. Legacy `HERMES_TUI_DIR` still works. |
+| `DOPPEL_TUI_RESUME` | Preferred env var for resuming a specific TUI session by ID on launch. When set, `doppel --tui` skips forging a fresh session and picks up the named session instead — useful for re-attaching after a disconnect or terminal crash. Legacy `HERMES_TUI_RESUME` still works. |
+| `DOPPEL_TUI_THEME` | Preferred env var for forcing the TUI color theme: `light`, `dark`, or a raw 6-character background hex (e.g. `ffffff` or `1a1a2e`). When unset, Doppel auto-detects using `COLORFGBG` and terminal background queries; this variable overrides detection on terminals (Ghostty, Warp, iTerm2, etc.) that don't set `COLORFGBG`. Legacy `HERMES_TUI_THEME` still works. |
+| `DOPPEL_INFERENCE_MODEL` | Preferred env var for forcing the model for `doppel -z` / `doppel chat` without mutating `config.yaml`. Pairs with the `--provider` flag. Useful for scripted callers (sweeper, CI, batch runners) that need to override the default model per run. Legacy `HERMES_INFERENCE_MODEL` still works. |
 
 ## Session Settings
 

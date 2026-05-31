@@ -89,6 +89,9 @@ EN_CONTEXT_FILES_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features
 EN_PERSONALITY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "personality.md"
 EN_GOALS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "goals.md"
 EN_SECURITY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "security.md"
+EN_ENVIRONMENT_VARIABLES_DOC = (
+    REPO_ROOT / "website" / "docs" / "reference" / "environment-variables.md"
+)
 EN_PROVIDER_ROUTING_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "provider-routing.md"
 )
@@ -212,6 +215,16 @@ ZH_SECURITY_DOC = (
     / "current"
     / "user-guide"
     / "security.md"
+)
+ZH_ENVIRONMENT_VARIABLES_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "reference"
+    / "environment-variables.md"
 )
 ZH_PROVIDER_ROUTING_DOC = (
     REPO_ROOT
@@ -3921,3 +3934,59 @@ def test_security_docs_prefer_doppel_customer_facing_wording_and_preserve_runtim
     assert "~/.doppel/pairing/" in zh
     assert "~/.doppel/logs/" in zh
     assert "doppel config edit" in zh
+
+
+def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surface():
+    en = EN_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
+    zh = ZH_ENVIRONMENT_VARIABLES_DOC.read_text(encoding="utf-8")
+
+    en_agent = en.split("## Agent Behavior", 1)[1].split("## Interface", 1)[0]
+    zh_agent = zh.split("## Agent 行为", 1)[1].split("## 界面", 1)[0]
+    en_interface = en.split("## Interface", 1)[1].split("## Session Settings", 1)[0]
+    zh_interface = zh.split("## 界面", 1)[1].split("## 会话设置", 1)[0]
+
+    for preferred in (
+        "`DOPPEL_MAX_ITERATIONS`",
+        "`DOPPEL_INFERENCE_MODEL`",
+        "`DOPPEL_YOLO_MODE`",
+        "`DOPPEL_ACCEPT_HOOKS`",
+        "`DOPPEL_IGNORE_USER_CONFIG`",
+        "`DOPPEL_IGNORE_RULES`",
+        "`DOPPEL_QUIET`",
+        "`DOPPEL_EPHEMERAL_SYSTEM_PROMPT`",
+        "`DOPPEL_REDACT_SECRETS`",
+    ):
+        assert preferred in en_agent
+        assert preferred in zh_agent
+
+    for legacy_row in (
+        "| `HERMES_MAX_ITERATIONS` |",
+        "| `HERMES_INFERENCE_MODEL` |",
+        "| `HERMES_YOLO_MODE` |",
+        "| `HERMES_ACCEPT_HOOKS` |",
+        "| `HERMES_IGNORE_USER_CONFIG` |",
+        "| `HERMES_IGNORE_RULES` |",
+        "| `HERMES_QUIET` |",
+        "| `HERMES_EPHEMERAL_SYSTEM_PROMPT` |",
+        "| `HERMES_REDACT_SECRETS` |",
+    ):
+        assert legacy_row not in en_agent
+        assert legacy_row not in zh_agent
+
+    for preferred in (
+        "`DOPPEL_TUI`",
+        "`DOPPEL_TUI_DIR`",
+        "`DOPPEL_TUI_RESUME`",
+        "`DOPPEL_TUI_THEME`",
+    ):
+        assert preferred in en_interface
+        assert preferred in zh_interface
+
+    for legacy_row in (
+        "| `HERMES_TUI` |",
+        "| `HERMES_TUI_DIR` |",
+        "| `HERMES_TUI_RESUME` |",
+        "| `HERMES_TUI_THEME` |",
+    ):
+        assert legacy_row not in en_interface
+        assert legacy_row not in zh_interface

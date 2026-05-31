@@ -44,9 +44,14 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
+from hermes_constants import sync_customer_facing_env_aliases
+
 logger = logging.getLogger(__name__)
 
+sync_customer_facing_env_aliases()
+
 # Suppress startup messages for clean CLI experience
+os.environ["DOPPEL_QUIET"] = "1"
 os.environ["HERMES_QUIET"] = "1"  # Our own modules
 
 import yaml
@@ -349,6 +354,8 @@ def load_cli_config() -> Dict[str, Any]:
     Credentials in ``.env`` are still loaded — this flag only suppresses
     behavioral/config settings.
     """
+    sync_customer_facing_env_aliases()
+
     # Check user config first ({HERMES_HOME}/config.yaml)
     user_config_path = _hermes_home / 'config.yaml'
     project_config_path = Path(__file__).parent / 'cli-config.yaml'
@@ -2950,6 +2957,8 @@ class HermesCLI:
             resume: Session ID to resume (restores conversation history from SQLite)
             pass_session_id: Include the session ID in the agent's system prompt
         """
+        sync_customer_facing_env_aliases()
+
         # Initialize Rich console
         self.console = Console()
         self.config = CLI_CONFIG

@@ -8,6 +8,7 @@ import pytest
 import hermes_constants
 from hermes_constants import (
     VALID_REASONING_EFFORTS,
+    sync_customer_facing_env_aliases,
     display_hermes_home,
     get_api_server_model_owner,
     get_api_server_platform_id,
@@ -176,6 +177,32 @@ class TestGetHermesHome:
         monkeypatch.delenv("HERMES_HOME", raising=False)
 
         assert display_hermes_home() == "~/.doppel"
+
+
+class TestCustomerFacingEnvAliases:
+    def test_preferred_alias_mirrors_to_legacy_name(self):
+        env = {"DOPPEL_TUI": "1"}
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_TUI"] == "1"
+
+    def test_legacy_alias_backfills_preferred_name(self):
+        env = {"HERMES_IGNORE_RULES": "1"}
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["DOPPEL_IGNORE_RULES"] == "1"
+
+    def test_preferred_alias_wins_on_conflict(self):
+        env = {
+            "DOPPEL_MAX_ITERATIONS": "64",
+            "HERMES_MAX_ITERATIONS": "90",
+        }
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_MAX_ITERATIONS"] == "64"
 
 
 class TestManagedCheckoutNames:

@@ -323,6 +323,23 @@ _HERMES_BEHAVIORAL_VARS = frozenset({
     "MATRIX_REQUIRE_MENTION",
 })
 
+_DOPPEL_BEHAVIORAL_VARS = frozenset({
+    "DOPPEL_ACCEPT_HOOKS",
+    "DOPPEL_EPHEMERAL_SYSTEM_PROMPT",
+    "DOPPEL_IGNORE_RULES",
+    "DOPPEL_IGNORE_USER_CONFIG",
+    "DOPPEL_INFERENCE_MODEL",
+    "DOPPEL_MAX_ITERATIONS",
+    "DOPPEL_QUIET",
+    "DOPPEL_REDACT_SECRETS",
+    "DOPPEL_TUI",
+    "DOPPEL_TUI_DIR",
+    "DOPPEL_TUI_NO_EARLY_DISABLE",
+    "DOPPEL_TUI_RESUME",
+    "DOPPEL_TUI_THEME",
+    "DOPPEL_YOLO_MODE",
+})
+
 
 @pytest.fixture(autouse=True)
 def _hermetic_environment(tmp_path, monkeypatch):
@@ -339,6 +356,8 @@ def _hermetic_environment(tmp_path, monkeypatch):
 
     # 2. Blank behavioral HERMES_* vars that could change test semantics.
     for name in _HERMES_BEHAVIORAL_VARS:
+        monkeypatch.delenv(name, raising=False)
+    for name in _DOPPEL_BEHAVIORAL_VARS:
         monkeypatch.delenv(name, raising=False)
 
     # 3. Redirect both home env names to a per-test tempdir. Code that

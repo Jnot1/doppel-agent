@@ -64,6 +64,11 @@ except ModuleNotFoundError:
 import os
 import sys
 
+from hermes_constants import sync_customer_facing_env_aliases
+
+
+sync_customer_facing_env_aliases()
+
 
 def _set_process_title() -> None:
     """Set the process title to 'hermes' so tools like 'ps', 'top', and
@@ -217,7 +222,8 @@ def _add_accept_hooks_flag(parser) -> None:
         default=argparse.SUPPRESS,
         help=(
             "Auto-approve unseen shell hooks without a TTY prompt "
-            "(equivalent to HERMES_ACCEPT_HOOKS=1 / hooks_auto_accept: true)."
+            "(equivalent to DOPPEL_ACCEPT_HOOKS=1 / legacy "
+            "HERMES_ACCEPT_HOOKS=1 / hooks_auto_accept: true)."
         ),
     )
 
@@ -355,6 +361,7 @@ from hermes_cli.config import get_hermes_home
 from hermes_cli.env_loader import load_hermes_dotenv
 
 load_hermes_dotenv(project_env=PROJECT_ROOT / ".env")
+sync_customer_facing_env_aliases()
 
 # Bridge security.redact_secrets from config.yaml → HERMES_REDACT_SECRETS env
 # var BEFORE hermes_logging imports agent.redact (which snapshots the flag at
@@ -386,6 +393,8 @@ try:
     del _cfg_path
 except Exception:
     pass  # best-effort — redaction stays at default (enabled) on config errors
+
+sync_customer_facing_env_aliases()
 
 # Initialize centralized file logging early — all `hermes` subcommands
 # (chat, setup, gateway, config, etc.) write to agent.log + errors.log.
@@ -1418,9 +1427,10 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
     ext_dir = os.environ.get("HERMES_TUI_DIR")
     if tui_dev and ext_dir:
         print(
-            f"Error: --dev is incompatible with HERMES_TUI_DIR={ext_dir}\n"
+            f"Error: --dev is incompatible with DOPPEL_TUI_DIR={ext_dir}\n"
             f"The prebuilt TUI has no source code to hot-reload.\n"
-            f"Unset HERMES_TUI_DIR (e.g. `unset HERMES_TUI_DIR`) to use --dev from a checkout.",
+            "Unset DOPPEL_TUI_DIR (legacy HERMES_TUI_DIR also works) "
+            "to use --dev from a checkout.",
             file=sys.stderr,
         )
         sys.exit(1)

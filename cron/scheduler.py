@@ -36,7 +36,7 @@ from typing import List, Optional
 # the module) fail with ModuleNotFoundError for hermes_time et al.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from hermes_constants import get_hermes_home
+from hermes_constants import get_hermes_home, sync_customer_facing_env_aliases
 from hermes_cli._subprocess_compat import windows_hide_flags
 from hermes_cli.config import load_config, _expand_env_vars
 from hermes_time import now as _hermes_now
@@ -1472,6 +1472,7 @@ def _run_job_impl(job: dict) -> tuple[bool, str, str, Optional[str]]:
             load_dotenv(str(_get_hermes_home() / ".env"), override=True, encoding="utf-8")
         except UnicodeDecodeError:
             load_dotenv(str(_get_hermes_home() / ".env"), override=True, encoding="latin-1")
+        sync_customer_facing_env_aliases()
 
         delivery_target = _resolve_delivery_target(job)
         if delivery_target:

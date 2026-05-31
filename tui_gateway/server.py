@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from hermes_constants import get_hermes_home
+from hermes_constants import get_hermes_home, sync_customer_facing_env_aliases
 from hermes_cli.env_loader import load_hermes_dotenv
 from utils import is_truthy_value
 from tui_gateway.transport import (
@@ -32,6 +32,7 @@ _hermes_home = get_hermes_home()
 load_hermes_dotenv(
     hermes_home=_hermes_home, project_env=Path(__file__).parent.parent / ".env"
 )
+sync_customer_facing_env_aliases()
 
 
 # ── Panic logger ─────────────────────────────────────────────────────
@@ -778,6 +779,7 @@ def resolve_skin() -> dict:
 
 
 def _resolve_model() -> str:
+    sync_customer_facing_env_aliases()
     env = (
         os.environ.get("HERMES_MODEL", "")
         or os.environ.get("HERMES_INFERENCE_MODEL", "")
@@ -793,6 +795,7 @@ def _resolve_model() -> str:
 
 
 def _resolve_startup_runtime() -> tuple[str, str | None]:
+    sync_customer_facing_env_aliases()
     model = _resolve_model()
     explicit_provider = os.environ.get("HERMES_TUI_PROVIDER", "").strip()
     if explicit_provider:

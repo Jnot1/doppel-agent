@@ -16,7 +16,7 @@ Model / provider selection mirrors `hermes chat`:
     - If only --provider given, error out (ambiguous — caller must pick a model).
 
 Env var fallbacks (used when the corresponding arg is not passed):
-    - HERMES_INFERENCE_MODEL
+    - DOPPEL_INFERENCE_MODEL (legacy HERMES_INFERENCE_MODEL still works)
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ import sys
 from contextlib import redirect_stderr, redirect_stdout
 from typing import Optional
 
+from hermes_constants import sync_customer_facing_env_aliases
 from hermes_cli.fallback_config import get_fallback_chain
 
 
@@ -132,8 +133,9 @@ def run_oneshot(
 
     Args:
         prompt: The user message to send.
-        model: Optional model override. Falls back to HERMES_INFERENCE_MODEL
-            env var, then config.yaml's model.default / model.model.
+        model: Optional model override. Falls back to DOPPEL_INFERENCE_MODEL
+            (legacy HERMES_INFERENCE_MODEL) env vars, then config.yaml's
+            model.default / model.model.
         provider: Optional provider override. Falls back to config.yaml's
             model.provider, then "auto".
         toolsets: Optional comma-separated string or iterable of toolsets.
@@ -152,10 +154,11 @@ def run_oneshot(
     # not host it), and silently picking the provider's catalog default hides
     # the mismatch.  Require the caller to be explicit.  Validate BEFORE the
     # stderr redirect so the message actually reaches the terminal.
+    sync_customer_facing_env_aliases()
     env_model_early = os.getenv("HERMES_INFERENCE_MODEL", "").strip()
     if provider and not ((model or "").strip() or env_model_early):
         sys.stderr.write(
-            "hermes -z: --provider requires --model (or HERMES_INFERENCE_MODEL). "
+            "hermes -z: --provider requires --model (or DOPPEL_INFERENCE_MODEL). "
             "Pass both explicitly, or neither to use your configured defaults.\n"
         )
         return 2

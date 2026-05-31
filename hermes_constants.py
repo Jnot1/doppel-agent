@@ -7,6 +7,7 @@ without risk of circular imports.
 import os
 import sys
 import sysconfig
+from collections.abc import MutableMapping
 from contextvars import ContextVar, Token
 from pathlib import Path
 
@@ -103,6 +104,22 @@ MODEL_CATALOG_DOCS_URL = f"{DOCS_SITE_BASE_URL}/reference/model-catalog"
 MODEL_CATALOG_FALLBACK_URLS = (
     f"https://raw.githubusercontent.com/{UPSTREAM_REPO_SLUG}/main/website/static/api/model-catalog.json",
 )
+CUSTOMER_FACING_ENV_ALIASES: tuple[tuple[str, str], ...] = (
+    ("DOPPEL_ACCEPT_HOOKS", "HERMES_ACCEPT_HOOKS"),
+    ("DOPPEL_EPHEMERAL_SYSTEM_PROMPT", "HERMES_EPHEMERAL_SYSTEM_PROMPT"),
+    ("DOPPEL_IGNORE_RULES", "HERMES_IGNORE_RULES"),
+    ("DOPPEL_IGNORE_USER_CONFIG", "HERMES_IGNORE_USER_CONFIG"),
+    ("DOPPEL_INFERENCE_MODEL", "HERMES_INFERENCE_MODEL"),
+    ("DOPPEL_MAX_ITERATIONS", "HERMES_MAX_ITERATIONS"),
+    ("DOPPEL_QUIET", "HERMES_QUIET"),
+    ("DOPPEL_REDACT_SECRETS", "HERMES_REDACT_SECRETS"),
+    ("DOPPEL_TUI", "HERMES_TUI"),
+    ("DOPPEL_TUI_DIR", "HERMES_TUI_DIR"),
+    ("DOPPEL_TUI_NO_EARLY_DISABLE", "HERMES_TUI_NO_EARLY_DISABLE"),
+    ("DOPPEL_TUI_RESUME", "HERMES_TUI_RESUME"),
+    ("DOPPEL_TUI_THEME", "HERMES_TUI_THEME"),
+    ("DOPPEL_YOLO_MODE", "HERMES_YOLO_MODE"),
+)
 
 
 def get_cli_prog_name(argv0: str | None = None) -> str:
@@ -114,6 +131,37 @@ def get_cli_prog_name(argv0: str | None = None) -> str:
     if stem in {"doppel", "doppel-agent"}:
         return PREFERRED_CLI_COMMAND
     return PREFERRED_CLI_COMMAND
+
+
+def sync_customer_facing_env_aliases(
+    env: MutableMapping[str, str] | None = None,
+) -> MutableMapping[str, str]:
+    """Mirror preferred Doppel env names to legacy Hermes aliases.
+
+    Preferred ``DOPPEL_*`` values win when both names are set. When only the
+    legacy name exists, backfill the preferred alias so customer-facing docs
+    and runtime surfaces can move to Doppel-first naming without breaking
+    compatibility.
+    """
+
+    target = os.environ if env is None else env
+    for preferred, legacy in CUSTOMER_FACING_ENV_ALIASES:
+        preferred_value = target.get(preferred)
+        legacy_value = target.get(legacy)
+        if preferred_value not in (None, ""):
+            target[legacy] = preferred_value
+            continue
+        if legacy_value not in (None, ""):
+            target[preferred] = legacy_value
+
+    preferred_home = target.get(PREFERRED_HOME_ENV)
+    legacy_home = target.get(LEGACY_HOME_ENV)
+    if preferred_home not in (None, ""):
+        target[LEGACY_HOME_ENV] = preferred_home
+    elif legacy_home not in (None, ""):
+        target[PREFERRED_HOME_ENV] = legacy_home
+
+    return target
 
 
 def get_distribution_package_name() -> str:

@@ -15,7 +15,7 @@ Doppel Agent ships a Nix flake with three levels of integration:
 | **NixOS module (container)** | Agents that need self-modification | Everything above, plus a persistent Ubuntu container where the agent can `apt`/`pip`/`npm install` |
 
 :::note Current Nix package and binary surface
-The Nix derivation and preferred flake package contract now use `doppel-agent`. Fresh NixOS configs can also use the preferred module alias `services.doppel-agent`, while the existing `services.hermes-agent` / `systemd.services.hermes-agent` contract remains in place for compatibility. The generated systemd unit also installs a `doppel-agent.service` alias alongside the canonical `hermes-agent` unit. Fresh flake installs should use `#doppel-agent` (and `pkgs.doppel-agent` in overlays), while `#hermes-agent` / `pkgs.hermes-agent` remain compatibility aliases. Packaged installs also expose the preferred `doppel`, `doppel-agent`, and `doppel-acp` entrypoints alongside the legacy `hermes`, `hermes-agent`, and `hermes-acp` aliases, so command examples below use Doppel-first CLI names while keeping the still-live compatibility contracts explicit.
+The Nix derivation and preferred flake package contract now use `doppel-agent`. Fresh NixOS configs can also use the preferred module alias `services.doppel-agent`, while the existing `services.hermes-agent` / `systemd.services.hermes-agent` contract remains in place for compatibility. The generated systemd unit also installs a `doppel-agent.service` alias alongside the canonical `hermes-agent` unit. Fresh flake installs should use `#doppel-agent` (and `pkgs.doppel-agent` in overlays), while `#hermes-agent` / `pkgs.hermes-agent` remain compatibility aliases. Packaged installs also expose the preferred `doppel`, `doppel-agent`, and `doppel-acp` entrypoints alongside the legacy `hermes`, `hermes-agent`, and `hermes-acp` aliases, so command examples below use Doppel-first CLI names while keeping the still-live compatibility contracts explicit. OCI container deployments still default to the legacy runtime object name `hermes-agent`; set `container.name = "doppel-agent"` for fresh Docker/Podman deployments if you want the container commands below to match the Doppel service alias.
 :::
 
 :::info What's different from the standard install
@@ -185,10 +185,10 @@ After `nixos-rebuild switch`, check that the service is running:
 
 ```bash
 # Check service status
-systemctl status hermes-agent
+systemctl status doppel-agent
 
 # Watch logs (Ctrl+C to stop)
-journalctl -u hermes-agent -f
+journalctl -u doppel-agent -f
 
 # If addToSystemPackages is true, test the CLI
 doppel version
@@ -346,6 +346,7 @@ Quick reference for the most common things Nix users want to customize:
 | Share state between host CLI and container | `container.hostUsers` | `[ "sidbin" ]` |
 | Make extra tools available to the agent | `extraPackages` | `[ pkgs.pandoc pkgs.imagemagick ]` |
 | Use a custom base image | `container.image` | `"ubuntu:24.04"` |
+| Rename the OCI container for fresh deployments | `container.name` | `"doppel-agent"` |
 | Override the Doppel package | `package` | `inputs.doppel-agent.packages.${system}.default.override { ... }` |
 | Change state directory | `stateDir` | `"/opt/hermes"` |
 | Set the agent's working directory | `workingDirectory` | `"/home/user/projects"` |
@@ -358,7 +359,7 @@ Quick reference for the most common things Nix users want to customize:
 Values in Nix expressions end up in `/nix/store`, which is world-readable. Always use `environmentFiles` with a secrets manager.
 :::
 
-Both `environment` (non-secret vars) and `environmentFiles` (secret files) are merged into `$HERMES_HOME/.env` at activation time (`nixos-rebuild switch`). Doppel reads this file on every startup, so changes take effect with a `systemctl restart hermes-agent` — no container recreation needed.
+Both `environment` (non-secret vars) and `environmentFiles` (secret files) are merged into `$HERMES_HOME/.env` at activation time (`nixos-rebuild switch`). Doppel reads this file on every startup, so changes take effect with a `systemctl restart doppel-agent` — no container recreation needed.
 
 ### sops-nix
 
@@ -600,7 +601,7 @@ The Nix-built binary works inside the Ubuntu container because `/nix/store` is b
 
 | Event | Container recreated? | `/data` (state) | `/home/hermes` | Writable layer (`apt`/`pip`/`npm`) |
 |---|---|---|---|---|
-| `systemctl restart hermes-agent` | No | Persists | Persists | Persists |
+| `systemctl restart doppel-agent` | No | Persists | Persists | Persists |
 | `nixos-rebuild switch` (code change) | No (symlink updated) | Persists | Persists | Persists |
 | Host reboot | No | Persists | Persists | Persists |
 | `nix-collect-garbage` | No (GC root) | Persists | Persists | Persists |
@@ -901,6 +902,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 | `container.enable` | `bool` | `false` | Enable OCI container mode |
 | `container.backend` | `enum ["docker" "podman"]` | `"docker"` | Container runtime |
 | `container.image` | `str` | `"ubuntu:24.04"` | Base image (pulled at runtime) |
+| `container.name` | `str` | `"hermes-agent"` | OCI container name. Keep the legacy default for upgrades, or set `"doppel-agent"` for fresh Doppel-first deployments |
 | `container.extraVolumes` | `listOf str` | `[]` | Extra volume mounts (`host:container:mode`) |
 | `container.extraOptions` | `listOf str` | `[]` | Extra args passed to `docker create` |
 | `container.hostUsers` | `listOf str` | `[]` | Interactive users who get a `~/.hermes` symlink to the service stateDir and are auto-added to the `hermes` group |
@@ -969,16 +971,16 @@ All `docker` commands below work the same with `podman`. Substitute accordingly 
 
 ```bash
 # Both modes use the same systemd unit
-journalctl -u hermes-agent -f
+journalctl -u doppel-agent -f
 
-# Container mode: also available directly
+# Container mode: runtime name defaults to hermes-agent unless you set container.name
 docker logs -f hermes-agent
 ```
 
 ### Container Inspection
 
 ```bash
-systemctl status hermes-agent
+systemctl status doppel-agent
 docker ps -a --filter name=hermes-agent
 docker inspect hermes-agent --format='{{.State.Status}}'
 docker exec -it hermes-agent bash
@@ -991,10 +993,10 @@ docker exec hermes-agent cat /data/.container-identity
 If you need to reset the writable layer (fresh Ubuntu):
 
 ```bash
-sudo systemctl stop hermes-agent
+sudo systemctl stop doppel-agent
 docker rm -f hermes-agent
 sudo rm /var/lib/hermes/.container-identity
-sudo systemctl start hermes-agent
+sudo systemctl start doppel-agent
 ```
 
 ### Verify Secrets Are Loaded
@@ -1020,11 +1022,11 @@ nix-store --query --roots $(docker exec hermes-agent readlink /data/current-pack
 | Symptom | Cause | Fix |
 |---|---|---|
 | `Cannot save configuration: managed by NixOS` | CLI guards active | Edit `configuration.nix` and `nixos-rebuild switch` |
-| `No adapter available for discord` (or telegram/slack) | Messaging deps missing from the sealed Nix venv | Install `#messaging` variant: `nix profile install ...#messaging`. For NixOS module: `extraDependencyGroups = [ "messaging" ]`. Check `journalctl -u hermes-agent` for `FeatureUnavailable` or `requirements not met` for the underlying error. |
+| `No adapter available for discord` (or telegram/slack) | Messaging deps missing from the sealed Nix venv | Install `#messaging` variant: `nix profile install ...#messaging`. For NixOS module: `extraDependencyGroups = [ "messaging" ]`. Check `journalctl -u doppel-agent` for `FeatureUnavailable` or `requirements not met` for the underlying error. |
 | Container recreated unexpectedly | `extraVolumes`, `extraOptions`, or `image` changed | Expected — writable layer resets. Reinstall packages or use a custom image |
-| `doppel version` shows old version | Container not restarted | `systemctl restart hermes-agent` |
+| `doppel version` shows old version | Container not restarted | `systemctl restart doppel-agent` |
 | Permission denied on `/var/lib/hermes` | State dir is `0750 hermes:hermes` | Use `docker exec` or `sudo -u hermes` |
 | `nix-collect-garbage` removed hermes | GC root missing | Restart the service (preStart recreates the GC root) |
 | `no container with name or ID "hermes-agent"` (Podman) | Podman rootful container not visible to regular user | Add passwordless sudo for podman (see [Container Mode](#container-mode) section) |
 | `unable to find user hermes` | Container still starting (entrypoint hasn't created user yet) | Wait a few seconds and retry — the CLI retries automatically |
-| Tool added via `extraPackages` not found in terminal | Requires `nixos-rebuild switch` to update the per-user profile | Rebuild and restart: `nixos-rebuild switch && systemctl restart hermes-agent` |
+| Tool added via `extraPackages` not found in terminal | Requires `nixos-rebuild switch` to update the per-user profile | Rebuild and restart: `nixos-rebuild switch && systemctl restart doppel-agent` |

@@ -66,7 +66,7 @@
       )
     );
 
-    containerName = "hermes-agent";
+    containerName = cfg.container.name;
     containerDataDir = "/data";     # stateDir mount point inside container
     containerHomeDir = "/home/hermes";
 
@@ -586,6 +586,16 @@
           type = types.str;
           default = "ubuntu:24.04";
           description = "OCI container image. The container pulls this at runtime via Docker/Podman.";
+        };
+
+        name = mkOption {
+          type = types.str;
+          default = "hermes-agent";
+          description = ''
+            OCI container name. Keeps the legacy hermes-agent default for
+            upgrade safety; set this to "doppel-agent" for fresh
+            Doppel-first container deployments.
+          '';
         };
 
         hostUsers = mkOption {

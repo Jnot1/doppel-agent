@@ -23,7 +23,7 @@ Doppel Agent 提供了一个 Nix flake，支持三个层级的集成：
 :::
 
 :::note 当前 Nix 包与二进制入口
-Nix derivation 与首选 flake 包契约现已使用 `doppel-agent`。新的 NixOS 配置也可以使用首选模块别名 `services.doppel-agent`，同时保留现有的 `services.hermes-agent` / `systemd.services.hermes-agent` 兼容契约。生成的 systemd 单元还会安装 `doppel-agent.service` 别名，与规范的 `hermes-agent` 单元并存。新的 flake 安装应使用首选包别名 `#doppel-agent`（overlay 中可用 `pkgs.doppel-agent`），同时保留 `#hermes-agent` / `pkgs.hermes-agent` 作为兼容别名。打包安装也会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，以及历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 Doppel 优先的写法，同时明确保留仍然有效的兼容契约。
+Nix derivation 与首选 flake 包契约现已使用 `doppel-agent`。新的 NixOS 配置也可以使用首选模块别名 `services.doppel-agent`，同时保留现有的 `services.hermes-agent` / `systemd.services.hermes-agent` 兼容契约。生成的 systemd 单元还会安装 `doppel-agent.service` 别名，与规范的 `hermes-agent` 单元并存。新的 flake 安装应使用首选包别名 `#doppel-agent`（overlay 中可用 `pkgs.doppel-agent`），同时保留 `#hermes-agent` / `pkgs.hermes-agent` 作为兼容别名。打包安装也会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，以及历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 Doppel 优先的写法，同时明确保留仍然有效的兼容契约。OCI 容器部署仍默认使用历史运行时对象名 `hermes-agent`；如果希望下面的 Docker/Podman 命令也与 Doppel 服务别名一致，可在全新部署中设置 `container.name = "doppel-agent"`。
 :::
 
 ## 前提条件
@@ -185,10 +185,10 @@ CLI 会自动检测何时需要 sudo 并透明地使用它。没有此配置，�
 
 ```bash
 # 检查服务状态
-systemctl status hermes-agent
+systemctl status doppel-agent
 
 # 查看日志（Ctrl+C 停止）
-journalctl -u hermes-agent -f
+journalctl -u doppel-agent -f
 
 # 如果 addToSystemPackages 为 true，测试 CLI
 doppel version
@@ -345,6 +345,7 @@ Nix 用户最常见自定义需求的快速参考：
 | 在主机 CLI 和容器间共享状态 | `container.hostUsers` | `[ "sidbin" ]` |
 | 为 Agent 提供额外工具 | `extraPackages` | `[ pkgs.pandoc pkgs.imagemagick ]` |
 | 使用自定义基础镜像 | `container.image` | `"ubuntu:24.04"` |
+| 为全新部署重命名 OCI 容器 | `container.name` | `"doppel-agent"` |
 | 覆盖 Doppel 包 | `package` | `inputs.doppel-agent.packages.${system}.default.override { ... }` |
 | 更改状态目录 | `stateDir` | `"/opt/hermes"` |
 | 设置 Agent 的工作目录 | `workingDirectory` | `"/home/user/projects"` |
@@ -357,7 +358,7 @@ Nix 用户最常见自定义需求的快速参考：
 Nix 表达式中的值会进入 `/nix/store`，该目录是全局可读的。请始终使用带有密钥管理器的 `environmentFiles`。
 :::
 
-`environment`（非密钥变量）和 `environmentFiles`（密钥文件）在激活时（`nixos-rebuild switch`）都会合并到 `$HERMES_HOME/.env` 中。Doppel Agent 在每次启动时读取此文件，因此更改在 `systemctl restart hermes-agent` 后生效——无需重建容器。
+`environment`（非密钥变量）和 `environmentFiles`（密钥文件）在激活时（`nixos-rebuild switch`）都会合并到 `$HERMES_HOME/.env` 中。Doppel Agent 在每次启动时读取此文件，因此更改在 `systemctl restart doppel-agent` 后生效——无需重建容器。
 
 ### sops-nix
 
@@ -599,7 +600,7 @@ Nix 构建的二进制文件能在 Ubuntu 容器内运行，是因为 `/nix/stor
 
 | 事件 | 容器重建？ | `/data`（状态） | `/home/hermes` | 可写层（`apt`/`pip`/`npm`） |
 |---|---|---|---|---|
-| `systemctl restart hermes-agent` | 否 | 保留 | 保留 | 保留 |
+| `systemctl restart doppel-agent` | 否 | 保留 | 保留 | 保留 |
 | `nixos-rebuild switch`（代码变更） | 否（更新符号链接） | 保留 | 保留 | 保留 |
 | 主机重启 | 否 | 保留 | 保留 | 保留 |
 | `nix-collect-garbage` | 否（GC root） | 保留 | 保留 | 保留 |
@@ -872,6 +873,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 | `container.enable` | `bool` | `false` | 启用 OCI 容器模式 |
 | `container.backend` | `enum ["docker" "podman"]` | `"docker"` | 容器运行时 |
 | `container.image` | `str` | `"ubuntu:24.04"` | 基础镜像（运行时拉取） |
+| `container.name` | `str` | `"hermes-agent"` | OCI 容器名。为升级安全保留历史默认值；全新 Doppel 优先部署可设置为 `"doppel-agent"` |
 | `container.extraVolumes` | `listOf str` | `[]` | 额外卷挂载（`host:container:mode`） |
 | `container.extraOptions` | `listOf str` | `[]` | 传递给 `docker create` 的额外参数 |
 | `container.hostUsers` | `listOf str` | `[]` | 获得 `~/.hermes` 符号链接（指向服务 stateDir）的交互式用户，自动加入 `hermes` 组 |
@@ -940,16 +942,16 @@ sudo nixos-rebuild switch
 
 ```bash
 # 两种模式使用相同的 systemd 单元
-journalctl -u hermes-agent -f
+journalctl -u doppel-agent -f
 
-# 容器模式：也可直接查看
+# 容器模式：运行时名称默认仍为 hermes-agent，除非你设置了 container.name
 docker logs -f hermes-agent
 ```
 
 ### 容器检查
 
 ```bash
-systemctl status hermes-agent
+systemctl status doppel-agent
 docker ps -a --filter name=hermes-agent
 docker inspect hermes-agent --format='{{.State.Status}}'
 docker exec -it hermes-agent bash
@@ -962,10 +964,10 @@ docker exec hermes-agent cat /data/.container-identity
 如果需要重置可写层（全新 Ubuntu）：
 
 ```bash
-sudo systemctl stop hermes-agent
+sudo systemctl stop doppel-agent
 docker rm -f hermes-agent
 sudo rm /var/lib/hermes/.container-identity
-sudo systemctl start hermes-agent
+sudo systemctl start doppel-agent
 ```
 
 ### 验证密钥已加载
@@ -992,9 +994,9 @@ nix-store --query --roots $(docker exec hermes-agent readlink /data/current-pack
 |---|---|---|
 | `Cannot save configuration: managed by NixOS` | CLI 守卫已激活 | 编辑 `configuration.nix` 并执行 `nixos-rebuild switch` |
 | 容器意外重建 | `extraVolumes`、`extraOptions` 或 `image` 发生变更 | 预期行为——可写层重置。重新安装包或使用自定义镜像 |
-| `doppel version` 显示旧版本 | 容器未重启 | `systemctl restart hermes-agent` |
+| `doppel version` 显示旧版本 | 容器未重启 | `systemctl restart doppel-agent` |
 | `/var/lib/hermes` 权限拒绝 | 状态目录为 `0750 hermes:hermes` | 使用 `docker exec` 或 `sudo -u hermes` |
 | `nix-collect-garbage` 删除了 hermes | GC root 缺失 | 重启服务（preStart 会重新创建 GC root） |
 | `no container with name or ID "hermes-agent"`（Podman） | Podman rootful 容器对普通用户不可见 | 为 podman 添加免密 sudo（参见[容器模式](#container-mode)章节） |
 | `unable to find user hermes` | 容器仍在启动中（入口点尚未创建用户） | 等待几秒后重试——CLI 会自动重试 |
-| 通过 `extraPackages` 添加的工具在终端中找不到 | 需要 `nixos-rebuild switch` 更新每用户 profile | 重建并重启：`nixos-rebuild switch && systemctl restart hermes-agent` |
+| 通过 `extraPackages` 添加的工具在终端中找不到 | 需要 `nixos-rebuild switch` 更新每用户 profile | 重建并重启：`nixos-rebuild switch && systemctl restart doppel-agent` |

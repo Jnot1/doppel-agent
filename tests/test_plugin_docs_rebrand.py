@@ -83,6 +83,9 @@ EN_PROVIDER_ROUTING_DOC = (
 EN_CONTEXT_REFERENCES_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "context-references.md"
 )
+EN_TOOL_GATEWAY_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tool-gateway.md"
+)
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -152,6 +155,17 @@ ZH_CONTEXT_REFERENCES_DOC = (
     / "user-guide"
     / "features"
     / "context-references.md"
+)
+ZH_TOOL_GATEWAY_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "tool-gateway.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -968,3 +982,55 @@ def test_context_references_docs_prefer_doppel_prose_and_keep_blocked_literals()
     assert "Hermes 会将引用内联展开" not in zh
     assert "Hermes env: `$HERMES_HOME/.env`" not in en
     assert "Hermes 环境文件：`$HERMES_HOME/.env`" not in zh
+
+
+def test_tool_gateway_docs_prefer_doppel_surfaces_and_keep_gateway_literals():
+    en = EN_TOOL_GATEWAY_DOC.read_text(encoding="utf-8")
+    zh = ZH_TOOL_GATEWAY_DOC.read_text(encoding="utf-8")
+
+    assert "routes Doppel Agent's tool calls" in en
+    assert "let Doppel Agent default to FLUX 2 Klein" in en
+    assert "doppel setup --portal" in en
+    assert "doppel model" in en
+    assert "doppel portal status" in en
+    assert "doppel portal tools" in en
+    assert "doppel status" in en
+    assert "doppel tools" in en
+    assert "doppel setup terminal" in en
+    assert "~/.doppel/.env" in en
+    assert "Legacy installs may still keep these overrides in `~/.hermes/.env`." in en
+    assert "Doppel Agent shows a clear error pointing at the portal." in en
+
+    assert "运行 `doppel model` 并选择 Nous Portal 作为提供商时，Doppel Agent 会主动询问是否启用 Tool Gateway：" in zh
+    assert "### 通过 `doppel tools`" in zh
+    assert "doppel tools" in zh
+    assert "doppel status" in zh
+    assert "`~/.doppel/config.yaml`" in zh
+    assert "`~/.doppel/auth.json`" in zh
+    assert "`~/.doppel/.env`" in zh
+    assert "legacy 安装仍可能使用 `~/.hermes/auth.json`" in zh
+    assert "legacy 安装仍可能将这些覆盖项保留在 `~/.hermes/.env` 中。" in zh
+    assert "doppel setup terminal" in zh
+
+    for fixed in (
+        "~/.hermes/.env",
+        "~/.hermes/auth.json",
+        "use_gateway",
+        "TOOL_GATEWAY_DOMAIN",
+        "TOOL_GATEWAY_SCHEME",
+        "TOOL_GATEWAY_USER_TOKEN",
+        "FIRECRAWL_GATEWAY_URL",
+        "image_generate",
+        "text_to_speech",
+        "browser_navigate",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "hermes setup --portal" not in en
+    assert "hermes model" not in en
+    assert "hermes portal status" not in en
+    assert "hermes portal tools" not in en
+    assert "hermes tools" not in en
+    assert "hermes setup terminal" not in en
+    assert "运行 `hermes model`" not in zh
+    assert "### 通过 `hermes tools`" not in zh

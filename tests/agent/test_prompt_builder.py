@@ -477,6 +477,8 @@ class TestBuildNousSubscriptionPrompt:
 
         assert "suggest Nous subscription as one option" in prompt
         assert "Do not mention subscription unless" in prompt
+        assert "Useful commands: doppel setup, doppel setup tools, doppel setup terminal, doppel status." in prompt
+        assert "Useful commands: hermes setup, hermes setup tools, hermes setup terminal, hermes status." not in prompt
 
     def test_feature_flag_off_returns_empty_prompt(self, monkeypatch):
         monkeypatch.setattr("tools.tool_backend_helpers.managed_nous_tools_enabled", lambda: False)
@@ -1173,6 +1175,25 @@ class TestBuildSkillsSystemPromptConditional:
         )
         assert "nested-null" in result
 
+    def test_help_guidance_is_doppel_first_but_keeps_legacy_skill_id(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        skill_dir = tmp_path / "skills" / "general" / "notes"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: notes\ndescription: Take notes\n---\n"
+        )
+
+        result = build_skills_system_prompt(
+            available_tools=set(),
+            available_toolsets=set(),
+        )
+
+        assert "troubleshoot Doppel Agent itself" in result
+        assert "load the bundled `hermes-agent` skill" in result
+        assert "`doppel config set …`, `doppel tools`, `doppel setup`" in result
+        assert "troubleshoot Hermes Agent itself" not in result
+        assert "`hermes config set …`, `hermes tools`, `hermes setup`" not in result
+
 
 # =========================================================================
 # Tool-use enforcement guidance
@@ -1247,5 +1268,4 @@ class TestOpenAIModelExecutionGuidance:
 # =========================================================================
 # Budget warning history stripping
 # =========================================================================
-
 

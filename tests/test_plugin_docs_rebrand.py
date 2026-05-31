@@ -2194,6 +2194,71 @@ def test_soul_guide_route_graph_uses_doppel_slug_and_legacy_redirect():
         assert "/guides/use-soul-with-hermes" not in text
 
 
+def test_voice_guide_route_graph_uses_doppel_slug_and_legacy_redirects():
+    en_guide = (
+        REPO_ROOT / "website" / "docs" / "guides" / "use-voice-mode-with-hermes.md"
+    ).read_text(encoding="utf-8")
+    zh_guide = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "use-voice-mode-with-hermes.md"
+    ).read_text(encoding="utf-8")
+    config = (REPO_ROOT / "website" / "docusaurus.config.ts").read_text(encoding="utf-8")
+    llms = (
+        REPO_ROOT / "website" / "scripts" / "generate-llms-txt.py"
+    ).read_text(encoding="utf-8")
+    linked_docs = [
+        REPO_ROOT / "website" / "docs" / "index.mdx",
+        REPO_ROOT / "website" / "docs" / "getting-started" / "learning-path.md",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "index.mdx",
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "getting-started"
+        / "learning-path.md",
+    ]
+
+    assert "slug: /guides/use-voice-mode-with-doppel-agent" in en_guide
+    assert "slug: /guides/use-voice-mode-with-doppel-agent" in zh_guide
+    assert (
+        "from: ['/guides/use-voice-mode-with-hermes', '/guides/use-voice-mode-with-doppel']"
+        in config
+    )
+    assert "to: '/guides/use-voice-mode-with-doppel-agent'" in config
+    assert (
+        '("guides/use-voice-mode-with-doppel-agent", "Use Voice Mode with Doppel Agent", None)'
+        in llms
+    )
+    assert (
+        '("guides/use-voice-mode-with-hermes", "Use Voice Mode with Doppel Agent", None)'
+        not in llms
+    )
+
+    for doc in linked_docs:
+        text = doc.read_text(encoding="utf-8")
+        assert "/guides/use-voice-mode-with-doppel-agent" in text
+        assert "/guides/use-voice-mode-with-hermes" not in text
+
+    en_learning_path = linked_docs[1].read_text(encoding="utf-8")
+    zh_learning_path = linked_docs[3].read_text(encoding="utf-8")
+    assert "[Use Voice Mode with Doppel](/guides/use-voice-mode-with-doppel)" not in en_learning_path
+    assert "[在 Hermes 中使用语音模式](/guides/use-voice-mode-with-hermes)" not in zh_learning_path
+
+
 def test_goals_feature_docs_prefer_doppel_surfaces_and_keep_goal_literals():
     en = EN_GOALS_DOC.read_text(encoding="utf-8")
     zh = ZH_GOALS_DOC.read_text(encoding="utf-8")
@@ -3620,8 +3685,8 @@ def test_voice_mode_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "与 Doppel Agent 进行实时语音对话" in zh
     assert "Doppel Agent supports full voice interaction" in en
     assert "Doppel Agent 支持在 CLI 和消息平台上进行完整的语音交互" in zh
-    assert "[Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-hermes)" in en
-    assert "[在 Doppel Agent 中使用语音模式](/guides/use-voice-mode-with-hermes)" in zh
+    assert "[Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-doppel-agent)" in en
+    assert "[在 Doppel Agent 中使用语音模式](/guides/use-voice-mode-with-doppel-agent)" in zh
     assert "`doppel model`" in en
     assert "`doppel model`" in zh
     assert "`doppel setup --portal`" in en
@@ -6233,8 +6298,8 @@ def test_voice_mode_guide_pair_prefer_doppel_customer_facing_surfaces():
     assert "\n```bash\ndoppel\n```" in zh
     assert "Doppel Agent supports both local and cloud speech stacks." in en
     assert "Doppel Agent 同时支持本地和云端语音处理方案。" in zh
-    assert "`~/.doppel/.env` on fresh installs. Legacy `~/.hermes/.env` still works" in en
-    assert "`~/.doppel/.env`（旧安装仍兼容 `~/.hermes/.env`）" in zh
+    assert "Add to `~/.doppel/.env`:" in en
+    assert "添加到 `~/.doppel/.env`：" in zh
     assert "### If you use `doppel setup tts`" in en
     assert "### 如果使用 `doppel setup tts`" in zh
     assert "Doppel Agent checks whether `neutts` is already installed" in en
@@ -6299,8 +6364,64 @@ def test_voice_mode_guide_pair_prefer_doppel_customer_facing_surfaces():
         "Hermes 检测语音边界",
         "Hermes responds in text and audio",
         "Hermes 以文字和音频形式回复",
+        "`~/.doppel/.env` on fresh installs. Legacy `~/.hermes/.env` still works",
+        "`~/.doppel/.env`（旧安装仍兼容 `~/.hermes/.env`）",
     ):
         assert stale not in en
+        assert stale not in zh
+
+
+def test_learning_path_pair_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "getting-started" / "learning-path.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "getting-started"
+        / "learning-path.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Doppel Agent can do a lot" in en
+    assert "Doppel Agent 功能丰富" in zh
+    assert "If you haven't installed Doppel Agent yet" in en
+    assert "如果您尚未安装 Doppel Agent" in zh
+    assert "First-time users almost always want `doppel setup --portal`" in en
+    assert "首次使用时，几乎总是应该先运行 `doppel setup --portal`" in zh
+    assert "Use Doppel Agent as an interactive terminal assistant" in en
+    assert "将 Doppel Agent 用作交互式终端助手" in zh
+    assert "[Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-doppel-agent)" in en
+    assert "[在 Doppel Agent 中使用语音模式](/guides/use-voice-mode-with-doppel-agent)" in zh
+    assert "Cron jobs let Doppel Agent run tasks on a schedule" in en
+    assert "Cron 任务让 Doppel Agent 按计划执行任务" in zh
+    assert "Extend Doppel Agent with your own tools" in en
+    assert "通过自定义工具和可复用技能包扩展 Doppel Agent" in zh
+    assert "[Build a Doppel Plugin](/guides/build-a-hermes-plugin)" in en
+    assert "[构建 Doppel 插件](/guides/build-a-hermes-plugin)" in zh
+    assert "Use reinforcement learning to fine-tune model behavior with Doppel Agent" in en
+    assert "通过 Doppel Agent 内置的 RL 训练流水线对模型行为进行微调" in zh
+    assert "Integrate Doppel Agent into your own Python applications" in en
+    assert "将 Doppel Agent 集成到您自己的 Python 应用中" in zh
+    assert "运行以编程方式调用 Doppel 工具的 Python 脚本" in zh
+
+    for stale in (
+        "根据您的经验水平和目标，选择适合您的 Hermes Agent 文档学习路径。",
+        "Hermes Agent 功能丰富",
+        "如果您尚未安装 Hermes Agent",
+        "将 Hermes Agent 用作交互式终端助手",
+        "[在 Hermes 中使用语音模式](/guides/use-voice-mode-with-hermes)",
+        "Cron 任务让 Hermes Agent 按计划执行任务",
+        "通过自定义工具和可复用技能包扩展 Hermes Agent",
+        "[构建 Hermes 插件](/guides/build-a-hermes-plugin)",
+        "通过 Hermes Agent 内置的 RL 训练流水线对模型行为进行微调",
+        "强化学习训练在您已了解 Hermes Agent 如何处理对话和工具调用的基础上效果最佳。",
+        "将 Hermes Agent 集成到您自己的 Python 应用中",
+        "运行以编程方式调用 Hermes 工具的 Python 脚本",
+    ):
         assert stale not in zh
 
 

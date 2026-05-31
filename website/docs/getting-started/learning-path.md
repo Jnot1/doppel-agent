@@ -59,7 +59,7 @@ Deploy Doppel Agent as a bot on your favorite messaging platform.
 4. [Telegram Setup](/user-guide/messaging/telegram)
 5. [Discord Setup](/user-guide/messaging/discord)
 6. [Voice Mode](/user-guide/features/voice-mode)
-7. [Use Voice Mode with Doppel](/guides/use-voice-mode-with-doppel)
+7. [Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-doppel-agent)
 8. [Security](/user-guide/security)
 
 For full project examples, see:

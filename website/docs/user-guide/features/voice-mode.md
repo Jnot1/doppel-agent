@@ -8,7 +8,7 @@ description: "Real-time voice conversations with Doppel Agent — CLI, Telegram,
 
 Doppel Agent supports full voice interaction across CLI and messaging platforms. Talk to the agent using your microphone, hear spoken replies, and have live voice conversations in Discord voice channels.
 
-If you want a practical setup walkthrough with recommended configurations and real usage patterns, see [Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-hermes).
+If you want a practical setup walkthrough with recommended configurations and real usage patterns, see [Use Voice Mode with Doppel Agent](/guides/use-voice-mode-with-doppel-agent).
 
 ## Prerequisites
 

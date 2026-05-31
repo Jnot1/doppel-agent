@@ -5223,3 +5223,48 @@ def test_azure_foundry_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_pipe_script_output_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "pipe-script-output.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "pipe-script-output.md"
+    ).read_text(encoding="utf-8")
+
+    assert "using `doppel send`." in en
+    assert "使用 `doppel send`" in zh
+    assert "`doppel send` is a small, scriptable CLI" in en
+    assert "`doppel send` 是一个轻量、可脚本化的 CLI" in zh
+    assert "`make | doppel send --to slack:#builds`" in en
+    assert "`make | doppel send --to slack:#builds`" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.doppel/channel_directory.json" in en
+    assert "~/.doppel/channel_directory.json" in zh
+    assert "doppel gateway start" in en
+    assert "doppel gateway start" in zh
+
+    for stale in (
+        "using `hermes send`.",
+        "使用 `hermes send`",
+        "`hermes send` is a small, scriptable CLI",
+        "`hermes send` 是一个轻量、可脚本化的 CLI",
+        "`make | hermes send --to slack:#builds`",
+        "~/.hermes/.env",
+        "~/.hermes/config.yaml",
+        "~/.hermes/channel_directory.json",
+        "hermes gateway start",
+    ):
+        assert stale not in en
+        assert stale not in zh

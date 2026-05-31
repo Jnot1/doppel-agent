@@ -106,6 +106,7 @@ EN_KANBAN_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "ka
 EN_FEATURE_SKILLS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "skills.md"
 EN_FEATURE_ACP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "acp.md"
 EN_TTS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "tts.md"
+EN_SPOTIFY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "spotify.md"
 EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hooks.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
@@ -319,6 +320,17 @@ ZH_TTS_DOC = (
     / "user-guide"
     / "features"
     / "tts.md"
+)
+ZH_SPOTIFY_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "spotify.md"
 )
 ZH_HOOKS_DOC = (
     REPO_ROOT
@@ -1851,3 +1863,54 @@ def test_tts_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "~/.hermes/cache/piper-voices/" not in zh
     assert "# In ~/.hermes/config.yaml" not in en
     assert "# In ~/.hermes/config.yaml" not in zh
+
+
+def test_spotify_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_SPOTIFY_DOC.read_text(encoding="utf-8")
+    zh = ZH_SPOTIFY_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent can control Spotify directly" in en
+    assert "Doppel Agent 可以直接控制 Spotify" in zh
+    assert "`doppel auth spotify`" in en
+    assert "`doppel auth spotify`" in zh
+    assert "`doppel tools`" in en
+    assert "`doppel tools`" in zh
+    assert "`doppel setup` / `doppel setup tools`" in en
+    assert "`doppel setup` / `doppel setup tools`" in zh
+    assert "doppel cron add" in en
+    assert "doppel cron add" in zh
+    assert "~/.doppel/auth.json" in en
+    assert "~/.doppel/auth.json" in zh
+    assert "~/.doppel/.env" in en
+    assert "~/.doppel/.env" in zh
+    assert "App name | anything (e.g. `doppel-agent`)" in en
+    assert "App name | 任意（例如 `doppel-agent`）" in zh
+    assert "personal Doppel integration" in en
+    assert "personal Doppel integration" in zh
+
+    for fixed in (
+        "HERMES_SPOTIFY_CLIENT_ID",
+        "HERMES_SPOTIFY_REDIRECT_URI",
+        "providers.spotify",
+        "/guides/oauth-over-ssh",
+    ):
+        assert fixed in en
+        assert fixed in zh
+
+    assert "Legacy installs may still keep the same auth files under `~/.hermes`." in en
+    assert "旧安装仍可能把相同的认证文件保存在 `~/.hermes` 下。" in zh
+
+    assert "Hermes can control Spotify directly" not in en
+    assert "Hermes 可以直接控制 Spotify" not in zh
+    assert "`hermes auth spotify`" not in en
+    assert "`hermes auth spotify`" not in zh
+    assert "`hermes tools`" not in en
+    assert "`hermes tools`" not in zh
+    assert "`hermes setup` / `hermes setup tools`" not in en
+    assert "`hermes setup` / `hermes setup tools`" not in zh
+    assert "hermes cron add" not in en
+    assert "hermes cron add" not in zh
+    assert "~/.hermes/auth.json" not in en
+    assert "~/.hermes/auth.json" not in zh
+    assert "~/.hermes/.env" not in en
+    assert "~/.hermes/.env" not in zh

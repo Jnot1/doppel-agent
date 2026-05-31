@@ -5063,3 +5063,55 @@ def test_automation_templates_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_xai_grok_oauth_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "xai-grok-oauth.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "xai-grok-oauth.md"
+    ).read_text(encoding="utf-8")
+
+    assert "use Grok models in Doppel Agent" in en
+    assert "在 Doppel Agent 中使用 Grok 模型" in zh
+    assert "Doppel Agent supports xAI Grok" in en
+    assert "Doppel Agent 通过基于浏览器的 OAuth 登录流程支持 xAI Grok" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel auth add xai-oauth" in en
+    assert "doppel auth add xai-oauth" in zh
+    assert "~/.doppel/auth.json" in en
+    assert "~/.doppel/auth.json" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "doppel tools" in en
+    assert "doppel tools" in zh
+    assert "use `doppel setup` for the guided flow" in en
+    assert "使用 `doppel setup` 进行引导配置" in zh
+    assert "doppel auth logout xai-oauth" in en
+    assert "doppel auth logout xai-oauth" in zh
+
+    for stale in (
+        "use Grok models in Hermes Agent",
+        "在 Hermes Agent 中使用 Grok 模型",
+        "Hermes Agent supports xAI Grok",
+        "Hermes Agent 通过基于浏览器的 OAuth 登录流程支持 xAI Grok",
+        "hermes model",
+        "hermes auth add xai-oauth",
+        "~/.hermes/auth.json",
+        "~/.hermes/config.yaml",
+        "hermes tools",
+        "use `hermes setup` for the guided flow",
+        "使用 `hermes setup` 进行引导配置",
+        "hermes auth logout xai-oauth",
+    ):
+        assert stale not in en
+        assert stale not in zh

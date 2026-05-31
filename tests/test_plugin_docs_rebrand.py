@@ -1964,7 +1964,7 @@ def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_se
 
     top = zh_cli_commands.split("## `doppel chat`", 1)[0]
     pre_model = zh_cli_commands.split("## `doppel model`", 1)[0]
-    model = zh_cli_commands.split("## `doppel model`", 1)[1].split("## `hermes gateway`", 1)[0]
+    model = zh_cli_commands.split("## `doppel model`", 1)[1].split("## `doppel gateway`", 1)[0]
     support = zh_cli_commands.split("## `doppel dump`", 1)[1].split("## `doppel checkpoints`", 1)[0]
     update = zh_cli_commands.split("## `doppel update`", 1)[1].split("## 维护命令", 1)[0]
 
@@ -2155,6 +2155,43 @@ def test_zh_reference_cli_commands_rebrand_completion_block():
     assert "hermes completion bash >> ~/.bashrc" not in section
     assert "hermes completion zsh >> ~/.zshrc" not in section
     assert "hermes completion fish > ~/.config/fish/completions/hermes.fish" not in section
+
+
+def test_zh_reference_cli_commands_rebrand_gateway_setup_and_portal_cluster():
+    zh_cli_commands = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "reference"
+        / "cli-commands.md"
+    ).read_text(encoding="utf-8")
+
+    section = zh_cli_commands.split("## `doppel gateway`", 1)[1].split("## `hermes whatsapp`", 1)[0]
+
+    assert "doppel gateway <subcommand>" in section
+    assert "活跃的 `DOPPEL_HOME`（同时仍兼容旧版 `HERMES_HOME`）" in section
+    assert "在 `doppel update` 后全部重启" in section
+    assert "使用 `doppel gateway run` 而非 `doppel gateway start`" in section
+    assert "tmux new -s doppel 'doppel gateway run'" in section
+    assert "doppel lsp <subcommand>" in section
+    assert "## `doppel setup`" in section
+    assert "**最简单路径：** `doppel setup --portal`" in section
+    assert "运行 `doppel setup` 现在默认执行此操作" in section
+    assert "## `doppel portal`" in section
+    assert "上方的 `doppel setup --portal`" in section
+    assert "## `hermes gateway`" not in section
+    assert "在 `hermes update` 后全部重启" not in section
+    assert "使用 `hermes gateway run` 而非 `hermes gateway start`" not in section
+    assert "tmux new -s hermes 'hermes gateway run'" not in section
+    assert "doppel lsp <subcommand>" in section
+    assert "## `hermes lsp`" not in section
+    assert "## `hermes setup`" not in section
+    assert "运行 `hermes setup` 现在默认执行此操作" not in section
+    assert "## `hermes portal`" not in section
+    assert "上方的 `hermes setup --portal`" not in section
 
 
 def test_feature_acp_docs_prefer_doppel_surfaces_and_keep_registry_literals():

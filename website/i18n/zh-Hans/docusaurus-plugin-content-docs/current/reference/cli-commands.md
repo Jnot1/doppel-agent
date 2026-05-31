@@ -203,10 +203,10 @@ doppel model
 
 Provider 和 base URL 的更改会自动持久化到 `config.yaml`。从自定义端点切换走时，过时的 base URL 会被清除，以防止其泄漏到其他 provider。
 
-## `hermes gateway`
+## `doppel gateway`
 
 ```bash
-hermes gateway <subcommand>
+doppel gateway <subcommand>
 ```
 
 子命令：
@@ -227,17 +227,17 @@ hermes gateway <subcommand>
 
 | 选项 | 说明 |
 |--------|-------------|
-| `--all` | 在 `start` / `restart` / `stop` 时：对**每个 profile** 的 gateway 执行操作，而不仅限于活跃的 `HERMES_HOME`。当你并行运行多个 profile 并希望在 `hermes update` 后全部重启时很有用。 |
+| `--all` | 在 `start` / `restart` / `stop` 时：对**每个 profile** 的 gateway 执行操作，而不仅限于活跃的 `DOPPEL_HOME`（同时仍兼容旧版 `HERMES_HOME`）。当你并行运行多个 profile 并希望在 `doppel update` 后全部重启时很有用。 |
 | `--no-supervise` | 在 `run` 时：在 s6-overlay Docker 镜像内部，跳过 s6 自动监管，退回到 pre-s6 前台语义——gateway 作为容器主进程运行，无自动重启。在 s6 镜像之外为空操作。等同于设置 `HERMES_GATEWAY_NO_SUPERVISE=1`。 |
 
 :::tip WSL 用户
-使用 `hermes gateway run` 而非 `hermes gateway start`——WSL 的 systemd 支持不稳定。用 tmux 包裹以保持持久运行：`tmux new -s hermes 'hermes gateway run'`。详见 [WSL FAQ](/reference/faq#wsl-gateway-keeps-disconnecting-or-hermes-gateway-start-fails)。
+使用 `doppel gateway run` 而非 `doppel gateway start`——WSL 的 systemd 支持不稳定。用 tmux 包裹以保持持久运行：`tmux new -s doppel 'doppel gateway run'`。详见 [WSL FAQ](/reference/faq#wsl-gateway-keeps-disconnecting-or-hermes-gateway-start-fails)。
 :::
 
-## `hermes lsp`
+## `doppel lsp`
 
 ```bash
-hermes lsp <subcommand>
+doppel lsp <subcommand>
 ```
 
 管理 Language Server Protocol 集成。LSP 在后台运行真实的语言服务器（pyright、gopls、rust-analyzer 等），并将其诊断信息输入 `write_file` 和 `patch` 使用的写后检查。受 git 工作区检测限制——仅当 cwd 或编辑的文件位于 git worktree 内时，LSP 才会运行。
@@ -255,11 +255,13 @@ hermes lsp <subcommand>
 
 完整指南、支持的语言和配置项，请参阅 [LSP — 语义诊断](/user-guide/features/lsp)。
 
-## `hermes setup`
+## `doppel setup`
 
 ```bash
-hermes setup [model|tts|terminal|gateway|tools|agent] [--non-interactive] [--reset] [--quick] [--reconfigure] [--portal]
+doppel setup [model|tts|terminal|gateway|tools|agent] [--non-interactive] [--reset] [--quick] [--reconfigure] [--portal]
 ```
+
+**最简单路径：** `doppel setup --portal` —— 通过 OAuth 登录 Nous Portal，并一键选择加入 [Tool Gateway](../user-guide/features/tool-gateway.md)。
 
 **首次运行：** 启动首次使用向导。
 
@@ -282,13 +284,13 @@ hermes setup [model|tts|terminal|gateway|tools|agent] [--non-interactive] [--res
 | `--quick` | 在已配置用户运行时：仅提示缺失或未设置的项目，跳过已配置的项目。 |
 | `--non-interactive` | 使用默认值/环境变量，不显示提示。 |
 | `--reset` | 在设置前将配置重置为默认值。 |
-| `--reconfigure` | 向后兼容别名——在已有安装上裸运行 `hermes setup` 现在默认执行此操作。 |
+| `--reconfigure` | 向后兼容别名——在已有安装上裸运行 `doppel setup` 现在默认执行此操作。 |
 | `--portal` | 一键 Nous Portal 设置：通过 OAuth 登录，将 Nous 设为推理 provider，并选择加入 [Tool Gateway](../user-guide/features/tool-gateway.md)。跳过向导其余部分。 |
 
-## `hermes portal`
+## `doppel portal`
 
 ```bash
-hermes portal [status|open|tools]
+doppel portal [status|open|tools]
 ```
 
 检查 Nous Portal 认证、Tool Gateway 路由，并访问订阅页面。不带子命令时运行 `status`。
@@ -299,7 +301,7 @@ hermes portal [status|open|tools]
 | `open` | 在默认浏览器中打开 `portal.nousresearch.com/manage-subscription`。 |
 | `tools` | 列出每个 Tool Gateway 合作伙伴（Firecrawl、FAL、OpenAI TTS、Browser Use、Modal）及哪些通过 Nous 路由。 |
 
-关于 gateway 本身的配置，请参阅 [Tool Gateway](../user-guide/features/tool-gateway.md)。关于一键设置路径，请参阅上方的 `hermes setup --portal`。
+关于 gateway 本身的配置，请参阅 [Tool Gateway](../user-guide/features/tool-gateway.md)。关于一键设置路径，请参阅上方的 `doppel setup --portal`。
 
 ## `hermes whatsapp`
 

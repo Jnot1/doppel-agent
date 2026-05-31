@@ -169,6 +169,9 @@ stdenv.mkDerivation {
           ${lib.optionalString (extraPythonPackages != [ ]) ''--suffix PYTHONPATH : "${pythonPath}"''}
       '')
       [
+        "doppel"
+        "doppel-agent"
+        "doppel-acp"
         "hermes"
         "hermes-agent"
         "hermes-acp"
@@ -213,7 +216,7 @@ stdenv.mkDerivation {
   meta = with lib; {
     description = "Doppel Agent: Your Everyday Personal AI Assistant";
     homepage = "https://github.com/Jnot1/doppel-agent";
-    mainProgram = "hermes";
+    mainProgram = "doppel";
     license = licenses.mit;
     platforms = platforms.unix;
   };

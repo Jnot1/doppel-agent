@@ -226,6 +226,8 @@ nix flake update hermes-agent
 nix profile upgrade hermes-agent
 ```
 
+The package-manager identifiers stay `hermes-agent` in this phase even though packaged installs now prefer the `doppel` CLI entrypoints and keep `hermes` as a compatibility alias.
+
 Nix installations are immutable — rollback is handled by Nix's generation system:
 
 ```bash
@@ -256,7 +258,7 @@ rm -rf ~/.doppel            # Optional — keep if you plan to reinstall
 ### Manual Uninstall
 
 ```bash
-rm -f ~/.local/bin/doppel
+rm -f ~/.local/bin/doppel ~/.local/bin/hermes
 rm -rf /path/to/doppel-agent
 rm -rf ~/.doppel            # Optional — keep if you plan to reinstall
 ```
@@ -265,7 +267,7 @@ rm -rf ~/.doppel            # Optional — keep if you plan to reinstall
 If you installed the gateway as a system service, stop and disable it first:
 ```bash
 doppel gateway stop
-# Linux: systemctl --user disable hermes-gateway
-# macOS: launchctl remove ai.hermes.gateway
+# Linux: systemctl --user disable doppel-gateway
+# macOS: launchctl remove ai.doppel.gateway
 ```
 :::

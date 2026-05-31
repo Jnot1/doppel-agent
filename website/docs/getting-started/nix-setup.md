@@ -14,16 +14,16 @@ Doppel Agent ships a Nix flake with three levels of integration:
 | **NixOS module (native)** | NixOS server deployments | Declarative config, hardened systemd service, managed secrets |
 | **NixOS module (container)** | Agents that need self-modification | Everything above, plus a persistent Ubuntu container where the agent can `apt`/`pip`/`npm install` |
 
-:::note Current Nix binary names
-During this rebrand phase, the Nix packages still expose the existing `hermes`, `hermes-agent`, and `hermes-acp` binaries. The repo/input URLs below point at the Doppel fork, but the command examples keep the current package names intentionally until the Nix package surface is migrated.
+:::note Current Nix package and binary surface
+The Nix package name and service/module identifiers still stay on the existing `hermes-agent` contract in this phase. Packaged installs now expose the preferred `doppel`, `doppel-agent`, and `doppel-acp` entrypoints alongside the legacy `hermes`, `hermes-agent`, and `hermes-acp` aliases, so command examples below use Doppel-first CLI names while keeping the package-manager identifiers explicit where they are still real contracts.
 :::
 
 :::info What's different from the standard install
 The `curl | bash` installer manages Python, Node, and dependencies itself. The Nix flake replaces all of that — every Python dependency is a Nix derivation built by [uv2nix](https://github.com/pyproject-nix/uv2nix), and runtime tools (Node.js, git, ripgrep, ffmpeg) are wrapped into the binary's PATH. There is no runtime pip, no venv activation, no `npm install`.
 
-**For non-NixOS users**, this only changes the install step. Everything after (`hermes setup`, `hermes gateway install`, config editing) works identically to the standard install.
+**For non-NixOS users**, this only changes the install step. Everything after (`doppel setup`, `doppel gateway install`, config editing) works identically to the standard install.
 
-**For NixOS module users**, the entire lifecycle is different: configuration lives in `configuration.nix`, secrets go through sops-nix/agenix, the service is a systemd unit, and CLI config commands are blocked. You manage hermes the same way you manage any other NixOS service.
+**For NixOS module users**, the entire lifecycle is different: configuration lives in `configuration.nix`, secrets go through sops-nix/agenix, the service is a systemd unit, and CLI config commands are blocked. You manage Doppel the same way you manage any other NixOS service.
 :::
 
 ## Prerequisites
@@ -44,11 +44,11 @@ nix run github:Jnot1/doppel-agent -- chat
 
 # Or install persistently
 nix profile install github:Jnot1/doppel-agent
-hermes setup
-hermes chat
+doppel setup
+doppel chat
 ```
 
-After `nix profile install`, `hermes`, `hermes-agent`, and `hermes-acp` are on your PATH. From here, the workflow is identical to the [standard installation](./installation.md) — `hermes setup` walks you through provider selection, `hermes gateway install` sets up a launchd (macOS) or systemd user service, and config lives in `~/.hermes/`.
+After `nix profile install`, `doppel`, `doppel-agent`, and `doppel-acp` are on your PATH, with `hermes`, `hermes-agent`, and `hermes-acp` kept as compatibility aliases. From here, the workflow is identical to the [standard installation](./installation.md) — `doppel setup` walks you through provider selection, `doppel gateway install` sets up a launchd (macOS) or systemd user service, and fresh installs keep config in `~/.doppel/` (legacy `~/.hermes/` trees still work).
 
 :::warning Messaging platforms (Discord, Telegram, Slack)
 The default package doesn't include messaging platform libraries — they were moved to on-demand installation, which can't work in Nix's read-only environment. If you plan to connect the agent to Discord, Telegram, or Slack, install the `messaging` variant:
@@ -73,7 +73,7 @@ The `full` variant adds ~700 MB to the closure. If you only need messaging platf
 git clone https://github.com/Jnot1/doppel-agent.git
 cd doppel-agent
 nix build
-./result/bin/hermes setup
+./result/bin/doppel setup
 ```
 
 </details>
@@ -139,18 +139,18 @@ services.hermes-agent.environmentFiles = [ "/var/lib/hermes/env" ];
 :::
 
 :::tip addToSystemPackages
-Setting `addToSystemPackages = true` does two things: puts the `hermes` CLI on your system PATH **and** sets `HERMES_HOME` system-wide so the interactive CLI shares state (sessions, skills, cron) with the gateway service. Without it, running `hermes` in your shell creates a separate `~/.hermes/` directory.
+Setting `addToSystemPackages = true` does two things: puts the preferred `doppel` CLI on your system PATH (with `hermes` kept as a compatibility alias) **and** sets `HERMES_HOME` system-wide so the interactive CLI shares state (sessions, skills, cron) with the gateway service. Without it, running `doppel` in your shell creates a separate `~/.doppel/` directory.
 :::
 
 ### Container-aware CLI
 
 :::info
-When `container.enable = true` and `addToSystemPackages = true`, **every** `hermes` command on the host automatically routes into the managed container. This means your interactive CLI session runs inside the same environment as the gateway service — with access to all container-installed packages and tools.
+When `container.enable = true` and `addToSystemPackages = true`, **every** `doppel` command on the host automatically routes into the managed container. The legacy `hermes` alias follows the same path. This means your interactive CLI session runs inside the same environment as the gateway service — with access to all container-installed packages and tools.
 
-- The routing is transparent: `hermes chat`, `hermes sessions list`, `hermes version`, etc. all exec into the container under the hood
+- The routing is transparent: `doppel chat`, `doppel sessions list`, `doppel version`, etc. all exec into the container under the hood
 - All CLI flags are forwarded as-is
 - If the container isn't running, the CLI retries briefly (5s with a spinner for interactive use, 10s silently for scripts) then fails with a clear error — no silent fallback
-- For developers working on the hermes codebase, set `HERMES_DEV=1` to bypass container routing and run the local checkout directly
+- For developers working on the Doppel codebase, set `HERMES_DEV=1` to bypass container routing and run the local checkout directly
 
 Set `container.hostUsers` to create a `~/.hermes` symlink to the service state directory, so the host CLI and the container share sessions, config, and memories:
 
@@ -176,7 +176,7 @@ security.sudo.extraRules = [{
 }];
 ```
 
-The CLI auto-detects when sudo is needed and uses it transparently. Without this, you'll need to run `sudo hermes chat` manually.
+The CLI auto-detects when sudo is needed and uses it transparently. Without this, you'll need to run `sudo doppel chat` manually.
 :::
 
 ### Verify It Works
@@ -191,8 +191,8 @@ systemctl status hermes-agent
 journalctl -u hermes-agent -f
 
 # If addToSystemPackages is true, test the CLI
-hermes version
-hermes config       # shows the generated config
+doppel version
+doppel config       # shows the generated config
 ```
 
 ### Choosing a Deployment Mode
@@ -543,20 +543,20 @@ Some MCP servers can request LLM completions from the agent:
 
 ## Managed Mode
 
-When hermes runs via the NixOS module, the following CLI commands are **blocked** with a descriptive error pointing you to `configuration.nix`:
+When Doppel runs via the NixOS module, the following CLI commands are **blocked** with a descriptive error pointing you to `configuration.nix`:
 
 | Blocked command | Why |
 |---|---|
-| `hermes setup` | Config is declarative — edit `settings` in your Nix config |
-| `hermes config edit` | Config is generated from `settings` |
-| `hermes config set <key> <value>` | Config is generated from `settings` |
-| `hermes gateway install` | The systemd service is managed by NixOS |
-| `hermes gateway uninstall` | The systemd service is managed by NixOS |
+| `doppel setup` | Config is declarative — edit `settings` in your Nix config |
+| `doppel config edit` | Config is generated from `settings` |
+| `doppel config set <key> <value>` | Config is generated from `settings` |
+| `doppel gateway install` | The systemd service is managed by NixOS |
+| `doppel gateway uninstall` | The systemd service is managed by NixOS |
 
 This prevents drift between what Nix declares and what's on disk. Detection uses two signals:
 
 1. **`HERMES_MANAGED=true`** environment variable — set by the systemd service, visible to the gateway process
-2. **`.managed` marker file** in `HERMES_HOME` — set by the activation script, visible to interactive shells (e.g., `docker exec -it hermes-agent hermes config set ...` is also blocked)
+2. **`.managed` marker file** in `HERMES_HOME` — set by the activation script, visible to interactive shells (e.g., `docker exec -it hermes-agent doppel config set ...` is also blocked)
 
 To change configuration, edit your Nix config and run `sudo nixos-rebuild switch`.
 
@@ -768,7 +768,7 @@ A build-time collision check prevents plugin packages from shadowing core hermes
 The flake provides a development shell with Python 3.12, uv, Node.js, and all runtime tools:
 
 ```bash
-cd hermes-agent
+cd doppel-agent
 nix develop
 
 # Shell provides:
@@ -776,8 +776,8 @@ nix develop
 #   - Node.js 22, ripgrep, git, openssh, ffmpeg on PATH
 #   - Stamp-file optimization: re-entry is near-instant if deps haven't changed
 
-hermes setup
-hermes chat
+doppel setup
+doppel chat
 ```
 
 ### direnv (Recommended)
@@ -785,7 +785,7 @@ hermes chat
 The included `.envrc` activates the dev shell automatically:
 
 ```bash
-cd hermes-agent
+cd doppel-agent
 direnv allow    # one-time
 # Subsequent entries are near-instant (stamp file skips dep install)
 ```
@@ -812,10 +812,10 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Check | What it tests |
 |---|---|
-| `package-contents` | `hermes` and `hermes-agent` binaries exist and `hermes version` runs |
+| `package-contents` | `doppel*` and `hermes*` binaries exist and both `doppel version` and `hermes version` run |
 | `entry-points-sync` | Every `[project.scripts]` entry in `pyproject.toml` has a wrapped binary in the Nix package |
-| `cli-commands` | `hermes --help` exposes `gateway` and `config` subcommands |
-| `managed-guard` | `HERMES_MANAGED=true hermes config set ...` prints the NixOS error |
+| `cli-commands` | Both `doppel --help` and `hermes --help` expose `gateway` and `config` subcommands |
+| `managed-guard` | `HERMES_MANAGED=true doppel config set ...` and `HERMES_MANAGED=true hermes config set ...` both print the NixOS error |
 | `bundled-skills` | Skills directory exists, contains SKILL.md files, `HERMES_BUNDLED_SKILLS` is set in wrapper |
 | `config-roundtrip` | 7 merge scenarios: fresh install, Nix override, user key preservation, mixed merge, MCP additive merge, nested deep merge, idempotency |
 
@@ -836,7 +836,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 | `createUser` | `bool` | `true` | Auto-create user/group |
 | `stateDir` | `str` | `"/var/lib/hermes"` | State directory (`HERMES_HOME` parent) |
 | `workingDirectory` | `str` | `"${stateDir}/workspace"` | Agent working directory |
-| `addToSystemPackages` | `bool` | `false` | Add `hermes` CLI to system PATH and set `HERMES_HOME` system-wide |
+| `addToSystemPackages` | `bool` | `false` | Add the preferred `doppel` CLI to system PATH, keep `hermes` as a compatibility alias, and set `HERMES_HOME` system-wide |
 
 ### Configuration
 
@@ -1017,7 +1017,7 @@ nix-store --query --roots $(docker exec hermes-agent readlink /data/current-pack
 | `Cannot save configuration: managed by NixOS` | CLI guards active | Edit `configuration.nix` and `nixos-rebuild switch` |
 | `No adapter available for discord` (or telegram/slack) | Messaging deps missing from the sealed Nix venv | Install `#messaging` variant: `nix profile install ...#messaging`. For NixOS module: `extraDependencyGroups = [ "messaging" ]`. Check `journalctl -u hermes-agent` for `FeatureUnavailable` or `requirements not met` for the underlying error. |
 | Container recreated unexpectedly | `extraVolumes`, `extraOptions`, or `image` changed | Expected — writable layer resets. Reinstall packages or use a custom image |
-| `hermes version` shows old version | Container not restarted | `systemctl restart hermes-agent` |
+| `doppel version` shows old version | Container not restarted | `systemctl restart hermes-agent` |
 | Permission denied on `/var/lib/hermes` | State dir is `0750 hermes:hermes` | Use `docker exec` or `sudo -u hermes` |
 | `nix-collect-garbage` removed hermes | GC root missing | Restart the service (preStart recreates the GC root) |
 | `no container with name or ID "hermes-agent"` (Podman) | Podman rootful container not visible to regular user | Add passwordless sudo for podman (see [Container Mode](#container-mode) section) |

@@ -63,12 +63,17 @@ json.dump(sorted(leaf_paths(DEFAULT_CONFIG)), sys.stdout, indent=2)
         package-contents = pkgs.runCommand "hermes-package-contents" { } ''
           set -e
           echo "=== Checking binaries ==="
+          test -x ${hermes-agent}/bin/doppel || (echo "FAIL: doppel binary missing"; exit 1)
+          test -x ${hermes-agent}/bin/doppel-agent || (echo "FAIL: doppel-agent binary missing"; exit 1)
+          test -x ${hermes-agent}/bin/doppel-acp || (echo "FAIL: doppel-acp binary missing"; exit 1)
           test -x ${hermes-agent}/bin/hermes || (echo "FAIL: hermes binary missing"; exit 1)
           test -x ${hermes-agent}/bin/hermes-agent || (echo "FAIL: hermes-agent binary missing"; exit 1)
+          test -x ${hermes-agent}/bin/hermes-acp || (echo "FAIL: hermes-acp binary missing"; exit 1)
           echo "PASS: All binaries present"
 
           echo "=== Checking version ==="
-          ${hermes-agent}/bin/hermes version 2>&1 | grep -qi "hermes" || (echo "FAIL: version check"; exit 1)
+          ${hermes-agent}/bin/doppel version 2>&1 | grep -qi "doppel" || (echo "FAIL: doppel version check"; exit 1)
+          ${hermes-agent}/bin/hermes version 2>&1 | grep -qi "doppel" || (echo "FAIL: hermes alias version check"; exit 1)
           echo "PASS: Version check"
 
           echo "=== All checks passed ==="
@@ -80,7 +85,7 @@ json.dump(sorted(leaf_paths(DEFAULT_CONFIG)), sys.stdout, indent=2)
         entry-points-sync = pkgs.runCommand "hermes-entry-points-sync" { } ''
           set -e
           echo "=== Checking entry points match pyproject.toml [project.scripts] ==="
-          for bin in hermes hermes-agent hermes-acp; do
+          for bin in doppel doppel-agent doppel-acp hermes hermes-agent hermes-acp; do
             test -x ${hermes-agent}/bin/$bin || (echo "FAIL: $bin binary missing from Nix package"; exit 1)
             echo "PASS: $bin present"
           done
@@ -94,10 +99,15 @@ json.dump(sorted(leaf_paths(DEFAULT_CONFIG)), sys.stdout, indent=2)
           set -e
           export HOME=$(mktemp -d)
 
+          echo "=== Checking doppel --help ==="
+          ${hermes-agent}/bin/doppel --help 2>&1 | grep -q "gateway" || (echo "FAIL: doppel gateway subcommand missing"; exit 1)
+          ${hermes-agent}/bin/doppel --help 2>&1 | grep -q "config" || (echo "FAIL: doppel config subcommand missing"; exit 1)
+          echo "PASS: Doppel subcommands accessible"
+
           echo "=== Checking hermes --help ==="
           ${hermes-agent}/bin/hermes --help 2>&1 | grep -q "gateway" || (echo "FAIL: gateway subcommand missing"; exit 1)
           ${hermes-agent}/bin/hermes --help 2>&1 | grep -q "config" || (echo "FAIL: config subcommand missing"; exit 1)
-          echo "PASS: All subcommands accessible"
+          echo "PASS: Legacy alias subcommands accessible"
 
           echo "=== All CLI checks passed ==="
           mkdir -p $out
@@ -202,8 +212,10 @@ json.dump(sorted(leaf_paths(DEFAULT_CONFIG)), sys.stdout, indent=2)
           }
 
           echo "=== Checking HERMES_MANAGED guards ==="
-          check_blocked "config set" ${hermes-agent}/bin/hermes config set model foo
-          check_blocked "config edit" ${hermes-agent}/bin/hermes config edit
+          check_blocked "doppel config set" ${hermes-agent}/bin/doppel config set model foo
+          check_blocked "doppel config edit" ${hermes-agent}/bin/doppel config edit
+          check_blocked "hermes config set" ${hermes-agent}/bin/hermes config set model foo
+          check_blocked "hermes config edit" ${hermes-agent}/bin/hermes config edit
 
           echo "=== All guard checks passed ==="
           mkdir -p $out

@@ -17,9 +17,13 @@ Doppel Agent 提供了一个 Nix flake，支持三个层级的集成：
 :::info 与标准安装的区别
 `curl | bash` 安装程序自行管理 Python、Node 及依赖项。Nix flake 替代了所有这些——每个 Python 依赖都是由 [uv2nix](https://github.com/pyproject-nix/uv2nix) 构建的 Nix derivation，运行时工具（Node.js、git、ripgrep、ffmpeg）已封装进二进制文件的 PATH 中。不需要运行时 pip，不需要激活 venv，不需要 `npm install`。
 
-**对于非 NixOS 用户**，这只影响安装步骤。之后的操作（`hermes setup`、`hermes gateway install`、编辑配置）与标准安装完全相同。
+**对于非 NixOS 用户**，这只影响安装步骤。之后的操作（`doppel setup`、`doppel gateway install`、编辑配置）与标准安装完全相同。
 
-**对于 NixOS 模块用户**，整个生命周期有所不同：配置存放在 `configuration.nix` 中，密钥通过 sops-nix/agenix 管理，服务是一个 systemd 单元，CLI 配置命令被屏蔽。管理 hermes 的方式与管理其他 NixOS 服务相同。
+**对于 NixOS 模块用户**，整个生命周期有所不同：配置存放在 `configuration.nix` 中，密钥通过 sops-nix/agenix 管理，服务是一个 systemd 单元，CLI 配置命令被屏蔽。管理 Doppel 的方式与管理其他 NixOS 服务相同。
+:::
+
+:::note 当前 Nix 包与二进制入口
+Nix 包名与服务/模块标识在当前阶段仍保持 `hermes-agent`。打包安装会同时暴露首选入口点 `doppel`、`doppel-agent`、`doppel-acp`，同时保留历史兼容别名 `hermes`、`hermes-agent`、`hermes-acp`。下面示例默认采用 `doppel*`，并将 `hermes*` 作为兼容入口保留。
 :::
 
 ## 前提条件
@@ -40,11 +44,27 @@ nix run github:Jnot1/doppel-agent -- chat
 
 # 或持久化安装
 nix profile install github:Jnot1/doppel-agent
-hermes setup
-hermes chat
+doppel setup
+doppel chat
 ```
 
-执行 `nix profile install` 后，`hermes`、`hermes-agent` 和 `hermes-acp` 将出现在你的 PATH 中。之后的工作流与[标准安装](./installation.md)完全相同——`hermes setup` 引导你完成提供商选择，`hermes gateway install` 设置 launchd（macOS）或 systemd 用户服务，配置存放在 `~/.hermes/`。
+执行 `nix profile install` 后，`doppel`、`doppel-agent` 和 `doppel-acp` 将出现在你的 PATH 中，`hermes`、`hermes-agent`、`hermes-acp` 保留为兼容别名。之后的工作流与[标准安装](./installation.md)完全相同——`doppel setup` 引导你完成提供商选择，`doppel gateway install` 设置 launchd（macOS）或 systemd 用户服务，配置存放在 `~/.doppel/`（`~/.hermes/` 旧目录仍兼容）。
+
+:::warning 消息平台能力（Discord、Telegram、Slack）
+默认包不包含消息平台依赖库，它们已迁移到按需安装。若你要连接 Discord、Telegram 或 Slack，需要安装 `messaging` 变体：
+
+```bash
+nix profile install github:Jnot1/doppel-agent#messaging
+```
+
+要启用所有可选能力（语音、全部 provider、全部平台）：
+
+```bash
+nix profile install github:Jnot1/doppel-agent#full
+```
+
+其中 `full` 变体会新增约 700 MB；仅需消息平台时，`#messaging` 大约只增加 33 MB。
+:::
 
 <details>
 <summary><strong>从本地克隆构建</strong></summary>
@@ -53,7 +73,7 @@ hermes chat
 git clone https://github.com/Jnot1/doppel-agent.git
 cd doppel-agent
 nix build
-./result/bin/hermes setup
+./result/bin/doppel setup
 ```
 
 </details>
@@ -119,18 +139,18 @@ services.hermes-agent.environmentFiles = [ "/var/lib/hermes/env" ];
 :::
 
 :::tip addToSystemPackages
-设置 `addToSystemPackages = true` 有两个作用：将 `hermes` CLI 添加到系统 PATH，**并**在系统范围内设置 `HERMES_HOME`，使交互式 CLI 与 gateway 服务共享状态（会话、技能、cron）。不设置此项时，在 shell 中运行 `hermes` 会创建独立的 `~/.hermes/` 目录。
+设置 `addToSystemPackages = true` 有两个作用：将首选的 `doppel` CLI 添加到系统 PATH（同时保留 `hermes` 作为兼容别名），**并**在系统范围内设置 `HERMES_HOME`，使交互式 CLI 与 gateway 服务共享状态（会话、技能、cron）。不设置此项时，在 shell 中运行 `doppel` 会创建独立的 `~/.doppel/` 目录。
 :::
 
 ### 容器感知 CLI
 
 :::info
-当 `container.enable = true` 且 `addToSystemPackages = true` 时，主机上的**所有** `hermes` 命令都会自动路由到托管容器中执行。这意味着你的交互式 CLI 会话在与 gateway 服务相同的环境中运行——可以访问所有容器内安装的包和工具。
+当 `container.enable = true` 且 `addToSystemPackages = true` 时，主机上的**所有** `doppel` 命令都会自动路由到托管容器中执行，历史兼容别名 `hermes` 也会走同一路径。这意味着你的交互式 CLI 会话在与 gateway 服务相同的环境中运行——可以访问所有容器内安装的包和工具。
 
-- 路由是透明的：`hermes chat`、`hermes sessions list`、`hermes version` 等命令都会在底层 exec 进容器
+- 路由是透明的：`doppel chat`、`doppel sessions list`、`doppel version` 等命令都会在底层 exec 进容器
 - 所有 CLI 参数原样转发
 - 如果容器未运行，CLI 会短暂重试（交互式使用时显示 5 秒 spinner，脚本中静默等待 10 秒），然后以明确的错误退出——不会静默回退
-- 对于在 hermes 代码库上工作的开发者，设置 `HERMES_DEV=1` 可绕过容器路由，直接运行本地检出版本
+- 对于在 Doppel 代码库上工作的开发者，设置 `HERMES_DEV=1` 可绕过容器路由，直接运行本地检出版本
 
 设置 `container.hostUsers` 可创建 `~/.hermes` 到服务状态目录的符号链接，使主机 CLI 和容器共享会话、配置和记忆：
 
@@ -156,7 +176,7 @@ security.sudo.extraRules = [{
 }];
 ```
 
-CLI 会自动检测何时需要 sudo 并透明地使用它。没有此配置，你需要手动运行 `sudo hermes chat`。
+CLI 会自动检测何时需要 sudo 并透明地使用它。没有此配置，你需要手动运行 `sudo doppel chat`。
 :::
 
 ### 验证运行状态
@@ -171,8 +191,8 @@ systemctl status hermes-agent
 journalctl -u hermes-agent -f
 
 # 如果 addToSystemPackages 为 true，测试 CLI
-hermes version
-hermes config       # 显示生成的配置
+doppel version
+doppel config       # 显示生成的配置
 ```
 
 ### 选择部署模式
@@ -522,15 +542,15 @@ scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
 
 ## 托管模式
 
-当 hermes 通过 NixOS 模块运行时，以下 CLI 命令会被**屏蔽**，并显示指向 `configuration.nix` 的描述性错误：
+当 Doppel 通过 NixOS 模块运行时，以下 CLI 命令会被**屏蔽**，并显示指向 `configuration.nix` 的描述性错误：
 
 | 被屏蔽的命令 | 原因 |
 |---|---|
-| `hermes setup` | 配置是声明式的——请在 Nix 配置中编辑 `settings` |
-| `hermes config edit` | 配置由 `settings` 生成 |
-| `hermes config set <key> <value>` | 配置由 `settings` 生成 |
-| `hermes gateway install` | systemd 服务由 NixOS 管理 |
-| `hermes gateway uninstall` | systemd 服务由 NixOS 管理 |
+| `doppel setup` | 配置是声明式的——请在 Nix 配置中编辑 `settings` |
+| `doppel config edit` | 配置由 `settings` 生成 |
+| `doppel config set <key> <value>` | 配置由 `settings` 生成 |
+| `doppel gateway install` | systemd 服务由 NixOS 管理 |
+| `doppel gateway uninstall` | systemd 服务由 NixOS 管理 |
 
 这可以防止 Nix 声明的内容与磁盘上实际内容之间产生漂移。检测使用两个信号：
 
@@ -727,8 +747,8 @@ nix develop
 #   - Node.js 22、ripgrep、git、openssh、ffmpeg 在 PATH 上
 #   - 戳记文件优化：依赖未变更时重新进入几乎即时
 
-hermes setup
-hermes chat
+doppel setup
+doppel chat
 ```
 
 ### direnv（推荐）
@@ -763,10 +783,10 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 
 | 检查 | 测试内容 |
 |---|---|
-| `package-contents` | `hermes` 和 `hermes-agent` 二进制文件存在且 `hermes version` 可运行 |
+| `package-contents` | `doppel*` 与 `hermes*` 二进制文件存在，且 `doppel version` 与 `hermes version` 均可运行 |
 | `entry-points-sync` | `pyproject.toml` 中 `[project.scripts]` 的每个条目在 Nix 包中都有对应的封装二进制文件 |
-| `cli-commands` | `hermes --help` 暴露 `gateway` 和 `config` 子命令 |
-| `managed-guard` | `HERMES_MANAGED=true hermes config set ...` 打印 NixOS 错误 |
+| `cli-commands` | `doppel --help` 与 `hermes --help` 都会暴露 `gateway` 和 `config` 子命令 |
+| `managed-guard` | `HERMES_MANAGED=true doppel config set ...` 与 `HERMES_MANAGED=true hermes config set ...` 都会打印 NixOS 错误 |
 | `bundled-skills` | skills 目录存在，包含 SKILL.md 文件，wrapper 中设置了 `HERMES_BUNDLED_SKILLS` |
 | `config-roundtrip` | 7 种合并场景：全新安装、Nix 覆盖、用户键保留、混合合并、MCP 累加合并、嵌套深度合并、幂等性 |
 
@@ -787,7 +807,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # 合并脚本保留用户�
 | `createUser` | `bool` | `true` | 自动创建用户/组 |
 | `stateDir` | `str` | `"/var/lib/hermes"` | 状态目录（`HERMES_HOME` 的父目录） |
 | `workingDirectory` | `str` | `"${stateDir}/workspace"` | Agent 工作目录（`MESSAGING_CWD`） |
-| `addToSystemPackages` | `bool` | `false` | 将 `hermes` CLI 添加到系统 PATH 并在系统范围内设置 `HERMES_HOME` |
+| `addToSystemPackages` | `bool` | `false` | 将首选的 `doppel` CLI 添加到系统 PATH，保留 `hermes` 兼容别名，并在系统范围内设置 `HERMES_HOME` |
 
 ### 配置
 
@@ -967,7 +987,7 @@ nix-store --query --roots $(docker exec hermes-agent readlink /data/current-pack
 |---|---|---|
 | `Cannot save configuration: managed by NixOS` | CLI 守卫已激活 | 编辑 `configuration.nix` 并执行 `nixos-rebuild switch` |
 | 容器意外重建 | `extraVolumes`、`extraOptions` 或 `image` 发生变更 | 预期行为——可写层重置。重新安装包或使用自定义镜像 |
-| `hermes version` 显示旧版本 | 容器未重启 | `systemctl restart hermes-agent` |
+| `doppel version` 显示旧版本 | 容器未重启 | `systemctl restart hermes-agent` |
 | `/var/lib/hermes` 权限拒绝 | 状态目录为 `0750 hermes:hermes` | 使用 `docker exec` 或 `sudo -u hermes` |
 | `nix-collect-garbage` 删除了 hermes | GC root 缺失 | 重启服务（preStart 会重新创建 GC root） |
 | `no container with name or ID "hermes-agent"`（Podman） | Podman rootful 容器对普通用户不可见 | 为 podman 添加免密 sudo（参见[容器模式](#container-mode)章节） |

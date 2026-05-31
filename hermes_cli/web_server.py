@@ -48,6 +48,7 @@ from hermes_cli.config import (
     check_config_version,
     redact_key,
 )
+from hermes_constants import get_customer_facing_env_value
 from gateway.status import get_running_pid, read_runtime_status
 from utils import env_var_enabled
 
@@ -1902,7 +1903,11 @@ async def _start_device_code_flow(provider_id: str) -> Dict[str, Any]:
         import httpx
         pconfig = PROVIDER_REGISTRY["nous"]
         portal_base_url = (
-            os.getenv("HERMES_PORTAL_BASE_URL")
+            get_customer_facing_env_value(
+                "DOPPEL_PORTAL_BASE_URL",
+                "HERMES_PORTAL_BASE_URL",
+                "",
+            )
             or os.getenv("NOUS_PORTAL_BASE_URL")
             or pconfig.portal_base_url
         ).rstrip("/")

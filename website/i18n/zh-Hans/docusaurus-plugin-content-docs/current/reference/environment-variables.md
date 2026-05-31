@@ -14,8 +14,8 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 |----------|-------------|
 | `OPENROUTER_API_KEY` | OpenRouter API 密钥（推荐，灵活性强） |
 | `OPENROUTER_BASE_URL` | 覆盖 OpenRouter 兼容的 base URL |
-| `HERMES_OPENROUTER_CACHE` | 启用 OpenRouter 响应缓存（`1`/`true`/`yes`/`on`）。覆盖 config.yaml 中的 `openrouter.response_cache`。参见 [Response Caching](https://openrouter.ai/docs/guides/features/response-caching)。 |
-| `HERMES_OPENROUTER_CACHE_TTL` | 缓存 TTL（秒，1-86400）。覆盖 config.yaml 中的 `openrouter.response_cache_ttl`。 |
+| `DOPPEL_OPENROUTER_CACHE` | 启用 OpenRouter 响应缓存（`1`/`true`/`yes`/`on`）。覆盖 config.yaml 中的 `openrouter.response_cache`。参见 [Response Caching](https://openrouter.ai/docs/guides/features/response-caching)。 |
+| `DOPPEL_OPENROUTER_CACHE_TTL` | 缓存 TTL（秒，1-86400）。覆盖 config.yaml 中的 `openrouter.response_cache_ttl`。 |
 | `NOUS_BASE_URL` | 覆盖 Nous Portal base URL（极少使用；仅用于开发/测试） |
 | `NOUS_INFERENCE_BASE_URL` | 直接覆盖 Nous 推理端点 |
 | `OPENAI_API_KEY` | 自定义 OpenAI 兼容端点的 API 密钥（与 `OPENAI_BASE_URL` 配合使用） |
@@ -23,9 +23,9 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 | `COPILOT_GITHUB_TOKEN` | 用于 Copilot API 的 GitHub token——最高优先级（OAuth `gho_*` 或细粒度 PAT `github_pat_*`；经典 PAT `ghp_*` **不支持**） |
 | `GH_TOKEN` | GitHub token——Copilot 第二优先级（也供 `gh` CLI 使用） |
 | `GITHUB_TOKEN` | GitHub token——Copilot 第三优先级 |
-| `HERMES_COPILOT_ACP_COMMAND` | 覆盖 Copilot ACP CLI 二进制路径（默认：`copilot`） |
-| `COPILOT_CLI_PATH` | `HERMES_COPILOT_ACP_COMMAND` 的别名 |
-| `HERMES_COPILOT_ACP_ARGS` | 覆盖 Copilot ACP 参数（默认：`--acp --stdio`） |
+| `DOPPEL_COPILOT_ACP_COMMAND` | 覆盖 Copilot ACP CLI 二进制路径（默认：`copilot`） |
+| `COPILOT_CLI_PATH` | `DOPPEL_COPILOT_ACP_COMMAND` 的别名 |
+| `DOPPEL_COPILOT_ACP_ARGS` | 覆盖 Copilot ACP 参数（默认：`--acp --stdio`） |
 | `COPILOT_ACP_BASE_URL` | 覆盖 Copilot ACP base URL |
 | `GLM_API_KEY` | z.ai / ZhipuAI GLM API 密钥（[z.ai](https://z.ai)） |
 | `ZAI_API_KEY` | `GLM_API_KEY` 的别名 |
@@ -63,9 +63,9 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 | `GOOGLE_API_KEY` | Google AI Studio API 密钥（[aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)） |
 | `GEMINI_API_KEY` | `GOOGLE_API_KEY` 的别名 |
 | `GEMINI_BASE_URL` | 覆盖 Google AI Studio base URL |
-| `HERMES_GEMINI_CLIENT_ID` | `google-gemini-cli` PKCE 登录的 OAuth 客户端 ID（可选；默认使用 Google 公共 gemini-cli 客户端） |
-| `HERMES_GEMINI_CLIENT_SECRET` | `google-gemini-cli` 的 OAuth 客户端密钥（可选） |
-| `HERMES_GEMINI_PROJECT_ID` | 付费 Gemini 层级的 GCP 项目 ID（免费层级自动配置） |
+| `DOPPEL_GEMINI_CLIENT_ID` | `google-gemini-cli` PKCE 登录的 OAuth 客户端 ID（可选；默认使用 Google 公共 gemini-cli 客户端） |
+| `DOPPEL_GEMINI_CLIENT_SECRET` | `google-gemini-cli` 的 OAuth 客户端密钥（可选） |
+| `DOPPEL_GEMINI_PROJECT_ID` | 付费 Gemini 层级的 GCP 项目 ID（免费层级自动配置） |
 | `ANTHROPIC_API_KEY` | Anthropic Console API 密钥（[console.anthropic.com](https://console.anthropic.com/)） |
 | `ANTHROPIC_TOKEN` | 手动或旧版 Anthropic OAuth/setup-token 覆盖 |
 | `DASHSCOPE_API_KEY` | Qwen Cloud（阿里巴巴 DashScope）Qwen 模型 API 密钥（[modelstudio.console.alibabacloud.com](https://modelstudio.console.alibabacloud.com/)） |
@@ -86,7 +86,7 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 | `AWS_REGION` | Bedrock 推理的 AWS 区域（例如 `us-east-1`、`eu-central-1`）。由 boto3 读取。 |
 | `AWS_PROFILE` | Bedrock 认证的 AWS 命名配置文件（读取 `~/.aws/credentials`）。不设置则使用默认 boto3 凭证链。 |
 | `BEDROCK_BASE_URL` | 覆盖 Bedrock runtime base URL（默认：`https://bedrock-runtime.us-east-1.amazonaws.com`；通常不设置，改用 `AWS_REGION`） |
-| `HERMES_QWEN_BASE_URL` | Qwen Portal base URL 覆盖（默认：`https://portal.qwen.ai/v1`） |
+| `DOPPEL_QWEN_BASE_URL` | Qwen Portal base URL 覆盖（默认：`https://portal.qwen.ai/v1`） |
 | `OPENCODE_ZEN_API_KEY` | OpenCode Zen API 密钥——按需付费访问精选模型（[opencode.ai](https://opencode.ai/auth)） |
 | `OPENCODE_ZEN_BASE_URL` | 覆盖 OpenCode Zen base URL |
 | `OPENCODE_GO_API_KEY` | OpenCode Go API 密钥——$10/月订阅开源模型（[opencode.ai](https://opencode.ai/auth)） |
@@ -111,9 +111,9 @@ description: "Doppel Agent 使用的所有环境变量完整参考"
 
 | 变量 | 描述 |
 |----------|-------------|
-| `HERMES_PORTAL_BASE_URL` | 覆盖 Nous Portal URL（用于开发/测试） |
+| `DOPPEL_PORTAL_BASE_URL` | 覆盖 Nous Portal URL（用于开发/测试） |
 | `NOUS_INFERENCE_BASE_URL` | 覆盖 Nous 推理 API URL |
-| `HERMES_NOUS_MIN_KEY_TTL_SECONDS` | 重新铸造前的最小 agent 密钥 TTL（默认：1800 = 30 分钟） |
+| `DOPPEL_NOUS_MIN_KEY_TTL_SECONDS` | 重新铸造前的最小 agent 密钥 TTL（默认：1800 = 30 分钟） |
 | `DOPPEL_NOUS_TIMEOUT_SECONDS` | Nous 凭证/token 流程的 HTTP 超时 |
 | `HERMES_DUMP_REQUESTS` | 将 API 请求载荷转储到日志文件（`true`/`false`） |
 | `HERMES_PREFILL_MESSAGES_FILE` | 包含在 API 调用时注入的临时预填消息的 JSON 文件路径 |

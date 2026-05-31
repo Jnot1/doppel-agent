@@ -23,6 +23,7 @@ from typing import Any
 
 from agent.file_safety import get_read_block_error, is_write_denied
 from agent.redact import redact_sensitive_text
+from hermes_constants import get_customer_facing_env_value
 
 ACP_MARKER_BASE_URL = "acp://copilot"
 _DEFAULT_TIMEOUT_SECONDS = 900.0
@@ -55,14 +56,28 @@ def _is_gh_copilot_deprecation_message(stderr_text: str) -> bool:
 
 def _resolve_command() -> str:
     return (
-        os.getenv("HERMES_COPILOT_ACP_COMMAND", "").strip()
+        (
+            get_customer_facing_env_value(
+                "DOPPEL_COPILOT_ACP_COMMAND",
+                "HERMES_COPILOT_ACP_COMMAND",
+                "",
+            )
+            or ""
+        ).strip()
         or os.getenv("COPILOT_CLI_PATH", "").strip()
         or "copilot"
     )
 
 
 def _resolve_args() -> list[str]:
-    raw = os.getenv("HERMES_COPILOT_ACP_ARGS", "").strip()
+    raw = (
+        get_customer_facing_env_value(
+            "DOPPEL_COPILOT_ACP_ARGS",
+            "HERMES_COPILOT_ACP_ARGS",
+            "",
+        )
+        or ""
+    ).strip()
     if not raw:
         return ["--acp", "--stdio"]
     return shlex.split(raw)
@@ -450,7 +465,7 @@ class CopilotACPClient:
         except FileNotFoundError as exc:
             raise RuntimeError(
                 f"Could not start Copilot ACP command '{self._acp_command}'. "
-                "Install GitHub Copilot CLI or set HERMES_COPILOT_ACP_COMMAND/COPILOT_CLI_PATH."
+                "Install GitHub Copilot CLI or set DOPPEL_COPILOT_ACP_COMMAND/COPILOT_CLI_PATH."
             ) from exc
 
         if proc.stdin is None or proc.stdout is None:
@@ -530,17 +545,17 @@ class CopilotACPClient:
             if proc.poll() is not None and stderr_text:
                 if _is_gh_copilot_deprecation_message(stderr_text):
                     raise RuntimeError(
-                        "Hermes ACP mode requires the NEW GitHub Copilot CLI "
+                        "Doppel ACP mode requires the NEW GitHub Copilot CLI "
                         "(github.com/github/copilot-cli), but the binary it just "
                         "spawned is the deprecated `gh copilot` extension.\n\n"
                         "Install the new CLI:\n"
                         "  npm install -g @github/copilot\n"
                         "  # then verify with: copilot --help\n\n"
                         "If `copilot` already resolves to the new CLI but you still see this,\n"
-                        "point Hermes at it explicitly:\n"
-                        "  export HERMES_COPILOT_ACP_COMMAND=/path/to/new/copilot\n\n"
+                        "point Doppel at it explicitly:\n"
+                        "  export DOPPEL_COPILOT_ACP_COMMAND=/path/to/new/copilot\n\n"
                         "Alternative: use the `copilot` provider (no ACP, hits the Copilot API\n"
-                        "directly with a Copilot subscription token) via `hermes setup`.\n\n"
+                        "directly with a Copilot subscription token) via `doppel setup`.\n\n"
                         f"Original error:\n{stderr_text}"
                     )
                 raise RuntimeError(f"Copilot ACP process exited early: {stderr_text}")

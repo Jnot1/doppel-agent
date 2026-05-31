@@ -46,6 +46,7 @@ import httpx
 from hermes_cli.config import get_hermes_home, get_config_path, read_raw_config
 from hermes_constants import (
     OPENROUTER_BASE_URL,
+    get_customer_facing_env_value,
     get_docs_page_url,
     get_nous_portal_base_url,
     secure_parent_dir,
@@ -2063,7 +2064,10 @@ def resolve_qwen_runtime_credentials(
             code="qwen_access_token_missing",
         )
 
-    base_url = os.getenv("HERMES_QWEN_BASE_URL", "").strip().rstrip("/") or DEFAULT_QWEN_BASE_URL
+    base_url = (
+        _preferred_or_legacy_env("DOPPEL_QWEN_BASE_URL", "HERMES_QWEN_BASE_URL").rstrip("/")
+        or DEFAULT_QWEN_BASE_URL
+    )
     return {
         "provider": "qwen-oauth",
         "base_url": base_url,
@@ -4852,7 +4856,7 @@ def resolve_nous_access_token(
 
         portal_base_url = (
             _optional_base_url(state.get("portal_base_url"))
-            or os.getenv("HERMES_PORTAL_BASE_URL")
+            or _preferred_or_legacy_env("DOPPEL_PORTAL_BASE_URL", "HERMES_PORTAL_BASE_URL")
             or os.getenv("NOUS_PORTAL_BASE_URL")
             or DEFAULT_NOUS_PORTAL_URL
         ).rstrip("/")
@@ -5162,7 +5166,7 @@ def resolve_nous_runtime_credentials(
 
         portal_base_url = (
             _optional_base_url(state.get("portal_base_url"))
-            or os.getenv("HERMES_PORTAL_BASE_URL")
+            or _preferred_or_legacy_env("DOPPEL_PORTAL_BASE_URL", "HERMES_PORTAL_BASE_URL")
             or os.getenv("NOUS_PORTAL_BASE_URL")
             or DEFAULT_NOUS_PORTAL_URL
         ).rstrip("/")
@@ -5675,19 +5679,37 @@ def get_api_key_provider_status(provider_id: str) -> Dict[str, Any]:
     }
 
 
+def _preferred_or_legacy_env(preferred: str, legacy: str) -> str:
+    return (
+        get_customer_facing_env_value(preferred, legacy, "")
+        or ""
+    ).strip()
+
+
+def _resolve_copilot_acp_command_and_args() -> tuple[str, list[str]]:
+    command = (
+        _preferred_or_legacy_env(
+            "DOPPEL_COPILOT_ACP_COMMAND",
+            "HERMES_COPILOT_ACP_COMMAND",
+        )
+        or os.getenv("COPILOT_CLI_PATH", "").strip()
+        or "copilot"
+    )
+    raw_args = _preferred_or_legacy_env(
+        "DOPPEL_COPILOT_ACP_ARGS",
+        "HERMES_COPILOT_ACP_ARGS",
+    )
+    args = shlex.split(raw_args) if raw_args else ["--acp", "--stdio"]
+    return command, args
+
+
 def get_external_process_provider_status(provider_id: str) -> Dict[str, Any]:
     """Status snapshot for providers that run a local subprocess."""
     pconfig = PROVIDER_REGISTRY.get(provider_id)
     if not pconfig or pconfig.auth_type != "external_process":
         return {"configured": False}
 
-    command = (
-        os.getenv("HERMES_COPILOT_ACP_COMMAND", "").strip()
-        or os.getenv("COPILOT_CLI_PATH", "").strip()
-        or "copilot"
-    )
-    raw_args = os.getenv("HERMES_COPILOT_ACP_ARGS", "").strip()
-    args = shlex.split(raw_args) if raw_args else ["--acp", "--stdio"]
+    command, args = _resolve_copilot_acp_command_and_args()
     base_url = os.getenv(pconfig.base_url_env_var, "").strip() if pconfig.base_url_env_var else ""
     if not base_url:
         base_url = pconfig.inference_base_url
@@ -5878,18 +5900,12 @@ def resolve_external_process_provider_credentials(provider_id: str) -> Dict[str,
     if not base_url:
         base_url = pconfig.inference_base_url
 
-    command = (
-        os.getenv("HERMES_COPILOT_ACP_COMMAND", "").strip()
-        or os.getenv("COPILOT_CLI_PATH", "").strip()
-        or "copilot"
-    )
-    raw_args = os.getenv("HERMES_COPILOT_ACP_ARGS", "").strip()
-    args = shlex.split(raw_args) if raw_args else ["--acp", "--stdio"]
+    command, args = _resolve_copilot_acp_command_and_args()
     resolved_command = shutil.which(command) if command else None
     if not resolved_command and not base_url.startswith("acp+tcp://"):
         raise AuthError(
             f"Could not find the Copilot CLI command '{command}'. "
-            "Install GitHub Copilot CLI or set HERMES_COPILOT_ACP_COMMAND/COPILOT_CLI_PATH.",
+            "Install GitHub Copilot CLI or set DOPPEL_COPILOT_ACP_COMMAND/COPILOT_CLI_PATH.",
             provider=provider_id,
             code="missing_copilot_cli",
         )
@@ -7323,7 +7339,7 @@ def _nous_device_code_login(
     pconfig = PROVIDER_REGISTRY["nous"]
     portal_base_url = (
         portal_base_url
-        or os.getenv("HERMES_PORTAL_BASE_URL")
+        or _preferred_or_legacy_env("DOPPEL_PORTAL_BASE_URL", "HERMES_PORTAL_BASE_URL")
         or os.getenv("NOUS_PORTAL_BASE_URL")
         or pconfig.portal_base_url
     ).rstrip("/")

@@ -64,12 +64,12 @@ legacy 安装仍可能将该文件保留在 `~/.hermes/config.yaml` 中。
 | GMI Cloud | `gmi` | `GMI_API_KEY`（可选：`GMI_BASE_URL`） |
 | StepFun | `stepfun` | `STEPFUN_API_KEY`（可选：`STEPFUN_BASE_URL`） |
 | Ollama Cloud | `ollama-cloud` | `OLLAMA_API_KEY` |
-| Google Gemini（OAuth） | `google-gemini-cli` | `doppel model`（Google OAuth；可选：`HERMES_GEMINI_PROJECT_ID`） |
+| Google Gemini（OAuth） | `google-gemini-cli` | `doppel model`（Google OAuth；可选：`DOPPEL_GEMINI_PROJECT_ID`） |
 | Google AI Studio | `gemini` | `GOOGLE_API_KEY`（别名：`GEMINI_API_KEY`） |
 | xAI（Grok） | `xai`（别名 `grok`） | `XAI_API_KEY`（可选：`XAI_BASE_URL`） |
 | xAI Grok OAuth（SuperGrok） | `xai-oauth`（别名 `grok-oauth`） | `doppel model` → xAI Grok OAuth（浏览器登录；需 SuperGrok 订阅） |
 | AWS Bedrock | `bedrock` | 标准 boto3 认证（`AWS_REGION` + `AWS_PROFILE` 或 `AWS_ACCESS_KEY_ID`） |
-| Qwen Portal（OAuth） | `qwen-oauth` | `doppel model`（Qwen Portal OAuth；可选：`HERMES_QWEN_BASE_URL`） |
+| Qwen Portal（OAuth） | `qwen-oauth` | `doppel model`（Qwen Portal OAuth；可选：`DOPPEL_QWEN_BASE_URL`） |
 | MiniMax（OAuth） | `minimax-oauth` | `doppel model`（MiniMax 门户 OAuth） |
 | OpenCode Zen | `opencode-zen` | `OPENCODE_ZEN_API_KEY` |
 | OpenCode Go | `opencode-go` | `OPENCODE_GO_API_KEY` |

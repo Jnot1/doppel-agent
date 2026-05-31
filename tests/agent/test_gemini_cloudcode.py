@@ -33,6 +33,9 @@ def _isolate_env(monkeypatch, tmp_path):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("HERMES_HOME", str(home))
     for key in (
+        "DOPPEL_GEMINI_CLIENT_ID",
+        "DOPPEL_GEMINI_CLIENT_SECRET",
+        "DOPPEL_GEMINI_PROJECT_ID",
         "HERMES_GEMINI_CLIENT_ID",
         "HERMES_GEMINI_CLIENT_SECRET",
         "HERMES_GEMINI_PROJECT_ID",
@@ -108,7 +111,7 @@ class TestClientCredResolution:
     def test_env_override(self, monkeypatch):
         from agent.google_oauth import _get_client_id
 
-        monkeypatch.setenv("HERMES_GEMINI_CLIENT_ID", "custom-id.apps.googleusercontent.com")
+        monkeypatch.setenv("DOPPEL_GEMINI_CLIENT_ID", "custom-id.apps.googleusercontent.com")
         assert _get_client_id() == "custom-id.apps.googleusercontent.com"
 
     def test_shipped_default_used_when_no_env(self):
@@ -336,6 +339,7 @@ class TestGetValidAccessToken:
 
 class TestProjectIdResolution:
     @pytest.mark.parametrize("env_var", [
+        "DOPPEL_GEMINI_PROJECT_ID",
         "HERMES_GEMINI_PROJECT_ID",
         "GOOGLE_CLOUD_PROJECT",
         "GOOGLE_CLOUD_PROJECT_ID",
@@ -350,7 +354,8 @@ class TestProjectIdResolution:
         from agent.google_oauth import resolve_project_id_from_env
 
         monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "lower-priority")
-        monkeypatch.setenv("HERMES_GEMINI_PROJECT_ID", "higher-priority")
+        monkeypatch.setenv("HERMES_GEMINI_PROJECT_ID", "legacy-project")
+        monkeypatch.setenv("DOPPEL_GEMINI_PROJECT_ID", "higher-priority")
         assert resolve_project_id_from_env() == "higher-priority"
 
     def test_no_env_returns_empty(self):
@@ -1166,9 +1171,9 @@ class TestProviderRegistration:
         from hermes_cli.config import OPTIONAL_ENV_VARS
 
         for key in (
-            "HERMES_GEMINI_CLIENT_ID",
-            "HERMES_GEMINI_CLIENT_SECRET",
-            "HERMES_GEMINI_PROJECT_ID",
+            "DOPPEL_GEMINI_CLIENT_ID",
+            "DOPPEL_GEMINI_CLIENT_SECRET",
+            "DOPPEL_GEMINI_PROJECT_ID",
         ):
             assert key in OPTIONAL_ENV_VARS
 

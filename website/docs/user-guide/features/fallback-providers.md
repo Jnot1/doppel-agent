@@ -64,12 +64,12 @@ Legacy installs may still keep this file in `~/.hermes/config.yaml`.
 | GMI Cloud | `gmi` | `GMI_API_KEY` (optional: `GMI_BASE_URL`) |
 | StepFun | `stepfun` | `STEPFUN_API_KEY` (optional: `STEPFUN_BASE_URL`) |
 | Ollama Cloud | `ollama-cloud` | `OLLAMA_API_KEY` |
-| Google Gemini (OAuth) | `google-gemini-cli` | `doppel model` (Google OAuth; optional: `HERMES_GEMINI_PROJECT_ID`) |
+| Google Gemini (OAuth) | `google-gemini-cli` | `doppel model` (Google OAuth; optional: `DOPPEL_GEMINI_PROJECT_ID`) |
 | Google AI Studio | `gemini` | `GOOGLE_API_KEY` (alias: `GEMINI_API_KEY`) |
 | xAI (Grok) | `xai` (alias `grok`) | `XAI_API_KEY` (optional: `XAI_BASE_URL`) |
 | xAI Grok OAuth (SuperGrok) | `xai-oauth` (alias `grok-oauth`) | `doppel model` → xAI Grok OAuth (browser login; SuperGrok subscription) |
 | AWS Bedrock | `bedrock` | Standard boto3 auth (`AWS_REGION` + `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`) |
-| Qwen Portal (OAuth) | `qwen-oauth` | `doppel model` (Qwen Portal OAuth; optional: `HERMES_QWEN_BASE_URL`) |
+| Qwen Portal (OAuth) | `qwen-oauth` | `doppel model` (Qwen Portal OAuth; optional: `DOPPEL_QWEN_BASE_URL`) |
 | MiniMax (OAuth) | `minimax-oauth` | `doppel model` (MiniMax portal OAuth) |
 | OpenCode Zen | `opencode-zen` | `OPENCODE_ZEN_API_KEY` |
 | OpenCode Go | `opencode-go` | `OPENCODE_GO_API_KEY` |

@@ -14,8 +14,8 @@ All variables go in `~/.doppel/.env`. You can also set them with `doppel config 
 |----------|-------------|
 | `OPENROUTER_API_KEY` | OpenRouter API key (recommended for flexibility) |
 | `OPENROUTER_BASE_URL` | Override the OpenRouter-compatible base URL |
-| `HERMES_OPENROUTER_CACHE` | Enable OpenRouter response caching (`1`/`true`/`yes`/`on`). Overrides `openrouter.response_cache` in config.yaml. See [Response Caching](https://openrouter.ai/docs/guides/features/response-caching). |
-| `HERMES_OPENROUTER_CACHE_TTL` | Cache TTL in seconds (1-86400). Overrides `openrouter.response_cache_ttl` in config.yaml. |
+| `DOPPEL_OPENROUTER_CACHE` | Enable OpenRouter response caching (`1`/`true`/`yes`/`on`). Overrides `openrouter.response_cache` in config.yaml. See [Response Caching](https://openrouter.ai/docs/guides/features/response-caching). |
+| `DOPPEL_OPENROUTER_CACHE_TTL` | Cache TTL in seconds (1-86400). Overrides `openrouter.response_cache_ttl` in config.yaml. |
 | `NOUS_BASE_URL` | Override Nous Portal base URL (rarely needed; development/testing only) |
 | `NOUS_INFERENCE_BASE_URL` | Override Nous inference endpoint directly |
 | `OPENAI_API_KEY` | API key for custom OpenAI-compatible endpoints (used with `OPENAI_BASE_URL`) |
@@ -23,9 +23,9 @@ All variables go in `~/.doppel/.env`. You can also set them with `doppel config 
 | `COPILOT_GITHUB_TOKEN` | GitHub token for Copilot API — first priority (OAuth `gho_*` or fine-grained PAT `github_pat_*`; classic PATs `ghp_*` are **not supported**) |
 | `GH_TOKEN` | GitHub token — second priority for Copilot (also used by `gh` CLI) |
 | `GITHUB_TOKEN` | GitHub token — third priority for Copilot |
-| `HERMES_COPILOT_ACP_COMMAND` | Override Copilot ACP CLI binary path (default: `copilot`) |
-| `COPILOT_CLI_PATH` | Alias for `HERMES_COPILOT_ACP_COMMAND` |
-| `HERMES_COPILOT_ACP_ARGS` | Override Copilot ACP arguments (default: `--acp --stdio`) |
+| `DOPPEL_COPILOT_ACP_COMMAND` | Override Copilot ACP CLI binary path (default: `copilot`) |
+| `COPILOT_CLI_PATH` | Alias for `DOPPEL_COPILOT_ACP_COMMAND` |
+| `DOPPEL_COPILOT_ACP_ARGS` | Override Copilot ACP arguments (default: `--acp --stdio`) |
 | `COPILOT_ACP_BASE_URL` | Override Copilot ACP base URL |
 | `GLM_API_KEY` | z.ai / ZhipuAI GLM API key ([z.ai](https://z.ai)) |
 | `ZAI_API_KEY` | Alias for `GLM_API_KEY` |
@@ -63,9 +63,9 @@ All variables go in `~/.doppel/.env`. You can also set them with `doppel config 
 | `GOOGLE_API_KEY` | Google AI Studio API key ([aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)) |
 | `GEMINI_API_KEY` | Alias for `GOOGLE_API_KEY` |
 | `GEMINI_BASE_URL` | Override Google AI Studio base URL |
-| `HERMES_GEMINI_CLIENT_ID` | OAuth client ID for `google-gemini-cli` PKCE login (optional; defaults to Google's public gemini-cli client) |
-| `HERMES_GEMINI_CLIENT_SECRET` | OAuth client secret for `google-gemini-cli` (optional) |
-| `HERMES_GEMINI_PROJECT_ID` | GCP project ID for paid Gemini tiers (free tier auto-provisions) |
+| `DOPPEL_GEMINI_CLIENT_ID` | OAuth client ID for `google-gemini-cli` PKCE login (optional; defaults to Google's public gemini-cli client) |
+| `DOPPEL_GEMINI_CLIENT_SECRET` | OAuth client secret for `google-gemini-cli` (optional) |
+| `DOPPEL_GEMINI_PROJECT_ID` | GCP project ID for paid Gemini tiers (free tier auto-provisions) |
 | `ANTHROPIC_API_KEY` | Anthropic Console API key ([console.anthropic.com](https://console.anthropic.com/)) |
 | `ANTHROPIC_TOKEN` | Manual or legacy Anthropic OAuth/setup-token override |
 | `DASHSCOPE_API_KEY` | Qwen Cloud (Alibaba DashScope) API key for Qwen models ([modelstudio.console.alibabacloud.com](https://modelstudio.console.alibabacloud.com/)) |
@@ -86,7 +86,7 @@ All variables go in `~/.doppel/.env`. You can also set them with `doppel config 
 | `AWS_REGION` | AWS region for Bedrock inference (e.g. `us-east-1`, `eu-central-1`). Read by boto3. |
 | `AWS_PROFILE` | AWS named profile for Bedrock authentication (reads `~/.aws/credentials`). Leave unset to use default boto3 credential chain. |
 | `BEDROCK_BASE_URL` | Override Bedrock runtime base URL (default: `https://bedrock-runtime.us-east-1.amazonaws.com`; usually leave unset and use `AWS_REGION` instead) |
-| `HERMES_QWEN_BASE_URL` | Qwen Portal base URL override (default: `https://portal.qwen.ai/v1`) |
+| `DOPPEL_QWEN_BASE_URL` | Qwen Portal base URL override (default: `https://portal.qwen.ai/v1`) |
 | `OPENCODE_ZEN_API_KEY` | OpenCode Zen API key — pay-as-you-go access to curated models ([opencode.ai](https://opencode.ai/auth)) |
 | `OPENCODE_ZEN_BASE_URL` | Override OpenCode Zen base URL |
 | `OPENCODE_GO_API_KEY` | OpenCode Go API key — $10/month subscription for open models ([opencode.ai](https://opencode.ai/auth)) |
@@ -111,9 +111,9 @@ For native Anthropic auth, Doppel prefers Claude Code's own credential files whe
 
 | Variable | Description |
 |----------|-------------|
-| `HERMES_PORTAL_BASE_URL` | Override Nous Portal URL (for development/testing) |
+| `DOPPEL_PORTAL_BASE_URL` | Override Nous Portal URL (for development/testing) |
 | `NOUS_INFERENCE_BASE_URL` | Override Nous inference API URL |
-| `HERMES_NOUS_MIN_KEY_TTL_SECONDS` | Min agent key TTL before re-mint (default: 1800 = 30min) |
+| `DOPPEL_NOUS_MIN_KEY_TTL_SECONDS` | Min agent key TTL before re-mint (default: 1800 = 30min) |
 | `DOPPEL_NOUS_TIMEOUT_SECONDS` | HTTP timeout for Nous credential / token flows |
 | `HERMES_DUMP_REQUESTS` | Dump API request payloads to log files (`true`/`false`) |
 | `HERMES_PREFILL_MESSAGES_FILE` | Path to a JSON file of ephemeral prefill messages injected at API-call time |

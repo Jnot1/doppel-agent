@@ -1444,10 +1444,10 @@ def test_integrations_providers_docs_prefer_doppel_customer_facing_wording_and_p
 
     for literal in (
         "client=hermes-client-v<version>",
-        "HERMES_COPILOT_ACP_COMMAND",
-        "HERMES_COPILOT_ACP_ARGS",
-        "HERMES_QWEN_BASE_URL",
-        "HERMES_GEMINI_PROJECT_ID",
+        "DOPPEL_COPILOT_ACP_COMMAND",
+        "DOPPEL_COPILOT_ACP_ARGS",
+        "DOPPEL_QWEN_BASE_URL",
+        "DOPPEL_GEMINI_PROJECT_ID",
         "--tool-call-parser hermes",
     ):
         assert literal in en
@@ -2376,7 +2376,7 @@ def test_fallback_provider_docs_prefer_doppel_surfaces_and_keep_legacy_literals(
     assert "fallback_model" in en
     assert "fallback_model" in zh
 
-    for fixed in ("HERMES_GEMINI_PROJECT_ID", "HERMES_QWEN_BASE_URL", "Auxiliary <task>"):
+    for fixed in ("DOPPEL_GEMINI_PROJECT_ID", "DOPPEL_QWEN_BASE_URL", "Auxiliary <task>"):
         assert fixed in en
         assert fixed in zh
 
@@ -4101,10 +4101,34 @@ def test_environment_variable_reference_prefers_doppel_aliases_for_core_cli_surf
     assert "`DOPPEL_MODEL`" in zh_provider
     assert "`DOPPEL_HOME`" in en_provider
     assert "`DOPPEL_HOME`" in zh_provider
+    for preferred in (
+        "`DOPPEL_OPENROUTER_CACHE`",
+        "`DOPPEL_OPENROUTER_CACHE_TTL`",
+        "`DOPPEL_COPILOT_ACP_COMMAND`",
+        "`DOPPEL_COPILOT_ACP_ARGS`",
+        "`DOPPEL_GEMINI_CLIENT_ID`",
+        "`DOPPEL_GEMINI_CLIENT_SECRET`",
+        "`DOPPEL_GEMINI_PROJECT_ID`",
+        "`DOPPEL_QWEN_BASE_URL`",
+    ):
+        assert preferred in en_provider
+        assert preferred in zh_provider
     assert "| `HERMES_MODEL` |" not in en_provider
     assert "| `HERMES_MODEL` |" not in zh_provider
     assert "| `HERMES_HOME` |" not in en_provider
     assert "| `HERMES_HOME` |" not in zh_provider
+    for legacy in (
+        "| `HERMES_OPENROUTER_CACHE` |",
+        "| `HERMES_OPENROUTER_CACHE_TTL` |",
+        "| `HERMES_COPILOT_ACP_COMMAND` |",
+        "| `HERMES_COPILOT_ACP_ARGS` |",
+        "| `HERMES_GEMINI_CLIENT_ID` |",
+        "| `HERMES_GEMINI_CLIENT_SECRET` |",
+        "| `HERMES_GEMINI_PROJECT_ID` |",
+        "| `HERMES_QWEN_BASE_URL` |",
+    ):
+        assert legacy not in en_provider
+        assert legacy not in zh_provider
 
     for preferred in (
         "`DOPPEL_MAX_ITERATIONS`",
@@ -4354,6 +4378,36 @@ def test_environment_variable_reference_prefers_doppel_stream_timeout_alias():
     ):
         assert preferred in en
         assert preferred in zh
+
+    for preferred in (
+        "DOPPEL_OPENROUTER_CACHE",
+        "DOPPEL_OPENROUTER_CACHE_TTL",
+        "DOPPEL_COPILOT_ACP_COMMAND",
+        "DOPPEL_COPILOT_ACP_ARGS",
+        "DOPPEL_GEMINI_CLIENT_ID",
+        "DOPPEL_GEMINI_CLIENT_SECRET",
+        "DOPPEL_GEMINI_PROJECT_ID",
+        "DOPPEL_QWEN_BASE_URL",
+        "DOPPEL_PORTAL_BASE_URL",
+        "DOPPEL_NOUS_MIN_KEY_TTL_SECONDS",
+    ):
+        assert preferred in en
+        assert preferred in zh
+
+    for legacy in (
+        "| `HERMES_OPENROUTER_CACHE` |",
+        "| `HERMES_OPENROUTER_CACHE_TTL` |",
+        "| `HERMES_COPILOT_ACP_COMMAND` |",
+        "| `HERMES_COPILOT_ACP_ARGS` |",
+        "| `HERMES_GEMINI_CLIENT_ID` |",
+        "| `HERMES_GEMINI_CLIENT_SECRET` |",
+        "| `HERMES_GEMINI_PROJECT_ID` |",
+        "| `HERMES_QWEN_BASE_URL` |",
+        "| `HERMES_PORTAL_BASE_URL` |",
+        "| `HERMES_NOUS_MIN_KEY_TTL_SECONDS` |",
+    ):
+        assert legacy not in en
+        assert legacy not in zh
 
 
 def test_zh_environment_variable_reference_rebrands_remaining_doppel_prose():

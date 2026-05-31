@@ -240,6 +240,33 @@ class TestCustomerFacingEnvAliases:
         assert env["HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT"] == "20"
         assert env["HERMES_TELEGRAM_HTTP_POOL_TIMEOUT"] == "8"
 
+    def test_preferred_provider_auth_aliases_mirror_to_legacy_names(self):
+        env = {
+            "DOPPEL_OPENROUTER_CACHE": "true",
+            "DOPPEL_OPENROUTER_CACHE_TTL": "1800",
+            "DOPPEL_COPILOT_ACP_COMMAND": "/opt/copilot",
+            "DOPPEL_COPILOT_ACP_ARGS": "--acp --stdio --debug",
+            "DOPPEL_GEMINI_CLIENT_ID": "client.apps.googleusercontent.com",
+            "DOPPEL_GEMINI_CLIENT_SECRET": "secret",
+            "DOPPEL_GEMINI_PROJECT_ID": "paid-project",
+            "DOPPEL_QWEN_BASE_URL": "https://portal.example/v1",
+            "DOPPEL_PORTAL_BASE_URL": "https://portal.dev",
+            "DOPPEL_NOUS_MIN_KEY_TTL_SECONDS": "900",
+        }
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_OPENROUTER_CACHE"] == "true"
+        assert env["HERMES_OPENROUTER_CACHE_TTL"] == "1800"
+        assert env["HERMES_COPILOT_ACP_COMMAND"] == "/opt/copilot"
+        assert env["HERMES_COPILOT_ACP_ARGS"] == "--acp --stdio --debug"
+        assert env["HERMES_GEMINI_CLIENT_ID"] == "client.apps.googleusercontent.com"
+        assert env["HERMES_GEMINI_CLIENT_SECRET"] == "secret"
+        assert env["HERMES_GEMINI_PROJECT_ID"] == "paid-project"
+        assert env["HERMES_QWEN_BASE_URL"] == "https://portal.example/v1"
+        assert env["HERMES_PORTAL_BASE_URL"] == "https://portal.dev"
+        assert env["HERMES_NOUS_MIN_KEY_TTL_SECONDS"] == "900"
+
     def test_legacy_alias_backfills_preferred_name(self):
         env = {"HERMES_IGNORE_RULES": "1"}
 

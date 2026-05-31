@@ -105,11 +105,14 @@ _ENV_VAR_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 #   ``.env`` would relocate state in ways the user did not request from
 #   the dashboard. ``config.yaml`` is the supported surface for these.
 #
-# IMPORTANT: ``HERMES_*`` overall is NOT blocked. Many legitimate
-# integration credentials follow that prefix (HERMES_GEMINI_CLIENT_ID,
-# HERMES_LANGFUSE_PUBLIC_KEY, HERMES_SPOTIFY_CLIENT_ID, ...). The
-# denylist is name-by-name on purpose so the gate stays narrow and
-# doesn't accidentally break provider setup wizards.
+# IMPORTANT: this is NOT a blanket block on customer-facing integration
+# variables. Many legitimate secrets/overrides live on the preferred
+# ``DOPPEL_*`` names and the legacy ``HERMES_*`` aliases
+# (DOPPEL_GEMINI_CLIENT_ID / HERMES_GEMINI_CLIENT_ID,
+# DOPPEL_QWEN_BASE_URL / HERMES_QWEN_BASE_URL,
+# HERMES_LANGFUSE_PUBLIC_KEY, HERMES_SPOTIFY_CLIENT_ID, ...). The denylist
+# is name-by-name on purpose so the gate stays narrow and doesn't
+# accidentally break provider setup wizards.
 #
 # This is enforced on *write* only — values already in ``.env`` (set
 # by the operator out-of-band, or pre-existing) keep working. The
@@ -2460,7 +2463,7 @@ OPTIONAL_ENV_VARS = {
         "category": "provider",
         "advanced": True,
     },
-    "HERMES_QWEN_BASE_URL": {
+    "DOPPEL_QWEN_BASE_URL": {
         "description": "Qwen Portal base URL override (default: https://portal.qwen.ai/v1)",
         "prompt": "Qwen Portal base URL (leave empty for default)",
         "url": None,
@@ -2468,7 +2471,7 @@ OPTIONAL_ENV_VARS = {
         "category": "provider",
         "advanced": True,
     },
-    "HERMES_GEMINI_CLIENT_ID": {
+    "DOPPEL_GEMINI_CLIENT_ID": {
         "description": "Google OAuth client ID for google-gemini-cli (optional; defaults to Google's public gemini-cli client)",
         "prompt": "Google OAuth client ID (optional — leave empty to use the public default)",
         "url": "https://console.cloud.google.com/apis/credentials",
@@ -2476,7 +2479,7 @@ OPTIONAL_ENV_VARS = {
         "category": "provider",
         "advanced": True,
     },
-    "HERMES_GEMINI_CLIENT_SECRET": {
+    "DOPPEL_GEMINI_CLIENT_SECRET": {
         "description": "Google OAuth client secret for google-gemini-cli (optional)",
         "prompt": "Google OAuth client secret (optional)",
         "url": "https://console.cloud.google.com/apis/credentials",
@@ -2484,7 +2487,7 @@ OPTIONAL_ENV_VARS = {
         "category": "provider",
         "advanced": True,
     },
-    "HERMES_GEMINI_PROJECT_ID": {
+    "DOPPEL_GEMINI_PROJECT_ID": {
         "description": "GCP project ID for paid Gemini tiers (free tier auto-provisions)",
         "prompt": "GCP project ID for Gemini OAuth (leave empty for free tier)",
         "url": None,
@@ -5399,10 +5402,24 @@ def reload_env() -> int:
 
 def get_env_value(key: str) -> Optional[str]:
     """Get a value from ~/.hermes/.env or environment."""
+    for preferred, legacy in hermes_constants.CUSTOMER_FACING_ENV_ALIASES:
+        if key not in {preferred, legacy}:
+            continue
+        for env_key in (preferred, legacy):
+            value = os.environ.get(env_key)
+            if value not in (None, ""):
+                return value
+        env_vars = load_env()
+        for env_key in (preferred, legacy):
+            value = env_vars.get(env_key)
+            if value not in (None, ""):
+                return value
+        return None
+
     # Check environment first
     if key in os.environ:
         return os.environ[key]
-    
+
     # Then check .env file
     env_vars = load_env()
     return env_vars.get(key)

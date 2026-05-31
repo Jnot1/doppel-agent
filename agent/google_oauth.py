@@ -10,7 +10,7 @@ Synthesized from:
 - clawdbot/extensions/google/ — refresh-token rotation, VPC-SC handling reference
 - PRs #10176 (@sliverp) and #10779 (@newarthur) — PKCE module structure, cross-process lock
 
-Storage (``~/.hermes/auth/google_oauth.json``, chmod 0o600):
+Storage (``~/.doppel/auth/google_oauth.json``, chmod 0o600):
 
     {
       "refresh": "refreshToken|projectId|managedProjectId",
@@ -59,7 +59,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-from hermes_constants import get_hermes_home, secure_parent_dir
+from hermes_constants import (
+    get_customer_facing_env_value,
+    get_hermes_home,
+    secure_parent_dir,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +72,7 @@ logger = logging.getLogger(__name__)
 # OAuth client credential resolution.
 #
 # Resolution order:
-#   1. HERMES_GEMINI_CLIENT_ID / HERMES_GEMINI_CLIENT_SECRET env vars (power users)
+#   1. DOPPEL_GEMINI_CLIENT_ID / DOPPEL_GEMINI_CLIENT_SECRET env vars (power users)
 #   2. Shipped defaults — Google's public gemini-cli desktop OAuth client
 #      (baked into every copy of Google's open-source gemini-cli; NOT
 #      confidential — desktop OAuth clients use PKCE, not client_secret, for
@@ -78,8 +82,10 @@ logger = logging.getLogger(__name__)
 #   4. Fail with a helpful error.
 # =============================================================================
 
-ENV_CLIENT_ID = "HERMES_GEMINI_CLIENT_ID"
-ENV_CLIENT_SECRET = "HERMES_GEMINI_CLIENT_SECRET"
+ENV_CLIENT_ID = "DOPPEL_GEMINI_CLIENT_ID"
+LEGACY_ENV_CLIENT_ID = "HERMES_GEMINI_CLIENT_ID"
+ENV_CLIENT_SECRET = "DOPPEL_GEMINI_CLIENT_SECRET"
+LEGACY_ENV_CLIENT_SECRET = "HERMES_GEMINI_CLIENT_SECRET"
 
 # Public gemini-cli desktop OAuth client (shipped in Google's open-source
 # gemini-cli MIT repo). Composed piecewise to keep the constants readable and
@@ -336,7 +342,10 @@ def _scrape_client_credentials() -> Tuple[str, str]:
 
 
 def _get_client_id() -> str:
-    env_val = (os.getenv(ENV_CLIENT_ID) or "").strip()
+    env_val = (
+        get_customer_facing_env_value(ENV_CLIENT_ID, LEGACY_ENV_CLIENT_ID, "")
+        or ""
+    ).strip()
     if env_val:
         return env_val
     if _DEFAULT_CLIENT_ID:
@@ -346,7 +355,10 @@ def _get_client_id() -> str:
 
 
 def _get_client_secret() -> str:
-    env_val = (os.getenv(ENV_CLIENT_SECRET) or "").strip()
+    env_val = (
+        get_customer_facing_env_value(ENV_CLIENT_SECRET, LEGACY_ENV_CLIENT_SECRET, "")
+        or ""
+    ).strip()
     if env_val:
         return env_val
     if _DEFAULT_CLIENT_SECRET:
@@ -360,10 +372,10 @@ def _require_client_id() -> str:
     if not cid:
         raise GoogleOAuthError(
             "Google OAuth client ID is not available.\n"
-            "Hermes looks for a locally installed gemini-cli to source the OAuth client. "
+            "Doppel looks for a locally installed gemini-cli to source the OAuth client. "
             "Either:\n"
             "  1. Install it: npm install -g @google/gemini-cli  (or brew install gemini-cli)\n"
-            "  2. Set HERMES_GEMINI_CLIENT_ID and HERMES_GEMINI_CLIENT_SECRET in ~/.hermes/.env\n"
+            "  2. Set DOPPEL_GEMINI_CLIENT_ID and DOPPEL_GEMINI_CLIENT_SECRET in ~/.doppel/.env\n"
             "\n"
             "Register a Desktop OAuth client at:\n"
             "  https://console.cloud.google.com/apis/credentials\n"
@@ -1056,11 +1068,17 @@ def run_gemini_oauth_login_pure() -> Dict[str, Any]:
 
 def resolve_project_id_from_env() -> str:
     """Return a GCP project ID from env vars, in priority order."""
-    for var in (
-        "HERMES_GEMINI_PROJECT_ID",
-        "GOOGLE_CLOUD_PROJECT",
-        "GOOGLE_CLOUD_PROJECT_ID",
-    ):
+    preferred = (
+        get_customer_facing_env_value(
+            "DOPPEL_GEMINI_PROJECT_ID",
+            "HERMES_GEMINI_PROJECT_ID",
+            "",
+        )
+        or ""
+    ).strip()
+    if preferred:
+        return preferred
+    for var in ("GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_PROJECT_ID"):
         val = (os.getenv(var) or "").strip()
         if val:
             return val

@@ -10,6 +10,7 @@ import yaml
 from hermes_cli.config import (
     DEFAULT_CONFIG,
     get_hermes_home,
+    get_env_value,
     ensure_hermes_home,
     get_compatible_custom_providers,
     load_config,
@@ -840,6 +841,8 @@ class TestEnvWriteDenylist:
     @pytest.mark.parametrize(
         "allowed_key",
         [
+            "DOPPEL_GEMINI_CLIENT_ID",
+            "DOPPEL_QWEN_BASE_URL",
             "HERMES_GEMINI_CLIENT_ID",
             "HERMES_LANGFUSE_PUBLIC_KEY",
             "HERMES_SPOTIFY_CLIENT_ID",
@@ -856,6 +859,11 @@ class TestEnvWriteDenylist:
         save_env_value(allowed_key, "test-value-123")
         env = load_env()
         assert env[allowed_key] == "test-value-123"
+
+    def test_get_env_value_prefers_doppel_alias_for_legacy_query(self):
+        save_env_value("DOPPEL_GEMINI_PROJECT_ID", "preferred-project")
+
+        assert get_env_value("HERMES_GEMINI_PROJECT_ID") == "preferred-project"
 
     def test_legitimate_provider_key_still_works(self):
         """The denylist must not regress on real provider key writes."""
@@ -892,4 +900,3 @@ class TestEnvWriteDenylist:
         # But the write path still refuses to update it
         with pytest.raises(ValueError, match="denylist"):
             save_env_value("LD_PRELOAD", "/tmp/evil.so")
-

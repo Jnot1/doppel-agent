@@ -1122,7 +1122,16 @@ def _resolve_explicit_runtime(
             str(state.get("agent_key") or "").strip()
             if _agent_key_is_usable(
                 state,
-                max(60, int(os.getenv("HERMES_NOUS_MIN_KEY_TTL_SECONDS", "1800"))),
+                max(
+                    60,
+                    int(
+                        get_customer_facing_env_value(
+                            "DOPPEL_NOUS_MIN_KEY_TTL_SECONDS",
+                            "HERMES_NOUS_MIN_KEY_TTL_SECONDS",
+                            "1800",
+                        )
+                    ),
+                ),
             )
             else ""
         )
@@ -1327,7 +1336,16 @@ def resolve_runtime_provider(
         # expired, clear pool_api_key so we fall through to
         # resolve_nous_runtime_credentials() which handles refresh.
         if provider == "nous" and entry is not None and pool_api_key:
-            min_ttl = max(60, int(os.getenv("HERMES_NOUS_MIN_KEY_TTL_SECONDS", "1800")))
+            min_ttl = max(
+                60,
+                int(
+                    get_customer_facing_env_value(
+                        "DOPPEL_NOUS_MIN_KEY_TTL_SECONDS",
+                        "HERMES_NOUS_MIN_KEY_TTL_SECONDS",
+                        "1800",
+                    )
+                ),
+            )
             nous_state = {
                 "agent_key": getattr(entry, "agent_key", None),
                 "agent_key_expires_at": getattr(entry, "agent_key_expires_at", None),

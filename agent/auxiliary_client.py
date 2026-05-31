@@ -323,10 +323,10 @@ def build_or_headers(or_config: dict | None = None) -> dict:
     Precedence for response cache: env var > config.yaml > default (enabled).
 
     Environment variables:
-        ``HERMES_OPENROUTER_CACHE`` — truthy (``1``/``true``/``yes``/``on``)
+        ``DOPPEL_OPENROUTER_CACHE`` — truthy (``1``/``true``/``yes``/``on``)
             enables caching; ``0``/``false``/``no``/``off`` disables.
             Overrides ``openrouter.response_cache`` in config.yaml.
-        ``HERMES_OPENROUTER_CACHE_TTL`` — integer seconds (1-86400).
+        ``DOPPEL_OPENROUTER_CACHE_TTL`` — integer seconds (1-86400).
             Overrides ``openrouter.response_cache_ttl`` in config.yaml.
 
     *or_config* is the ``openrouter`` section from config.yaml.  When *None*,
@@ -343,7 +343,14 @@ def build_or_headers(or_config: dict | None = None) -> dict:
             or_config = {}
 
     # Determine cache enabled: env var overrides config.
-    env_cache = os.environ.get("HERMES_OPENROUTER_CACHE", "").strip().lower()
+    env_cache = (
+        get_customer_facing_env_value(
+            "DOPPEL_OPENROUTER_CACHE",
+            "HERMES_OPENROUTER_CACHE",
+            "",
+        )
+        or ""
+    ).strip().lower()
     if env_cache:
         cache_enabled = env_cache in _TRUTHY_ENV_VALUES
     else:
@@ -355,7 +362,14 @@ def build_or_headers(or_config: dict | None = None) -> dict:
     headers["X-OpenRouter-Cache"] = "true"
 
     # Determine TTL: env var overrides config.
-    env_ttl = os.environ.get("HERMES_OPENROUTER_CACHE_TTL", "").strip()
+    env_ttl = (
+        get_customer_facing_env_value(
+            "DOPPEL_OPENROUTER_CACHE_TTL",
+            "HERMES_OPENROUTER_CACHE_TTL",
+            "",
+        )
+        or ""
+    ).strip()
     if env_ttl:
         if env_ttl.isdigit():
             ttl = int(env_ttl)

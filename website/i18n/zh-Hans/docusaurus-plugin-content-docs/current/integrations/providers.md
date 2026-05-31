@@ -198,8 +198,8 @@ model:
 | 环境变量 | 说明 |
 |---------------------|-------------|
 | `COPILOT_GITHUB_TOKEN` | Copilot API 的 GitHub token（最高优先级） |
-| `HERMES_COPILOT_ACP_COMMAND` | 覆盖 Copilot CLI 二进制路径（默认：`copilot`） |
-| `HERMES_COPILOT_ACP_ARGS` | 覆盖 ACP 参数（默认：`--acp --stdio`） |
+| `DOPPEL_COPILOT_ACP_COMMAND` | 覆盖 Copilot CLI 二进制路径（默认：`copilot`） |
+| `DOPPEL_COPILOT_ACP_ARGS` | 覆盖 ACP 参数（默认：`--acp --stdio`） |
 
 ### 一等 API Key 提供商
 
@@ -376,7 +376,7 @@ model:
   default: "qwen3-coder-plus"
 ```
 
-仅在 portal 端点迁移时才需设置 `HERMES_QWEN_BASE_URL`（默认：`https://portal.qwen.ai/v1`）。
+仅在 portal 端点迁移时才需设置 `DOPPEL_QWEN_BASE_URL`（默认：`https://portal.qwen.ai/v1`）。
 
 :::tip Qwen OAuth 与 Qwen Cloud（阿里 DashScope）
 `qwen-oauth` 使用面向消费者的 Qwen Portal，通过 OAuth 登录——适合个人用户。`alibaba` 提供商使用 Qwen Cloud（阿里 DashScope），需要 `DASHSCOPE_API_KEY`——适合程序化/生产工作负载。两者都路由到 Qwen 系列模型，但端点不同。
@@ -554,7 +554,7 @@ Doppel 默认使用 Google 的**公开** `gemini-cli` 桌面 OAuth 客户端—�
 | 你的情况 | 操作 |
 |---|---|
 | 个人 Google 账户，使用免费层 | 无需操作——登录即可开始聊天 |
-| Workspace / Standard / Enterprise 账户 | 将 `HERMES_GEMINI_PROJECT_ID` 或 `GOOGLE_CLOUD_PROJECT` 设置为你的 GCP 项目 ID |
+| Workspace / Standard / Enterprise 账户 | 将 `DOPPEL_GEMINI_PROJECT_ID` 或 `GOOGLE_CLOUD_PROJECT` 设置为你的 GCP 项目 ID |
 | VPC-SC 保护的组织 | Doppel 检测到 `SECURITY_POLICY_VIOLATED` 后自动强制使用 `standard-tier` |
 
 免费层在首次使用时自动开通 Google 托管项目。无需 GCP 配置。
@@ -583,8 +583,8 @@ Google 认为将 Gemini CLI OAuth 客户端用于第三方软件违反政策。�
 如果你希望注册自己的 Google OAuth 客户端——例如将配额和授权范围限定在自己的 GCP 项目内——请设置：
 
 ```bash
-HERMES_GEMINI_CLIENT_ID=your-client.apps.googleusercontent.com
-HERMES_GEMINI_CLIENT_SECRET=...   # 桌面客户端可选
+DOPPEL_GEMINI_CLIENT_ID=your-client.apps.googleusercontent.com
+DOPPEL_GEMINI_CLIENT_SECRET=...   # 桌面客户端可选
 ```
 
 在 [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) 注册一个**桌面应用** OAuth 客户端，并启用 Generative Language API。

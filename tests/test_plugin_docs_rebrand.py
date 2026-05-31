@@ -113,6 +113,7 @@ EN_VOICE_MODE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" /
 EN_HONCHO_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "honcho.md"
 EN_MEMORY_PROVIDERS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "memory-providers.md"
 EN_LSP_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "lsp.md"
+EN_COMPUTER_USE_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "computer-use.md"
 EN_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "extending-the-dashboard.md"
 )
@@ -410,6 +411,17 @@ ZH_LSP_DOC = (
     / "user-guide"
     / "features"
     / "lsp.md"
+)
+ZH_COMPUTER_USE_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "computer-use.md"
 )
 ZH_EXTENDING_DASHBOARD_DOC = (
     REPO_ROOT
@@ -2334,6 +2346,58 @@ def test_lsp_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
     assert "`hermes lsp install typescript`" not in zh
     assert "`<HERMES_HOME>/lsp/node_modules/`" not in en
     assert "`<HERMES_HOME>/lsp/node_modules/`" not in zh
+
+
+def test_computer_use_docs_prefer_doppel_surfaces_and_keep_runtime_literals():
+    en = EN_COMPUTER_USE_DOC.read_text(encoding="utf-8")
+    zh = ZH_COMPUTER_USE_DOC.read_text(encoding="utf-8")
+
+    assert "Doppel Agent can drive your Mac's desktop" in en
+    assert "Doppel Agent 可以在**后台**驱动你的 Mac 桌面" in zh
+    assert "`doppel computer-use install`" in en
+    assert "`doppel computer-use install`" in zh
+    assert "`doppel computer-use status`" in en
+    assert "`doppel computer-use status`" in zh
+    assert "`doppel tools`" in en
+    assert "`doppel tools`" in zh
+    assert "doppel -t computer_use chat" in en
+    assert "doppel -t computer_use chat" in zh
+    assert "`~/.doppel/config.yaml`" in en
+    assert "`~/.doppel/config.yaml`" in zh
+    assert "`~/.hermes/config.yaml`" in en
+    assert "`~/.hermes/config.yaml`" in zh
+    assert "Doppel Agent applies three layers of optimisation" in en
+    assert "Doppel Agent 应用三层优化措施" in zh
+
+    for fixed in (
+        "`computer_use`",
+        "cua-driver",
+        "`image_url`",
+        "`tool_result`",
+        "HERMES_CUA_DRIVER_CMD",
+        "HERMES_CUA_DRIVER_VERSION",
+        "HERMES_COMPUTER_USE_BACKEND",
+        "SLEventPostToPid",
+        "_AXObserverAddNotificationAndCheckRemote",
+    ):
+        assert fixed in en or fixed in zh
+
+    assert "Hermes Agent can drive your Mac's desktop" not in en
+    assert "Hermes Agent 可以在**后台**驱动你的 Mac 桌面" not in zh
+    assert "`hermes computer-use install`" not in en
+    assert "`hermes computer-use install`" not in zh
+    assert "`hermes computer-use status`" not in en
+    assert "`hermes computer-use status`" not in zh
+    assert "`hermes tools`" not in en
+    assert "`hermes tools`" not in zh
+    assert "hermes -t computer_use chat" not in en
+    assert "hermes -t computer_use chat" not in zh
+    assert "`hermes update`" not in en
+    assert "`hermes update`" not in zh
+    assert "context_management" not in en
+    assert "context_management" not in zh
+    assert "clear_tool_uses_20250919" not in en
+    assert "clear_tool_uses_20250919" not in zh
 
 
 def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_literals():

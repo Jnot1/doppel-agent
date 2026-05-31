@@ -1,12 +1,14 @@
 ---
 sidebar_position: 4
 title: "Toolsets Reference"
-description: "Reference for Hermes core, composite, platform, and dynamic toolsets"
+description: "Reference for Doppel Agent core, composite, platform, and dynamic toolsets"
 ---
 
 # Toolsets Reference
 
 Toolsets are named bundles of tools that control what the agent can do. They're the primary mechanism for configuring tool availability per platform, per session, or per task.
+
+The internal platform toolset ids still retain the historical `hermes-` prefix for compatibility. The examples below use the customer-facing `doppel` command surface.
 
 ## How Toolsets Work
 
@@ -21,9 +23,9 @@ Every tool belongs to exactly one toolset. When you enable a toolset, all tools 
 ### Per-session (CLI)
 
 ```bash
-hermes chat --toolsets web,file,terminal
-hermes chat --toolsets debugging        # composite — expands to file + terminal + web
-hermes chat --toolsets all              # everything
+doppel chat --toolsets web,file,terminal
+doppel chat --toolsets debugging        # composite — expands to file + terminal + web
+doppel chat --toolsets all              # everything
 ```
 
 ### Per-platform (config.yaml)
@@ -37,7 +39,7 @@ toolsets:
 ### Interactive management
 
 ```bash
-hermes tools                            # curses UI to enable/disable per platform
+doppel tools                            # curses UI to enable/disable per platform
 ```
 
 Or in-session:
@@ -54,7 +56,7 @@ Or in-session:
 |---------|-------|---------|
 | `browser` | `browser_back`, `browser_cdp`, `browser_click`, `browser_console`, `browser_dialog`, `browser_get_images`, `browser_navigate`, `browser_press`, `browser_scroll`, `browser_snapshot`, `browser_type`, `browser_vision`, `web_search` | Core browser automation. Includes `web_search` as a fallback for quick lookups. `browser_cdp` and `browser_dialog` are gated at runtime — registered only when a CDP endpoint is reachable at session start (via `/browser connect`, `browser.cdp_url` config, Browserbase, or Camofox). `browser_dialog` works together with the `pending_dialogs` and `frame_tree` fields that `browser_snapshot` adds when a CDP supervisor is attached. |
 | `clarify` | `clarify` | Ask the user a question when the agent needs clarification. |
-| `code_execution` | `execute_code` | Run Python scripts that call Hermes tools programmatically. |
+| `code_execution` | `execute_code` | Run Python scripts that call Doppel Agent tools programmatically. |
 | `cronjob` | `cronjob` | Schedule and manage recurring tasks. |
 | `debugging` | composite (`file` + `terminal` + `web`) | Debug bundle — file, process/terminal, web extract/search. |
 | `delegation` | `delegate_task` | Spawn isolated subagent instances for parallel work. |
@@ -82,12 +84,12 @@ Or in-session:
 | `vision` | `vision_analyze` | Image analysis via vision-capable models. |
 | `video` | `video_analyze` | Video analysis and understanding tools (opt-in, not in the default toolset — add explicitly via `--toolsets`). |
 | `web` | `web_extract`, `web_search` | Web search and page content extraction. |
-| `x_search` | `x_search` | Search X (Twitter) posts and threads via xAI's built-in `x_search` Responses tool. Off by default; opt in via `hermes tools`. Schema only registered when xAI credentials (SuperGrok OAuth or `XAI_API_KEY`) are configured. |
+| `x_search` | `x_search` | Search X (Twitter) posts and threads via xAI's built-in `x_search` Responses tool. Off by default; opt in via `doppel tools`. Schema only registered when xAI credentials (SuperGrok OAuth or `XAI_API_KEY`) are configured. |
 | `yuanbao` | `yb_query_group_info`, `yb_query_group_members`, `yb_search_sticker`, `yb_send_dm`, `yb_send_sticker` | Yuanbao DM/group actions and sticker search. Registered only on `hermes-yuanbao`. |
 
 ## Platform Toolsets
 
-Platform toolsets define the complete tool configuration for a deployment target. Most messaging platforms use the same set as `hermes-cli`:
+Platform toolsets define the complete tool configuration for a deployment target. Most messaging platforms use the same set as the default CLI toolset id, `hermes-cli`:
 
 | Toolset | Differences from `hermes-cli` |
 |---------|-------------------------------|
@@ -156,8 +158,8 @@ custom_toolsets:
 
 - `all` or `*` — expands to every registered toolset (built-in + dynamic + plugin)
 
-## Relationship to `hermes tools`
+## Relationship to `doppel tools`
 
-The `hermes tools` command provides a curses-based UI for toggling individual tools on or off per platform. This operates at the tool level (finer than toolsets) and persists to `config.yaml`. Disabled tools are filtered out even if their toolset is enabled.
+The `doppel tools` command provides a curses-based UI for toggling individual tools on or off per platform. This operates at the tool level (finer than toolsets) and persists to `config.yaml`. Disabled tools are filtered out even if their toolset is enabled.
 
 See also: [Tools Reference](./tools-reference.md) for the complete list of individual tools and their parameters.

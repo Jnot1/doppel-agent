@@ -76,6 +76,7 @@ EN_SESSION_STORAGE_DOC = EN_DEV_GUIDE_DIR / "session-storage.md"
 EN_TRAJECTORY_DOC = EN_DEV_GUIDE_DIR / "trajectory-format.md"
 EN_CONTEXT_FILES_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "context-files.md"
 EN_PERSONALITY_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "personality.md"
+EN_GOALS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "goals.md"
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 ZH_ADDING_PROVIDERS_DOC = ZH_DEV_GUIDE_DIR / "adding-providers.md"
 ZH_PROVIDER_RUNTIME_DOC = ZH_DEV_GUIDE_DIR / "provider-runtime.md"
@@ -112,6 +113,17 @@ ZH_PERSONALITY_DOC = (
     / "user-guide"
     / "features"
     / "personality.md"
+)
+ZH_GOALS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "features"
+    / "goals.md"
 )
 ZH_USE_SOUL_DOC = (
     REPO_ROOT
@@ -853,3 +865,39 @@ def test_personality_feature_docs_prefer_doppel_surfaces_and_keep_literals():
     assert "自定义 Hermes Agent 的个性" not in zh
     assert "Hermes Agent's personality is fully customizable" not in en
     assert "Hermes Agent 的个性完全可自定义" not in zh
+
+
+def test_goals_feature_docs_prefer_doppel_surfaces_and_keep_goal_literals():
+    en = EN_GOALS_DOC.read_text(encoding="utf-8")
+    zh = ZH_GOALS_DOC.read_text(encoding="utf-8")
+
+    assert "let Doppel Agent keep working across turns" in en
+    assert "让 Doppel Agent 跨轮次持续工作直到完成" in zh
+    assert "`/goal` gives Doppel Agent a standing objective" in en
+    assert "`/goal` 为 Doppel Agent 设置一个跨轮次持续存在的目标" in zh
+    assert "adapted to Doppel Agent's architecture" in en
+    assert "已适配 Doppel Agent 的架构" in zh
+    assert "Use `/goal` for tasks where you want Doppel Agent to iterate" in en
+    assert "当你希望 Doppel Agent 自主迭代" in zh
+    assert "Doppel Agent starts working as if you'd sent the goal as a normal message." in en
+    assert "Doppel Agent 开始工作，就像你发送了一条普通消息一样。" in zh
+    assert "Add to `~/.doppel/config.yaml`" in en
+    assert "在 `~/.doppel/config.yaml` 中添加" in zh
+    assert "Legacy installs may still keep this under `~/.hermes/config.yaml`." in en
+    assert "legacy 安装仍可能将这段配置保留在 `~/.hermes/config.yaml` 中。" in zh
+    assert "Doppel: Creating /tmp/note_1.txt now." in en
+    assert "Doppel: Creating /tmp/note_1.txt now." in zh
+    assert "`/goal` is Doppel Agent's take on the **Ralph loop** pattern." in en
+    assert "`/goal` 是 Doppel Agent 对 **Ralph loop** 模式的实现。" in zh
+
+    assert "/goal" in en and "/goal" in zh
+    assert "Codex CLI 0.128.0" in en and "Codex CLI 0.128.0" in zh
+    assert "Ralph loop" in en and "Ralph loop" in zh
+    assert "tests/hermes_cli/" in en and "tests/hermes_cli/" in zh
+    assert "~/.hermes/config.yaml" in en and "~/.hermes/config.yaml" in zh
+    assert "SessionDB.state_meta" in en and "SessionDB.state_meta" in zh
+
+    assert "let Hermes keep working across turns" not in en
+    assert "让 Hermes 跨轮次持续工作直到完成" not in zh
+    assert "`/goal` gives Hermes a standing objective" not in en
+    assert "`/goal` 为 Hermes 设置一个跨轮次持续存在的目标" not in zh

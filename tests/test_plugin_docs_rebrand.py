@@ -3493,6 +3493,71 @@ def test_overview_and_git_worktrees_docs_prefer_doppel_customer_facing_surfaces(
     assert "## 使用 `hermes -w`（自动 Worktree 模式）" not in zh_worktrees
 
 
+def test_tui_guide_pair_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "tui.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "tui.md"
+    ).read_text(encoding="utf-8")
+
+    assert 'description: "Launch the modern terminal UI for Doppel Agent' in en
+    assert 'description: "启动 Doppel Agent 的现代终端 UI' in zh
+    assert "The TUI is the modern front-end for Doppel Agent" in en
+    assert "TUI 是 Doppel Agent 的现代前端" in zh
+    assert "It's the recommended way to run Doppel Agent interactively." in en
+    assert "这是以交互方式运行 Doppel Agent 的推荐方式。" in zh
+    assert "doppel --tui" in en and "doppel --tui" in zh
+    assert "export DOPPEL_TUI=1" in en and "export DOPPEL_TUI=1" in zh
+    assert "export DOPPEL_TUI_DIR=/path/to/prebuilt/ui-tui" in en
+    assert "export DOPPEL_TUI_DIR=/path/to/prebuilt/ui-tui" in zh
+    assert "export DOPPEL_TUI_THEME=light" in en
+    assert "export DOPPEL_TUI_THEME=light" in zh
+    assert "export DOPPEL_TUI_RESUME=1" in en
+    assert "export DOPPEL_TUI_RESUME=1" in zh
+    assert "`~/.doppel/.env`" in en and "`~/.doppel/.env`" in zh
+    assert "`~/.doppel/config.yaml`" in en and "`~/.doppel/config.yaml`" in zh
+    assert "`~/.doppel/state.db`" in en and "`~/.doppel/state.db`" in zh
+    assert "`doppel --yolo`" in en and "`doppel --yolo`" in zh
+    assert "`DOPPEL_YOLO_MODE=1`" in en and "`DOPPEL_YOLO_MODE=1`" in zh
+    assert "Doppel TUI Session Orchestrator" in en
+    assert "Launching `doppel` (without `--tui`) stays on the classic CLI." in en
+    assert "不带 `--tui` 启动 `doppel` 将继续使用 classic CLI。" in zh
+    assert "HERMES_TUI_GATEWAY_URL" not in en
+    assert "HERMES_TUI_GATEWAY_URL" not in zh
+    assert "## Attaching to a running gateway" not in en
+    assert "## 连接到运行中的 gateway" not in zh
+
+    for fixed in (
+        "Launch the modern terminal UI for Hermes",
+        "启动 Hermes 的现代终端 UI",
+        "The TUI is the modern front-end for Hermes",
+        "TUI 是 Hermes 的现代前端",
+        "It's the recommended way to run Hermes interactively.",
+        "这是以交互方式运行 Hermes 的推荐方式。",
+        "export HERMES_TUI=1",
+        "export HERMES_TUI_DIR=/path/to/prebuilt/ui-tui",
+        "export HERMES_TUI_THEME=light",
+        "export HERMES_TUI_RESUME=1",
+        "`~/.hermes/.env`",
+        "`~/.hermes/config.yaml`",
+        "`~/.hermes/state.db`",
+        "`hermes --yolo`",
+        "`HERMES_YOLO_MODE=1`",
+        "Hermes TUI Session Orchestrator",
+        "Launching `hermes` (without `--tui`) stays on the classic CLI.",
+    ):
+        assert fixed not in en
+        assert fixed not in zh
+
+
 def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_sections():
     zh_cli_commands = (
         REPO_ROOT

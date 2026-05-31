@@ -5016,3 +5016,50 @@ def test_automate_with_cron_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_automation_templates_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "automation-templates.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "automation-templates.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Each template uses Doppel's built-in" in en
+    assert "每个模板使用 Doppel 内置的" in zh
+    assert "doppel webhook subscribe" in en
+    assert "doppel webhook subscribe" in zh
+    assert "doppel cron create" in en
+    assert "doppel cron create" in zh
+    assert "Jnot1/doppel-agent" in en
+    assert "Jnot1/doppel-agent" in zh
+    assert "~/.doppel/scripts/check-uptime.py" in en
+    assert "~/.doppel/scripts/check-uptime.py" in zh
+    assert "Doppel-Monitor/1.0" in en
+    assert "Doppel-Monitor/1.0" in zh
+    assert "Doppel Agent development" in en
+    assert "Doppel Agent development" in zh
+    assert "/path/to/your/doppel-agent/checkout" in en
+    assert "/path/to/your/doppel-agent/checkout" in zh
+
+    for stale in (
+        "Hermes's built-in",
+        "使用 Hermes 内置的",
+        "hermes webhook subscribe",
+        "hermes cron create",
+        "NousResearch/hermes-agent",
+        "~/.hermes/scripts/check-uptime.py",
+        "Hermes-Monitor/1.0",
+        "Hermes Agent development",
+        "~/.hermes/hermes-agent",
+    ):
+        assert stale not in en
+        assert stale not in zh

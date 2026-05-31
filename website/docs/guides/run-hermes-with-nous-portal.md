@@ -2,6 +2,7 @@
 sidebar_position: 1
 title: "Run Doppel Agent with Nous Portal"
 description: "Start-to-finish walkthrough: subscribe, set up, switch models, enable gateway tools, and verify routing"
+slug: /guides/run-doppel-agent-with-nous-portal
 ---
 
 # Run Doppel Agent with Nous Portal

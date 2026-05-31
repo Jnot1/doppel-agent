@@ -89,6 +89,10 @@ const config: Config = {
             from: ['/guides/use-mcp-with-hermes', '/guides/use-mcp-with-doppel'],
             to: '/guides/use-mcp-with-doppel-agent',
           },
+          {
+            from: '/guides/run-hermes-with-nous-portal',
+            to: '/guides/run-doppel-agent-with-nous-portal',
+          },
         ],
       },
     ],

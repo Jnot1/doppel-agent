@@ -63,7 +63,7 @@ doppel portal status      # 随时查看登录状态和路由信息
 
 还没有订阅？前往 [portal.nousresearch.com/manage-subscription](https://portal.nousresearch.com/manage-subscription) 购买。
 
-**完整详情：** 参见专属的 [Nous Portal 集成页面](/integrations/nous-portal)（订阅内容、模型目录、故障排查）以及分步指南[使用 Nous Portal 运行 Doppel Agent](/guides/run-hermes-with-nous-portal)。
+**完整详情：** 参见专属的 [Nous Portal 集成页面](/integrations/nous-portal)（订阅内容、模型目录、故障排查）以及分步指南[使用 Nous Portal 运行 Doppel Agent](/guides/run-doppel-agent-with-nous-portal)。
 
 **客户端标识。** Doppel Agent 发出的每个 Portal 请求都会携带自动与当前安装版本对齐的 `client=hermes-client-v<version>` 标签（例如 `client=hermes-client-v0.13.0`）。该标签会出现在所有 Portal 路径上——主聊天循环、辅助调用、压缩摘要器、网页提取——以便 Portal 侧遥测将 Doppel 流量与其他客户端区分开来。无需额外配置；每次运行 `doppel update` 后，该标签会自动随版本更新。
 

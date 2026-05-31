@@ -1473,12 +1473,16 @@ def test_integrations_providers_docs_prefer_doppel_customer_facing_wording_and_p
     assert "Doppel Agent" in zh
     assert "recommended way to run Doppel Agent" in en_preview
     assert "运行 Doppel Agent 的推荐方式" in zh_preview
+    assert "/guides/run-doppel-agent-with-nous-portal" in en_preview
+    assert "/guides/run-doppel-agent-with-nous-portal" in zh_preview
     assert "`doppel setup --portal`" in en_preview
     assert "`doppel setup --portal`" in zh_preview
     assert "`doppel model`" in en_preview
     assert "`doppel model`" in zh_preview
     assert "hermes model" not in en_preview
     assert "hermes model" not in zh_preview
+    assert "/guides/run-hermes-with-nous-portal" not in en_preview
+    assert "/guides/run-hermes-with-nous-portal" not in zh_preview
     assert "doppel chat --provider" in en_preview
     assert "doppel chat --provider" in zh_preview
     assert "doppel auth add" in en_preview
@@ -1501,6 +1505,76 @@ def test_integrations_providers_docs_prefer_doppel_customer_facing_wording_and_p
     assert "~/.doppel/config.yaml" in zh
     assert "~/.doppel/auth.json" in en
     assert "~/.doppel/auth.json" in zh
+
+
+def test_nous_portal_integration_page_pair_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "integrations" / "nous-portal.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "integrations"
+        / "nous-portal.md"
+    ).read_text(encoding="utf-8")
+
+    assert "recommended way to run Doppel Agent" in en
+    assert "运行 Doppel Agent 的推荐方式" in zh
+    assert "routes Doppel Agent's tool calls" in en
+    assert "将 Doppel Agent 的工具调用路由至 Nous 托管的基础设施" in zh
+    assert "doppel setup --portal" in en
+    assert "doppel setup --portal" in zh
+    assert "doppel chat" in en
+    assert "doppel chat" in zh
+    assert "doppel model" in en
+    assert "doppel model" in zh
+    assert "doppel portal status" in en
+    assert "doppel portal status" in zh
+    assert "doppel portal tools" in en
+    assert "doppel portal tools" in zh
+    assert "doppel portal open" in en
+    assert "doppel portal open" in zh
+    assert "doppel tools" in en
+    assert "doppel tools" in zh
+    assert "~/.doppel/auth.json" in en
+    assert "~/.doppel/auth.json" in zh
+    assert "~/.doppel/config.yaml" in en
+    assert "~/.doppel/config.yaml" in zh
+    assert "~/.hermes/auth.json" in en
+    assert "~/.hermes/auth.json" in zh
+    assert "~/.hermes/config.yaml" in en
+    assert "~/.hermes/config.yaml" in zh
+    assert "Hermes-4-70B" in en
+    assert "Hermes-4-70B" in zh
+    assert "non-Doppel tools" in en
+    assert "非 Doppel 工具" in zh
+    assert "Multiple Doppel configurations sharing one Portal login" in en
+    assert "多个 Doppel 配置共享一个 Portal 登录" in zh
+
+    for stale in (
+        "recommended way to run Hermes Agent",
+        "运行 Hermes Agent 的推荐方式",
+        "hermes setup --portal",
+        "hermes chat",
+        "hermes model",
+        "hermes portal status",
+        "hermes portal tools",
+        "hermes portal open",
+        "hermes tools",
+        "Hermes-side opinion",
+        "Hermes 侧的主观意见",
+        "If you already have Hermes configured",
+        "非 Hermes 工具",
+        "non-Hermes tools",
+        "Multiple Hermes configurations sharing one Portal login",
+        "多个 Hermes 配置共享一个 Portal 登录",
+    ):
+        assert stale not in en
+        assert stale not in zh
 
 
 def test_provider_plugin_developer_guides_prefer_doppel_surfaces():
@@ -5726,6 +5800,8 @@ def test_run_hermes_with_nous_portal_guides_prefer_doppel_customer_facing_surfac
 
     assert "Run Doppel Agent with Nous Portal" in en
     assert "通过 Nous Portal 运行 Doppel Agent" in zh
+    assert "slug: /guides/run-doppel-agent-with-nous-portal" in en
+    assert "slug: /guides/run-doppel-agent-with-nous-portal" in zh
     assert "running Doppel Agent on a [Nous Portal]" in en
     assert "在 [Nous Portal](https://portal.nousresearch.com) 订阅下运行 Doppel Agent" in zh
     assert "doppel setup --portal" in en
@@ -5788,6 +5864,35 @@ def test_run_hermes_with_nous_portal_guides_prefer_doppel_customer_facing_surfac
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_nous_portal_guide_route_graph_uses_doppel_slug_and_legacy_redirect():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "run-hermes-with-nous-portal.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "run-hermes-with-nous-portal.md"
+    ).read_text(encoding="utf-8")
+    config = (
+        REPO_ROOT / "website" / "docusaurus.config.ts"
+    ).read_text(encoding="utf-8")
+    en_providers = EN_INTEGRATIONS_PROVIDERS_DOC.read_text(encoding="utf-8")
+    zh_providers = ZH_INTEGRATIONS_PROVIDERS_DOC.read_text(encoding="utf-8")
+
+    assert "slug: /guides/run-doppel-agent-with-nous-portal" in en
+    assert "slug: /guides/run-doppel-agent-with-nous-portal" in zh
+    assert "to: '/guides/run-doppel-agent-with-nous-portal'" in config
+    assert "/guides/run-doppel-agent-with-nous-portal" in en_providers
+    assert "/guides/run-doppel-agent-with-nous-portal" in zh_providers
+    assert "/guides/run-hermes-with-nous-portal" not in en_providers
+    assert "/guides/run-hermes-with-nous-portal" not in zh_providers
 
 
 def test_work_with_skills_guides_prefer_doppel_customer_facing_surfaces():

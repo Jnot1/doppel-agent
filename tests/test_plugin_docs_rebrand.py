@@ -3424,6 +3424,75 @@ def test_user_stories_page_and_docs_categories_prefer_doppel_front_door_wording(
     assert "Explore the powerful features of Hermes Agent." not in features_category
 
 
+def test_overview_and_git_worktrees_docs_prefer_doppel_customer_facing_surfaces():
+    en_overview = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "overview.md"
+    ).read_text(encoding="utf-8")
+    zh_overview = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "features"
+        / "overview.md"
+    ).read_text(encoding="utf-8")
+    en_worktrees = (
+        REPO_ROOT / "website" / "docs" / "user-guide" / "git-worktrees.md"
+    ).read_text(encoding="utf-8")
+    zh_worktrees = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "user-guide"
+        / "git-worktrees.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Doppel Agent includes a rich set of capabilities" in en_overview
+    assert "Doppel Agent 包含一套丰富的能力" in zh_overview
+    assert "`doppel setup --portal`" in en_overview
+    assert "pick one via `doppel tools`" in en_overview
+    assert "可通过 `doppel tools` 选择" in zh_overview
+    assert "Managed via the unified `doppel plugins` interactive UI." in en_overview
+    assert "通过统一的 `doppel plugins` 交互式界面管理。" in zh_overview
+    assert "Hermes Agent includes a rich set of capabilities" not in en_overview
+    assert "Hermes Agent 包含一套丰富的能力" not in zh_overview
+    assert "`hermes setup --portal`" not in en_overview
+    assert "`hermes tools`" not in zh_overview
+    assert "`hermes plugins`" not in en_overview
+    assert "`hermes plugins`" not in zh_overview
+
+    assert 'description: "Run multiple Doppel agents safely on the same repository using git worktrees and isolated checkouts"' in en_worktrees
+    assert 'description: "使用 git worktrees 和隔离检出在同一仓库中安全运行多个 Doppel agent"' in zh_worktrees
+    assert "Doppel Agent is often used on large, long‑lived repositories." in en_worktrees
+    assert "Doppel Agent 常用于大型、长期维护的仓库。" in zh_worktrees
+    assert "`doppel` or `doppel chat`" in en_worktrees
+    assert "`doppel` 或 `doppel chat`" in zh_worktrees
+    assert "`terminal.cwd` in `~/.doppel/config.yaml`" in en_worktrees
+    assert "`terminal.cwd` 设置的目录" in zh_worktrees
+    assert "feature/worktree-experiment" in en_worktrees
+    assert "feature/worktree-experiment" in zh_worktrees
+    assert "`~/.doppel/checkpoints/`" in en_worktrees
+    assert "`~/.doppel/checkpoints/`" in zh_worktrees
+    assert "## Using `doppel -w` (Automatic Worktree Mode)" in en_worktrees
+    assert "## 使用 `doppel -w`（自动 Worktree 模式）" in zh_worktrees
+    assert "doppel -w -q \"Fix issue #123\"" in en_worktrees
+    assert "doppel -w -q \"Fix issue #123\"" in zh_worktrees
+    assert "Hermes Agent is often used on large, long‑lived repositories." not in en_worktrees
+    assert "Hermes Agent 常用于大型、长期维护的仓库。" not in zh_worktrees
+    assert "`hermes` or `hermes chat`" not in en_worktrees
+    assert "`hermes` 或 `hermes chat`" not in zh_worktrees
+    assert "`~/.hermes/checkpoints/`" not in en_worktrees
+    assert "`~/.hermes/checkpoints/`" not in zh_worktrees
+    assert "## Using `hermes -w` (Automatic Worktree Mode)" not in en_worktrees
+    assert "## 使用 `hermes -w`（自动 Worktree 模式）" not in zh_worktrees
+
+
 def test_zh_reference_cli_commands_rebrand_top_level_model_support_and_update_sections():
     zh_cli_commands = (
         REPO_ROOT

@@ -93,14 +93,14 @@ TIPS = [
     "hermes auth add lets you add multiple API keys for credential pool rotation.",
     "hermes completion bash >> ~/.bashrc enables tab completion for all commands and profiles.",
     "hermes logs -f follows agent.log in real time. --level WARNING --since 1h filters output.",
-    "hermes backup creates a zip backup of your entire Hermes home directory.",
-    "hermes profile create coder creates an isolated profile that becomes its own command.",
-    "hermes profile create work --clone copies your current config and keys to a new profile.",
-    "hermes update syncs new bundled skills to ALL profiles automatically.",
-    "hermes gateway install sets up Hermes as a system service (systemd/launchd).",
-    "hermes memory setup lets you configure an external memory provider (Honcho, Mem0, etc.).",
-    "hermes webhook subscribe creates event-driven webhook routes with HMAC validation.",
-    "Save money: hermes tools disables unused tools, hermes skills config trims skills down.",
+    "doppel backup creates a zip backup of your entire Doppel home directory.",
+    "doppel profile create coder creates an isolated profile that becomes its own command.",
+    "doppel profile create work --clone copies your current config and keys to a new profile.",
+    "doppel update syncs new bundled skills to ALL profiles automatically.",
+    "doppel gateway install sets up Doppel as a system service (systemd/launchd).",
+    "doppel memory setup lets you configure an external memory provider (Honcho, Mem0, etc.).",
+    "doppel webhook subscribe creates event-driven webhook routes with HMAC validation.",
+    "Save money: doppel tools disables unused tools, doppel skills config trims skills down.",
     "/reasoning low or /reasoning minimal cuts thinking depth below the default (medium) — faster, cheaper responses.",
     "hermes models routes vision, compression, and aux tasks to cheaper models — cuts background token cost 85%+ without downgrading your main chat model.",
 
@@ -193,7 +193,7 @@ TIPS = [
 
     # --- Gateway & Messaging ---
     "Hermes runs on 21 messaging platforms: Telegram, Discord, Slack, WhatsApp, Signal, Matrix, IRC, Microsoft Teams, email, and more.",
-    "hermes gateway install sets it up as a system service that starts on boot.",
+    "doppel gateway install sets it up as a system service that starts on boot.",
     "DingTalk uses Stream Mode — no webhooks or public URL needed.",
     "BlueBubbles brings iMessage to Hermes via a local macOS server.",
     "Webhook routes support HMAC validation, rate limiting, and event filtering.",
@@ -328,7 +328,7 @@ TIPS = [
     "GPT-5 and Codex use 'developer' role instead of 'system' in the message format.",
     "Per-task auxiliary overrides: auxiliary.vision.provider, auxiliary.compression.model, etc. in config.yaml.",
     "The auxiliary client treats 'main' as a provider alias — resolves to your actual primary provider + model.",
-    "hermes claw migrate --dry-run previews OpenClaw migration without writing anything.",
+    "doppel claw migrate --dry-run previews OpenClaw migration without writing anything.",
     "File paths pasted with quotes or escaped spaces are handled automatically — no manual cleanup needed.",
     "Slash commands never trigger the large-paste collapse — /command with big arguments works correctly.",
     "In interrupt mode, slash commands typed during agent execution bypass interrupt logic and run immediately.",
@@ -434,11 +434,11 @@ TIPS = [
     "hermes chat --source tool tags programmatic chats so they don't clutter hermes sessions list.",
     'hermes dump --show-keys includes redacted API key fingerprints for deeper support debugging.',
     'hermes sessions rename <ID> "new title" renames any past session; hermes sessions delete <ID> removes one.',
-    'hermes import restores a session export or profile archive produced by sessions export or profile export.',
+    'doppel import restores a session export or profile archive produced by sessions export or profile export.',
     'hermes fallback manages the fallback_model chain interactively — no hand-editing config.yaml.',
     'hermes pairing rotates the DM pairing token — the first messager after rotation claims access to the bot.',
-    'hermes setup walks first-time users through provider, keys, and platform wiring in one interactive flow.',
-    'hermes status --deep runs the full health sweep across every component; plain hermes status is the quick view.',
+    'doppel setup walks first-time users through provider, keys, and platform wiring in one interactive flow.',
+    'doppel status --deep runs the full health sweep across every component; plain doppel status is the quick view.',
 
     # --- Agent Behavior Env Vars ---
     'HERMES_AGENT_TIMEOUT=0 disables the gateway inactivity kill for a running agent — use for long research runs.',
@@ -484,5 +484,4 @@ def get_random_tip(exclude_recent: int = 0) -> str:
             deduplication across sessions.
     """
     return random.choice(TIPS)
-
 

@@ -3721,7 +3721,7 @@ def validate_config_structure(config: Optional[Dict[str, Any]] = None) -> List["
         try:
             config = load_config()
         except Exception:
-            return [ConfigIssue("error", "Could not load config.yaml", "Run 'hermes setup' to create a valid config")]
+            return [ConfigIssue("error", "Could not load config.yaml", "Run 'doppel setup' to create a valid config")]
 
     issues: List[ConfigIssue] = []
 
@@ -5558,9 +5558,9 @@ def show_config():
 
     print()
     print(color("─" * 60, Colors.DIM))
-    print(color("  hermes config edit     # Edit config file", Colors.DIM))
-    print(color("  hermes config set <key> <value>", Colors.DIM))
-    print(color("  hermes setup           # Run setup wizard", Colors.DIM))
+    print(color("  doppel config edit     # Edit config file", Colors.DIM))
+    print(color("  doppel config set <key> <value>", Colors.DIM))
+    print(color("  doppel setup           # Run setup wizard", Colors.DIM))
     print()
 
 

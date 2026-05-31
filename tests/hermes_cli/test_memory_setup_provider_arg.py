@@ -47,4 +47,4 @@ class TestMemorySetupProviderRouting:
         memory_setup.cmd_setup_provider("notaprovider")
         out = capsys.readouterr().out
         assert "not found" in out
-        assert "hermes memory setup" in out
+        assert "doppel memory setup" in out

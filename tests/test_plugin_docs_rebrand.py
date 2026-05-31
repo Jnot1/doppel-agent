@@ -4809,3 +4809,54 @@ def test_skill_catalog_and_public_skill_pages_prefer_doppel_wording_for_kanban_t
         assert stale not in zh_teams
         assert stale not in en_telephony
         assert stale not in zh_telephony
+
+
+def test_operate_teams_meeting_pipeline_guides_prefer_doppel_and_real_plugin_enable_flow():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "operate-teams-meeting-pipeline.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "operate-teams-meeting-pipeline.md"
+    ).read_text(encoding="utf-8")
+
+    assert "doppel plugins enable teams_pipeline" in en
+    assert "plugins.enabled: [teams_pipeline]" in en
+    assert "start a new CLI session" in en
+    assert "doppel teams-pipeline validate" in en
+    assert "~/.doppel/scripts/" in en
+    assert "doppel cron create" in en
+    assert "/usr/local/bin/doppel teams-pipeline maintain-subscriptions" in en
+    assert "~/.doppel/.env" in en
+    assert "Doppel cron" in en
+
+    assert "doppel plugins enable teams_pipeline" in zh
+    assert "plugins.enabled: [teams_pipeline]" in zh
+    assert "新的 CLI 会话" in zh
+    assert "doppel teams-pipeline validate" in zh
+    assert "~/.doppel/scripts/" in zh
+    assert "doppel cron create" in zh
+    assert "/usr/local/bin/doppel teams-pipeline maintain-subscriptions" in zh
+    assert "~/.doppel/.env" in zh
+    assert "Doppel cron" in zh
+
+    for stale in (
+        "hermes teams-pipeline validate",
+        "hermes teams-pipeline token-health",
+        "hermes teams-pipeline subscriptions",
+        "hermes teams-pipeline maintain-subscriptions",
+        "hermes cron create",
+        "hermes cron list",
+        "~/.hermes/scripts/",
+        "/usr/local/bin/hermes teams-pipeline maintain-subscriptions",
+        "~/.hermes/.env",
+        "Hermes cron",
+    ):
+        assert stale not in en
+        assert stale not in zh

@@ -5646,3 +5646,91 @@ def test_github_pr_review_agent_guides_prefer_doppel_customer_facing_surfaces():
     ):
         assert stale not in en
         assert stale not in zh
+
+
+def test_webhook_github_pr_review_guides_prefer_doppel_customer_facing_surfaces():
+    en = (
+        REPO_ROOT / "website" / "docs" / "guides" / "webhook-github-pr-review.md"
+    ).read_text(encoding="utf-8")
+    zh = (
+        REPO_ROOT
+        / "website"
+        / "i18n"
+        / "zh-Hans"
+        / "docusaurus-plugin-content-docs"
+        / "current"
+        / "guides"
+        / "webhook-github-pr-review.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Connect Doppel to GitHub" in en
+    assert "将 Doppel 连接到 GitHub" in zh
+    assert "connecting Doppel Agent to GitHub" in en
+    assert "将 Doppel Agent 连接到 GitHub" in zh
+    assert "your Doppel instance" in en
+    assert "你的 Doppel 实例" in zh
+    assert "Doppel runs the agent" in en
+    assert "Doppel 使用一个 prompt 运行 agent" in zh
+    assert "`doppel gateway`" in en
+    assert "`doppel gateway`" in zh
+    assert "`~/.doppel/config.yaml`" in en
+    assert "`~/.doppel/config.yaml`" in zh
+    assert "default webhook toolset" in en
+    assert "默认的 webhook 工具集" in zh
+    assert "\n```bash\ndoppel gateway\n```" in en
+    assert "\n```bash\ndoppel gateway\n```" in zh
+    assert "Doppel should post a review comment" in en
+    assert "Doppel 应该会发布一条审查评论" in zh
+    assert '${DOPPEL_HOME:-$HOME/.doppel}/logs/gateway.log' in en
+    assert '${DOPPEL_HOME:-$HOME/.doppel}/logs/gateway.log' in zh
+    assert "If Doppel is running on your laptop" in en
+    assert "如果 Doppel 在你的笔记本上运行" in zh
+    assert "`doppel webhook test <name>`" in en
+    assert "`doppel webhook test <name>`" in zh
+    assert "`doppel webhook subscribe`" in en
+    assert "`doppel webhook subscribe`" in zh
+    assert "[Doppel skill](/user-guide/features/skills)" in en
+    assert "[Doppel skill](/user-guide/features/skills)" in zh
+    assert "Doppel does not stack multiple skills" in en
+    assert "Doppel 不会叠加多个 skill" in zh
+    assert "Doppel handles both automatically" in en
+    assert "Doppel 会自动处理两者" in zh
+    assert "Doppel will then pass the full payload" in en
+    assert "Doppel 将把完整 payload 作为格式化 JSON 直接传递给 agent" in zh
+    assert "[Build a Doppel Plugin](/guides/build-a-hermes-plugin)" in en
+    assert "[构建 Doppel Plugin](/guides/build-a-hermes-plugin)" in zh
+    assert "## 使用 ngrok 进行本地测试 {#local-testing-with-ngrok}" in zh
+    assert "## 安全说明 {#security-notes}" in zh
+
+    for stale in (
+        "Connect Hermes to GitHub",
+        "将 Hermes 连接到 GitHub",
+        "connecting Hermes Agent to GitHub",
+        "将 Hermes Agent 连接到 GitHub",
+        "your Hermes instance",
+        "你的 Hermes 实例",
+        "Hermes runs the agent",
+        "Hermes 使用一个 prompt 运行 agent",
+        "`hermes gateway`",
+        "`~/.hermes/config.yaml`",
+        "default `hermes-webhook` toolset",
+        "默认的 `hermes-webhook` 工具集",
+        "Hermes should post a review comment",
+        "Hermes 应该会发布一条审查评论",
+        '${HERMES_HOME:-$HOME/.hermes}/logs/gateway.log',
+        "If Hermes is running on your laptop",
+        "如果 Hermes 在你的笔记本上运行",
+        "`hermes webhook test <name>`",
+        "`hermes webhook subscribe`",
+        "[Hermes skill](/user-guide/features/skills)",
+        "Hermes does not stack multiple skills",
+        "Hermes 不会叠加多个 skill",
+        "Hermes handles both automatically",
+        "Hermes 会自动处理两者",
+        "Hermes will then pass the full payload",
+        "Hermes 将把完整 payload 作为格式化 JSON 直接传递给 agent",
+        "[Build a Plugin](/guides/build-a-hermes-plugin)",
+        "[构建 Plugin](/guides/build-a-hermes-plugin)",
+    ):
+        assert stale not in en
+        assert stale not in zh

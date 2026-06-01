@@ -36,9 +36,14 @@ from gateway.platforms.api_server import (
 )
 from hermes_constants import (
     API_SERVER_CAPABILITIES_OBJECT,
+    API_SERVER_COMPLETED_HEADER,
+    API_SERVER_ERROR_HEADER,
+    API_SERVER_PARTIAL_HEADER,
     API_SERVER_SESSION_ID_HEADER,
     API_SERVER_SESSION_KEY_HEADER,
     API_SERVER_TOOL_PROGRESS_EVENT,
+    LEGACY_API_SERVER_SESSION_ID_HEADER,
+    LEGACY_API_SERVER_SESSION_KEY_HEADER,
     get_api_server_model_owner,
     get_api_server_platform_id,
     get_default_api_server_model_name,
@@ -2836,7 +2841,7 @@ class TestChatCompletionsAgentIncomplete:
     @pytest.mark.asyncio
     async def test_truncation_with_partial_text_uses_length_finish_reason(self, adapter):
         """Partial text + truncation marker → finish_reason='length', 200 OK,
-        plus hermes extras + headers."""
+        plus doppel extras + headers."""
         mock_result = {
             "final_response": "Here is part one of the answer",
             "completed": False,
@@ -2857,11 +2862,14 @@ class TestChatCompletionsAgentIncomplete:
             data = await resp.json()
             assert data["choices"][0]["finish_reason"] == "length"
             assert data["choices"][0]["message"]["content"] == "Here is part one of the answer"
-            assert data["hermes"]["partial"] is True
-            assert data["hermes"]["completed"] is False
-            assert data["hermes"]["error_code"] == "output_truncated"
-            assert resp.headers.get("X-Hermes-Completed") == "false"
-            assert resp.headers.get("X-Hermes-Partial") == "true"
+            assert data["doppel"]["partial"] is True
+            assert data["doppel"]["completed"] is False
+            assert data["doppel"]["error_code"] == "output_truncated"
+            assert "hermes" not in data
+            assert resp.headers.get(API_SERVER_COMPLETED_HEADER) == "false"
+            assert resp.headers.get(API_SERVER_PARTIAL_HEADER) == "true"
+            assert "X-Hermes-Completed" not in resp.headers
+            assert "X-Hermes-Partial" not in resp.headers
 
     @pytest.mark.asyncio
     async def test_failure_with_no_text_returns_502_error_envelope(self, adapter):
@@ -2893,14 +2901,16 @@ class TestChatCompletionsAgentIncomplete:
             data = await resp.json()
             assert data["error"]["code"] == "agent_incomplete"
             assert "truncated" in data["error"]["message"].lower()
-            assert data["error"]["hermes"]["partial"] is True
-            assert data["error"]["hermes"]["failed"] is True
-            assert resp.headers.get("X-Hermes-Completed") == "false"
+            assert data["error"]["doppel"]["partial"] is True
+            assert data["error"]["doppel"]["failed"] is True
+            assert "hermes" not in data["error"]
+            assert resp.headers.get(API_SERVER_COMPLETED_HEADER) == "false"
+            assert "X-Hermes-Completed" not in resp.headers
 
     @pytest.mark.asyncio
     async def test_normal_completion_unchanged(self, adapter):
         """Sanity: a completed-True result still returns finish_reason='stop'
-        and no hermes extras (preserves the existing happy-path contract)."""
+        and no doppel extras (preserves the existing happy-path contract)."""
         mock_result = {
             "final_response": "All good.",
             "completed": True,
@@ -2921,7 +2931,11 @@ class TestChatCompletionsAgentIncomplete:
             data = await resp.json()
             assert data["choices"][0]["finish_reason"] == "stop"
             assert data["choices"][0]["message"]["content"] == "All good."
+            assert "doppel" not in data
             assert "hermes" not in data
+            assert API_SERVER_COMPLETED_HEADER not in resp.headers
+            assert API_SERVER_PARTIAL_HEADER not in resp.headers
+            assert API_SERVER_ERROR_HEADER not in resp.headers
             assert "X-Hermes-Completed" not in resp.headers
 
 
@@ -3219,14 +3233,14 @@ class TestConversationParameter:
 
 
 # ---------------------------------------------------------------------------
-# X-Hermes-Session-Id header (session continuity)
+# X-Doppel-Session-Id header (session continuity)
 # ---------------------------------------------------------------------------
 
 
 class TestSessionIdHeader:
     @pytest.mark.asyncio
     async def test_new_session_response_includes_session_id_header(self, adapter):
-        """Without X-Hermes-Session-Id, a new session is created and returned in the header."""
+        """Without X-Doppel-Session-Id, a new session is created and returned in the header."""
         mock_result = {"final_response": "Hello!", "messages": [], "api_calls": 1}
         app = _create_app(adapter)
         async with TestClient(TestServer(app)) as cli:
@@ -3241,7 +3255,7 @@ class TestSessionIdHeader:
 
     @pytest.mark.asyncio
     async def test_provided_session_id_is_used_and_echoed(self, auth_adapter):
-        """When X-Hermes-Session-Id is provided, it's passed to the agent and echoed in the response."""
+        """When X-Doppel-Session-Id is provided, it's passed to the agent and echoed in the response."""
         mock_result = {"final_response": "Continuing!", "messages": [], "api_calls": 1}
         mock_db = MagicMock()
         mock_db.get_messages_as_conversation.return_value = [
@@ -3266,8 +3280,31 @@ class TestSessionIdHeader:
             assert call_kwargs["session_id"] == "my-session-123"
 
     @pytest.mark.asyncio
+    async def test_legacy_session_id_header_is_still_accepted(self, auth_adapter):
+        """Legacy X-Hermes-Session-Id input still works, but responses prefer X-Doppel-Session-Id."""
+        mock_result = {"final_response": "Continuing!", "messages": [], "api_calls": 1}
+        mock_db = MagicMock()
+        mock_db.get_messages_as_conversation.return_value = []
+        auth_adapter._session_db = mock_db
+        app = _create_app(auth_adapter)
+        async with TestClient(TestServer(app)) as cli:
+            with patch.object(auth_adapter, "_run_agent", new_callable=AsyncMock) as mock_run:
+                mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
+                resp = await cli.post(
+                    "/v1/chat/completions",
+                    headers={LEGACY_API_SERVER_SESSION_ID_HEADER: "legacy-session-123", "Authorization": "Bearer sk-secret"},
+                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "Continue"}]},
+                )
+
+            assert resp.status == 200
+            assert resp.headers.get(API_SERVER_SESSION_ID_HEADER) == "legacy-session-123"
+            assert LEGACY_API_SERVER_SESSION_ID_HEADER not in resp.headers
+            call_kwargs = mock_run.call_args.kwargs
+            assert call_kwargs["session_id"] == "legacy-session-123"
+
+    @pytest.mark.asyncio
     async def test_provided_session_id_loads_history_from_db(self, auth_adapter):
-        """When X-Hermes-Session-Id is provided, history comes from SessionDB not request body."""
+        """When X-Doppel-Session-Id is provided, history comes from SessionDB not request body."""
         mock_result = {"final_response": "OK", "messages": [], "api_calls": 1}
         db_history = [
             {"role": "user", "content": "stored message 1"},
@@ -3326,7 +3363,7 @@ class TestSessionIdHeader:
 
 
 # ---------------------------------------------------------------------------
-# X-Hermes-Session-Key header (long-term memory scoping)
+# X-Doppel-Session-Key header (long-term memory scoping)
 # ---------------------------------------------------------------------------
 
 
@@ -3340,7 +3377,7 @@ class TestSessionKeyHeader:
 
     @pytest.mark.asyncio
     async def test_session_key_passed_to_agent_and_echoed(self, auth_adapter):
-        """X-Hermes-Session-Key reaches _run_agent as gateway_session_key and is echoed back."""
+        """X-Doppel-Session-Key reaches _run_agent as gateway_session_key and is echoed back."""
         mock_result = {"final_response": "ok", "messages": [], "api_calls": 1}
         app = _create_app(auth_adapter)
         async with TestClient(TestServer(app)) as cli:
@@ -3358,6 +3395,28 @@ class TestSessionKeyHeader:
             assert resp.headers.get(API_SERVER_SESSION_KEY_HEADER) == "webui:user-42"
             call_kwargs = mock_run.call_args.kwargs
             assert call_kwargs["gateway_session_key"] == "webui:user-42"
+
+    @pytest.mark.asyncio
+    async def test_legacy_session_key_header_is_still_accepted(self, auth_adapter):
+        """Legacy X-Hermes-Session-Key input still works, but responses prefer X-Doppel-Session-Key."""
+        mock_result = {"final_response": "ok", "messages": [], "api_calls": 1}
+        app = _create_app(auth_adapter)
+        async with TestClient(TestServer(app)) as cli:
+            with patch.object(auth_adapter, "_run_agent", new_callable=AsyncMock) as mock_run:
+                mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
+                resp = await cli.post(
+                    "/v1/chat/completions",
+                    headers={
+                        LEGACY_API_SERVER_SESSION_KEY_HEADER: "legacy-user-42",
+                        "Authorization": "Bearer sk-secret",
+                    },
+                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                )
+            assert resp.status == 200
+            assert resp.headers.get(API_SERVER_SESSION_KEY_HEADER) == "legacy-user-42"
+            assert LEGACY_API_SERVER_SESSION_KEY_HEADER not in resp.headers
+            call_kwargs = mock_run.call_args.kwargs
+            assert call_kwargs["gateway_session_key"] == "legacy-user-42"
 
     @pytest.mark.asyncio
     async def test_session_key_independent_of_session_id(self, auth_adapter):
@@ -3476,7 +3535,7 @@ class TestSessionKeyHeader:
 
     @pytest.mark.asyncio
     async def test_responses_endpoint_accepts_session_key(self, auth_adapter):
-        """Responses API honors the same X-Hermes-Session-Key contract."""
+        """Responses API honors the same X-Doppel-Session-Key contract."""
         mock_result = {"final_response": "ok", "messages": [], "api_calls": 1}
         app = _create_app(auth_adapter)
         async with TestClient(TestServer(app)) as cli:

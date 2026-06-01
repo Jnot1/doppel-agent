@@ -14,6 +14,8 @@ from hermes_constants import (
     API_SERVER_SESSION_ID_HEADER,
     API_SERVER_SESSION_KEY_HEADER,
     API_SERVER_SESSION_OBJECT,
+    LEGACY_API_SERVER_SESSION_ID_HEADER,
+    LEGACY_API_SERVER_SESSION_KEY_HEADER,
 )
 from hermes_state import SessionDB
 
@@ -184,6 +186,32 @@ async def test_session_chat_loads_history_and_preserves_session_headers(auth_ada
         {"role": "user", "content": "earlier"},
         {"role": "assistant", "content": "prior answer"},
     ]
+
+
+@pytest.mark.asyncio
+async def test_session_chat_legacy_headers_are_accepted_but_echo_new_names(auth_adapter, session_db):
+    session_id = session_db.create_session("legacy-session", "api_server")
+    mock_run = AsyncMock(return_value=({"final_response": "ok", "session_id": session_id}, {"total_tokens": 3}))
+    app = _create_session_app(auth_adapter)
+    with patch.object(auth_adapter, "_run_agent", mock_run):
+        async with TestClient(TestServer(app)) as cli:
+            resp = await cli.post(
+                f"/api/sessions/{session_id}/chat",
+                json={"message": "next"},
+                headers={
+                    "Authorization": "Bearer sk-test",
+                    LEGACY_API_SERVER_SESSION_ID_HEADER: session_id,
+                    LEGACY_API_SERVER_SESSION_KEY_HEADER: "legacy-client-42",
+                },
+            )
+            assert resp.status == 200
+            payload = await resp.json()
+
+    assert payload["object"] == API_SERVER_SESSION_CHAT_COMPLETION_OBJECT
+    assert resp.headers[API_SERVER_SESSION_ID_HEADER] == session_id
+    assert resp.headers[API_SERVER_SESSION_KEY_HEADER] == "legacy-client-42"
+    assert LEGACY_API_SERVER_SESSION_ID_HEADER not in resp.headers
+    assert LEGACY_API_SERVER_SESSION_KEY_HEADER not in resp.headers
 
 
 @pytest.mark.asyncio

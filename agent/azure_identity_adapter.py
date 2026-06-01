@@ -179,7 +179,7 @@ def _build_default_credential(config: EntraIdentityConfig) -> Any:
     cloud authority, etc.) is read by ``azure-identity`` from the
     standard ``AZURE_*`` environment variables — see Microsoft's
     documented credential resolution chain. Users configure those in
-    ``~/.hermes/.env`` or the deployment environment.
+    ``~/.doppel/.env`` or the deployment environment.
     """
     ai = _require_azure_identity()
     kwargs: Dict[str, Any] = {}
@@ -269,7 +269,7 @@ def has_azure_identity_credentials(scope: Optional[str] = None,
     Runs ``credential.get_token(scope)`` under a thread-based timeout so
     a slow token service can't hang the caller. Returns False on any
     error — never raises. Use for ``doppel doctor`` /
-    ``hermes auth status`` / wizard preflight.
+    ``doppel auth status`` / wizard preflight.
 
     ``allow_install``: when True (default) and ``azure-identity`` is not
     importable, the adapter triggers the standard lazy-install path

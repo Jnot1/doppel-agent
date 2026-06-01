@@ -23,6 +23,12 @@ def test_auxiliary_client_runtime_guidance_prefers_doppel():
     assert "switch to a different provider with `doppel model`." in text
     assert "Run: hermes setup" not in text
     assert "Run: doppel setup" in text
+    assert "(run: hermes auth)." not in text
+    assert "(run: doppel auth)." in text
+    assert "(run: hermes auth add nous)." not in text
+    assert "(run: doppel auth add nous)." in text
+    assert "but Nous Portal not configured (run: hermes auth)" not in text
+    assert "but Nous Portal not configured (run: doppel auth)" in text
 
 
 def test_agent_init_and_backend_helper_guidance_prefers_doppel():
@@ -107,3 +113,10 @@ def test_conversation_loop_and_gemini_runtime_guidance_prefers_doppel():
     assert "~/.doppel/.env" in gemini_native
     assert "run `hermes setup`" not in gemini_native
     assert "run `doppel setup`" in gemini_native
+
+
+def test_google_oauth_runtime_guidance_prefers_doppel():
+    google_oauth = _read("agent/google_oauth.py")
+
+    assert "Run `hermes auth add google-gemini-cli` first." not in google_oauth
+    assert "Run `doppel auth add google-gemini-cli` first." in google_oauth

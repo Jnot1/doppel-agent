@@ -1143,6 +1143,7 @@ class TestTranscribeXAI:
         from tools.transcription_tools import _transcribe_xai
         result = _transcribe_xai("/tmp/test.ogg", "grok-stt")
         assert result["success"] is False
+        assert "doppel model" in result["error"]
         assert "XAI_API_KEY" in result["error"]
 
     def test_successful_transcription(self, monkeypatch, sample_ogg, mock_xai_http_module):

@@ -10,6 +10,7 @@ def _read(rel_path: str) -> str:
 
 def test_tui_gateway_customer_surfaces_prefer_doppel() -> None:
     server = _read("tui_gateway/server.py")
+    entry = _read("tui_gateway/entry.py")
 
     assert "Re-read ``~/.hermes/.env`` into the gateway process" not in server
     assert "Re-read ``~/.doppel/.env`` into the gateway process" in server
@@ -30,3 +31,6 @@ def test_tui_gateway_customer_surfaces_prefer_doppel() -> None:
     assert "# Save the key to ~/.doppel/.env" in server
     assert "appends every unhandled exception to ~/.hermes/logs/tui_gateway_crash.log" not in server
     assert "appends every unhandled exception to ~/.doppel/logs/tui_gateway_crash.log" in server
+
+    assert "``hermes --tui``" not in entry
+    assert "``doppel --tui``" in entry

@@ -1,6 +1,6 @@
 """CLI entry point for the Doppel ACP adapter.
 
-Loads environment variables from ``~/.doppel/.env`` / legacy ``~/.hermes/.env``, configures logging
+Loads environment variables from ``~/.doppel/.env`` plus legacy compatibility fallbacks, configures logging
 to write to stderr (so stdout is reserved for ACP JSON-RPC transport),
 and starts the ACP agent server.
 

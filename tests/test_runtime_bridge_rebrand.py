@@ -68,6 +68,8 @@ def test_runtime_bridge_and_dashboard_surfaces_prefer_doppel() -> None:
     assert "Install agent-browser + Playwright Chromium into ~/.doppel/node/" in acp_entry
     assert "with ``hermes postinstall`` and the runtime lazy installer." not in acp_entry
     assert "with ``doppel postinstall`` and the runtime lazy installer." in acp_entry
+    assert "Loads environment variables from ``~/.doppel/.env`` / legacy ``~/.hermes/.env``" not in acp_entry
+    assert "Loads environment variables from ``~/.doppel/.env`` plus legacy compatibility fallbacks" in acp_entry
 
     assert "`~/.hermes/dashboard-themes/*.yaml`" not in theme_types
     assert "`~/.doppel/dashboard-themes/*.yaml`" in theme_types

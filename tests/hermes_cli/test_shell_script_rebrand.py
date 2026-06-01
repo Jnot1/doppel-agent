@@ -13,11 +13,15 @@ def test_shell_script_surfaces_prefer_doppel() -> None:
         'log_info "Legacy compatibility alias kept alongside the Doppel launcher"',
         'echo "Missing required command: doppel" >&2',
         '_nb_ok "Node $(node --version) found (Doppel-managed)"',
+        "#   2. ~/.doppel/node/ from a prior Doppel-managed install",
+        "#   5. pinned nodejs.org tarball into ~/.doppel/node/ (always works, zero shell rc edits)",
     ]
     forbidden = [
         'log_info "Legacy alias kept at $command_link_display_dir/hermes"',
         'echo "Missing required command: doppel (legacy hermes also accepted)" >&2',
         '_nb_ok "Node $(node --version) found (Hermes-managed)"',
+        "#   2. ~/.hermes/node/ from a prior Hermes-managed install",
+        "#   5. pinned nodejs.org tarball into ~/.hermes/node/ (always works, zero shell rc edits)",
     ]
 
     haystacks = [install_text, open_webui_text, node_bootstrap_text]

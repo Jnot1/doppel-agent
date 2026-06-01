@@ -18,6 +18,7 @@ def test_platform_runtime_surfaces_prefer_doppel() -> None:
     wecom = _read("gateway/platforms/wecom.py")
     sms = _read("gateway/platforms/sms.py")
     telegram = _read("gateway/platforms/telegram.py")
+    matrix = _read("gateway/platforms/matrix.py")
 
     assert '"title": "Hermes"' not in dingtalk
     assert '"title": "Doppel"' in dingtalk
@@ -77,3 +78,6 @@ def test_platform_runtime_surfaces_prefer_doppel() -> None:
     assert "Scripts live in ~/.doppel/scripts/gmail-triage/." in telegram
     assert "Telegram groups can contain several Hermes bot profiles." not in telegram
     assert "Telegram groups can contain several Doppel bot profiles." in telegram
+
+    assert 'normal phrases like "Hermes Agent" become "Agent".' not in matrix
+    assert 'normal phrases like "Doppel Agent" become "Agent".' in matrix

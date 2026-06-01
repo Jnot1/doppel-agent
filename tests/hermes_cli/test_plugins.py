@@ -122,6 +122,21 @@ class TestPluginDiscovery:
         assert "proj_plugin" in mgr._plugins
         assert mgr._plugins["proj_plugin"].enabled
 
+    def test_discover_project_plugins_via_doppel_alias(self, tmp_path, monkeypatch):
+        """Plugins in ./.doppel/plugins/ are discovered via the preferred env alias."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+        monkeypatch.chdir(project_dir)
+        monkeypatch.setenv("DOPPEL_ENABLE_PROJECT_PLUGINS", "true")
+        plugins_dir = project_dir / ".doppel" / "plugins"
+        _make_plugin_dir(plugins_dir, "proj_plugin")
+
+        mgr = PluginManager()
+        mgr.discover_and_load()
+
+        assert "proj_plugin" in mgr._plugins
+        assert mgr._plugins["proj_plugin"].enabled
+
     def test_discover_project_plugins_skipped_by_default(self, tmp_path, monkeypatch):
         """Project plugins are not discovered unless explicitly enabled."""
         project_dir = tmp_path / "project"

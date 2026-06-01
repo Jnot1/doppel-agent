@@ -4795,24 +4795,35 @@ def test_extending_dashboard_docs_prefer_doppel_surfaces_and_keep_runtime_litera
     assert "重启 `doppel dashboard`" in zh
     assert "~/.doppel/logs/errors.log" in en
     assert "~/.doppel/logs/errors.log" in zh
-
-    for fixed in (
-        "Hermes Teal",
-        "data-hermes-theme-css",
-        "__HERMES_PLUGIN_SDK__",
-        "__HERMES_PLUGINS__",
-        "hermes-example-plugins",
-        "strike-freedom-cockpit",
-        "HERMES_ENABLE_PROJECT_PLUGINS",
-        "Legacy installs may still keep the same dashboard themes, plugins, and logs under `~/.hermes`.",
-        "旧安装仍可能将相同的 dashboard 主题、插件和日志保存在 `~/.hermes` 下。",
-    ):
-        assert fixed in en or fixed in zh
+    assert "Doppel Teal" in en
+    assert "Doppel Teal" in zh
+    assert "__DOPPEL_PLUGIN_SDK__" in en
+    assert "__DOPPEL_PLUGIN_SDK__" in zh
+    assert "__DOPPEL_PLUGINS__" in en
+    assert "__DOPPEL_PLUGINS__" in zh
+    assert "`plugins/example-dashboard`" in en
+    assert "`plugins/example-dashboard`" in zh
+    assert "single scoped `<style>` tag" in en
+    assert "单个带作用域的 `<style>` 标签" in zh
 
     assert "Build themes and plugins for the Hermes web dashboard" not in en
     assert "为 Hermes Web Dashboard 构建主题和插件" not in zh
     assert "The Hermes web dashboard (`hermes dashboard`)" not in en
     assert "Hermes Web Dashboard（`hermes dashboard`）" not in zh
+    assert "Hermes Teal" not in en
+    assert "Hermes Teal" not in zh
+    assert "data-hermes-theme-css" not in en
+    assert "data-hermes-theme-css" not in zh
+    assert "__HERMES_PLUGIN_SDK__" not in en
+    assert "__HERMES_PLUGIN_SDK__" not in zh
+    assert "__HERMES_PLUGINS__" not in en
+    assert "__HERMES_PLUGINS__" not in zh
+    assert "hermes-example-plugins" not in en
+    assert "hermes-example-plugins" not in zh
+    assert "strike-freedom-cockpit" not in en
+    assert "strike-freedom-cockpit" not in zh
+    assert "HERMES_ENABLE_PROJECT_PLUGINS" not in en
+    assert "HERMES_ENABLE_PROJECT_PLUGINS" not in zh
     assert "~/.hermes/dashboard-themes/" not in en
     assert "~/.hermes/dashboard-themes/" not in zh
     assert "~/.hermes/plugins/my-plugin/" not in en

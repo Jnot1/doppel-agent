@@ -4,14 +4,15 @@ Hermes Plugin System
 
 Discovers, loads, and manages plugins from four sources:
 
-1. **Bundled plugins** – ``<repo>/plugins/<name>/`` (shipped with hermes-agent;
+1. **Bundled plugins** – ``<repo>/plugins/<name>/`` (shipped with doppel-agent;
    ``memory/`` and ``context_engine/`` subdirs are excluded — they have their
    own discovery paths)
-2. **User plugins**   – ``~/.hermes/plugins/<name>/``
-3. **Project plugins** – ``./.hermes/plugins/<name>/`` (opt-in via
-   ``HERMES_ENABLE_PROJECT_PLUGINS``)
-4. **Pip plugins**     – packages that expose the ``hermes_agent.plugins``
-   entry-point group.
+2. **User plugins**   – ``~/.doppel/plugins/<name>/``
+3. **Project plugins** – ``./.doppel/plugins/<name>/`` (opt-in via
+   ``DOPPEL_ENABLE_PROJECT_PLUGINS``; legacy Hermes aliases still work)
+4. **Pip plugins**     – packages that expose the preferred
+   ``doppel_agent.plugins`` entry-point group (legacy Hermes alias still
+   works).
 
 Later sources override earlier ones on name collision, so a user or project
 plugin with the same name as a bundled plugin replaces it.
@@ -184,6 +185,34 @@ _NS_PARENT = "hermes_plugins"
 def _env_enabled(name: str) -> bool:
     """Return True when an env var is set to a truthy opt-in value."""
     return env_var_enabled(name)
+
+
+PREFERRED_PROJECT_PLUGINS_ENV = "DOPPEL_ENABLE_PROJECT_PLUGINS"
+LEGACY_PROJECT_PLUGINS_ENV = "HERMES_ENABLE_PROJECT_PLUGINS"
+PROJECT_PLUGINS_ENV_SCAN_ORDER = (
+    PREFERRED_PROJECT_PLUGINS_ENV,
+    LEGACY_PROJECT_PLUGINS_ENV,
+)
+
+
+def _project_plugins_enabled() -> bool:
+    """Return True when either Doppel or legacy Hermes project opt-in is set."""
+    return any(_env_enabled(name) for name in PROJECT_PLUGINS_ENV_SCAN_ORDER)
+
+
+def _project_plugin_dirs() -> list[Path]:
+    """Return project-local plugin roots in load order.
+
+    Legacy ``./.hermes/plugins`` remains supported, but the preferred
+    customer-facing root is ``./.doppel/plugins``. The loader scans the
+    legacy directory first so the preferred Doppel directory wins on name
+    collision when manifests are later de-duplicated.
+    """
+    cwd = Path.cwd()
+    return [
+        cwd / ".hermes" / "plugins",
+        cwd / ".doppel" / "plugins",
+    ]
 
 
 def _select_entry_points_for_group(entry_points_obj: Any, group: str) -> list[Any]:
@@ -1093,23 +1122,26 @@ class PluginManager:
         logger.debug("  bundled/platforms: %d manifest(s)", len(bundled_platforms))
         manifests.extend(bundled_platforms)
 
-        # 2. User plugins (~/.hermes/plugins/)
+        # 2. User plugins (~/.doppel/plugins/)
         user_dir = get_hermes_home() / "plugins"
         logger.debug("Scanning user plugins: %s", user_dir)
         user_manifests = self._scan_directory(user_dir, source="user")
         logger.debug("  user: %d manifest(s)", len(user_manifests))
         manifests.extend(user_manifests)
 
-        # 3. Project plugins (./.hermes/plugins/)
-        if _env_enabled("HERMES_ENABLE_PROJECT_PLUGINS"):
-            project_dir = Path.cwd() / ".hermes" / "plugins"
-            logger.debug("Scanning project plugins: %s", project_dir)
-            project_manifests = self._scan_directory(project_dir, source="project")
-            logger.debug("  project: %d manifest(s)", len(project_manifests))
-            manifests.extend(project_manifests)
+        # 3. Project plugins (preferred: ./.doppel/plugins/, legacy: ./.hermes/plugins/)
+        if _project_plugins_enabled():
+            total_project = 0
+            for project_dir in _project_plugin_dirs():
+                logger.debug("Scanning project plugins: %s", project_dir)
+                project_manifests = self._scan_directory(project_dir, source="project")
+                logger.debug("  project (%s): %d manifest(s)", project_dir, len(project_manifests))
+                total_project += len(project_manifests)
+                manifests.extend(project_manifests)
+            logger.debug("  project total: %d manifest(s)", total_project)
         else:
             logger.debug(
-                "Project plugins disabled (set HERMES_ENABLE_PROJECT_PLUGINS=1 to enable)"
+                "Project plugins disabled (set DOPPEL_ENABLE_PROJECT_PLUGINS=1 to enable)"
             )
 
         # 4. Pip / entry-point plugins

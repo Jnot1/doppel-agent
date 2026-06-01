@@ -22,6 +22,7 @@ def test_achievements_customer_surfaces_prefer_doppel() -> None:
     manifest = _read("plugins/hermes-achievements/dashboard/manifest.json")
     plugin_api = _read("plugins/hermes-achievements/dashboard/plugin_api.py")
     dist = _read("plugins/hermes-achievements/dashboard/dist/index.js")
+    web_server = _read("hermes_cli/web_server.py")
     readme = _read("plugins/hermes-achievements/README.md")
     en_doc = _section(
         _read("website/docs/user-guide/features/built-in-plugins.md"),
@@ -84,7 +85,9 @@ def test_achievements_customer_surfaces_prefer_doppel() -> None:
         '"category": "Doppel Native"',
         'PLUGIN_SLUG = "doppel-achievements"',
         "doppel-achievement-",
+        '"doppel-achievements": ["hermes-achievements"]',
+        "Mounted legacy plugin API alias: /api/plugins/%s/ -> %s",
     ]
     for text in required_runtime:
-        combined = "\n".join([plugin_api, dist])
+        combined = "\n".join([plugin_api, dist, web_server])
         assert text in combined, text

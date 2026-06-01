@@ -4776,6 +4776,10 @@ def _mount_plugin_api_routes():
     static JS/CSS but their Python ``api`` file is never auto-imported
     by the web server.  See GHSA-5qr3-c538-wm9j (#29156).
     """
+    legacy_prefix_aliases = {
+        "doppel-achievements": ["hermes-achievements"],
+    }
+
     for plugin in _get_dashboard_plugins():
         api_file_name = plugin.get("_api_file")
         if not api_file_name:
@@ -4829,8 +4833,17 @@ def _mount_plugin_api_routes():
             if router is None:
                 _log.warning("Plugin %s api file has no 'router' attribute", plugin["name"])
                 continue
-            app.include_router(router, prefix=f"/api/plugins/{plugin['name']}")
-            _log.info("Mounted plugin API routes: /api/plugins/%s/", plugin["name"])
+            prefixes = [plugin["name"], *legacy_prefix_aliases.get(plugin["name"], [])]
+            for prefix_name in prefixes:
+                app.include_router(router, prefix=f"/api/plugins/{prefix_name}")
+                if prefix_name == plugin["name"]:
+                    _log.info("Mounted plugin API routes: /api/plugins/%s/", prefix_name)
+                else:
+                    _log.info(
+                        "Mounted legacy plugin API alias: /api/plugins/%s/ -> %s",
+                        prefix_name,
+                        plugin["name"],
+                    )
         except Exception as exc:
             _log.warning("Failed to load plugin %s API routes: %s", plugin["name"], exc)
 

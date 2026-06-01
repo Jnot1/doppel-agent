@@ -52,6 +52,15 @@ def test_register_cli_builds_tree():
     assert args.teams_pipeline_action == "list"
 
 
+def test_missing_action_usage_is_doppel_first(capsys):
+    exit_code = teams_pipeline_command(_make_args())
+    out = capsys.readouterr().out
+
+    assert exit_code == 2
+    assert "Usage: doppel teams-pipeline" in out
+    assert "Usage: hermes teams-pipeline" not in out
+
+
 def test_list_prints_recent_jobs(capsys, tmp_path):
     store = TeamsPipelineStore(tmp_path / "teams_pipeline_store.json")
     store.upsert_job(

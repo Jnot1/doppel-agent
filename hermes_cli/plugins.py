@@ -4,14 +4,15 @@ Hermes Plugin System
 
 Discovers, loads, and manages plugins from four sources:
 
-1. **Bundled plugins** – ``<repo>/plugins/<name>/`` (shipped with hermes-agent;
+1. **Bundled plugins** – ``<repo>/plugins/<name>/`` (shipped with doppel-agent;
    ``memory/`` and ``context_engine/`` subdirs are excluded — they have their
    own discovery paths)
-2. **User plugins**   – ``~/.hermes/plugins/<name>/``
-3. **Project plugins** – ``./.hermes/plugins/<name>/`` (opt-in via
-   ``HERMES_ENABLE_PROJECT_PLUGINS``)
-4. **Pip plugins**     – packages that expose the ``hermes_agent.plugins``
-   entry-point group.
+2. **User plugins**   – ``~/.doppel/plugins/<name>/``
+3. **Project plugins** – ``./.doppel/plugins/<name>/`` (opt-in via
+   ``DOPPEL_ENABLE_PROJECT_PLUGINS``; legacy Hermes aliases still work)
+4. **Pip plugins**     – packages that expose the preferred
+   ``doppel_agent.plugins`` entry-point group (legacy Hermes alias still
+   works).
 
 Later sources override earlier ones on name collision, so a user or project
 plugin with the same name as a bundled plugin replaces it.
@@ -166,7 +167,17 @@ VALID_HOOKS: Set[str] = {
     "post_approval_response",
 }
 
-ENTRY_POINTS_GROUP = "hermes_agent.plugins"
+PREFERRED_ENTRY_POINTS_GROUP = "doppel_agent.plugins"
+LEGACY_ENTRY_POINTS_GROUP = "hermes_agent.plugins"
+ENTRY_POINTS_GROUP = PREFERRED_ENTRY_POINTS_GROUP
+ENTRY_POINTS_GROUP_SCAN_ORDER = (
+    LEGACY_ENTRY_POINTS_GROUP,
+    PREFERRED_ENTRY_POINTS_GROUP,
+)
+ENTRY_POINTS_GROUP_LOAD_ORDER = (
+    PREFERRED_ENTRY_POINTS_GROUP,
+    LEGACY_ENTRY_POINTS_GROUP,
+)
 
 _NS_PARENT = "hermes_plugins"
 
@@ -174,6 +185,43 @@ _NS_PARENT = "hermes_plugins"
 def _env_enabled(name: str) -> bool:
     """Return True when an env var is set to a truthy opt-in value."""
     return env_var_enabled(name)
+
+
+PREFERRED_PROJECT_PLUGINS_ENV = "DOPPEL_ENABLE_PROJECT_PLUGINS"
+LEGACY_PROJECT_PLUGINS_ENV = "HERMES_ENABLE_PROJECT_PLUGINS"
+PROJECT_PLUGINS_ENV_SCAN_ORDER = (
+    PREFERRED_PROJECT_PLUGINS_ENV,
+    LEGACY_PROJECT_PLUGINS_ENV,
+)
+
+
+def _project_plugins_enabled() -> bool:
+    """Return True when either Doppel or legacy Hermes project opt-in is set."""
+    return any(_env_enabled(name) for name in PROJECT_PLUGINS_ENV_SCAN_ORDER)
+
+
+def _project_plugin_dirs() -> list[Path]:
+    """Return project-local plugin roots in load order.
+
+    Legacy ``./.hermes/plugins`` remains supported, but the preferred
+    customer-facing root is ``./.doppel/plugins``. The loader scans the
+    legacy directory first so the preferred Doppel directory wins on name
+    collision when manifests are later de-duplicated.
+    """
+    cwd = Path.cwd()
+    return [
+        cwd / ".hermes" / "plugins",
+        cwd / ".doppel" / "plugins",
+    ]
+
+
+def _select_entry_points_for_group(entry_points_obj: Any, group: str) -> list[Any]:
+    """Return entry points for one group across importlib.metadata variants."""
+    if hasattr(entry_points_obj, "select"):
+        return list(entry_points_obj.select(group=group))
+    if isinstance(entry_points_obj, dict):
+        return list(entry_points_obj.get(group, []))
+    return [ep for ep in entry_points_obj if ep.group == group]
 
 
 def _get_disabled_plugins() -> set:
@@ -1074,23 +1122,26 @@ class PluginManager:
         logger.debug("  bundled/platforms: %d manifest(s)", len(bundled_platforms))
         manifests.extend(bundled_platforms)
 
-        # 2. User plugins (~/.hermes/plugins/)
+        # 2. User plugins (~/.doppel/plugins/)
         user_dir = get_hermes_home() / "plugins"
         logger.debug("Scanning user plugins: %s", user_dir)
         user_manifests = self._scan_directory(user_dir, source="user")
         logger.debug("  user: %d manifest(s)", len(user_manifests))
         manifests.extend(user_manifests)
 
-        # 3. Project plugins (./.hermes/plugins/)
-        if _env_enabled("HERMES_ENABLE_PROJECT_PLUGINS"):
-            project_dir = Path.cwd() / ".hermes" / "plugins"
-            logger.debug("Scanning project plugins: %s", project_dir)
-            project_manifests = self._scan_directory(project_dir, source="project")
-            logger.debug("  project: %d manifest(s)", len(project_manifests))
-            manifests.extend(project_manifests)
+        # 3. Project plugins (preferred: ./.doppel/plugins/, legacy: ./.hermes/plugins/)
+        if _project_plugins_enabled():
+            total_project = 0
+            for project_dir in _project_plugin_dirs():
+                logger.debug("Scanning project plugins: %s", project_dir)
+                project_manifests = self._scan_directory(project_dir, source="project")
+                logger.debug("  project (%s): %d manifest(s)", project_dir, len(project_manifests))
+                total_project += len(project_manifests)
+                manifests.extend(project_manifests)
+            logger.debug("  project total: %d manifest(s)", total_project)
         else:
             logger.debug(
-                "Project plugins disabled (set HERMES_ENABLE_PROJECT_PLUGINS=1 to enable)"
+                "Project plugins disabled (set DOPPEL_ENABLE_PROJECT_PLUGINS=1 to enable)"
             )
 
         # 4. Pip / entry-point plugins
@@ -1175,7 +1226,7 @@ class PluginManager:
             if not is_enabled:
                 loaded = LoadedPlugin(manifest=manifest, enabled=False)
                 loaded.error = (
-                    "not enabled in config (run `hermes plugins enable {}` to activate)"
+                    "not enabled in config (run `doppel plugins enable {}` to activate)"
                     .format(lookup_key)
                 )
                 self._plugins[lookup_key] = loaded
@@ -1377,22 +1428,15 @@ class PluginManager:
         manifests: List[PluginManifest] = []
         try:
             eps = importlib.metadata.entry_points()
-            # Python 3.12+ returns a SelectableGroups; earlier returns dict
-            if hasattr(eps, "select"):
-                group_eps = eps.select(group=ENTRY_POINTS_GROUP)
-            elif isinstance(eps, dict):
-                group_eps = eps.get(ENTRY_POINTS_GROUP, [])
-            else:
-                group_eps = [ep for ep in eps if ep.group == ENTRY_POINTS_GROUP]
-
-            for ep in group_eps:
-                manifest = PluginManifest(
-                    name=ep.name,
-                    source="entrypoint",
-                    path=ep.value,
-                    key=ep.name,
-                )
-                manifests.append(manifest)
+            for group in ENTRY_POINTS_GROUP_SCAN_ORDER:
+                for ep in _select_entry_points_for_group(eps, group):
+                    manifest = PluginManifest(
+                        name=ep.name,
+                        source="entrypoint",
+                        path=ep.value,
+                        key=ep.name,
+                    )
+                    manifests.append(manifest)
         except Exception as exc:
             logger.debug("Entry-point scan failed: %s", exc)
 
@@ -1512,19 +1556,15 @@ class PluginManager:
     def _load_entrypoint_module(self, manifest: PluginManifest) -> types.ModuleType:
         """Load a pip-installed plugin via its entry-point reference."""
         eps = importlib.metadata.entry_points()
-        if hasattr(eps, "select"):
-            group_eps = eps.select(group=ENTRY_POINTS_GROUP)
-        elif isinstance(eps, dict):
-            group_eps = eps.get(ENTRY_POINTS_GROUP, [])
-        else:
-            group_eps = [ep for ep in eps if ep.group == ENTRY_POINTS_GROUP]
-
-        for ep in group_eps:
-            if ep.name == manifest.name:
-                return ep.load()
+        for group in ENTRY_POINTS_GROUP_LOAD_ORDER:
+            for ep in _select_entry_points_for_group(eps, group):
+                if ep.name == manifest.name:
+                    return ep.load()
 
         raise ImportError(
-            f"Entry point '{manifest.name}' not found in group '{ENTRY_POINTS_GROUP}'"
+            f"Entry point '{manifest.name}' not found in preferred group "
+            f"'{PREFERRED_ENTRY_POINTS_GROUP}' or legacy compatibility group "
+            f"'{LEGACY_ENTRY_POINTS_GROUP}'"
         )
 
     # -----------------------------------------------------------------------

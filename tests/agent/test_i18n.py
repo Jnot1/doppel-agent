@@ -167,3 +167,51 @@ def test_t_missing_key_in_non_english_falls_back_to_english(tmp_path, monkeypatc
 def test_t_unknown_language_uses_english():
     """Unknown lang codes normalize to English, not to a key-path fallback."""
     assert i18n.t("approval.denied", lang="klingon") == i18n.t("approval.denied", lang="en")
+
+
+@pytest.mark.parametrize(
+    "lang",
+    ["en", "af", "zh-hant", "es", "ga", "fr", "de", "hu", "it", "ja", "ko", "pt", "ru", "tr", "uk", "zh"],
+)
+def test_gateway_customer_facing_locale_slice_prefers_doppel(lang: str):
+    help_header = i18n.t("gateway.help.header", lang=lang)
+    assert "Doppel" in help_header
+    assert "Hermes" not in help_header
+
+    debug_hint = i18n.t("gateway.debug.full_logs_hint", lang=lang)
+    assert "`doppel debug share`" in debug_hint
+    assert "`hermes debug share`" not in debug_hint
+
+    share_hint = i18n.t("gateway.debug.share_hint", lang=lang)
+    assert "Doppel" in share_hint
+    assert "Hermes" not in share_hint
+
+    status_header = i18n.t("gateway.status.header", lang=lang)
+    assert "Doppel" in status_header
+    assert "Hermes" not in status_header
+
+    thread_ready = i18n.t("gateway.topic.thread_ready", lang=lang)
+    assert "Doppel" in thread_ready
+    assert "Hermes" not in thread_ready
+
+    restart_notice = i18n.t("gateway.restart.restarting", lang=lang)
+    assert "`doppel gateway restart`" in restart_notice
+    assert "`hermes gateway restart`" not in restart_notice
+
+    kanban_suffix = i18n.t("gateway.kanban.truncated_suffix", lang=lang)
+    assert "`doppel kanban" in kanban_suffix
+    assert "`hermes kanban" not in kanban_suffix
+
+    update_platform = i18n.t("gateway.update.platform_not_messaging", lang=lang)
+    assert "`doppel update`" in update_platform
+    assert "`hermes update`" not in update_platform
+
+    update_missing = i18n.t("gateway.update.hermes_cmd_not_found", lang=lang)
+    assert "`doppel`" in update_missing
+    assert "`hermes`" not in update_missing
+    assert "Doppel" in update_missing
+    assert "Hermes" not in update_missing
+
+    update_starting = i18n.t("gateway.update.starting", lang=lang)
+    assert "Doppel" in update_starting
+    assert "Hermes" not in update_starting

@@ -62,6 +62,32 @@ class TestCmdUpdatePip:
 
     @patch("shutil.which", return_value="/usr/bin/uv")
     @patch("subprocess.run")
+    def test_update_pip_uses_shared_distribution_name(
+        self, mock_run, _mock_which, mock_args, monkeypatch
+    ):
+        from hermes_cli import main as hm
+
+        mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+        monkeypatch.setattr(
+            "hermes_constants.get_distribution_package_name",
+            lambda: "doppel-agent-test",
+        )
+        monkeypatch.setattr(hm.sys, "prefix", "/usr")
+        monkeypatch.setattr(hm.sys, "base_prefix", "/usr")
+
+        hm._cmd_update_pip(mock_args)
+
+        assert mock_run.call_args.args[0] == [
+            "/usr/bin/uv",
+            "pip",
+            "install",
+            "--system",
+            "--upgrade",
+            "doppel-agent-test",
+        ]
+
+    @patch("shutil.which", return_value="/usr/bin/uv")
+    @patch("subprocess.run")
     def test_update_pip_does_not_export_virtualenv_for_system_python(
         self, mock_run, _mock_which, mock_args, monkeypatch
     ):
@@ -76,6 +102,23 @@ class TestCmdUpdatePip:
 
         assert mock_run.call_count == 1
         assert "env" not in mock_run.call_args.kwargs
+
+    @patch("shutil.which", return_value="/usr/bin/uv")
+    @patch("subprocess.run")
+    def test_update_pip_completion_banner_is_doppel_first(
+        self, mock_run, _mock_which, mock_args, capsys, monkeypatch
+    ):
+        from hermes_cli import main as hm
+
+        mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+        monkeypatch.setattr(hm.sys, "prefix", "/usr")
+        monkeypatch.setattr(hm.sys, "base_prefix", "/usr")
+
+        hm._cmd_update_pip(mock_args)
+
+        out = capsys.readouterr().out
+        assert "Restart doppel to use the new version." in out
+        assert "Restart hermes" not in out
 
 
 class TestCmdUpdateBranchFallback:
@@ -251,11 +294,13 @@ class TestCmdUpdateBranchFallback:
                 "(no capture_output) so postinstall progress is visible"
             )
 
-    def test_update_non_interactive_runs_safe_config_migrations(self, mock_args, capsys):
+    @patch("shutil.which", return_value=None)
+    @patch("subprocess.run")
+    def test_update_non_interactive_runs_safe_config_migrations(
+        self, mock_run, _mock_which, mock_args, capsys
+    ):
         """Dashboard/web updates apply non-interactive migrations before restart."""
-        with patch("shutil.which", return_value=None), patch(
-            "subprocess.run"
-        ) as mock_run, patch("builtins.input") as mock_input, patch(
+        with patch("builtins.input") as mock_input, patch(
             "hermes_cli.config.get_missing_env_vars", return_value=["MISSING_KEY"]
         ), patch(
             "hermes_cli.config.get_missing_config_fields",
@@ -279,6 +324,15 @@ class TestCmdUpdateBranchFallback:
             captured = capsys.readouterr()
             assert "applying safe config migrations" in captured.out
             assert "API keys require manual entry" in captured.out
+
+
+class TestGatewayServiceGlobs:
+    def test_includes_current_and_legacy_gateway_patterns(self):
+        from hermes_cli import main as hm
+
+        globs = hm._gateway_service_globs()
+
+        assert globs == ("doppel-gateway*", "hermes-gateway*")
 
 
 class TestCmdUpdateProfileSkillSync:
@@ -499,6 +553,72 @@ class TestCmdUpdateBranchFlag:
         assert "nonexistent" in out
 
 
+def test_is_fork_uses_shared_official_repo_urls(monkeypatch):
+    from hermes_cli import main as hm
+
+    monkeypatch.setattr(
+        "hermes_constants.get_official_repo_urls",
+        lambda: frozenset({"https://example.com/org/custom-agent"}),
+    )
+
+    assert hm._is_fork("https://example.com/org/custom-agent.git") is False
+    assert hm._is_fork("https://example.com/org/fork.git") is True
+
+
+@patch("subprocess.run")
+def test_add_upstream_remote_uses_shared_upstream_repo_url(mock_run, monkeypatch, tmp_path):
+    from hermes_cli import main as hm
+
+    mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
+    monkeypatch.setattr(
+        "hermes_constants.get_official_upstream_repo_url",
+        lambda: "https://example.com/org/custom-agent.git",
+    )
+
+    ok = hm._add_upstream_remote(["git"], tmp_path)
+
+    assert ok is True
+    assert mock_run.call_args.args[0] == [
+        "git",
+        "remote",
+        "add",
+        "upstream",
+        "https://example.com/org/custom-agent.git",
+    ]
+
+
+def test_sync_with_upstream_decline_prompt_is_doppel_first(monkeypatch, tmp_path, capsys):
+    from hermes_cli import main as hm
+
+    prompts = []
+    marked = {"called": False}
+
+    monkeypatch.setattr(hm, "_has_upstream_remote", lambda *_: False)
+    monkeypatch.setattr(hm, "_should_skip_upstream_prompt", lambda: False)
+    monkeypatch.setattr(hm, "_mark_skip_upstream_prompt", lambda: marked.__setitem__("called", True))
+    monkeypatch.setattr(hm, "_official_upstream_repo_slug", lambda: "NousResearch/hermes-agent")
+    monkeypatch.setattr(
+        hm,
+        "_official_upstream_repo_url",
+        lambda: "https://github.com/NousResearch/hermes-agent.git",
+    )
+
+    def fake_input(prompt=""):
+        prompts.append(prompt)
+        return "n"
+
+    monkeypatch.setattr("builtins.input", fake_input)
+
+    hm._sync_with_upstream_if_needed(["git"], tmp_path)
+
+    out = capsys.readouterr().out
+    assert "official upstream repository" in out
+    assert "official Hermes repository" not in out
+    assert "NousResearch/hermes-agent" in out
+    assert prompts == ["Add official upstream repo as 'upstream' remote? [Y/n]: "]
+    assert marked["called"] is True
+
+
 class TestCmdUpdateCheckBranchFlag:
     """``hermes update --check --branch <name>`` honors the branch override.
 
@@ -661,6 +781,8 @@ class TestCmdUpdateZipBranchRefusal:
         out = capsys.readouterr().out
         assert "bb/gui" in out
         assert "not supported" in out
+        assert "rerun `doppel update --branch bb/gui`" in out
+        assert "update against main with `doppel update`" in out
         # No actual download attempted.
         assert "Downloading latest version" not in out
 

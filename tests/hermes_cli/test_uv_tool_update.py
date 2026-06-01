@@ -1,15 +1,15 @@
 """Tests for uv-tool install detection in the update path (issue #29700).
 
-``uv tool install hermes-agent`` lives outside any venv, so the previous
+``uv tool install doppel-agent`` lives outside any venv, so the previous
 ``uv pip install --upgrade`` update path failed with ``No virtual
 environment found``. ``is_uv_tool_install`` should detect this layout and
 both the user-facing recommended command and the actual
 ``_cmd_update_pip`` subprocess invocation should switch to
-``uv tool upgrade hermes-agent``.
+``uv tool upgrade doppel-agent``.
 
 Detection is restricted to properties of the running interpreter
 (``sys.prefix`` / ``sys.executable``) so a pip/venv install on a machine
-that also has ``uv tool install hermes-agent`` does not get misclassified.
+that also has ``uv tool install doppel-agent`` does not get misclassified.
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class TestIsUvToolInstall:
     def test_returns_true_when_sys_prefix_matches_uv_tool_layout(self):
         from hermes_cli import config
 
-        with patch.object(config.sys, "prefix", "/home/user/.local/share/uv/tools/hermes-agent"):
+        with patch.object(config.sys, "prefix", "/home/user/.local/share/uv/tools/doppel-agent"):
             assert config.is_uv_tool_install() is True
 
     def test_returns_true_when_sys_executable_matches_uv_tool_layout(self):
@@ -40,7 +40,7 @@ class TestIsUvToolInstall:
              patch.object(
                  config.sys,
                  "executable",
-                 "/home/user/.local/share/uv/tools/hermes-agent/bin/python",
+                 "/home/user/.local/share/uv/tools/doppel-agent/bin/python",
              ):
             assert config.is_uv_tool_install() is True
 
@@ -54,7 +54,7 @@ class TestIsUvToolInstall:
     def test_does_not_consult_uv_tool_list(self):
         """Detection must NOT shell out: ``uv tool list`` would false-positive
         when the active install is pip/venv but the machine also has
-        ``uv tool install hermes-agent`` somewhere on disk. Copilot review on
+        ``uv tool install doppel-agent`` somewhere on disk. Copilot review on
         PR #29703 flagged this; the fix is to never call ``uv tool list``
         from the detection path."""
         from hermes_cli import config
@@ -67,13 +67,13 @@ class TestIsUvToolInstall:
 
     def test_case_insensitive_match(self):
         """Match must be case-insensitive — Windows paths preserve case
-        (e.g. ``...AppData\\Local\\UV\\Tools\\hermes-agent``) and a case-sensitive
+        (e.g. ``...AppData\\Local\\UV\\Tools\\doppel-agent``) and a case-sensitive
         check would miss them. We exercise the lower-cased compare path here
         without monkey-patching ``os.sep``, which would break the whole suite."""
         from hermes_cli import config
 
         with patch.object(
-            config.sys, "prefix", "/HOME/USER/.local/share/UV/Tools/hermes-agent"
+            config.sys, "prefix", "/HOME/USER/.local/share/UV/Tools/doppel-agent"
         ):
             assert config.is_uv_tool_install() is True
 
@@ -97,7 +97,7 @@ class TestRecommendedUpdateCommandForUvTool:
         with patch("shutil.which", return_value="/usr/local/bin/uv"), \
              patch.object(config, "is_uv_tool_install", return_value=True):
             cmd = config.recommended_update_command_for_method("pip")
-            assert cmd == "uv tool upgrade hermes-agent"
+            assert cmd == "uv tool upgrade doppel-agent"
 
     def test_uv_tool_install_recommends_uv_tool_upgrade_even_without_uv_on_path(self):
         """Recommendation reflects the *install method*, not whether ``uv`` is
@@ -107,7 +107,7 @@ class TestRecommendedUpdateCommandForUvTool:
         with patch("shutil.which", return_value=None), \
              patch.object(config, "is_uv_tool_install", return_value=True):
             cmd = config.recommended_update_command_for_method("pip")
-            assert cmd == "uv tool upgrade hermes-agent"
+            assert cmd == "uv tool upgrade doppel-agent"
 
     def test_uv_pip_install_keeps_legacy_recommendation(self):
         """Existing behavior: uv is on PATH but Hermes is a regular pip install."""
@@ -116,7 +116,7 @@ class TestRecommendedUpdateCommandForUvTool:
         with patch("shutil.which", return_value="/usr/local/bin/uv"), \
              patch.object(config, "is_uv_tool_install", return_value=False):
             cmd = config.recommended_update_command_for_method("pip")
-            assert cmd == "uv pip install --upgrade hermes-agent"
+            assert cmd == "uv pip install --upgrade doppel-agent"
 
     def test_no_uv_falls_back_to_plain_pip(self):
         from hermes_cli import config
@@ -124,7 +124,7 @@ class TestRecommendedUpdateCommandForUvTool:
         with patch("shutil.which", return_value=None), \
              patch.object(config, "is_uv_tool_install", return_value=False):
             cmd = config.recommended_update_command_for_method("pip")
-            assert cmd == "pip install --upgrade hermes-agent"
+            assert cmd == "pip install --upgrade doppel-agent"
 
     def test_recommendation_does_not_spawn_subprocess(self):
         """Computing the recommendation string must be cheap — no ``uv tool list``
@@ -139,7 +139,7 @@ class TestRecommendedUpdateCommandForUvTool:
              patch("subprocess.run") as mock_run:
             cmd = config.recommended_update_command_for_method("pip")
             mock_run.assert_not_called()
-            assert cmd == "uv pip install --upgrade hermes-agent"
+            assert cmd == "uv pip install --upgrade doppel-agent"
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +158,7 @@ class TestCmdUpdatePipUsesUvTool:
              patch("hermes_cli.config.is_uv_tool_install", return_value=True):
             _cmd_update_pip(SimpleNamespace())
 
-        assert mock_run.call_args[0][0] == ["/usr/local/bin/uv", "tool", "upgrade", "hermes-agent"]
+        assert mock_run.call_args[0][0] == ["/usr/local/bin/uv", "tool", "upgrade", "doppel-agent"]
 
     @patch("subprocess.run")
     def test_runs_uv_pip_install_when_not_uv_tool(self, mock_run):
@@ -175,7 +175,7 @@ class TestCmdUpdatePipUsesUvTool:
             "pip",
             "install",
             "--upgrade",
-            "hermes-agent",
+            "doppel-agent",
         ]
 
     @patch("subprocess.run")
@@ -188,7 +188,7 @@ class TestCmdUpdatePipUsesUvTool:
             _cmd_update_pip(SimpleNamespace())
 
         cmd = mock_run.call_args[0][0]
-        assert cmd[1:] == ["-m", "pip", "install", "--upgrade", "hermes-agent"]
+        assert cmd[1:] == ["-m", "pip", "install", "--upgrade", "doppel-agent"]
 
     @patch("subprocess.run")
     def test_exits_nonzero_on_subprocess_failure(self, mock_run):
@@ -236,7 +236,7 @@ class TestCmdUpdatePipInstallLayouts:
         from hermes_cli import main as hm
 
         mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
-        monkeypatch.setattr(hm.sys, "prefix", "/home/u/.local/pipx/venvs/hermes-agent")
+        monkeypatch.setattr(hm.sys, "prefix", "/home/u/.local/pipx/venvs/doppel-agent")
         monkeypatch.setattr(hm.sys, "base_prefix", "/usr")
 
         def _which(name):
@@ -246,7 +246,7 @@ class TestCmdUpdatePipInstallLayouts:
              patch("hermes_cli.config.is_uv_tool_install", return_value=False):
             hm._cmd_update_pip(SimpleNamespace())
 
-        assert mock_run.call_args[0][0] == ["/usr/bin/pipx", "upgrade", "hermes-agent"]
+        assert mock_run.call_args[0][0] == ["/usr/bin/pipx", "upgrade", "doppel-agent"]
         # pipx upgrade ignores VIRTUAL_ENV; we must not set it.
         assert "env" not in mock_run.call_args.kwargs
 
@@ -257,7 +257,7 @@ class TestCmdUpdatePipInstallLayouts:
         from hermes_cli import main as hm
 
         mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
-        monkeypatch.setattr(hm.sys, "prefix", "/home/u/.local/pipx/venvs/hermes-agent")
+        monkeypatch.setattr(hm.sys, "prefix", "/home/u/.local/pipx/venvs/doppel-agent")
         monkeypatch.setattr(hm.sys, "base_prefix", "/usr")
 
         # pipx layout detected via prefix, but pipx binary missing on PATH.
@@ -270,9 +270,9 @@ class TestCmdUpdatePipInstallLayouts:
 
         # prefix != base_prefix, so this is treated as a venv -> overlay, no --system.
         assert mock_run.call_args[0][0] == [
-            "/usr/bin/uv", "pip", "install", "--upgrade", "hermes-agent",
+            "/usr/bin/uv", "pip", "install", "--upgrade", "doppel-agent",
         ]
-        assert mock_run.call_args.kwargs["env"]["VIRTUAL_ENV"].endswith("hermes-agent")
+        assert mock_run.call_args.kwargs["env"]["VIRTUAL_ENV"].endswith("doppel-agent")
 
     @patch("subprocess.run")
     def test_bare_pip_outside_venv_adds_system(self, mock_run, monkeypatch):
@@ -288,7 +288,7 @@ class TestCmdUpdatePipInstallLayouts:
             hm._cmd_update_pip(SimpleNamespace())
 
         assert mock_run.call_args[0][0] == [
-            "/usr/bin/uv", "pip", "install", "--system", "--upgrade", "hermes-agent",
+            "/usr/bin/uv", "pip", "install", "--system", "--upgrade", "doppel-agent",
         ]
         assert "env" not in mock_run.call_args.kwargs
 
@@ -298,7 +298,7 @@ class TestCmdUpdatePipInstallLayouts:
 
         mock_run.return_value = subprocess.CompletedProcess([], 0, stdout="", stderr="")
         monkeypatch.delenv("VIRTUAL_ENV", raising=False)
-        monkeypatch.setattr(hm.sys, "prefix", "/home/u/.hermes/hermes-agent/venv")
+        monkeypatch.setattr(hm.sys, "prefix", "/home/u/.doppel/doppel-agent/venv")
         monkeypatch.setattr(hm.sys, "base_prefix", "/usr")
 
         with patch("shutil.which", return_value="/usr/bin/uv"), \
@@ -307,5 +307,5 @@ class TestCmdUpdatePipInstallLayouts:
 
         cmd = mock_run.call_args[0][0]
         assert "--system" not in cmd
-        assert cmd == ["/usr/bin/uv", "pip", "install", "--upgrade", "hermes-agent"]
-        assert mock_run.call_args.kwargs["env"]["VIRTUAL_ENV"] == "/home/u/.hermes/hermes-agent/venv"
+        assert cmd == ["/usr/bin/uv", "pip", "install", "--upgrade", "doppel-agent"]
+        assert mock_run.call_args.kwargs["env"]["VIRTUAL_ENV"] == "/home/u/.doppel/doppel-agent/venv"

@@ -662,6 +662,37 @@ class TestNoCredsPreflight:
         assert result is False
         # Non-retryable so the reconnect watcher drops it cleanly
         assert adapter._fatal_error_code == "whatsapp_not_paired"
+        assert adapter._fatal_error_message == (
+            "WhatsApp enabled but not paired — run `doppel whatsapp` to pair."
+        )
+        assert adapter._fatal_error_retryable is False
+
+    @pytest.mark.asyncio
+    async def test_connect_returns_false_when_node_missing(self, tmp_path):
+        from gateway.platforms.whatsapp import WhatsAppAdapter
+
+        adapter = WhatsAppAdapter.__new__(WhatsAppAdapter)
+        adapter.platform = Platform.WHATSAPP
+        adapter.config = MagicMock()
+        adapter._bridge_port = 19876
+        adapter._bridge_script = str(tmp_path / "bridge.js")
+        adapter._session_path = tmp_path / "session"
+        adapter._bridge_log_fh = None
+        adapter._fatal_error_code = None
+        adapter._fatal_error_message = None
+        adapter._fatal_error_retryable = True
+
+        with patch(
+            "gateway.platforms.whatsapp.check_whatsapp_requirements",
+            return_value=False,
+        ):
+            result = await adapter.connect()
+
+        assert result is False
+        assert adapter._fatal_error_code == "whatsapp_node_missing"
+        assert adapter._fatal_error_message == (
+            "Node.js is not installed — install Node.js and re-run `doppel gateway`."
+        )
         assert adapter._fatal_error_retryable is False
 
     @pytest.mark.asyncio

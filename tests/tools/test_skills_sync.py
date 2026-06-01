@@ -481,7 +481,8 @@ class TestSyncSkills:
 
         captured = capsys.readouterr().out
         assert "new-skill" in captured
-        assert "hermes skills reset new-skill" in captured
+        assert "doppel skills reset new-skill" in captured
+        assert "hermes skills reset new-skill" not in captured
 
     def test_backfills_official_optional_provenance_for_existing_identical_skill(self, tmp_path):
         bundled = self._setup_bundled(tmp_path)
@@ -808,6 +809,8 @@ class TestResetBundledSkill:
         assert result["ok"] is False
         assert result["action"] == "not_in_manifest"
         assert "not a tracked bundled skill" in result["message"]
+        assert "doppel skills uninstall" in result["message"]
+        assert "hermes skills uninstall" not in result["message"]
 
     def test_reset_restore_when_bundled_removed_upstream(self, tmp_path):
         """If a skill was removed upstream, --restore should fail with a clear message."""
@@ -841,6 +844,8 @@ class TestResetBundledSkill:
 
             assert result["ok"] is True
             assert result["action"] == "manifest_cleared"
+            assert "Future `doppel update` runs" in result["message"]
+            assert "Future `hermes update` runs" not in result["message"]
             # Manifest entry still present (re-baselined), user copy still present
             post_manifest = _read_manifest()
             assert "google-workspace" in post_manifest

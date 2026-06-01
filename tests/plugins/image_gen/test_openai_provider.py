@@ -134,6 +134,8 @@ class TestGenerate:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         result = openai_plugin.OpenAIImageGenProvider().generate("a cat")
         assert result["success"] is False
+        assert "doppel tools" in result["error"]
+        assert "doppel setup" in result["error"]
         assert result["error_type"] == "auth_required"
 
     def test_b64_saves_to_cache(self, provider, tmp_path):

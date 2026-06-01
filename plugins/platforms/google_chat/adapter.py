@@ -2237,7 +2237,7 @@ class GoogleChatAdapter(BasePlatformAdapter):
         return SendResult(success=True, message_id=resp.get("name"))
 
     async def send_typing(self, chat_id: str, metadata: Any = None) -> None:
-        """Post a visible 'Hermes is thinking…' marker message.
+        """Post a visible 'Doppel is thinking…' marker message.
 
         NOT ephemeral (Google Chat has no ephemeral text messages outside
         slash command responses). ``send()`` PATCHes this marker in-place
@@ -2261,7 +2261,7 @@ class GoogleChatAdapter(BasePlatformAdapter):
         keeps running and creates a card in Chat that we have NO way to
         track (the storage line never runs). Next ``_keep_typing`` tick
         sees an empty slot and creates a SECOND card. Result: one orphan
-        "Hermes is thinking…" stuck in chat forever, plus one card that
+        "Doppel is thinking…" stuck in chat forever, plus one card that
         gets patched into the reply.
 
         Fix: reserve the slot with an in-flight ``Event``, run the
@@ -2290,7 +2290,7 @@ class GoogleChatAdapter(BasePlatformAdapter):
         thread_id = self._resolve_thread_id(
             reply_to=None, metadata=metadata, chat_id=chat_id,
         )
-        body: Dict[str, Any] = {"text": "Hermes is thinking…"}
+        body: Dict[str, Any] = {"text": "Doppel is thinking…"}
         if thread_id:
             body["thread"] = {"name": thread_id}
 
@@ -3023,12 +3023,12 @@ def _env_enablement() -> Optional[Dict[str, Any]]:
 
 
 def interactive_setup() -> None:
-    """Walk the user through Google Chat configuration via ``hermes setup``.
+    """Walk the user through Google Chat configuration via ``doppel setup``.
 
     The setup wizard at ``hermes_cli/gateway.py`` calls this for plugin
     platforms instead of using the in-tree ``_PLATFORMS`` data block. The
     flow mirrors the in-tree built-ins: print the GCP setup instructions,
-    prompt for env vars, persist them to ``~/.hermes/.env`` so the next
+    prompt for env vars, persist them to ``~/.doppel/.env`` so the next
     gateway restart picks them up.
     """
     from hermes_cli.cli_output import (
@@ -3051,7 +3051,7 @@ def interactive_setup() -> None:
     print_info("Walkthrough:")
     print_info("  1. Create or select a GCP project; enable Google Chat API + Cloud Pub/Sub API.")
     print_info("  2. Create a Service Account (no project-level IAM role needed).")
-    print_info("  3. Create a Pub/Sub topic (e.g. hermes-chat-events) and a Pull subscription.")
+    print_info("  3. Create a Pub/Sub topic (e.g. doppel-chat-events) and a Pull subscription.")
     print_info("  4. On the TOPIC: add chat-api-push@system.gserviceaccount.com as Pub/Sub Publisher.")
     print_info("  5. On the SUBSCRIPTION: grant your Service Account Pub/Sub Subscriber.")
     print_info("  6. Download the Service Account JSON key.")
@@ -3110,8 +3110,8 @@ def interactive_setup() -> None:
         save_env_value("GOOGLE_CHAT_HOME_CHANNEL", home.strip())
 
     print()
-    print_success("Google Chat configuration saved to ~/.hermes/.env")
-    print_info("Restart the gateway: hermes gateway restart")
+    print_success("Google Chat configuration saved to ~/.doppel/.env")
+    print_info("Restart the gateway: doppel gateway restart")
 
 
 # Strict resource-name pattern.  ``spaces/<id>`` and ``users/<id>`` must
@@ -3133,8 +3133,8 @@ async def _standalone_send(
     """POST a single Google Chat message via the REST API without the SDK.
 
     Used by ``tools/send_message_tool._send_via_adapter`` when the gateway
-    runner is not in this process (e.g. ``hermes cron`` running as a
-    separate process from ``hermes gateway``).  Without this hook,
+    runner is not in this process (e.g. ``doppel cron`` running as a
+    separate process from ``doppel gateway``).  Without this hook,
     ``deliver=google_chat`` cron jobs fail with ``No live adapter for
     platform``.
 
@@ -3274,7 +3274,7 @@ async def _standalone_send(
 
 
 def register(ctx) -> None:
-    """Plugin entry point — called by the Hermes plugin system at startup.
+    """Plugin entry point — called by the Doppel plugin system at startup.
 
     Registers the Google Chat adapter under the ``google_chat`` name.
     The gateway's ``_create_adapter`` consults the platform registry
@@ -3293,7 +3293,7 @@ def register(ctx) -> None:
             "GOOGLE_CHAT_SUBSCRIPTION_NAME",
             "GOOGLE_CHAT_SERVICE_ACCOUNT_JSON",
         ],
-        install_hint="pip install 'hermes-agent[google_chat]'",
+        install_hint="pip install 'doppel-agent[google_chat]'",
         setup_fn=interactive_setup,
         # Env-driven auto-configuration — the core env-populator hook calls
         # this during ``_apply_env_overrides`` and seeds
@@ -3331,7 +3331,7 @@ def register(ctx) -> None:
             "to a text notice with the host path. Do NOT generate interactive "
             "Card v2 buttons — Google Chat interactivity is not yet supported "
             "by this gateway; ask for typed confirmations instead. While you "
-            "are generating a response, a 'Hermes is thinking…' marker message "
+            "are generating a response, a 'Doppel is thinking…' marker message "
             "appears in the space and is deleted once your response is ready. "
             "You do NOT have access to Google Chat-specific APIs — you cannot "
             "search space history, list space members, or manage spaces. Do "

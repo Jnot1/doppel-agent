@@ -51,6 +51,7 @@ def test_xai_generate_requires_xai_key(monkeypatch):
     monkeypatch.delenv("XAI_API_KEY", raising=False)
     result = XAIVideoGenProvider().generate("a happy dog")
     assert result["success"] is False
+    assert "doppel auth add xai-oauth" in result["error"]
     assert result["error_type"] == "auth_required"
 
 

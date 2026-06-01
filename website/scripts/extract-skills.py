@@ -7,7 +7,7 @@ Two data sources:
    (official optional). These give us full metadata — overview prose, version,
    license, env vars, commands — that the unified index doesn't carry.
 
-2. The unified Hermes Skills Index at ``website/static/api/skills-index.json``,
+2. The unified Doppel Skills Index at ``website/static/api/skills-index.json``,
    built twice daily by ``scripts/build_skills_index.py`` (workflow
    ``.github/workflows/skills-index.yml``). Covers skills.sh, ClawHub, browse.sh,
    LobeHub, Claude Marketplace, well-known endpoints, and the GitHub taps
@@ -110,6 +110,13 @@ LEGACY_SOURCE_LABELS = {
     "lobehub": "LobeHub",
 }
 
+LEGACY_DOC_SLUG_ALIASES = {
+    "autonomous-ai-agents/hermes-agent": "doppel-agent",
+    "software-development/debugging-hermes-tui-commands": "debugging-doppel-tui-commands",
+    "software-development/hermes-agent-skill-authoring": "doppel-agent-skill-authoring",
+    "software-development/hermes-s6-container-supervision": "doppel-s6-container-supervision",
+}
+
 
 def _extract_overview(body: str) -> str:
     """Pull the first non-heading paragraph from a SKILL.md body."""
@@ -150,47 +157,64 @@ def _docs_page_path(rel_dir: str, source_label: str) -> str:
     if not parts:
         return ""
     source_dir = "bundled" if source_label == "built-in" else "optional"
+    alias_slug = LEGACY_DOC_SLUG_ALIASES.get(rel_dir.replace("\\", "/"))
     if len(parts) == 1:
         category, slug = parts[0], parts[0]
-        return f"{source_dir}/{category}/{category}-{slug}"
+        return f"{source_dir}/{category}/{category}-{alias_slug or slug}"
     if len(parts) == 2:
         category, slug = parts
-        return f"{source_dir}/{category}/{category}-{slug}"
+        return f"{source_dir}/{category}/{category}-{alias_slug or slug}"
     if len(parts) == 3:
         category, sub, slug = parts
-        return f"{source_dir}/{category}/{category}-{sub}-{slug}"
+        return f"{source_dir}/{category}/{category}-{sub}-{alias_slug or slug}"
     return ""
 
 
 def _install_command(source: str, identifier: str, name: str) -> str:
-    """Build the ``hermes skills install …`` command for a unified-index entry.
+    """Build the ``doppel skills install …`` command for a unified-index entry.
 
     These show up in the SkillCard panel so users can copy-paste them. We try
     to use the most idiomatic identifier per source.
     """
     if not identifier:
-        return f"hermes skills install {name}"
+        return f"doppel skills install {name}"
     src = source.lower()
     if src in {"official", "built-in", "optional"}:
         # OptionalSkillSource emits identifiers like "official/security/1password"
-        return f"hermes skills install {identifier}"
+        return f"doppel skills install {identifier}"
     if src in {"skills.sh", "skills-sh"}:
         # Already wrapped as "skills-sh/owner/repo/skill" by the source
-        return f"hermes skills install {identifier}"
+        return f"doppel skills install {identifier}"
     if src == "clawhub":
-        return f"hermes skills install clawhub/{identifier}"
+        return f"doppel skills install clawhub/{identifier}"
     if src == "browse-sh":
         # Identifier already includes the "browse-sh/" prefix from BrowseShSource
-        return f"hermes skills install {identifier}"
+        return f"doppel skills install {identifier}"
     if src == "lobehub":
-        return f"hermes skills install {identifier}"
+        return f"doppel skills install {identifier}"
     if src == "claude-marketplace":
-        return f"hermes skills install {identifier}"
+        return f"doppel skills install {identifier}"
     if src == "github":
-        return f"hermes skills install {identifier}"
+        return f"doppel skills install {identifier}"
     if src == "well-known":
-        return f"hermes skills install {identifier}"
-    return f"hermes skills install {identifier}"
+        return f"doppel skills install {identifier}"
+    return f"doppel skills install {identifier}"
+
+
+def _display_name(frontmatter: dict, fallback: str) -> str:
+    metadata = frontmatter.get("metadata")
+    if isinstance(metadata, dict):
+        hermes_meta = metadata.get("hermes", {})
+        if isinstance(hermes_meta, dict):
+            for key in ("docs_display_name", "display_name"):
+                value = hermes_meta.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+    return fallback
+
+
+def _normalized_author_display(author: str) -> str:
+    return author.replace("Hermes Agent", "Doppel Agent")
 
 
 def extract_local_skills():
@@ -258,6 +282,7 @@ def extract_local_skills():
 
             skills.append({
                 "name": fm.get("name", os.path.basename(root)),
+                "displayName": _display_name(fm, fm.get("name", os.path.basename(root))),
                 "description": fm.get("description", ""),
                 "overview": overview,
                 "category": category,
@@ -265,7 +290,7 @@ def extract_local_skills():
                 "source": source_label,
                 "tags": tags or [],
                 "platforms": fm.get("platforms", []),
-                "author": fm.get("author", ""),
+                "author": _normalized_author_display(str(fm.get("author", ""))),
                 "version": fm.get("version", ""),
                 "license": fm.get("license", ""),
                 "envVars": env_vars,
@@ -364,6 +389,7 @@ def extract_unified_index_skills():
 
         out.append({
             "name": name,
+            "displayName": name,
             "description": description,
             "overview": "",
             "category": category,

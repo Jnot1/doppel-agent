@@ -13,7 +13,11 @@ def _hermes_home_path() -> Path:
         from hermes_constants import get_hermes_home  # local import to avoid cycles
         return get_hermes_home()
     except Exception:
-        return Path(os.path.expanduser("~/.hermes"))
+        return Path(
+            os.getenv("DOPPEL_HOME")
+            or os.getenv("HERMES_HOME")
+            or os.path.expanduser("~/.doppel")
+        )
 
 
 def _hermes_root_path() -> Path:
@@ -22,7 +26,11 @@ def _hermes_root_path() -> Path:
         from hermes_constants import get_default_hermes_root  # local import to avoid cycles
         return get_default_hermes_root()
     except Exception:
-        return Path(os.path.expanduser("~/.hermes"))
+        return Path(
+            os.getenv("DOPPEL_HOME")
+            or os.getenv("HERMES_HOME")
+            or os.path.expanduser("~/.doppel")
+        )
 
 
 def build_write_denied_paths(home: str) -> set[str]:
@@ -187,7 +195,7 @@ def get_read_block_error(path: str) -> Optional[str]:
 
     **This is NOT a security boundary.** The terminal tool runs as the
     same OS user with shell access; the agent can still ``cat auth.json``
-    or ``cat ~/.hermes/.env`` and exfiltrate the file. The read-deny exists
+    or ``cat ~/.doppel/.env`` and exfiltrate the file. The read-deny exists
     as defense-in-depth that:
 
       * Returns a clear error to models that respect tool denials, which
@@ -337,10 +345,10 @@ PROFILE_SCOPED_AREAS = ("skills", "plugins", "cron", "memories")
 
 
 def _resolve_active_profile_name() -> str:
-    """Return the active profile name derived from HERMES_HOME.
+    """Return the active profile name derived from DOPPEL_HOME.
 
-    ``~/.hermes``              -> ``"default"``
-    ``~/.hermes/profiles/X``  -> ``"X"``
+    ``~/.doppel``              -> ``"default"``
+    ``~/.doppel/profiles/X``  -> ``"X"``
 
     Falls back to ``"default"`` on any resolution failure so the guard
     never raises into the tool path.

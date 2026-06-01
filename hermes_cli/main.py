@@ -1,46 +1,46 @@
 #!/usr/bin/env python3
 """
-Hermes CLI - Main entry point.
+Doppel CLI - Main entry point.
 
 Usage:
-    hermes                     # Interactive chat (default)
-    hermes chat                # Interactive chat
-    hermes gateway             # Run gateway in foreground
-    hermes gateway start       # Start gateway as service
-    hermes gateway stop        # Stop gateway service
-    hermes gateway status      # Show gateway status
-    hermes gateway install     # Install gateway service
-    hermes gateway uninstall   # Uninstall gateway service
-    hermes setup               # Interactive setup wizard
-    hermes logout              # Clear stored authentication
-    hermes status              # Show status of all components
-    hermes cron                # Manage cron jobs
-    hermes cron list           # List cron jobs
-    hermes cron status         # Check if cron scheduler is running
-    hermes doctor              # Check configuration and dependencies
-    hermes honcho setup                    # Configure Honcho AI memory integration
-    hermes honcho status                   # Show Honcho config and connection status
-    hermes honcho sessions                 # List directory → session name mappings
-    hermes honcho map <name>               # Map current directory to a session name
-    hermes honcho peer                     # Show peer names and dialectic settings
-    hermes honcho peer --user NAME         # Set user peer name
-    hermes honcho peer --ai NAME           # Set AI peer name
-    hermes honcho peer --reasoning LEVEL   # Set dialectic reasoning level
-    hermes honcho mode                     # Show current memory mode
-    hermes honcho mode [hybrid|honcho|local]  # Set memory mode
-    hermes honcho tokens                   # Show token budget settings
-    hermes honcho tokens --context N       # Set session.context() token cap
-    hermes honcho tokens --dialectic N     # Set dialectic result char cap
-    hermes honcho identity                 # Show AI peer identity representation
-    hermes honcho identity <file>          # Seed AI peer identity from a file (SOUL.md etc.)
-    hermes honcho migrate                  # Step-by-step migration guide: OpenClaw native → Hermes + Honcho
-    hermes version             Show version
-    hermes update              Update to latest version
-    hermes uninstall           Uninstall Hermes Agent
-    hermes acp                 Run as an ACP server for editor integration
-    hermes sessions browse     Interactive session picker with search
+    doppel                     # Interactive chat (default)
+    doppel chat                # Interactive chat
+    doppel gateway             # Run gateway in foreground
+    doppel gateway start       # Start gateway as service
+    doppel gateway stop        # Stop gateway service
+    doppel gateway status      # Show gateway status
+    doppel gateway install     # Install gateway service
+    doppel gateway uninstall   # Uninstall gateway service
+    doppel setup               # Interactive setup wizard
+    doppel logout              # Clear stored authentication
+    doppel status              # Show status of all components
+    doppel cron                # Manage cron jobs
+    doppel cron list           # List cron jobs
+    doppel cron status         # Check if cron scheduler is running
+    doppel doctor              # Check configuration and dependencies
+    doppel honcho setup                    # Configure Honcho AI memory integration
+    doppel honcho status                   # Show Honcho config and connection status
+    doppel honcho sessions                 # List directory → session name mappings
+    doppel honcho map <name>               # Map current directory to a session name
+    doppel honcho peer                     # Show peer names and dialectic settings
+    doppel honcho peer --user NAME         # Set user peer name
+    doppel honcho peer --ai NAME           # Set AI peer name
+    doppel honcho peer --reasoning LEVEL   # Set dialectic reasoning level
+    doppel honcho mode                     # Show current memory mode
+    doppel honcho mode [hybrid|honcho|local]  # Set memory mode
+    doppel honcho tokens                   # Show token budget settings
+    doppel honcho tokens --context N       # Set session.context() token cap
+    doppel honcho tokens --dialectic N     # Set dialectic result char cap
+    doppel honcho identity                 # Show AI peer identity representation
+    doppel honcho identity <file>          # Seed AI peer identity from a file (SOUL.md etc.)
+    doppel honcho migrate                  # Step-by-step migration guide: OpenClaw native → Doppel + Honcho
+    doppel version             Show version
+    doppel update              Update to latest version
+    doppel uninstall           Uninstall Doppel Agent
+    doppel acp                 Run as an ACP server for editor integration
+    doppel sessions browse     Interactive session picker with search
 
-    hermes claw migrate --dry-run  # Preview migration without changes
+    doppel claw migrate --dry-run  # Preview migration without changes
 """
 
 # IMPORTANT: hermes_bootstrap must be the very first import — it sets up
@@ -49,12 +49,12 @@ Usage:
 #
 # Guarded against ModuleNotFoundError because ``hermes_bootstrap`` is a
 # top-level module registered via pyproject.toml's ``py-modules`` list.
-# When the user upgrades code via ``git pull`` (or ``hermes update``
+# When the user upgrades code via ``git pull`` (or ``doppel update``
 # crashes between ``git reset --hard`` and ``uv pip install -e .``), the
 # new code references ``hermes_bootstrap`` but the editable install's
 # ``.pth`` file still points at the old set of top-level modules.  Without
 # this guard, hermes crashes on import and the user can't run
-# ``hermes update`` to recover.  Missing the bootstrap means UTF-8 stdio
+# ``doppel update`` to recover.  Missing the bootstrap means UTF-8 stdio
 # setup is skipped on Windows — degraded, not broken.  POSIX is unaffected.
 try:
     import hermes_bootstrap  # noqa: F401
@@ -64,6 +64,11 @@ except ModuleNotFoundError:
 import os
 import sys
 
+from hermes_constants import sync_customer_facing_env_aliases
+
+
+sync_customer_facing_env_aliases()
+
 
 def _set_process_title() -> None:
     """Set the process title to 'hermes' so tools like 'ps', 'top', and
@@ -72,7 +77,7 @@ def _set_process_title() -> None:
     Purely cosmetic — non-fatal on any platform.
 
     Strategy (try in order):
-      1. ``setproctitle`` (opt-in dep — installed via ``hermes tools`` or
+      1. ``setproctitle`` (opt-in dep — installed via ``doppel tools`` or
          ``pip install setproctitle``, or bundled in a future release).
       2. ctypes ``prctl(PR_SET_NAME)`` (Linux only, 15-char limit).
       3. ctypes ``pthread_setname_np`` (macOS only, kernel thread name —
@@ -119,7 +124,7 @@ def _suppress_mouse_residue_early() -> None:
     if not (os.environ.get("HERMES_TUI") == "1" or "--tui" in sys.argv[1:]):
         return
     try:
-        # Skip when stdout is redirected (`hermes --tui … >log`, CI capture):
+        # Skip when stdout is redirected (`doppel --tui … >log`, CI capture):
         # the bytes can't reach the terminal anyway and would just pollute
         # the log with raw CSI.
         if not os.isatty(1):
@@ -176,7 +181,7 @@ def _print_fast_version_info() -> None:
     from hermes_cli import __release_date__, __version__
 
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-    print(f"Hermes Agent v{__version__} ({__release_date__})")
+    print(f"Doppel Agent v{__version__} ({__release_date__})")
     print(f"Project: {project_root}")
     print(f"Python: {sys.version.split()[0]}")
 
@@ -185,7 +190,7 @@ def _print_fast_version_info() -> None:
 
 
 def _try_termux_ultrafast_version() -> bool:
-    """Handle ``hermes --version`` before config/logging imports on Termux."""
+    """Handle ``doppel --version`` before config/logging imports on Termux."""
     if os.environ.get("HERMES_TERMUX_DISABLE_FAST_CLI") == "1":
         return False
     if not _is_termux_startup_environment_fast():
@@ -217,7 +222,7 @@ def _add_accept_hooks_flag(parser) -> None:
         default=argparse.SUPPRESS,
         help=(
             "Auto-approve unseen shell hooks without a TTY prompt "
-            "(equivalent to HERMES_ACCEPT_HOOKS=1 / hooks_auto_accept: true)."
+            "(equivalent to DOPPEL_ACCEPT_HOOKS=1 / hooks_auto_accept: true)."
         ),
     )
 
@@ -225,13 +230,13 @@ def _add_accept_hooks_flag(parser) -> None:
 def _require_tty(command_name: str) -> None:
     """Exit with a clear error if stdin is not a terminal.
 
-    Interactive TUI commands (hermes tools, hermes setup, hermes model) use
+    Interactive TUI commands (doppel tools, doppel setup, doppel model) use
     curses or input() prompts that spin at 100% CPU when stdin is a pipe.
     This guard prevents accidental non-interactive invocation.
     """
     if not sys.stdin.isatty():
         print(
-            f"Error: 'hermes {command_name}' requires an interactive terminal.\n"
+            f"Error: 'doppel {command_name}' requires an interactive terminal.\n"
             f"It cannot be run through a pipe or non-interactive subprocess.\n"
             f"Run it directly in your terminal instead.",
             file=sys.stderr,
@@ -248,13 +253,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Profile override — MUST happen before any hermes module import.
 #
 # Many modules cache HERMES_HOME at import time (module-level constants).
-# We intercept --profile/-p from sys.argv here and set the env var so that
-# every subsequent ``os.getenv("HERMES_HOME", ...)`` resolves correctly.
+# We intercept --profile/-p from sys.argv here and set both home env vars so
+# that legacy and rebrand call sites resolve the same profile directory.
 # The flag is stripped from sys.argv so argparse never sees it.
-# Falls back to ~/.hermes/active_profile for sticky default.
+# Falls back to the selected native root's active_profile for sticky default.
 # ---------------------------------------------------------------------------
 def _apply_profile_override() -> None:
-    """Pre-parse --profile/-p and set HERMES_HOME before module imports."""
+    """Pre-parse --profile/-p and set home env vars before module imports."""
     argv = sys.argv[1:]
     profile_name = None
     consume = 0
@@ -281,18 +286,25 @@ def _apply_profile_override() -> None:
             profile_name = None
             consume = 0
 
-    # 1.5 If HERMES_HOME is already set and no explicit flag was given, trust it
-    # only when it already points to a specific profile directory.  The
+    # 1.5 If a home env is already set and no explicit flag was given, trust it
+    # only when it already points to a specific profile directory. The
     # distinguishing heuristic: a profile path has "profiles" as its immediate
-    # parent directory name (e.g. ~/.hermes/profiles/coder or
+    # parent directory name (e.g. ~/.doppel/profiles/coder,
+    # ~/.hermes/profiles/coder, or
     # /opt/data/profiles/coder).  If HERMES_HOME points to the hermes root
     # instead (e.g. systemd hardcodes HERMES_HOME=/root/.hermes), we must
     # still read active_profile — the user may have switched profiles via
-    # `hermes profile use` and the gateway should honour that choice.
+    # `doppel profile use` and the gateway should honour that choice.
     # See issue #22502.
-    hermes_home_env = os.environ.get("HERMES_HOME", "")
-    if profile_name is None and hermes_home_env:
-        if Path(hermes_home_env).parent.name == "profiles":
+    doppel_home_env = os.environ.get("DOPPEL_HOME", "").strip()
+    hermes_home_env = os.environ.get("HERMES_HOME", "").strip()
+    current_home_env = doppel_home_env or hermes_home_env
+    if doppel_home_env and not hermes_home_env:
+        os.environ["HERMES_HOME"] = doppel_home_env
+    elif hermes_home_env and not doppel_home_env:
+        os.environ["DOPPEL_HOME"] = hermes_home_env
+    if profile_name is None and current_home_env:
+        if Path(current_home_env).parent.name == "profiles":
             return
 
     # 2. If no flag, check active_profile in the hermes root
@@ -309,7 +321,7 @@ def _apply_profile_override() -> None:
         except (UnicodeDecodeError, OSError):
             pass  # corrupted file, skip
 
-    # 3. If we found a profile, resolve and set HERMES_HOME
+    # 3. If we found a profile, resolve and set both home env vars
     if profile_name is not None:
         try:
             from hermes_cli.profiles import resolve_profile_env
@@ -325,6 +337,7 @@ def _apply_profile_override() -> None:
                 file=sys.stderr,
             )
             return
+        os.environ["DOPPEL_HOME"] = hermes_home
         os.environ["HERMES_HOME"] = hermes_home
         # Strip the flag from argv so argparse doesn't choke
         if consume > 0:
@@ -341,12 +354,13 @@ def _apply_profile_override() -> None:
 
 _apply_profile_override()
 
-# Load .env from ~/.hermes/.env first, then project root as dev fallback.
+# Load .env from ~/.doppel/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
 from hermes_cli.config import get_hermes_home
 from hermes_cli.env_loader import load_hermes_dotenv
 
 load_hermes_dotenv(project_env=PROJECT_ROOT / ".env")
+sync_customer_facing_env_aliases()
 
 # Bridge security.redact_secrets from config.yaml → HERMES_REDACT_SECRETS env
 # var BEFORE hermes_logging imports agent.redact (which snapshots the flag at
@@ -378,6 +392,8 @@ try:
     del _cfg_path
 except Exception:
     pass  # best-effort — redaction stays at default (enabled) on config errors
+
+sync_customer_facing_env_aliases()
 
 # Initialize centralized file logging early — all `hermes` subcommands
 # (chat, setup, gateway, config, etc.) write to agent.log + errors.log.
@@ -569,7 +585,7 @@ def _has_any_provider_configured() -> bool:
     from hermes_cli.config import get_env_path, get_hermes_home, load_config
     from hermes_cli.auth import get_auth_status
 
-    # Determine whether Hermes itself has been explicitly configured (model
+    # Determine whether Doppel itself has been explicitly configured (model
     # in config that isn't the hardcoded default). Used below to gate external
     # tool credentials (Claude Code, Codex CLI) that shouldn't silently skip
     # the setup wizard on a fresh install.
@@ -658,8 +674,8 @@ def _has_any_provider_configured() -> bool:
             return True
 
     # Check for Claude Code OAuth credentials (~/.claude/.credentials.json)
-    # Only count these if Hermes has been explicitly configured — Claude Code
-    # being installed doesn't mean the user wants Hermes to use their tokens.
+    # Only count these if Doppel has been explicitly configured — Claude Code
+    # being installed doesn't mean the user wants Doppel to use their tokens.
     if _has_hermes_config:
         try:
             from agent.anthropic_adapter import (
@@ -1146,9 +1162,9 @@ def _print_tui_exit_summary(
 
     print()
     print("Resume this session with:")
-    print(f"  hermes --tui --resume {target}")
+    print(f"  doppel --tui --resume {target}")
     if title:
-        print(f'  hermes --tui -c "{title}"')
+        print(f'  doppel --tui -c "{title}"')
     print()
     print(f"Session:        {target}")
     if title:
@@ -1335,7 +1351,13 @@ def _ensure_tui_node() -> None:
     if not helper.is_file():
         return
 
-    hermes_home = os.environ.get("HERMES_HOME") or str(Path.home() / ".hermes")
+    from hermes_constants import get_default_hermes_root
+
+    hermes_home = (
+        os.environ.get("DOPPEL_HOME")
+        or os.environ.get("HERMES_HOME")
+        or str(get_default_hermes_root())
+    )
     try:
         # Helper writes logs to stderr; we ask bash to print `command -v node`
         # on stdout once ensure_node succeeds. Subshell PATH edits don't leak
@@ -1404,9 +1426,9 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
     ext_dir = os.environ.get("HERMES_TUI_DIR")
     if tui_dev and ext_dir:
         print(
-            f"Error: --dev is incompatible with HERMES_TUI_DIR={ext_dir}\n"
+            f"Error: --dev is incompatible with DOPPEL_TUI_DIR={ext_dir}\n"
             f"The prebuilt TUI has no source code to hot-reload.\n"
-            f"Unset HERMES_TUI_DIR (e.g. `unset HERMES_TUI_DIR`) to use --dev from a checkout.",
+            "Unset DOPPEL_TUI_DIR to use --dev from a checkout.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -1585,6 +1607,7 @@ def _launch_tui(
         env["TERMINAL_CWD"] = wt_info["path"]
 
     if model:
+        env["DOPPEL_MODEL"] = model
         env["HERMES_MODEL"] = model
         env["HERMES_INFERENCE_MODEL"] = model
     if provider:
@@ -1635,7 +1658,7 @@ def _launch_tui(
     env["NODE_OPTIONS"] = " ".join(_tokens)
     # HERMES_TUI_RESUME is an internal hand-off from the Python wrapper to the
     # Ink app.  Because we start from os.environ.copy(), an exported/stale value
-    # in the user's shell would otherwise make a plain `hermes --tui` try to
+    # in the user's shell would otherwise make a plain `doppel --tui` try to
     # resume a non-existent session and leave the UI at "error: session not
     # found" with no live session.  Only forward a resume id that argparse
     # resolved for this invocation; direct `node ui-tui/dist/entry.js` users can
@@ -1665,7 +1688,7 @@ def _launch_tui(
             except Exception:
                 pass
 
-    # Exit code 42 = TUI requested an update. Relaunch as `hermes update` so
+    # Exit code 42 = TUI requested an update. Relaunch as `doppel update` so
     # the user sees update output directly and gets the new version.
     # preserve_inherited=False ensures --tui and other flags are NOT carried
     # into the update subcommand.
@@ -1684,9 +1707,9 @@ def _pin_kanban_board_env() -> None:
     """Pin the active kanban board into ``HERMES_KANBAN_BOARD`` for the chat session.
 
     Without this, in-process tools (``kanban_*``) and shelled-out CLI calls
-    (``hermes kanban …``) resolve the board on different paths: the env-pin if
+    (``doppel kanban …``) resolve the board on different paths: the env-pin if
     set, otherwise the global ``<root>/kanban/current`` file. A concurrent
-    ``hermes kanban boards switch`` from another session can flip the file
+    ``doppel kanban boards switch`` from another session can flip the file
     mid-turn, so the same chat sees its tool calls hit board A while its shell
     calls hit board B (#20074). Pinning at chat boot mirrors what the
     dispatcher already does for spawned workers.
@@ -1715,7 +1738,7 @@ def cmd_chat(args):
                 args.resume = resolved
             else:
                 print(f"No session found matching '{continue_val}'.")
-                print("Use 'hermes sessions list' to see available sessions.")
+                print("Use 'doppel sessions list' to see available sessions.")
                 sys.exit(1)
         else:
             # -c with no argument — continue the most recent session
@@ -1758,7 +1781,7 @@ def cmd_chat(args):
             for _ref in _retired_xai_refs:
                 sys.stderr.write(f"  \033[33m⚠\033[0m {format_issue(_ref)}\n")
             sys.stderr.write(f"  \033[2mMigration guide: {MIGRATION_GUIDE_URL}\033[0m\n")
-            sys.stderr.write("  \033[2mRun 'hermes doctor' for details.\033[0m\n\n")
+            sys.stderr.write("  \033[2mRun 'doppel doctor' for details.\033[0m\n\n")
     except Exception:
         pass
 
@@ -1766,10 +1789,10 @@ def cmd_chat(args):
     if not _has_any_provider_configured():
         print()
         print(
-            "It looks like Hermes isn't configured yet -- no API keys or providers found."
+            "It looks like Doppel isn't configured yet -- no API keys or providers found."
         )
         print()
-        print("  Run:  hermes setup")
+        print("  Run:  doppel setup")
         print()
 
         from hermes_cli.setup import (
@@ -1791,7 +1814,7 @@ def cmd_chat(args):
             cmd_setup(args)
             return
         print()
-        print("You can run 'hermes setup' at any time to configure.")
+        print("You can run 'doppel setup' at any time to configure.")
         sys.exit(1)
 
     # Start update check in background (runs while other init happens).
@@ -1816,7 +1839,7 @@ def cmd_chat(args):
         os.environ["HERMES_YOLO_MODE"] = "1"
 
     # --ignore-user-config: make load_cli_config() / load_config() skip the
-    # user's ~/.hermes/config.yaml and return built-in defaults. Set BEFORE
+    # user's ~/.doppel/config.yaml and return built-in defaults. Set BEFORE
     # importing cli (which runs `CLI_CONFIG = load_cli_config()` at module
     # import time). Credentials in .env are still loaded — this flag only
     # ignores behavioral/config settings.
@@ -1917,7 +1940,7 @@ def cmd_whatsapp(args):
     current_mode = get_env_value("WHATSAPP_MODE") or ""
     if not current_mode:
         print()
-        print("How will you use WhatsApp with Hermes?")
+        print("How will you use WhatsApp with Doppel?")
         print()
         print("  1. Separate bot number (recommended)")
         print("     People message the bot's number directly — cleanest experience.")
@@ -1967,7 +1990,7 @@ def cmd_whatsapp(args):
     # We intentionally don't write WHATSAPP_ENABLED=true here.  If the user
     # aborts the wizard later (Ctrl+C, failed npm install, missed QR scan),
     # we'd otherwise leave .env claiming WhatsApp is ready when the bridge
-    # has no creds.json.  Every subsequent `hermes gateway` then paid a 30s
+    # has no creds.json.  Every subsequent `doppel gateway` then paid a 30s
     # bridge-bootstrap timeout and queued WhatsApp for indefinite retries.
     # Now: aborted setup leaves WHATSAPP_ENABLED unset → gateway skips it.
     # Re-runs that already have WHATSAPP_ENABLED=true (from a prior
@@ -2071,7 +2094,7 @@ def cmd_whatsapp(args):
             if (get_env_value("WHATSAPP_ENABLED") or "").lower() != "true":
                 save_env_value("WHATSAPP_ENABLED", "true")
             print("\n✓ WhatsApp is configured and paired!")
-            print("  Start the gateway with: hermes gateway")
+            print("  Start the gateway with: doppel gateway")
             return
 
     # ── Step 6: QR code pairing ──────────────────────────────────────────
@@ -2100,30 +2123,30 @@ def cmd_whatsapp(args):
     if (session_dir / "creds.json").exists():
         # Only enable WhatsApp now that pairing actually succeeded.  If the
         # user Ctrl+C'd at any earlier step, WHATSAPP_ENABLED stays unset
-        # and `hermes gateway` skips it cleanly instead of paying a 30s
+        # and `doppel gateway` skips it cleanly instead of paying a 30s
         # bridge timeout + queueing the platform for indefinite retries.
         save_env_value("WHATSAPP_ENABLED", "true")
         print("✓ WhatsApp paired successfully!")
         print()
         if wa_mode == "bot":
             print("  Next steps:")
-            print("    1. Start the gateway:  hermes gateway")
+            print("    1. Start the gateway:  doppel gateway")
             print("    2. Send a message to the bot's WhatsApp number")
             print("    3. The agent will reply automatically")
             print()
-            print("  Tip: Agent responses are prefixed with '⚕ Hermes Agent'")
+            print("  Tip: Agent responses are prefixed with '⚕ Doppel Agent'")
         else:
             print("  Next steps:")
-            print("    1. Start the gateway:  hermes gateway")
+            print("    1. Start the gateway:  doppel gateway")
             print("    2. Open WhatsApp → Message Yourself")
             print("    3. Type a message — the agent will reply")
             print()
-            print("  Tip: Agent responses are prefixed with '⚕ Hermes Agent'")
+            print("  Tip: Agent responses are prefixed with '⚕ Doppel Agent'")
             print("  so you can tell them apart from your own messages.")
         print()
-        print("  Or install as a service: hermes gateway install")
+        print("  Or install as a service: doppel gateway install")
     else:
-        print("⚠ Pairing may not have completed. Run 'hermes whatsapp' to try again.")
+        print("⚠ Pairing may not have completed. Run 'doppel whatsapp' to try again.")
 
 
 def cmd_setup(args):
@@ -2140,7 +2163,7 @@ def cmd_postinstall(args):
 
     stamp_install_method("pip")
 
-    print("⚕ Hermes post-install bootstrap")
+    print("⚕ Doppel post-install bootstrap")
     print()
 
     for dep in ("node", "browser", "ripgrep", "ffmpeg"):
@@ -2185,7 +2208,7 @@ def _is_profile_api_key_provider(provider_id: str) -> bool:
 def select_provider_and_model(args=None):
     """Core provider selection + model picking logic.
 
-    Shared by ``cmd_model`` (``hermes model``) and the setup wizard
+    Shared by ``cmd_model`` (``doppel model``) and the setup wizard
     (``setup_model_provider`` in setup.py).  Handles the full flow:
     provider picker, credential prompting, model selection, and config
     persistence.
@@ -2376,8 +2399,8 @@ def select_provider_and_model(args=None):
             active = active_def.id
         else:
             warning = (
-                f"Unknown provider '{effective_provider}'. Check 'hermes model' for "
-                "available providers, or run 'hermes doctor' to diagnose config "
+                f"Unknown provider '{effective_provider}'. Check 'doppel model' for "
+                "available providers, or run 'doppel doctor' to diagnose config "
                 "issues."
             )
             print(f"Warning: {warning} Falling back to auto provider detection.")
@@ -2575,7 +2598,7 @@ def select_provider_and_model(args=None):
 
     # ── Post-switch cleanup: clear stale OPENAI_BASE_URL ──────────────
     # When the user switches to a named provider (anything except "custom"),
-    # a leftover OPENAI_BASE_URL in ~/.hermes/.env can poison auxiliary
+    # a leftover OPENAI_BASE_URL in ~/.doppel/.env can poison auxiliary
     # clients that use provider:auto. Clear it proactively.  (#5161)
     if selected_provider not in {
         "custom",
@@ -2586,7 +2609,7 @@ def select_provider_and_model(args=None):
 
 
 def _clear_stale_openai_base_url():
-    """Remove OPENAI_BASE_URL from ~/.hermes/.env if the active provider is not 'custom'.
+    """Remove OPENAI_BASE_URL from ~/.doppel/.env if the active provider is not 'custom'.
 
     After a provider switch, a leftover OPENAI_BASE_URL causes auxiliary
     clients (compression, vision, delegation) with provider:auto to route
@@ -2618,14 +2641,14 @@ def _clear_stale_openai_base_url():
 # ─────────────────────────────────────────────────────────────────────────────
 # Auxiliary model configuration
 #
-# Hermes uses lightweight "auxiliary" models for side tasks (vision analysis,
+# Doppel uses lightweight "auxiliary" models for side tasks (vision analysis,
 # context compression, web extraction, session search, etc.). Each task has
 # its own provider+model pair in config.yaml under `auxiliary.<task>`.
 #
 # The UI lives behind "Configure auxiliary models..." at the bottom of the
-# `hermes model` provider picker. It does NOT re-run credential setup — it
+# `doppel model` provider picker. It does NOT re-run credential setup — it
 # only routes already-authenticated providers to specific aux tasks. Users
-# configure new providers through the normal `hermes model` flow first.
+# configure new providers through the normal `doppel model` flow first.
 # ─────────────────────────────────────────────────────────────────────────────
 
 # (task_key, display_name, short_description)
@@ -2765,7 +2788,7 @@ def _aux_config_menu() -> None:
         print()
         print("  Side tasks (vision, compression, web extraction, etc.) default")
         print('  to your main chat model.  "auto" means "use my main model" —')
-        print("  Hermes only falls back to a lightweight backend (OpenRouter,")
+        print("  Doppel only falls back to a lightweight backend (OpenRouter,")
         print("  Nous Portal) if the main model is unavailable.  Override a")
         print("  task below if you want it pinned to a specific provider/model.")
         print()
@@ -2814,7 +2837,7 @@ def _aux_select_for_task(task: str) -> None:
     Uses ``list_authenticated_providers()`` to only show providers the user
     has already configured. This avoids re-running OAuth/credential flows
     inside the aux picker — users set up new providers through the normal
-    ``hermes model`` flow, then route aux tasks to them here.
+    ``doppel model`` flow, then route aux tasks to them here.
     """
     from hermes_cli.config import load_config
     from hermes_cli.model_switch import list_authenticated_providers
@@ -3044,9 +3067,9 @@ def _model_flow_openrouter(config, current_model=""):
     from hermes_cli.config import get_env_value
 
     # Route through _prompt_api_key so users can replace a stale/broken key
-    # in-flow (K/R/C) instead of having to edit ~/.hermes/.env by hand. The
+    # in-flow (K/R/C) instead of having to edit ~/.doppel/.env by hand. The
     # previous bypass-when-key-exists branch left no way to recover from a
-    # bad paste short of re-running `hermes setup` from scratch. OpenRouter
+    # bad paste short of re-running `doppel setup` from scratch. OpenRouter
     # isn't in PROVIDER_REGISTRY so we synthesize a minimal pconfig.
     pconfig = ProviderConfig(
         id="openrouter",
@@ -3374,7 +3397,7 @@ def _model_flow_openai_codex(config, current_model=""):
             return
 
     _codex_token = None
-    # Prefer credential pool (where `hermes auth` stores device_code tokens),
+    # Prefer credential pool (where `doppel auth` stores device_code tokens),
     # fall back to legacy provider state.
     try:
         _codex_status = get_codex_auth_status()
@@ -3433,10 +3456,10 @@ def _model_flow_xai_oauth(_config, current_model="", *, args=None):
             print("Starting a fresh xAI OAuth login...")
             print()
             try:
-                # Forward CLI flags from ``hermes model --manual-paste``
+                # Forward CLI flags from ``doppel model --manual-paste``
                 # / ``--no-browser`` / ``--timeout`` into the loopback
                 # login. Without this, browser-only remotes (#26923)
-                # can't reach the manual-paste path via ``hermes model``.
+                # can't reach the manual-paste path via ``doppel model``.
                 mock_args = argparse.Namespace(
                     manual_paste=bool(getattr(args, "manual_paste", False)),
                     no_browser=bool(getattr(args, "no_browser", False)),
@@ -3474,7 +3497,7 @@ def _model_flow_xai_oauth(_config, current_model="", *, args=None):
 
     # Resolve a usable base URL.  ``resolve_xai_oauth_runtime_credentials``
     # only reads from the auth.json singleton — but credentials may legitimately
-    # live only in the pool (e.g. after ``hermes auth add xai-oauth``).  Fall
+    # live only in the pool (e.g. after ``doppel auth add xai-oauth``).  Fall
     # back to the default base URL in that case so the model picker still
     # completes successfully instead of bailing out with
     # ``Could not resolve xAI OAuth credentials``.
@@ -3601,7 +3624,7 @@ def _model_flow_google_gemini_cli(_config, current_model=""):
       2. If creds missing, run PKCE browser OAuth via agent.google_oauth.
       3. Resolve project context (env -> config -> auto-discover -> free tier).
       4. Prompt user to pick a model.
-      5. Save to ~/.hermes/config.yaml.
+      5. Save to ~/.doppel/config.yaml.
     """
     from hermes_cli.auth import (
         DEFAULT_GEMINI_CLOUDCODE_BASE_URL,
@@ -3754,7 +3777,7 @@ def _model_flow_custom(config):
     else:
         print(
             f"Warning: could not verify this endpoint via {probe.get('probed_url')}. "
-            f"Hermes will still save it."
+            f"Doppel will still save it."
         )
         if probe.get("suggested_base_url"):
             suggested = probe["suggested_base_url"]
@@ -3874,7 +3897,7 @@ def _model_flow_custom(config):
         else:
             _caller_model.pop("api_mode", None)
         config["model"] = _caller_model
-        print("Endpoint saved. Use `/model` in chat or `hermes model` to set a model.")
+        print("Endpoint saved. Use `/model` in chat or `doppel model` to set a model.")
 
     # Auto-save to custom_providers so it appears in the menu next time
     _save_custom_provider(
@@ -3902,7 +3925,7 @@ def _prompt_custom_api_mode_selection(base_url: str, current_api_mode: str = "")
         (
             "",
             "Auto-detect",
-            "Use Hermes URL heuristics; best for standard OpenAI-compatible endpoints.",
+            "Use Doppel URL heuristics; best for standard OpenAI-compatible endpoints.",
         ),
         (
             "chat_completions",
@@ -4126,7 +4149,7 @@ def _model_flow_azure_foundry(config, current_model=""):
     print("=" * 50)
     print()
     print("Azure Foundry can host models with either OpenAI-style or")
-    print("Anthropic-style API endpoints.  Hermes will probe your")
+    print("Anthropic-style API endpoints.  Doppel Agent will probe your")
     print("endpoint to auto-detect the transport and the deployed")
     print("models when possible.")
     print()
@@ -4214,7 +4237,7 @@ def _model_flow_azure_foundry(config, current_model=""):
         if not has_azure_identity_installed():
             print("◐ The 'azure-identity' package is not installed yet.")
             print(
-                "  Hermes will install it now (the preflight below "
+                "  Doppel Agent will install it now (the preflight below "
                 "triggers the lazy-install). To skip lazy installs, "
                 "run:  pip install azure-identity"
             )
@@ -4670,7 +4693,7 @@ def _model_flow_named_custom(config, provider_info):
 # downstream call sites read `hermes_cli.main._PROVIDER_MODELS` directly,
 # so the symbol needs to be reachable as a module attribute. But importing
 # the catalog eagerly costs ~55ms on every `hermes` invocation — including
-# fast paths like `hermes --version` and slash-command dispatch that never
+# fast paths like `doppel --version` and slash-command dispatch that never
 # touch the catalog. PEP 562 module-level __getattr__ defers the import
 # until first attribute access, so the cost is only paid by callers that
 # actually look up the catalog. Termux already defers via the same
@@ -5015,9 +5038,9 @@ def _model_flow_copilot_acp(config, current_model=""):
     )
     effective_base = status.get("base_url") or pconfig.inference_base_url
 
-    print("  GitHub Copilot ACP delegates Hermes turns to `copilot --acp`.")
-    print("  Hermes currently starts its own ACP subprocess for each request.")
-    print("  Hermes uses your selected model as a hint for the Copilot ACP session.")
+    print("  GitHub Copilot ACP delegates Doppel Agent turns to `copilot --acp`.")
+    print("  Doppel Agent currently starts its own ACP subprocess for each request.")
+    print("  Doppel Agent uses your selected model as a hint for the Copilot ACP session.")
     print(f"  Command: {resolved_command}")
     print(f"  Backend marker: {effective_base}")
     print()
@@ -5027,7 +5050,7 @@ def _model_flow_copilot_acp(config, current_model=""):
     except Exception as exc:
         print(f"  ⚠ {exc}")
         print(
-            "  Set HERMES_COPILOT_ACP_COMMAND or COPILOT_CLI_PATH if Copilot CLI is installed elsewhere."
+            "  Set DOPPEL_COPILOT_ACP_COMMAND or COPILOT_CLI_PATH if Copilot CLI is installed elsewhere."
         )
         return
 
@@ -5101,11 +5124,11 @@ def _model_flow_copilot_acp(config, current_model=""):
 
 
 def _prompt_api_key(pconfig, existing_key: str, provider_id: str = "") -> tuple:
-    """Shared API-key entry point for ``hermes setup`` / ``hermes model``.
+    """Shared API-key entry point for ``doppel setup`` / ``doppel model``.
 
     Handles both first-time entry and the already-configured case.  When a key
     is already present, offers [K]eep / [R]eplace / [C]lear so the user can
-    recover from a malformed paste without editing ``~/.hermes/.env`` by hand.
+    recover from a malformed paste without editing ``~/.doppel/.env`` by hand.
 
     Returns ``(resolved_key, abort)``.  ``abort=True`` means the caller should
     ``return`` immediately — the user cancelled entry, declined to replace, or
@@ -5174,7 +5197,7 @@ def _prompt_api_key(pconfig, existing_key: str, provider_id: str = "") -> tuple:
     if choice.startswith("c"):
         save_env_value(key_env, "")
         print(
-            f"  API key cleared.  Re-run `hermes setup` to configure {pconfig.name} again."
+            f"  API key cleared.  Re-run `doppel setup` to configure {pconfig.name} again."
         )
         return "", True
 
@@ -5743,7 +5766,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
                     "(<= 250 requests/day for gemini-2.5-flash)."
                 )
                 print(
-                    "   Hermes typically makes 3-10 API calls per user turn "
+                    "   Doppel typically makes 3-10 API calls per user turn "
                     "(tool iterations + auxiliary tasks),"
                 )
                 print(
@@ -5753,7 +5776,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
                 print("   an agent session.")
                 print()
                 print(
-                    "   To use Gemini with Hermes, enable billing on your "
+                    "   To use Gemini with Doppel, enable billing on your "
                     "Google Cloud project and regenerate"
                 )
                 print(
@@ -5990,7 +6013,7 @@ def _run_anthropic_oauth_flow(save_env_value):
             from hermes_constants import display_hermes_home as _dhh_fn
 
             print(
-                f"    Hermes will use Claude's credential store directly instead of copying a setup-token into {_dhh_fn()}/.env."
+                f"    Doppel will use Claude's credential store directly instead of copying a setup-token into {_dhh_fn()}/.env."
             )
             return True
         return False
@@ -6039,7 +6062,7 @@ def _run_anthropic_oauth_flow(save_env_value):
         print("    1. Install Claude Code:  npm install -g @anthropic-ai/claude-code")
         print("    2. Run:                  claude setup-token")
         print("    3. Follow the browser prompts to authorize")
-        print("    4. Re-run:               hermes model")
+        print("    4. Re-run:               doppel model")
         print()
         print("  Or paste an existing setup-token now (sk-ant-oat-...):")
         print()
@@ -6195,7 +6218,7 @@ def _model_flow_anthropic(config, current_model=""):
         # Update config with provider — clear base_url since
         # resolve_runtime_provider() always hardcodes Anthropic's URL.
         # Leaving a stale base_url in config can contaminate other
-        # providers if the user switches without running 'hermes model'.
+        # providers if the user switches without running 'doppel model'.
         cfg = load_config()
         model = cfg.get("model")
         if not isinstance(model, dict):
@@ -6212,7 +6235,7 @@ def _model_flow_anthropic(config, current_model=""):
 
 
 def cmd_login(args):
-    """Authenticate Hermes CLI with a provider."""
+    """Authenticate Doppel CLI with a provider."""
     from hermes_cli.auth import login_command
 
     login_command(args)
@@ -6256,7 +6279,7 @@ def cmd_webhook(args):
 def cmd_slack(args):
     """Slack integration helpers.
 
-    Dispatches ``hermes slack <subcommand>``. Currently supports:
+    Dispatches ``doppel slack <subcommand>``. Currently supports:
       manifest — print or write a Slack app manifest with every gateway
                  command registered as a first-class slash.
     """
@@ -6264,13 +6287,13 @@ def cmd_slack(args):
     if sub in {None, ""}:
         # No subcommand — print usage hint.
         print(
-            "usage: hermes slack <subcommand>\n"
+            "usage: doppel slack <subcommand>\n"
             "\n"
             "subcommands:\n"
             "  manifest   Generate a Slack app manifest with every gateway\n"
             "             command registered as a native slash\n"
             "\n"
-            "Run `hermes slack manifest -h` for details.",
+            "Run `doppel slack manifest -h` for details.",
             file=sys.stderr,
         )
         return 1
@@ -6306,7 +6329,7 @@ def cmd_doctor(args):
 
 
 def cmd_security(args):
-    """Dispatch `hermes security <subcmd>`."""
+    """Dispatch `doppel security <subcmd>`."""
     sub = getattr(args, "security_command", None)
     if sub in ("audit", None):
         from hermes_cli.security_audit import cmd_security_audit
@@ -6340,7 +6363,7 @@ def cmd_config(args):
 
 
 def cmd_backup(args):
-    """Back up Hermes home directory to a zip file."""
+    """Back up Doppel home directory to a zip file."""
     if getattr(args, "quick", False):
         from hermes_cli.backup import run_quick_backup
 
@@ -6352,14 +6375,14 @@ def cmd_backup(args):
 
 
 def cmd_import(args):
-    """Restore a Hermes backup from a zip file."""
+    """Restore a Doppel backup from a zip file."""
     from hermes_cli.backup import run_import
 
     run_import(args)
 
 
 def _print_version_info(*, check_updates: bool = True) -> None:
-    print(f"Hermes Agent v{__version__} ({__release_date__})")
+    print(f"Doppel Agent v{__version__} ({__release_date__})")
     print(f"Project: {PROJECT_ROOT}")
 
     # Show Python version
@@ -6405,7 +6428,7 @@ def cmd_version(args):
 
 
 def cmd_uninstall(args):
-    """Uninstall Hermes Agent."""
+    """Uninstall Doppel Agent."""
     _require_tty("uninstall")
     from hermes_cli.uninstall import run_uninstall
 
@@ -6442,7 +6465,7 @@ def _clear_bytecode_cache(root: Path) -> int:
 
 # Critical files that every ``hermes`` invocation imports at startup. If any
 # of these fail to parse after a pull, the CLI is bricked — the user can't
-# even run ``hermes update`` again to roll forward. The post-pull syntax
+# even run ``doppel update`` again to roll forward. The post-pull syntax
 # guard validates these and auto-rolls-back on failure.
 _UPDATE_CRITICAL_FILES = (
     "hermes_cli/main.py",
@@ -6519,7 +6542,7 @@ def _gateway_prompt(prompt_text: str, default: str = "", timeout: float = 300.0)
     Writes a prompt marker file so the gateway can forward the question to the
     user, then polls for a response file.  Falls back to *default* on timeout.
 
-    Used by ``hermes update --gateway`` so interactive prompts (stash restore,
+    Used by ``doppel update --gateway`` so interactive prompts (stash restore,
     config migration) are forwarded to the messenger instead of being silently
     skipped.
     """
@@ -6710,7 +6733,7 @@ def _run_npm_install_deterministic(
     falls back to ``npm install`` only if ``npm ci`` fails (e.g. lockfile out of
     sync on a WIP checkout).  Without this, ``npm install`` on npm ≥ 10 silently
     rewrites committed lockfiles (stripping ``"peer": true`` etc.), which leaves
-    the working tree dirty and causes the next ``hermes update`` to stash the
+    the working tree dirty and causes the next ``doppel update`` to stash the
     lockfile — repeatedly.
     """
     lockfile = cwd / "package-lock.json"
@@ -6747,7 +6770,7 @@ def _build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
     Args:
         web_dir: Path to the ``web/`` source directory.
         fatal: If True, print error guidance and return False on failure
-               instead of a soft warning (used by ``hermes web``).
+               instead of a soft warning (used by ``doppel web``).
 
     Returns True if the build succeeded or was skipped (no package.json).
     """
@@ -6848,10 +6871,10 @@ def _build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
 
 
 def _find_stale_dashboard_pids() -> list[int]:
-    """Return PIDs of ``hermes dashboard`` processes other than ourselves.
+    """Return PIDs of ``doppel dashboard`` processes other than ourselves.
 
-    ``hermes dashboard`` is a long-lived server process commonly started and
-    forgotten.  When ``hermes update`` replaces files on disk, the running
+    ``doppel dashboard`` is a long-lived server process commonly started and
+    forgotten.  When ``doppel update`` replaces files on disk, the running
     process keeps the old Python backend in memory while the JS bundle on
     disk is updated, causing a silent frontend/backend mismatch (e.g. new
     auth headers the old backend doesn't recognise → every API call 401s).
@@ -6865,6 +6888,7 @@ def _find_stale_dashboard_pids() -> list[int]:
     Returns an empty list on any scan error (missing ps/wmic, timeout, etc.).
     """
     patterns = [
+        "doppel dashboard",
         "hermes dashboard",
         "hermes_cli.main dashboard",
         "hermes_cli/main.py dashboard",
@@ -6941,7 +6965,7 @@ def _find_stale_dashboard_pids() -> list[int]:
 
 
 def _print_curator_first_run_notice() -> None:
-    """Print a short heads-up about the skill curator after `hermes update`.
+    """Print a short heads-up about the skill curator after `doppel update`.
 
     Only fires when the curator is enabled AND has no recorded run yet, which
     is exactly the window where the gateway ticker used to fire Curator
@@ -6949,6 +6973,8 @@ def _print_curator_first_run_notice() -> None:
     first real pass by one ``interval_hours``; this notice tells the user how
     to preview or disable before then. Silent on steady state.
     """
+    from hermes_constants import get_docs_page_url
+
     try:
         from agent import curator
     except Exception:
@@ -6974,11 +7000,9 @@ def _print_curator_first_run_notice() -> None:
         f"~{days}d after installation; only agent-created skills are in "
         f"scope and nothing is ever auto-deleted (archive is recoverable)."
     )
-    print("  Preview now:  hermes curator run --dry-run")
-    print("  Pause it:     hermes curator pause")
-    print(
-        "  Docs:         https://hermes-agent.nousresearch.com/docs/user-guide/features/curator"
-    )
+    print("  Preview now:  doppel curator run --dry-run")
+    print("  Pause it:     doppel curator pause")
+    print(f"  Docs:         {get_docs_page_url('curator')}")
 
 
 def _print_curator_recent_run_notice() -> None:
@@ -6986,11 +7010,11 @@ def _print_curator_recent_run_notice() -> None:
 
     The curator runs in the background (gateway tick + CLI session start),
     so users learn about skill consolidations only by stumbling into a
-    rename. ``hermes update`` is a high-attention surface — surface the
+    rename. ``doppel update`` is a high-attention surface — surface the
     most recent run's rename map here, once.
 
     Show-once: state stamps ``last_run_summary_shown_at`` after printing.
-    Subsequent ``hermes update`` invocations skip the block until a newer
+    Subsequent ``doppel update`` invocations skip the block until a newer
     curator run lands. Silent when the curator has never run, when the
     most recent summary has already been shown, or when the summary has
     no rename information to display (no archives).
@@ -7036,7 +7060,7 @@ def _print_curator_recent_run_notice() -> None:
         print(f"  {line}")
     print(
         "  (This message shows once per curator run. "
-        "View anytime: hermes curator status)"
+        "View anytime: doppel curator status)"
     )
 
     # Stamp shown so we don't repeat on the next update.
@@ -7070,10 +7094,10 @@ def _format_time_ago(iso_ts: str) -> str:
 def _kill_stale_dashboard_processes(
     reason: str = "the running backend no longer matches the updated frontend",
 ) -> None:
-    """Kill running ``hermes dashboard`` processes.
+    """Kill running ``doppel dashboard`` processes.
 
-    Called at the end of ``hermes update`` (default ``reason``) and also
-    from ``hermes dashboard --stop`` (which overrides ``reason``).  The
+    Called at the end of ``doppel update`` (default ``reason``) and also
+    from ``doppel dashboard --stop`` (which overrides ``reason``).  The
     dashboard has no service manager, so after a code update the running
     process is guaranteed to be serving stale Python against a
     freshly-updated JS bundle.  Leaving it alive produces silent
@@ -7163,7 +7187,7 @@ def _kill_stale_dashboard_processes(
 
     if killed:
         print("  Restart the dashboard when you're ready:")
-        print("    hermes dashboard --port <port>")
+        print("    doppel dashboard --port <port>")
 
 
 # Back-compat alias: some tests and any external callers may import the old
@@ -7172,7 +7196,7 @@ _warn_stale_dashboard_processes = _kill_stale_dashboard_processes
 
 
 def _update_via_zip(args):
-    """Update Hermes Agent by downloading a ZIP archive.
+    """Update Doppel Agent by downloading a ZIP archive.
 
     Used on Windows when git file I/O is broken (antivirus, NTFS filter
     drivers causing 'Invalid argument' errors on file creation).
@@ -7196,18 +7220,16 @@ def _update_via_zip(args):
         print(
             "  This path runs when git file I/O is broken on the system. "
             "Either resolve the git-side breakage (typically an antivirus "
-            "or NTFS filter holding files open) and rerun `hermes update "
-            f"--branch {branch}`, or update against main with `hermes update`."
+            "or NTFS filter holding files open) and rerun `doppel update "
+            f"--branch {branch}`, or update against main with `doppel update`."
         )
         sys.exit(1)
-    zip_url = (
-        f"https://github.com/NousResearch/hermes-agent/archive/refs/heads/{branch}.zip"
-    )
+    zip_url = _upstream_archive_url(branch)
 
     print("→ Downloading latest version...")
     tmp_dir = tempfile.mkdtemp(prefix="hermes-update-")
     try:
-        zip_path = os.path.join(tmp_dir, f"hermes-agent-{branch}.zip")
+        zip_path = os.path.join(tmp_dir, _upstream_archive_filename(branch))
         urlretrieve(zip_url, zip_path)
 
         print("→ Extracting...")
@@ -7237,8 +7259,8 @@ def _update_via_zip(args):
                     )
             zf.extractall(tmp_dir)
 
-        # GitHub ZIPs extract to hermes-agent-<branch>/
-        extracted = os.path.join(tmp_dir, f"hermes-agent-{branch}")
+        # GitHub ZIPs extract to <package>-<branch>/
+        extracted = os.path.join(tmp_dir, _upstream_extracted_dir_name(branch))
         if not os.path.isdir(extracted):
             # Try to find it
             for d in os.listdir(tmp_dir):
@@ -7444,7 +7466,7 @@ def _restore_stashed_changes(
         print(
             "  Restoring them may reapply local customizations onto the updated codebase."
         )
-        print("  Review the result afterward if Hermes behaves unexpectedly.")
+        print("  Review the result afterward if Doppel Agent behaves unexpectedly.")
         print("Restore local changes now? [Y/n]")
         if input_fn is not None:
             response = input_fn("Restore local changes now? [Y/n]", "y")
@@ -7508,7 +7530,7 @@ def _restore_stashed_changes(
     stash_selector = _resolve_stash_selector(git_cmd, cwd, stash_ref)
     if stash_selector is None:
         print(
-            "⚠ Local changes were restored, but Hermes couldn't find the stash entry to drop."
+            "⚠ Local changes were restored, but Doppel Agent couldn't find the stash entry to drop."
         )
         print(
             "  The stash was left in place. You can remove it manually after checking the result."
@@ -7523,7 +7545,7 @@ def _restore_stashed_changes(
         )
         if drop.returncode != 0:
             print(
-                "⚠ Local changes were restored, but Hermes couldn't drop the saved stash entry."
+                "⚠ Local changes were restored, but Doppel Agent couldn't drop the saved stash entry."
             )
             if drop.stdout.strip():
                 print(drop.stdout.strip())
@@ -7535,22 +7557,77 @@ def _restore_stashed_changes(
             _print_stash_cleanup_guidance(stash_ref, stash_selector)
 
     print("⚠ Local changes were restored on top of the updated codebase.")
-    print("  Review `git diff` / `git status` if Hermes behaves unexpectedly.")
+    print("  Review `git diff` / `git status` if Doppel Agent behaves unexpectedly.")
     return True
 
 
 # =========================================================================
-# Fork detection and upstream management for `hermes update`
+# Fork detection and upstream management for `doppel update`
 # =========================================================================
 
-OFFICIAL_REPO_URLS = {
-    "https://github.com/NousResearch/hermes-agent.git",
-    "git@github.com:NousResearch/hermes-agent.git",
-    "https://github.com/NousResearch/hermes-agent",
-    "git@github.com:NousResearch/hermes-agent",
-}
-OFFICIAL_REPO_URL = "https://github.com/NousResearch/hermes-agent.git"
 SKIP_UPSTREAM_PROMPT_FILE = ".skip_upstream_prompt"
+
+
+def _gateway_service_globs() -> tuple[str, ...]:
+    """Return the systemd globs used to discover current + legacy gateway units."""
+    try:
+        from hermes_constants import get_gateway_service_names
+    except ImportError:
+        return ("doppel-gateway*", "hermes-gateway*")
+    return tuple(f"{name}*" for name in get_gateway_service_names())
+
+
+def _gateway_service_glob() -> str:
+    """Return the primary systemd glob used to discover gateway units."""
+    return _gateway_service_globs()[0]
+
+
+def _distribution_package_name() -> str:
+    from hermes_constants import get_distribution_package_name
+
+    return get_distribution_package_name()
+
+
+def _official_repo_urls() -> frozenset[str]:
+    from hermes_constants import get_official_repo_urls
+
+    return get_official_repo_urls()
+
+
+def _official_upstream_repo_url() -> str:
+    from hermes_constants import get_official_upstream_repo_url
+
+    return get_official_upstream_repo_url()
+
+
+def _official_upstream_repo_slug() -> str:
+    from hermes_constants import get_official_upstream_repo_slug
+
+    return get_official_upstream_repo_slug()
+
+
+def _upstream_archive_url(branch: str) -> str:
+    from hermes_constants import get_upstream_archive_url
+
+    return get_upstream_archive_url(branch)
+
+
+def _upstream_archive_filename(branch: str) -> str:
+    from hermes_constants import get_upstream_archive_filename
+
+    return get_upstream_archive_filename(branch)
+
+
+def _upstream_extracted_dir_name(branch: str) -> str:
+    from hermes_constants import get_upstream_extracted_dir_name
+
+    return get_upstream_extracted_dir_name(branch)
+
+
+def _upstream_install_script_url(ref: str = "main") -> str:
+    from hermes_constants import get_upstream_install_script_url
+
+    return get_upstream_install_script_url(ref)
 
 
 def _get_origin_url(git_cmd: list[str], cwd: Path) -> Optional[str]:
@@ -7577,7 +7654,7 @@ def _is_fork(origin_url: Optional[str]) -> bool:
     normalized = origin_url.rstrip("/")
     if normalized.endswith(".git"):
         normalized = normalized[:-4]
-    for official in OFFICIAL_REPO_URLS:
+    for official in _official_repo_urls():
         official_normalized = official.rstrip("/")
         if official_normalized.endswith(".git"):
             official_normalized = official_normalized[:-4]
@@ -7604,7 +7681,7 @@ def _add_upstream_remote(git_cmd: list[str], cwd: Path) -> bool:
     """Add the official repo as the 'upstream' remote. Returns True on success."""
     try:
         result = subprocess.run(
-            git_cmd + ["remote", "add", "upstream", OFFICIAL_REPO_URL],
+            git_cmd + ["remote", "add", "upstream", _official_upstream_repo_url()],
             cwd=cwd,
             capture_output=True,
             text=True,
@@ -7682,12 +7759,12 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
         # Ask user if they want to add upstream
         print()
-        print("ℹ Your fork is not tracking the official Hermes repository.")
-        print("  This means you may miss updates from NousResearch/hermes-agent.")
+        print("ℹ Your fork is not tracking the official upstream repository.")
+        print(f"  This means you may miss updates from {_official_upstream_repo_slug()}.")
         print()
         try:
             response = (
-                input("Add official repo as 'upstream' remote? [Y/n]: ").strip().lower()
+                input("Add official upstream repo as 'upstream' remote? [Y/n]: ").strip().lower()
             )
         except (EOFError, KeyboardInterrupt):
             print()
@@ -7696,16 +7773,14 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
         if response in {"", "y", "yes"}:
             print("→ Adding upstream remote...")
             if _add_upstream_remote(git_cmd, cwd):
-                print(
-                    "  ✓ Added upstream: https://github.com/NousResearch/hermes-agent.git"
-                )
+                print(f"  ✓ Added upstream: {_official_upstream_repo_url()}")
                 has_upstream = True
             else:
                 print("  ✗ Failed to add upstream remote. Skipping upstream sync.")
                 return
         else:
             print(
-                "  Skipped. Run 'git remote add upstream https://github.com/NousResearch/hermes-agent.git' to add later."
+                f"  Skipped. Run 'git remote add upstream {_official_upstream_repo_url()}' to add later."
             )
             _mark_skip_upstream_prompt()
             return
@@ -7783,7 +7858,7 @@ def _invalidate_update_cache():
     reports a stale "commits behind" count after a successful update.
 
     The git repo is shared across profiles — when one profile runs
-    ``hermes update``, every profile is now current.
+    ``doppel update``, every profile is now current.
     """
     homes = []
     # Default profile home (Docker-aware — uses /opt/data in Docker)
@@ -7845,7 +7920,7 @@ def _run_install_with_heartbeat(
 
     Some resolvers/build backends (especially when compiling Rust/C extensions)
     can stay quiet for minutes. Emit a simple elapsed-time heartbeat so users
-    know ``hermes update`` is still progressing even if pip/uv itself is silent.
+    know ``doppel update`` is still progressing even if pip/uv itself is silent.
     """
     done = threading.Event()
     start = _time.time()
@@ -8031,8 +8106,8 @@ def _format_concurrent_instances_message(
     lines.append(f"  Updating now would fail to overwrite {shim} because")
     lines.append("  Windows blocks REPLACE on a running executable.")
     lines.append("")
-    lines.append("  Close Hermes Desktop, exit any open `hermes` REPLs, and")
-    lines.append("  stop the gateway (`hermes gateway stop`) before retrying.")
+    lines.append("  Close Doppel Desktop, exit any open `doppel` REPLs, and")
+    lines.append("  stop the gateway (`doppel gateway stop`) before retrying.")
     lines.append("")
     if matches:
         pid_args = " ".join(f"/PID {pid}" for pid, _ in matches)
@@ -8040,7 +8115,7 @@ def _format_concurrent_instances_message(
         lines.append("  stale, terminate them directly, then retry the update:")
         lines.append(f"      taskkill {pid_args} /F")
         lines.append("")
-    lines.append("  Override with `hermes update --force` if you've already")
+    lines.append("  Override with `doppel update --force` if you've already")
     lines.append("  confirmed those processes will not write to the venv.")
     return "\n".join(lines)
 
@@ -8141,8 +8216,8 @@ def _quarantine_running_hermes_exe(
             f"another process is holding it open)."
         )
         print(
-            "    Close Hermes Desktop, exit other `hermes` REPLs, stop the "
-            "gateway, or pause AV scanning, then re-run `hermes update`."
+            "    Close Doppel Desktop, exit other `doppel` REPLs, stop the "
+            "gateway, or pause AV scanning, then re-run `doppel update`."
         )
 
     return moved
@@ -8281,7 +8356,7 @@ def _refresh_active_lazy_features() -> None:
                 reason = reason[:200] + "..."
             print(f"  ⚠ {feature} failed to refresh: {reason}")
         print("  Backends keep their previously-installed version; rerun")
-        print("  `hermes update` once the upstream issue is resolved.")
+        print("  `doppel update` once the upstream issue is resolved.")
 
 
 def _install_python_dependencies_with_optional_fallback(
@@ -8423,7 +8498,7 @@ def _update_node_dependencies() -> None:
         # Chromium fetch on first install) print progress instead of
         # appearing to hang silently for minutes (#18840).  The
         # `_UpdateOutputStream` wrapper installed by the updater mirrors
-        # streamed output to ``~/.hermes/logs/update.log`` so nothing is lost.
+        # streamed output to ``~/.doppel/logs/update.log`` so nothing is lost.
         result = _run_npm_install_deterministic(
             npm,
             path,
@@ -8441,12 +8516,12 @@ def _update_node_dependencies() -> None:
 
 
 class _UpdateOutputStream:
-    """Stream wrapper used during ``hermes update`` to survive terminal loss.
+    """Stream wrapper used during ``doppel update`` to survive terminal loss.
 
     Wraps the process's original stdout/stderr so that:
 
     * Every write is also mirrored to an append-only log file
-      (``~/.hermes/logs/update.log``) that users can inspect after the
+      (``~/.doppel/logs/update.log``) that users can inspect after the
       terminal disconnects.
     * Writes to the original stream that fail with ``BrokenPipeError`` /
       ``OSError`` / ``ValueError`` (closed file) no longer cascade into
@@ -8454,7 +8529,7 @@ class _UpdateOutputStream:
       stops.
 
     Combined with ``SIGHUP -> SIG_IGN`` installed by
-    ``_install_hangup_protection``, this makes ``hermes update`` safe to
+    ``_install_hangup_protection``, this makes ``doppel update`` safe to
     run in a plain SSH session that might disconnect mid-install.
     """
 
@@ -8516,7 +8591,7 @@ class _UpdateOutputStream:
 def _install_hangup_protection(gateway_mode: bool = False):
     """Protect ``cmd_update`` from SIGHUP and broken terminal pipes.
 
-    Users commonly run ``hermes update`` in an SSH session or a terminal
+    Users commonly run ``doppel update`` in an SSH session or a terminal
     that may close mid-install.  Without protection, ``SIGHUP`` from the
     terminal kills the Python process during ``pip install`` and leaves
     the venv half-installed; the documented workaround ("use screen /
@@ -8528,14 +8603,14 @@ def _install_hangup_protection(gateway_mode: bool = False):
        across ``exec()``, so pip and git subprocesses also stop dying on
        hangup.
     2. ``sys.stdout`` / ``sys.stderr`` are wrapped to mirror output to
-       ``~/.hermes/logs/update.log`` and to silently absorb
+       ``~/.doppel/logs/update.log`` and to silently absorb
        ``BrokenPipeError`` when the terminal vanishes.
 
     ``SIGINT`` (Ctrl-C) and ``SIGTERM`` (systemd shutdown) are
     **intentionally left alone** — those are legitimate cancellation
     signals the user or OS sent on purpose.
 
-    In gateway mode (``hermes update --gateway``) the update is already
+    In gateway mode (``doppel update --gateway``) the update is already
     spawned detached from a terminal, so this function is a no-op.
 
     Returns a dict that ``cmd_update`` can pass to
@@ -8578,7 +8653,7 @@ def _install_hangup_protection(gateway_mode: bool = False):
         import datetime as _dt
 
         log_file.write(
-            f"\n=== hermes update started "
+            f"\n=== doppel update started "
             f"{_dt.datetime.now().isoformat(timespec='seconds')} ===\n"
         )
 
@@ -8628,7 +8703,7 @@ def _resolve_update_branch(args) -> str:
 
 
 def _cmd_update_check(branch: str = "main", *, branch_explicit: bool = False):
-    """Implement ``hermes update --check``: fetch and report without installing.
+    """Implement ``doppel update --check``: fetch and report without installing.
 
     ``branch`` selects which branch the check compares against. Default is
     "main"; callers can pass another branch to ask "are there new commits
@@ -8643,7 +8718,7 @@ def _cmd_update_check(branch: str = "main", *, branch_explicit: bool = False):
     method = detect_install_method(PROJECT_ROOT)
     if method == "docker":
         # Docker can't ``git fetch`` from within the container.  Surface the
-        # same long-form ``docker pull`` guidance ``hermes update`` (apply
+        # same long-form ``docker pull`` guidance ``doppel update`` (apply
         # path) uses — telling the user to "reinstall via curl" or that
         # ".git is missing" would point them at the wrong remediation.
         from hermes_cli.config import format_docker_update_message
@@ -8813,7 +8888,7 @@ def _ensure_fhs_path_guard() -> None:
 
     path_line = 'export PATH="/usr/local/bin:$PATH"'
     path_comment = (
-        "# Hermes Agent — ensure /usr/local/bin is on PATH " "(RHEL non-login shells)"
+        "# Doppel Agent — ensure /usr/local/bin is on PATH " "(RHEL non-login shells)"
     )
     wrote_any = False
     for candidate in (".bashrc", ".bash_profile"):
@@ -8851,7 +8926,7 @@ def _run_pre_update_backup(args) -> None:
 
     Gated on ``updates.pre_update_backup`` in config (default false).  Off
     by default because the zip can add minutes to every update on large
-    HERMES_HOME directories.  The ``--backup`` flag on ``hermes update``
+    HERMES_HOME directories.  The ``--backup`` flag on ``doppel update``
     opts in for a single run; ``--no-backup`` forces it off when config
     has it enabled.  Never raises — a backup failure should not block the
     update itself.
@@ -8923,7 +8998,7 @@ def _run_pre_update_backup(args) -> None:
         size_bytes /= 1024
         size_str = f"{size_bytes:.1f} {unit}"
 
-    # Render path using display_hermes_home so the user sees ~/.hermes/...
+    # Render path using display_hermes_home so the user sees ~/.doppel/...
     try:
         from hermes_constants import get_hermes_home, display_hermes_home
 
@@ -8936,14 +9011,14 @@ def _run_pre_update_backup(args) -> None:
         display_path = str(out_path)
 
     print(f"  Saved:    {display_path} ({size_str}, {elapsed:.1f}s)")
-    print(f"  Restore:  hermes import {out_path}")
+    print(f"  Restore:  doppel import {out_path}")
     print(f"  Disable:  omit --backup (backups are off by default)")
     print(f"            set updates.pre_update_backup: false in config.yaml")
     print()
 
 
 def cmd_update(args):
-    """Update Hermes Agent to the latest version.
+    """Update Doppel Agent to the latest version.
 
     Thin wrapper around ``_cmd_update_impl``: installs hangup protection,
     runs the update, then restores stdio on the way out (even on
@@ -8957,7 +9032,7 @@ def cmd_update(args):
     )
 
     if is_managed():
-        managed_error("update Hermes Agent")
+        managed_error("update Doppel Agent")
         return
 
     # Docker users can't ``git pull`` — the image excludes ``.git`` from
@@ -8993,7 +9068,7 @@ def cmd_update(args):
 
 
 def _cmd_update_pip(args):
-    """Update Hermes via pip (for PyPI installs)."""
+    """Update Doppel via pip (for PyPI installs)."""
     from hermes_cli import __version__
     from hermes_cli.config import is_uv_tool_install
 
@@ -9012,18 +9087,19 @@ def _cmd_update_pip(args):
     # operate on a named environment and ignore VIRTUAL_ENV, so we don't
     # set it for them.
     export_virtualenv = False
+    package_name = _distribution_package_name()
 
     if is_uv_tool_install():
         if not uv:
             print("✗ Detected a uv-tool install but `uv` is not on PATH; install uv and retry.")
             sys.exit(1)
-        cmd = [uv, "tool", "upgrade", "hermes-agent"]
+        cmd = [uv, "tool", "upgrade", package_name]
     elif pipx_managed and pipx:
         # pipx owns its own venv; ``pipx upgrade`` is the only correct path.
         # Matches scripts/auto-update.sh, which already uses pipx upgrade.
-        cmd = [pipx, "upgrade", "hermes-agent"]
+        cmd = [pipx, "upgrade", package_name]
     elif uv:
-        cmd = [uv, "pip", "install", "--upgrade", "hermes-agent"]
+        cmd = [uv, "pip", "install", "--upgrade", package_name]
         if in_venv:
             # Launcher shim runs the venv interpreter but doesn't export
             # VIRTUAL_ENV; without it uv errors "No virtual environment found".
@@ -9033,7 +9109,7 @@ def _cmd_update_pip(args):
             # interpreter, matching pip's default behaviour.
             cmd.insert(3, "--system")
     else:
-        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "hermes-agent"]
+        cmd = [sys.executable, "-m", "pip", "install", "--upgrade", package_name]
 
     print(f"→ Running: {' '.join(cmd)}")
     run_kwargs = {}
@@ -9044,7 +9120,7 @@ def _cmd_update_pip(args):
         print("✗ Update failed")
         sys.exit(1)
 
-    print("✓ Update complete! Restart hermes to use the new version.")
+    print("✓ Update complete! Restart doppel to use the new version.")
 
 
 def _cmd_update_impl(args, gateway_mode: bool):
@@ -9058,7 +9134,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
     )
     assume_yes = bool(getattr(args, "yes", False))
 
-    print("⚕ Updating Hermes Agent...")
+    print("⚕ Updating Doppel Agent...")
     print()
 
     # On Windows, abort early if another hermes.exe is holding the venv shim
@@ -9093,7 +9169,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
                 return
             print("✗ Not a git repository. Please reinstall:")
             print(
-                "  curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash"
+                f"  curl -fsSL {_upstream_install_script_url()} | bash"
             )
             sys.exit(1)
 
@@ -9352,7 +9428,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
                     )
                     if rollback_result.returncode == 0:
                         print("  ✓ Rollback complete — your install is unchanged.")
-                        print("  Try ``hermes update`` again later once a fix lands.")
+                        print("  Try ``doppel update`` again later once a fix lands.")
                     else:
                         print("  ✗ Rollback failed. Recover manually with:")
                         print(f"    cd {PROJECT_ROOT} && git reset --hard {pre_pull_sha}")
@@ -9611,10 +9687,10 @@ def _cmd_update_impl(args, gateway_mode: bool):
                     print()
                     print("✓ Configuration updated!")
                 if (gateway_mode or assume_yes or response == "auto") and missing_env:
-                    print("  ℹ API keys require manual entry: hermes config migrate")
+                    print("  ℹ API keys require manual entry: doppel config migrate")
             else:
                 print()
-                print("Skipped. Run 'hermes config migrate' later to configure.")
+                print("Skipped. Run 'doppel config migrate' later to configure.")
         else:
             print("  ✓ Configuration is up to date")
 
@@ -9652,7 +9728,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
         # Most-recent curator run notice — show-once per run. Surfaces the
         # rename map (`old-name → umbrella`) on the high-attention update
         # surface so users learn about consolidations without having to
-        # check `hermes curator status`. Self-stamps after printing so it
+        # check `doppel curator status`. Self-stamps after printing so it
         # never repeats for the same run.
         try:
             _print_curator_recent_run_notice()
@@ -9669,7 +9745,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
         # Refresh the cua-driver binary used by the Computer Use toolset.
         # The upstream installer is gated on macOS and on the binary already
         # being on PATH, so this is a no-op for users who don't have it.
-        # Tying the refresh to ``hermes update`` gives users a predictable
+        # Tying the refresh to ``doppel update`` gives users a predictable
         # cadence (matches when they pull new agent code) without adding
         # startup latency or a per-launch GitHub API call.
         try:
@@ -9683,7 +9759,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
             logger.debug("cua-driver refresh failed: %s", e)
 
         # Write exit code *before* the gateway restart attempt.
-        # When running as ``hermes update --gateway`` (spawned by the gateway's
+        # When running as ``doppel update --gateway`` (spawned by the gateway's
         # /update command), this process lives inside the gateway's systemd
         # cgroup.  A graceful SIGUSR1 restart keeps the drain loop alive long
         # enough for the exit-code marker to be written below, but the
@@ -9839,7 +9915,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
             relaunched_profiles = []
 
             # --- Systemd services (Linux) ---
-            # Discover all hermes-gateway* units (default + profiles)
+            # Discover all current + legacy gateway units (default + profiles)
             if supports_systemd_services():
                 try:
                     _ensure_user_systemd_env()
@@ -9851,200 +9927,102 @@ def _cmd_update_impl(args, gateway_mode: bool):
                     ("system", ["systemctl"]),
                 ]:
                     try:
-                        result = subprocess.run(
-                            scope_cmd
-                            + [
-                                "list-units",
-                                "hermes-gateway*",
-                                "--plain",
-                                "--no-legend",
-                                "--no-pager",
-                            ],
-                            capture_output=True,
-                            text=True,
-                            timeout=10,
-                        )
-                        for line in result.stdout.strip().splitlines():
-                            parts = line.split()
-                            if not parts:
-                                continue
-                            unit = parts[
-                                0
-                            ]  # e.g. hermes-gateway.service or hermes-gateway-coder.service
-                            if not unit.endswith(".service"):
-                                continue
-                            svc_name = unit.removesuffix(".service")
-                            # Check if active
-                            check = subprocess.run(
-                                scope_cmd + ["is-active", svc_name],
-                                capture_output=True,
-                                text=True,
-                                timeout=5,
-                            )
-                            if check.stdout.strip() != "active":
-                                continue
-
-                            # Prefer a graceful SIGUSR1 restart so in-flight
-                            # agent runs drain instead of being SIGKILLed.
-                            # The gateway's SIGUSR1 handler calls
-                            # request_restart(via_service=True) → drain →
-                            # exit(75); systemd's Restart=on-failure (and
-                            # RestartForceExitStatus=75) respawns the unit.
-                            _main_pid = 0
-                            try:
-                                _show = subprocess.run(
-                                    scope_cmd
-                                    + [
-                                        "show",
-                                        svc_name,
-                                        "--property=MainPID",
-                                        "--value",
-                                    ],
-                                    capture_output=True,
-                                    text=True,
-                                    timeout=5,
-                                )
-                                _main_pid = int((_show.stdout or "").strip() or 0)
-                            except (
-                                ValueError,
-                                subprocess.TimeoutExpired,
-                                FileNotFoundError,
-                            ):
-                                _main_pid = 0
-
-                            _graceful_ok = False
-                            if _main_pid > 0:
-                                print(
-                                    f"  → {svc_name}: draining (up to {int(_drain_budget)}s)..."
-                                )
-                                _graceful_ok = _graceful_restart_via_sigusr1(
-                                    _main_pid,
-                                    drain_timeout=_drain_budget,
-                                )
-
-                            if _graceful_ok:
-                                # Gateway exited 75. ``Restart=always`` +
-                                # ``RestartForceExitStatus=75`` means systemd
-                                # WILL respawn the unit — but only after
-                                # ``RestartSec`` (default 60s on our unit
-                                # file). That 60s wait is a crash-loop guard,
-                                # and is the right default when the gateway
-                                # dies unexpectedly. For a voluntary restart
-                                # on update, it's dead time the user watches.
-                                #
-                                # Shortcut it: ``reset-failed`` + ``start``
-                                # skips RestartSec entirely (we're manually
-                                # initiating the unit, not waiting for
-                                # systemd's auto-restart logic). Takes about
-                                # as long as the process takes to come up
-                                # (~1-3s on a warm box).
-                                #
-                                # If the unit is already active because
-                                # RestartSec elapsed while we were draining,
-                                # ``start`` is a no-op and we fall through to
-                                # the poll below. Either way we collapse the
-                                # 60s+ delay to a ~5s one.
-                                subprocess.run(
-                                    scope_cmd + ["reset-failed", svc_name],
-                                    capture_output=True,
-                                    text=True,
-                                    timeout=10,
-                                )
-                                subprocess.run(
-                                    scope_cmd + ["start", svc_name],
-                                    capture_output=True,
-                                    text=True,
-                                    timeout=15,
-                                )
-                                # Short poll: the gateway should be up within
-                                # a few seconds now that we bypassed
-                                # RestartSec. Fall back to the longer
-                                # RestartSec + slack budget ONLY if the
-                                # explicit start failed and we need to rely
-                                # on systemd's auto-restart.
-                                if _wait_for_service_active(
-                                    scope_cmd,
-                                    svc_name,
-                                    timeout=10.0,
-                                ):
-                                    restarted_services.append(svc_name)
-                                    continue
-                                # Explicit start didn't take. Fall back to
-                                # the original passive poll (systemd's
-                                # auto-restart WILL fire after RestartSec
-                                # regardless).
-                                _restart_sec = _service_restart_sec(
-                                    scope_cmd,
-                                    svc_name,
-                                    default=0.0,
-                                )
-                                _post_drain_timeout = max(
-                                    10.0,
-                                    _restart_sec + 10.0,
-                                )
-                                if _wait_for_service_active(
-                                    scope_cmd,
-                                    svc_name,
-                                    timeout=_post_drain_timeout,
-                                ):
-                                    restarted_services.append(svc_name)
-                                    continue
-                                # Process exited but wasn't respawned (older
-                                # unit without Restart=on-failure or
-                                # RestartForceExitStatus=75).  Fall through
-                                # to systemctl start/restart.
-                                print(
-                                    f"  ⚠ {svc_name} drained but didn't relaunch — forcing restart"
-                                )
-
-                            # Fallback: blunt systemctl restart.  This is
-                            # what the old code always did; we get here only
-                            # when the graceful path failed (unit missing
-                            # SIGUSR1 wiring, drain exceeded the budget,
-                            # restart-policy mismatch).
-                            #
-                            # Always `reset-failed` first.  If systemd's own
-                            # auto-restart attempts already parked the unit
-                            # in a failed state (transient CHDIR / OOM /
-                            # filesystem race after our drain + exit-75),
-                            # a plain `systemctl restart` can wedge against
-                            # the RestartSec backoff and leave the unit
-                            # dead.  Clearing the failed state first makes
-                            # the restart idempotent.  Mirrors the recovery
-                            # path in `hermes gateway restart`
-                            # (`systemd_restart()`) as of PR #20949.
-                            subprocess.run(
-                                scope_cmd + ["reset-failed", svc_name],
+                        seen_units: set[str] = set()
+                        for unit_glob in _gateway_service_globs():
+                            result = subprocess.run(
+                                scope_cmd
+                                + [
+                                    "list-units",
+                                    unit_glob,
+                                    "--plain",
+                                    "--no-legend",
+                                    "--no-pager",
+                                ],
                                 capture_output=True,
                                 text=True,
                                 timeout=10,
                             )
-                            restart = subprocess.run(
-                                scope_cmd + ["restart", svc_name],
-                                capture_output=True,
-                                text=True,
-                                timeout=15,
-                            )
-                            if restart.returncode == 0:
-                                # Verify the service actually survived the
-                                # restart.  systemctl restart returns 0 even
-                                # if the new process crashes immediately.
-                                if _wait_for_service_active(
-                                    scope_cmd,
-                                    svc_name,
-                                    timeout=10.0,
-                                ):
-                                    restarted_services.append(svc_name)
-                                else:
-                                    # Retry once — transient startup failures
-                                    # (stale module cache, import race) often
-                                    # resolve on the second attempt.  Again
-                                    # clear any failed state first so the
-                                    # retry isn't blocked by the previous
-                                    # crash.
-                                    print(
-                                        f"  ⚠ {svc_name} died after restart, retrying..."
+                            for line in result.stdout.strip().splitlines():
+                                parts = line.split()
+                                if not parts:
+                                    continue
+                                unit = parts[
+                                    0
+                                ]  # e.g. doppel-gateway.service or hermes-gateway-coder.service
+                                if not unit.endswith(".service") or unit in seen_units:
+                                    continue
+                                seen_units.add(unit)
+                                svc_name = unit.removesuffix(".service")
+                                # Check if active
+                                check = subprocess.run(
+                                    scope_cmd + ["is-active", svc_name],
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=5,
+                                )
+                                if check.stdout.strip() != "active":
+                                    continue
+
+                                # Prefer a graceful SIGUSR1 restart so in-flight
+                                # agent runs drain instead of being SIGKILLed.
+                                # The gateway's SIGUSR1 handler calls
+                                # request_restart(via_service=True) → drain →
+                                # exit(75); systemd's Restart=on-failure (and
+                                # RestartForceExitStatus=75) respawns the unit.
+                                _main_pid = 0
+                                try:
+                                    _show = subprocess.run(
+                                        scope_cmd
+                                        + [
+                                            "show",
+                                            svc_name,
+                                            "--property=MainPID",
+                                            "--value",
+                                        ],
+                                        capture_output=True,
+                                        text=True,
+                                        timeout=5,
                                     )
+                                    _main_pid = int((_show.stdout or "").strip() or 0)
+                                except (
+                                    ValueError,
+                                    subprocess.TimeoutExpired,
+                                    FileNotFoundError,
+                                ):
+                                    _main_pid = 0
+
+                                _graceful_ok = False
+                                if _main_pid > 0:
+                                    print(
+                                        f"  → {svc_name}: draining (up to {int(_drain_budget)}s)..."
+                                    )
+                                    _graceful_ok = _graceful_restart_via_sigusr1(
+                                        _main_pid,
+                                        drain_timeout=_drain_budget,
+                                    )
+
+                                if _graceful_ok:
+                                    # Gateway exited 75. ``Restart=always`` +
+                                    # ``RestartForceExitStatus=75`` means systemd
+                                    # WILL respawn the unit — but only after
+                                    # ``RestartSec`` (default 60s on our unit
+                                    # file). That 60s wait is a crash-loop guard,
+                                    # and is the right default when the gateway
+                                    # dies unexpectedly. For a voluntary restart
+                                    # on update, it's dead time the user watches.
+                                    #
+                                    # Shortcut it: ``reset-failed`` + ``start``
+                                    # skips RestartSec entirely (we're manually
+                                    # initiating the unit, not waiting for
+                                    # systemd's auto-restart logic). Takes about
+                                    # as long as the process takes to come up
+                                    # (~1-3s on a warm box).
+                                    #
+                                    # If the unit is already active because
+                                    # RestartSec elapsed while we were draining,
+                                    # ``start`` is a no-op and we fall through to
+                                    # the poll below. Either way we collapse the
+                                    # 60s+ delay to a ~5s one.
                                     subprocess.run(
                                         scope_cmd + ["reset-failed", svc_name],
                                         capture_output=True,
@@ -10052,31 +10030,132 @@ def _cmd_update_impl(args, gateway_mode: bool):
                                         timeout=10,
                                     )
                                     subprocess.run(
-                                        scope_cmd + ["restart", svc_name],
+                                        scope_cmd + ["start", svc_name],
                                         capture_output=True,
                                         text=True,
                                         timeout=15,
                                     )
+                                    # Short poll: the gateway should be up within
+                                    # a few seconds now that we bypassed
+                                    # RestartSec. Fall back to the longer
+                                    # RestartSec + slack budget ONLY if the
+                                    # explicit start failed and we need to rely
+                                    # on systemd's auto-restart.
                                     if _wait_for_service_active(
                                         scope_cmd,
                                         svc_name,
                                         timeout=10.0,
                                     ):
                                         restarted_services.append(svc_name)
-                                        print(f"  ✓ {svc_name} recovered on retry")
-                                    else:
-                                        _scope_flag = "--user " if scope == "user" else ""
-                                        print(
-                                            f"  ✗ {svc_name} failed to stay running after restart.\n"
-                                            f"    Check logs: journalctl {_scope_flag}-u {svc_name} --since '2 min ago'\n"
-                                            f"    Recover manually:\n"
-                                            f"      systemctl {_scope_flag}reset-failed {svc_name}\n"
-                                            f"      systemctl {_scope_flag}restart {svc_name}"
-                                        )
-                            else:
-                                print(
-                                    f"  ⚠ Failed to restart {svc_name}: {restart.stderr.strip()}"
+                                        continue
+                                    # Explicit start didn't take. Fall back to
+                                    # the original passive poll (systemd's
+                                    # auto-restart WILL fire after RestartSec
+                                    # regardless).
+                                    _restart_sec = _service_restart_sec(
+                                        scope_cmd,
+                                        svc_name,
+                                        default=0.0,
+                                    )
+                                    _post_drain_timeout = max(
+                                        10.0,
+                                        _restart_sec + 10.0,
+                                    )
+                                    if _wait_for_service_active(
+                                        scope_cmd,
+                                        svc_name,
+                                        timeout=_post_drain_timeout,
+                                    ):
+                                        restarted_services.append(svc_name)
+                                        continue
+                                    # Process exited but wasn't respawned (older
+                                    # unit without Restart=on-failure or
+                                    # RestartForceExitStatus=75).  Fall through
+                                    # to systemctl start/restart.
+                                    print(
+                                        f"  ⚠ {svc_name} drained but didn't relaunch — forcing restart"
+                                    )
+
+                                # Fallback: blunt systemctl restart.  This is
+                                # what the old code always did; we get here only
+                                # when the graceful path failed (unit missing
+                                # SIGUSR1 wiring, drain exceeded the budget,
+                                # restart-policy mismatch).
+                                #
+                                # Always `reset-failed` first.  If systemd's own
+                                # auto-restart attempts already parked the unit
+                                # in a failed state (transient CHDIR / OOM /
+                                # filesystem race after our drain + exit-75),
+                                # a plain `systemctl restart` can wedge against
+                                # the RestartSec backoff and leave the unit
+                                # dead.  Clearing the failed state first makes
+                                # the restart idempotent.  Mirrors the recovery
+                                # path in `doppel gateway restart`
+                                # (`systemd_restart()`) as of PR #20949.
+                                subprocess.run(
+                                    scope_cmd + ["reset-failed", svc_name],
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=10,
                                 )
+                                restart = subprocess.run(
+                                    scope_cmd + ["restart", svc_name],
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=15,
+                                )
+                                if restart.returncode == 0:
+                                    # Verify the service actually survived the
+                                    # restart.  systemctl restart returns 0 even
+                                    # if the new process crashes immediately.
+                                    if _wait_for_service_active(
+                                        scope_cmd,
+                                        svc_name,
+                                        timeout=10.0,
+                                    ):
+                                        restarted_services.append(svc_name)
+                                    else:
+                                        # Retry once — transient startup failures
+                                        # (stale module cache, import race) often
+                                        # resolve on the second attempt.  Again
+                                        # clear any failed state first so the
+                                        # retry isn't blocked by the previous
+                                        # crash.
+                                        print(
+                                            f"  ⚠ {svc_name} died after restart, retrying..."
+                                        )
+                                        subprocess.run(
+                                            scope_cmd + ["reset-failed", svc_name],
+                                            capture_output=True,
+                                            text=True,
+                                            timeout=10,
+                                        )
+                                        subprocess.run(
+                                            scope_cmd + ["restart", svc_name],
+                                            capture_output=True,
+                                            text=True,
+                                            timeout=15,
+                                        )
+                                        if _wait_for_service_active(
+                                            scope_cmd,
+                                            svc_name,
+                                            timeout=10.0,
+                                        ):
+                                            restarted_services.append(svc_name)
+                                            print(f"  ✓ {svc_name} recovered on retry")
+                                        else:
+                                            _scope_flag = "--user " if scope == "user" else ""
+                                            print(
+                                                f"  ✗ {svc_name} failed to stay running after restart.\n"
+                                                f"    Check logs: journalctl {_scope_flag}-u {svc_name} --since '2 min ago'\n"
+                                                f"    Recover manually:\n"
+                                                f"      systemctl {_scope_flag}reset-failed {svc_name}\n"
+                                                f"      systemctl {_scope_flag}restart {svc_name}"
+                                            )
+                                else:
+                                    print(
+                                        f"  ⚠ Failed to restart {svc_name}: {restart.stderr.strip()}"
+                                    )
                     except (FileNotFoundError, subprocess.TimeoutExpired):
                         pass
 
@@ -10174,10 +10253,10 @@ def _cmd_update_impl(args, gateway_mode: bool):
                 unmapped_count = len(killed_pids) - len(relaunched_profiles)
                 if unmapped_count:
                     print(f"  → Stopped {unmapped_count} manual gateway process(es)")
-                    print("    Restart manually: hermes gateway run")
+                    print("    Restart manually: doppel gateway run")
                     if unmapped_count > 1:
                         print(
-                            "    (or: hermes -p <profile> gateway run  for each profile)"
+                            "    (or: doppel -p <profile> gateway run  for each profile)"
                         )
 
             if not restarted_services and not killed_pids:
@@ -10231,9 +10310,9 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         # Warn if legacy Hermes gateway unit files are still installed.
         # When both hermes.service (from a pre-rename install) and the
-        # current hermes-gateway.service are enabled, they SIGTERM-fight
+        # current doppel-gateway.service are enabled, they SIGTERM-fight
         # for the same bot token (see PR #11909). Flagging here means
-        # every `hermes update` surfaces the issue until the user migrates.
+        # every `doppel update` surfaces the issue until the user migrates.
         try:
             from hermes_cli.gateway import (
                 has_legacy_hermes_units,
@@ -10243,16 +10322,16 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             if supports_systemd_services() and has_legacy_hermes_units():
                 print()
-                print("⚠ Legacy Hermes gateway unit(s) detected:")
+                print("⚠ Legacy gateway unit(s) detected from an older install:")
                 for name, path, is_sys in _find_legacy_hermes_units():
                     scope = "system" if is_sys else "user"
                     print(f"    {path}  ({scope} scope)")
                 print()
                 print("  These pre-rename units (hermes.service) fight the current")
-                print("  hermes-gateway.service for the bot token and cause SIGTERM")
+                print("  doppel-gateway.service for the bot token and cause SIGTERM")
                 print("  flap loops. Remove them with:")
                 print()
-                print("    hermes gateway migrate-legacy")
+                print("    doppel gateway migrate-legacy")
                 print()
                 print("  (add `sudo` if any are in system scope)")
         except Exception as e:
@@ -10267,7 +10346,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         print()
         print("Tip: You can now select a provider and model:")
-        print("  hermes model              # Select provider and model")
+        print("  doppel model              # Select provider and model")
 
     except subprocess.CalledProcessError as e:
         if sys.platform == "win32":
@@ -10283,7 +10362,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 def _coalesce_session_name_args(argv: list) -> list:
     """Join unquoted multi-word session names after -c/--continue and -r/--resume.
 
-    When a user types ``hermes -c Pokemon Agent Dev`` without quoting the
+    When a user types ``doppel -c Pokemon Agent Dev`` without quoting the
     session name, argparse sees three separate tokens.  This function merges
     them into a single argument so argparse receives
     ``['-c', 'Pokemon Agent Dev']`` instead.
@@ -10375,7 +10454,7 @@ def cmd_profile(args):
     action = getattr(args, "profile_action", None)
 
     if action is None:
-        # Bare `hermes profile` — show current profile status
+        # Bare `doppel profile` — show current profile status
         profile_name = get_active_profile_name()
         dhh = display_hermes_home()
         print(f"\nActive profile: {profile_name}")
@@ -10394,7 +10473,7 @@ def cmd_profile(args):
                 )
                 print(f"Skills:         {p.skill_count} installed")
                 if p.alias_path:
-                    print(f"Alias:          {p.name} → hermes -p {p.name}")
+                    print(f"Alias:          {p.name} → doppel -p {p.name}")
                 break
         print()
         return
@@ -10442,7 +10521,7 @@ def cmd_profile(args):
         try:
             set_active_profile(name)
             if name == "default":
-                print(f"Switched to: default (~/.hermes)")
+                print(f"Switched to: default ({display_hermes_home()})")
             else:
                 print(f"Switched to: {name}")
         except (ValueError, FileNotFoundError) as e:
@@ -10517,9 +10596,9 @@ def cmd_profile(args):
                 if collision:
                     print(f"\n⚠ Cannot create alias '{name}' — {collision}")
                     print(
-                        f"  Choose a custom alias:  hermes profile alias {name} --name <custom>"
+                        f"  Choose a custom alias:  doppel profile alias {name} --name <custom>"
                     )
-                    print(f"  Or access via flag:     hermes -p {name} chat")
+                    print(f"  Or access via flag:     doppel -p {name} chat")
                 else:
                     wrapper_path = create_wrapper_script(name)
                     if wrapper_path:
@@ -10704,7 +10783,7 @@ def cmd_profile(args):
             print(f"Distribution: {dist_name}@{dist_version or '?'}")
             if dist_source:
                 print(f"Installed from: {dist_source}")
-            print(f"  (run `hermes profile info {name}` for full manifest)")
+            print(f"  (run `doppel profile info {name}` for full manifest)")
         if wrapper.exists():
             print(f"Alias:   {wrapper}")
         print()
@@ -10829,9 +10908,9 @@ def cmd_profile(args):
             if plan.has_cron:
                 print(
                     "  Cron jobs were included but are NOT scheduled automatically.\n"
-                    f"  Review them with:  hermes -p {plan.manifest.name} cron list"
+                    f"  Review them with:  doppel -p {plan.manifest.name} cron list"
                 )
-            print(f"\n  Use with:      hermes -p {plan.manifest.name} chat")
+            print(f"\n  Use with:      doppel -p {plan.manifest.name} chat")
         except (DistributionError, ValueError) as e:
             print(f"Error: {e}")
             sys.exit(1)
@@ -10851,7 +10930,7 @@ def cmd_profile(args):
             if current is None:
                 print(
                     f"Error: Profile '{canon}' is not a distribution (no distribution.yaml). "
-                    "Only profiles installed via `hermes profile install` can be updated."
+                    "Only profiles installed via `doppel profile install` can be updated."
                 )
                 sys.exit(1)
 
@@ -10877,7 +10956,7 @@ def cmd_profile(args):
             if plan.has_cron:
                 print(
                     "  Cron files were refreshed.  Review with:  "
-                    f"hermes -p {plan.manifest.name} cron list"
+                    f"doppel -p {plan.manifest.name} cron list"
                 )
         except (DistributionError, ValueError) as e:
             print(f"Error: {e}")
@@ -10906,7 +10985,7 @@ def cmd_profile(args):
         if data.get("license"):
             print(f"License:      {data['license']}")
         if data.get("hermes_requires"):
-            print(f"Requires:     Hermes {data['hermes_requires']}")
+            print(f"Requires:     Doppel {data['hermes_requires']}")
         if data.get("source"):
             print(f"Source:       {data['source']}")
         if data.get("installed_at"):
@@ -10935,7 +11014,7 @@ def _render_distribution_plan(plan) -> None:
     if mf.author:
         print(f"  Author:   {mf.author}")
     if mf.hermes_requires:
-        print(f"  Requires: Hermes {mf.hermes_requires}")
+        print(f"  Requires: Doppel {mf.hermes_requires}")
     print(f"  Source:   {plan.provenance}")
     print(f"  Target:   {plan.target_dir}")
     if plan.existing:
@@ -10988,19 +11067,19 @@ def _render_distribution_plan(plan) -> None:
 
 
 def _report_dashboard_status() -> int:
-    """Print ``hermes dashboard`` PIDs and return the count.
+    """Print ``doppel dashboard`` PIDs and return the count.
 
     Uses the same detection logic as ``_find_stale_dashboard_pids`` (the
-    current process is excluded, but since ``hermes dashboard --status``
+    current process is excluded, but since ``doppel dashboard --status``
     runs in a short-lived CLI process that never matches the pattern,
     the exclusion is irrelevant here).
     """
     pids = _find_stale_dashboard_pids()
     if not pids:
-        print("No hermes dashboard processes running.")
+        print("No doppel dashboard processes running.")
         return 0
 
-    print(f"{len(pids)} hermes dashboard process(es) running:")
+    print(f"{len(pids)} doppel dashboard process(es) running:")
     for pid in pids:
         # Best-effort: show the full cmdline so users can tell profiles apart.
         cmdline = ""
@@ -11035,9 +11114,9 @@ def cmd_dashboard(args):
     if getattr(args, "stop", False):
         pids = _find_stale_dashboard_pids()
         if not pids:
-            print("No hermes dashboard processes running.")
+            print("No doppel dashboard processes running.")
             sys.exit(0)
-        # Reuse the same SIGTERM-grace-SIGKILL path used after `hermes update`.
+        # Reuse the same SIGTERM-grace-SIGKILL path used after `doppel update`.
         _kill_stale_dashboard_processes(reason="requested via --stop")
         # _kill_stale_dashboard_processes prints outcomes itself.  Exit 0 if
         # we killed at least one, 1 if they were all unkillable.
@@ -11126,7 +11205,7 @@ def cmd_prompt_size(args):
 
 
 def cmd_logs(args):
-    """View and filter Hermes log files."""
+    """View and filter Doppel log files."""
     from hermes_cli.logs import tail_log, list_logs
 
     log_name = getattr(args, "log_name", "agent") or "agent"
@@ -11174,7 +11253,7 @@ _BUILTIN_SUBCOMMANDS = frozenset(
 
 
 # Top-level flags that take a value. Needed by ``_first_positional_argv``
-# so that in ``hermes -m gpt5 chat``, ``gpt5`` is correctly skipped as a
+# so that in ``doppel -m gpt5 chat``, ``gpt5`` is correctly skipped as a
 # flag value rather than misclassified as a subcommand. Kept in sync with
 # the top-level flags declared in ``hermes_cli/_parser.py``.
 #
@@ -11203,7 +11282,7 @@ def _first_positional_argv() -> str | None:
 
     Used by ``main()`` to decide whether plugin discovery has to run at
     argparse-setup time. Handles common invocations like
-    ``hermes -m gpt5 --provider openai chat "msg"`` by skipping the
+    ``doppel -m gpt5 --provider openai chat "msg"`` by skipping the
     values attached to known top-level flags.
 
     Does NOT fully simulate argparse — unknown ``--foo=bar`` / ``--foo
@@ -11437,7 +11516,7 @@ def _try_termux_fast_cli_launch() -> bool:
 def _try_termux_fast_tui_launch() -> bool:
     """Launch obvious Termux TUI invocations before building every subparser.
 
-    `hermes --tui` is the hot path on phones. The full parser setup imports
+    `doppel --tui` is the hot path on phones. The full parser setup imports
     command modules for model, fallback, migrate, kanban, bundles, plugins,
     etc. even though the TUI immediately execs Node. On Termux only, parse the
     lightweight top-level/chat parser and hand off to ``cmd_chat`` when the
@@ -11476,7 +11555,7 @@ def _try_termux_fast_tui_launch() -> bool:
 
 
 def main():
-    """Main entry point for hermes CLI."""
+    """Main entry point for doppel CLI."""
     # Cosmetic: make the process show up as 'hermes' instead of 'python3.11'
     # in ps/top/htop.  Non-fatal — just a nicer UX.
     _set_process_title()
@@ -11489,7 +11568,7 @@ def main():
         pass
 
     # Sweep stale ``hermes.exe.old.*`` quarantine files left by previous
-    # ``hermes update`` runs on Windows. Silent no-op on non-Windows or when
+    # ``doppel update`` runs on Windows. Silent no-op on non-Windows or when
     # there's nothing to clean. See ``_quarantine_running_hermes_exe``.
     try:
         _cleanup_quarantined_exes()
@@ -11530,7 +11609,7 @@ def main():
     model_parser.add_argument(
         "--client-id",
         default=None,
-        help="OAuth client id to use for Nous login (default: hermes-cli)",
+        help="Registered OAuth client id to use for Nous login (default: hermes-cli)",
     )
     model_parser.add_argument(
         "--scope", default=None, help="OAuth scope to request for Nous login"
@@ -11570,6 +11649,10 @@ def main():
     # fallback command — manage the fallback provider chain
     # =========================================================================
     from hermes_cli.fallback_cmd import cmd_fallback
+    from hermes_constants import get_docs_page_url
+
+    fallback_docs_url = get_docs_page_url("fallback_providers")
+    bitwarden_docs_url = get_docs_page_url("secrets_bitwarden")
 
     fallback_parser = subparsers.add_parser(
         "fallback",
@@ -11577,8 +11660,7 @@ def main():
         description=(
             "Manage the fallback provider chain.  Fallback providers are tried "
             "in order when the primary model fails with rate-limit, overload, or "
-            "connection errors.  See: "
-            "https://hermes-agent.nousresearch.com/docs/user-guide/features/fallback-providers"
+            f"connection errors.  See: {fallback_docs_url}"
         ),
     )
     fallback_subparsers = fallback_parser.add_subparsers(dest="fallback_command")
@@ -11589,7 +11671,7 @@ def main():
     )
     fallback_subparsers.add_parser(
         "add",
-        help="Pick a provider + model (same picker as `hermes model`) and append to the chain",
+        help="Pick a provider + model (same picker as `doppel model`) and append to the chain",
     )
     fallback_subparsers.add_parser(
         "remove",
@@ -11610,9 +11692,8 @@ def main():
         help="Manage external secret sources (Bitwarden Secrets Manager)",
         description=(
             "Pull API keys from an external secret manager at process startup "
-            "instead of storing them in ~/.hermes/.env.  Currently supports "
-            "Bitwarden Secrets Manager.  See: "
-            "https://hermes-agent.nousresearch.com/docs/user-guide/secrets/bitwarden"
+            "instead of storing them in ~/.doppel/.env.  Currently supports "
+            f"Bitwarden Secrets Manager.  See: {bitwarden_docs_url}"
         ),
     )
     secrets_subparsers = secrets_parser.add_subparsers(dest="secrets_command")
@@ -11846,11 +11927,13 @@ def main():
     # gateway migrate-legacy
     gateway_migrate_legacy = gateway_subparsers.add_parser(
         "migrate-legacy",
-        help="Remove legacy hermes.service units from pre-rename installs",
+        help="Remove legacy gateway service artifacts from pre-rebrand installs",
         description=(
-            "Stop, disable, and remove legacy Hermes gateway unit files "
-            "(e.g. hermes.service) left over from older installs. Profile "
-            "units (hermes-gateway-<profile>.service) and unrelated "
+            "Stop, disable, and remove legacy gateway service artifacts "
+            "(for example hermes.service on systemd hosts or ai.hermes.gateway*.plist "
+            "on macOS launchd hosts) left over from older installs. Current "
+            "Doppel profile units (doppel-gateway-<profile>.service), legacy "
+            "profile units (hermes-gateway-<profile>.service), and unrelated "
             "third-party services are never touched."
         ),
     )
@@ -11892,7 +11975,7 @@ def main():
     proxy_start.add_argument(
         "--provider",
         default="nous",
-        help="Upstream provider: nous or xai (default: nous). See `hermes proxy providers`.",
+        help="Upstream provider: nous or xai (default: nous). See `doppel proxy providers`.",
     )
     proxy_start.add_argument(
         "--host",
@@ -11932,8 +12015,8 @@ def main():
     setup_parser = subparsers.add_parser(
         "setup",
         help="Interactive setup wizard",
-        description="Configure Hermes Agent with an interactive wizard. "
-        "Run a specific section: hermes setup model|tts|terminal|gateway|tools|agent",
+        description="Configure Doppel Agent with an interactive wizard. "
+        "Run a specific section: doppel setup model|tts|terminal|gateway|tools|agent",
     )
     setup_parser.add_argument(
         "section",
@@ -11955,7 +12038,7 @@ def main():
         action="store_true",
         help="(Default on existing installs.) Re-run the full wizard, "
         "showing current values as defaults. Kept for backwards "
-        "compatibility — a bare 'hermes setup' now does this.",
+        "compatibility — a bare 'doppel setup' now does this.",
     )
     setup_parser.add_argument(
         "--quick",
@@ -11999,7 +12082,7 @@ def main():
     slack_parser = subparsers.add_parser(
         "slack",
         help="Slack integration helpers (manifest generation, etc.)",
-        description="Slack integration helpers for Hermes.",
+        description="Slack integration helpers for Doppel Agent.",
     )
     slack_sub = slack_parser.add_subparsers(dest="slack_command")
     slack_manifest = slack_sub.add_parser(
@@ -12021,12 +12104,12 @@ def main():
         default=None,
         metavar="PATH",
         help="Write manifest to a file instead of stdout. With no PATH "
-        "writes to $HERMES_HOME/slack-manifest.json.",
+        "writes to the active home directory as slack-manifest.json.",
     )
     slack_manifest.add_argument(
         "--name",
         default=None,
-        help='Bot display name (default: "Hermes")',
+        help='Bot display name (default: "Doppel")',
     )
     slack_manifest.add_argument(
         "--description",
@@ -12053,7 +12136,7 @@ def main():
     login_parser = subparsers.add_parser(
         "login",
         help="Authenticate with an inference provider",
-        description="Run OAuth device authorization flow for Hermes CLI",
+        description="Run OAuth device authorization flow for Doppel CLI",
     )
     login_parser.add_argument(
         "--provider",
@@ -12069,7 +12152,9 @@ def main():
         help="Inference API base URL (default: production inference API)",
     )
     login_parser.add_argument(
-        "--client-id", default=None, help="OAuth client id to use (default: hermes-cli)"
+        "--client-id",
+        default=None,
+        help="Registered OAuth client id to use (default: hermes-cli)",
     )
     login_parser.add_argument("--scope", default=None, help="OAuth scope to request")
     login_parser.add_argument(
@@ -12180,7 +12265,7 @@ def main():
     )
     auth_logout.add_argument("provider", help="Provider id")
     auth_spotify = auth_subparsers.add_parser(
-        "spotify", help="Authenticate Hermes with Spotify via PKCE"
+        "spotify", help="Authenticate Doppel with Spotify via PKCE"
     )
     auth_spotify.add_argument(
         "spotify_action",
@@ -12212,7 +12297,7 @@ def main():
     status_parser = subparsers.add_parser(
         "status",
         help="Show status of all components",
-        description="Display status of Hermes Agent components",
+        description="Display status of Doppel Agent components",
     )
     status_parser.add_argument(
         "--all", action="store_true", help="Show all details (redacted for sharing)"
@@ -12259,7 +12344,7 @@ def main():
     cron_create.add_argument(
         "--script",
         help=(
-            "Path to a script under ~/.hermes/scripts/. Default mode: "
+            "Path to a script under ~/.doppel/scripts/. Default mode: "
             "script stdout is injected into the agent's prompt each run. "
             "With --no-agent: the script IS the job and its stdout is "
             "delivered verbatim. .sh/.bash files run via bash, everything "
@@ -12283,7 +12368,7 @@ def main():
     )
     cron_create.add_argument(
         "--profile",
-        help="Hermes profile name to run the job under. Use 'default' for the root profile. Named profiles must already exist. Omit to preserve the scheduler's existing profile.",
+        help="Doppel profile name to run the job under. Use 'default' for the root profile. Named profiles must already exist. Omit to preserve the scheduler's existing profile.",
     )
 
     # cron edit
@@ -12322,7 +12407,7 @@ def main():
     cron_edit.add_argument(
         "--script",
         help=(
-            "Path to a script under ~/.hermes/scripts/. Pass empty string to clear. "
+            "Path to a script under ~/.doppel/scripts/. Pass empty string to clear. "
             "With --no-agent the script IS the job; otherwise its stdout is "
             "injected into the agent's prompt each run."
         ),
@@ -12351,7 +12436,7 @@ def main():
     )
     cron_edit.add_argument(
         "--profile",
-        help="Hermes profile name to run the job under. Use 'default' for the root profile. Pass empty string to clear.",
+        help="Doppel profile name to run the job under. Use 'default' for the root profile. Pass empty string to clear.",
     )
 
     # lifecycle actions
@@ -12466,9 +12551,9 @@ def main():
         "hooks",
         help="Inspect and manage shell-script hooks",
         description=(
-            "Inspect shell-script hooks declared in ~/.hermes/config.yaml, "
+            "Inspect shell-script hooks declared in ~/.doppel/config.yaml, "
             "test them against synthetic payloads, and manage the first-use "
-            "consent allowlist at ~/.hermes/shell-hooks-allowlist.json."
+            "consent allowlist at ~/.doppel/shell-hooks-allowlist.json."
         ),
     )
     hooks_subparsers = hooks_parser.add_subparsers(dest="hooks_action")
@@ -12532,7 +12617,7 @@ def main():
     doctor_parser = subparsers.add_parser(
         "doctor",
         help="Check configuration and dependencies",
-        description="Diagnose issues with Hermes Agent setup",
+        description="Diagnose issues with Doppel Agent setup",
     )
     doctor_parser.add_argument(
         "--fix", action="store_true", help="Attempt to fix issues automatically"
@@ -12543,7 +12628,7 @@ def main():
         default=None,
         help=(
             "Acknowledge a security advisory by ID and exit. After ack, the "
-            "advisory will no longer trigger startup banners. Run `hermes "
+            "advisory will no longer trigger startup banners. Run `doppel "
             "doctor` first to see active advisories and their IDs."
         ),
     )
@@ -12556,9 +12641,9 @@ def main():
         "security",
         help="Supply-chain audit (OSV.dev) for venv, plugins, and MCP servers",
         description=(
-            "On-demand vulnerability scan against OSV.dev. Covers the Hermes "
+            "On-demand vulnerability scan against OSV.dev. Covers the Doppel "
             "venv (installed PyPI dists), Python deps declared by plugins under "
-            "~/.hermes/plugins/, and pinned npx/uvx MCP servers in config.yaml. "
+            "your plugin directory, and pinned npx/uvx MCP servers in config.yaml. "
             "Does NOT scan globally-installed packages or editor/browser extensions."
         ),
     )
@@ -12586,7 +12671,7 @@ def main():
     audit_parser.add_argument(
         "--skip-venv",
         action="store_true",
-        help="Skip scanning the Hermes Python venv",
+        help="Skip scanning the Doppel Python venv",
     )
     audit_parser.add_argument(
         "--skip-plugins",
@@ -12607,7 +12692,7 @@ def main():
     dump_parser = subparsers.add_parser(
         "dump",
         help="Dump setup summary for support/debugging",
-        description="Output a compact, plain-text summary of your Hermes setup "
+        description="Output a compact, plain-text summary of your Doppel setup "
         "that can be copy-pasted into Discord/GitHub for support context",
     )
     dump_parser.add_argument(
@@ -12623,18 +12708,18 @@ def main():
     debug_parser = subparsers.add_parser(
         "debug",
         help="Debug tools — upload logs and system info for support",
-        description="Debug utilities for Hermes Agent. Use 'hermes debug share' to "
+        description="Debug utilities for Doppel Agent. Use 'doppel debug share' to "
         "upload a debug report (system info + recent logs) to a paste "
         "service and get a shareable URL.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 Examples:
-    hermes debug share              Upload debug report and print URL
-    hermes debug share --lines 500  Include more log lines
-    hermes debug share --expire 30  Keep paste for 30 days
-    hermes debug share --local      Print report locally (no upload)
-    hermes debug share --no-redact  Disable upload-time secret redaction
-    hermes debug delete <url>       Delete a previously uploaded paste
+    doppel debug share              Upload debug report and print URL
+    doppel debug share --lines 500  Include more log lines
+    doppel debug share --expire 30  Keep paste for 30 days
+    doppel debug share --local      Print report locally (no upload)
+    doppel debug share --no-redact  Disable upload-time secret redaction
+    doppel debug delete <url>       Delete a previously uploaded paste
 """,
     )
     debug_sub = debug_parser.add_subparsers(dest="debug_command")
@@ -12671,7 +12756,7 @@ Examples:
     )
     delete_parser = debug_sub.add_parser(
         "delete",
-        help="Delete a paste uploaded by 'hermes debug share'",
+        help="Delete a paste uploaded by 'doppel debug share'",
     )
     delete_parser.add_argument(
         "urls",
@@ -12686,15 +12771,15 @@ Examples:
     # =========================================================================
     backup_parser = subparsers.add_parser(
         "backup",
-        help="Back up Hermes home directory to a zip file",
-        description="Create a zip archive of your entire Hermes configuration, "
-        "skills, sessions, and data (excludes the hermes-agent codebase). "
+        help="Back up Doppel home directory to a zip file",
+        description="Create a zip archive of your entire Doppel configuration, "
+        "skills, sessions, and data (excludes the managed agent codebase). "
         "Use --quick for a fast snapshot of just critical state files.",
     )
     backup_parser.add_argument(
         "-o",
         "--output",
-        help="Output path for the zip file (default: ~/hermes-backup-<timestamp>.zip)",
+        help="Output path for the zip file (default: ~/doppel-backup-<timestamp>.zip)",
     )
     backup_parser.add_argument(
         "-q",
@@ -12712,7 +12797,7 @@ Examples:
     # =========================================================================
     checkpoints_parser = subparsers.add_parser(
         "checkpoints",
-        help="Inspect / prune / clear ~/.hermes/checkpoints/",
+        help="Inspect / prune / clear your checkpoints directory",
         description="Manage the filesystem checkpoint store — the shadow git "
         "repo hermes uses to snapshot working directories before "
         "write_file/patch/terminal calls. Lets you see how much "
@@ -12726,9 +12811,9 @@ Examples:
     # =========================================================================
     import_parser = subparsers.add_parser(
         "import",
-        help="Restore a Hermes backup from a zip file",
-        description="Extract a previously created Hermes backup into your "
-        "Hermes home directory, restoring configuration, skills, "
+        help="Restore a Doppel backup from a zip file",
+        description="Extract a previously created Doppel backup into your "
+        "Doppel home directory, restoring configuration, skills, "
         "sessions, and data",
     )
     import_parser.add_argument("zipfile", help="Path to the backup zip file")
@@ -12746,7 +12831,7 @@ Examples:
     config_parser = subparsers.add_parser(
         "config",
         help="View and edit configuration",
-        description="Manage Hermes Agent configuration",
+        description="Manage Doppel Agent configuration",
     )
     config_subparsers = config_parser.add_subparsers(dest="config_command")
 
@@ -12946,8 +13031,8 @@ Examples:
         "reset",
         help="Reset a bundled skill — clears 'user-modified' tracking so updates work again",
         description=(
-            "Clear a bundled skill's entry from the sync manifest (~/.hermes/skills/.bundled_manifest) "
-            "so future 'hermes update' runs stop marking it as user-modified. Pass --restore to also "
+            "Clear a bundled skill's entry from the sync manifest (~/.doppel/skills/.bundled_manifest) "
+            "so future 'doppel update' runs stop marking it as user-modified. Pass --restore to also "
             "replace the current copy with the bundled version."
         ),
     )
@@ -13077,7 +13162,7 @@ Examples:
     )
     plugins_install.add_argument(
         "identifier",
-        help="Git URL or owner/repo shorthand (e.g. anpicasso/hermes-plugin-chrome-profiles)",
+        help="Git URL or owner/repo shorthand (e.g. my-org/doppel-plugin-chrome-profiles)",
     )
     plugins_install.add_argument(
         "--force",
@@ -13094,7 +13179,7 @@ Examples:
     _install_enable_group.add_argument(
         "--no-enable",
         action="store_true",
-        help="Install disabled (skip confirmation prompt); enable later with `hermes plugins enable <name>`",
+        help="Install disabled (skip confirmation prompt); enable later with `doppel plugins enable <name>`",
     )
 
     plugins_update = plugins_subparsers.add_parser(
@@ -13159,7 +13244,7 @@ Examples:
     # own argparse tree.  No hardcoded plugin commands in main.py.
     #
     # Skipped when the invocation is already targeting a known built-in
-    # subcommand — ``hermes --help``, ``hermes version``, ``hermes logs``,
+    # subcommand — ``doppel --help``, ``doppel version``, ``doppel logs``,
     # etc.  This avoids eagerly importing every bundled plugin module
     # (google.cloud.pubsub_v1, aiohttp, grpc, PIL …) which costs
     # 500-650ms on typical installs.
@@ -13336,7 +13421,7 @@ Examples:
             "Enable, disable, or list tools for CLI, Telegram, Discord, etc.\n\n"
             "Built-in toolsets use plain names (e.g. web, memory).\n"
             "MCP tools use server:tool notation (e.g. github:create_issue).\n\n"
-            "Run 'hermes tools' with no subcommand for the interactive configuration UI."
+            "Run 'doppel tools' with no subcommand for the interactive configuration UI."
         ),
     )
     tools_parser.add_argument(
@@ -13346,7 +13431,7 @@ Examples:
     )
     tools_sub = tools_parser.add_subparsers(dest="tools_action")
 
-    # hermes tools list [--platform cli]
+    # doppel tools list [--platform cli]
     tools_list_p = tools_sub.add_parser(
         "list",
         help="Show all tools and their enabled/disabled status",
@@ -13357,7 +13442,7 @@ Examples:
         help="Platform to show (default: cli)",
     )
 
-    # hermes tools disable <name...> [--platform cli]
+    # doppel tools disable <name...> [--platform cli]
     tools_disable_p = tools_sub.add_parser(
         "disable",
         help="Disable toolsets or MCP tools",
@@ -13374,7 +13459,7 @@ Examples:
         help="Platform to apply to (default: cli)",
     )
 
-    # hermes tools enable <name...> [--platform cli]
+    # doppel tools enable <name...> [--platform cli]
     tools_enable_p = tools_sub.add_parser(
         "enable",
         help="Enable toolsets or MCP tools",
@@ -13414,9 +13499,9 @@ Examples:
         description=(
             "Install or check the cua-driver binary used by the\n"
             "`computer_use` toolset. macOS-only.\n\n"
-            "Use `hermes computer-use install` to fetch and run the\n"
+            "Use `doppel computer-use install` to fetch and run the\n"
             "upstream cua-driver installer. This is equivalent to the\n"
-            "post-setup hook that `hermes tools` runs when you first\n"
+            "post-setup hook that `doppel tools` runs when you first\n"
             "enable the Computer Use toolset, and is a stable target\n"
             "for re-running the install if it didn't fire (e.g. when\n"
             "toggling the toolset on a returning-user setup)."
@@ -13465,10 +13550,10 @@ Examples:
                     print(f"cua-driver: installed at {path} ({version})")
                 else:
                     print(f"cua-driver: installed at {path}")
-                print("  Refresh to latest: hermes computer-use install --upgrade")
+                print("  Refresh to latest: doppel computer-use install --upgrade")
                 return
             print("cua-driver: not installed")
-            print("  Run: hermes computer-use install")
+            print("  Run: doppel computer-use install")
             return
         # No subcommand → show help
         computer_use_parser.print_help()
@@ -13479,19 +13564,19 @@ Examples:
     # =========================================================================
     mcp_parser = subparsers.add_parser(
         "mcp",
-        help="Manage MCP servers and run Hermes as an MCP server",
+        help="Manage MCP servers and run Doppel as an MCP server",
         description=(
-            "Manage MCP server connections and run Hermes as an MCP server.\n\n"
+            "Manage MCP server connections and run Doppel as an MCP server.\n\n"
             "MCP servers provide additional tools via the Model Context Protocol.\n"
-            "Use 'hermes mcp add' to connect to a new server, or\n"
-            "'hermes mcp serve' to expose Hermes conversations over MCP."
+            "Use 'doppel mcp add' to connect to a new server, or\n"
+            "'doppel mcp serve' to expose Doppel conversations over MCP."
         ),
     )
     mcp_sub = mcp_parser.add_subparsers(dest="mcp_action")
 
     mcp_serve_p = mcp_sub.add_parser(
         "serve",
-        help="Run Hermes as an MCP server (expose conversations to other agents)",
+        help="Run Doppel as an MCP server (expose conversations to other agents)",
     )
     mcp_serve_p.add_argument(
         "-v",
@@ -13510,7 +13595,7 @@ Examples:
     # subparser's args.command attribute, which the dispatcher reads to
     # route to cmd_mcp.  Without an explicit dest, argparse derives
     # dest="command" from the flag name and sets it to None when the
-    # flag is omitted, causing `hermes mcp add ...` to fall through to
+    # flag is omitted, causing `doppel mcp add ...` to fall through to
     # interactive chat.
     mcp_add_p.add_argument(
         "--command", dest="mcp_command", help="Stdio command (e.g. npx)"
@@ -13549,7 +13634,7 @@ Examples:
     # ── Catalog (Nous-approved MCPs shipped with the repo) ─────────────────
     mcp_sub.add_parser(
         "picker",
-        help="Interactive catalog picker (also the default for `hermes mcp`)",
+        help="Interactive catalog picker (also the default for `doppel mcp`)",
     )
     mcp_sub.add_parser(
         "catalog",
@@ -13557,7 +13642,7 @@ Examples:
     )
     mcp_install_p = mcp_sub.add_parser(
         "install",
-        help="Install a catalog MCP by name (e.g. `hermes mcp install n8n`)",
+        help="Install a catalog MCP by name (e.g. `doppel mcp install n8n`)",
     )
     mcp_install_p.add_argument(
         "identifier",
@@ -13882,14 +13967,14 @@ Examples:
     claw_parser = subparsers.add_parser(
         "claw",
         help="OpenClaw migration tools",
-        description="Migrate settings, memories, skills, and API keys from OpenClaw to Hermes",
+        description="Migrate settings, memories, skills, and API keys from OpenClaw to Doppel",
     )
     claw_subparsers = claw_parser.add_subparsers(dest="claw_action")
 
     # claw migrate
     claw_migrate = claw_subparsers.add_parser(
         "migrate",
-        help="Migrate from OpenClaw to Hermes",
+        help="Migrate from OpenClaw to Doppel",
         description="Import settings, memories, skills, and API keys from an OpenClaw installation. "
         "Always shows a preview before making changes.",
     )
@@ -13922,9 +14007,9 @@ Examples:
     claw_migrate.add_argument(
         "--no-backup",
         action="store_true",
-        help="Skip the pre-migration zip snapshot of ~/.hermes/ (by default a "
-        "single restore-point archive is written to ~/.hermes/backups/ "
-        "before apply; restorable with 'hermes import').",
+        help="Skip the pre-migration zip snapshot of your active home directory (by default a "
+        "single restore-point archive is written to the backups directory "
+        "before apply; restorable with 'doppel import').",
     )
     claw_migrate.add_argument(
         "--workspace-target", help="Absolute path to copy workspace instructions into"
@@ -13976,7 +14061,7 @@ Examples:
     # =========================================================================
     update_parser = subparsers.add_parser(
         "update",
-        help="Update Hermes Agent to the latest version",
+        help="Update Doppel Agent to the latest version",
         description="Pull the latest changes from git and reinstall dependencies",
     )
     update_parser.add_argument(
@@ -14008,7 +14093,7 @@ Examples:
         "-y",
         action="store_true",
         default=False,
-        help="Assume yes for interactive prompts (config migration, stash restore). API-key entry is skipped; run 'hermes config migrate' separately for those.",
+        help="Assume yes for interactive prompts (config migration, stash restore). API-key entry is skipped; run 'doppel config migrate' separately for those.",
     )
     update_parser.add_argument(
         "--branch",
@@ -14034,8 +14119,8 @@ Examples:
     # =========================================================================
     uninstall_parser = subparsers.add_parser(
         "uninstall",
-        help="Uninstall Hermes Agent",
-        description="Remove Hermes Agent from your system. Can keep configs/data for reinstall.",
+        help="Uninstall Doppel Agent",
+        description="Remove Doppel Agent from your system. Can keep configs/data for reinstall.",
     )
     uninstall_parser.add_argument(
         "--full",
@@ -14052,15 +14137,15 @@ Examples:
     # =========================================================================
     acp_parser = subparsers.add_parser(
         "acp",
-        help="Run Hermes Agent as an ACP (Agent Client Protocol) server",
-        description="Start Hermes Agent in ACP mode for editor integration (VS Code, Zed, JetBrains)",
+        help="Run Doppel Agent as an ACP (Agent Client Protocol) server",
+        description="Start Doppel Agent in ACP mode for editor integration (VS Code, Zed, JetBrains)",
     )
     _add_accept_hooks_flag(acp_parser)
     acp_parser.add_argument(
         "--version",
         action="store_true",
         dest="acp_version",
-        help="Print Hermes ACP version and exit",
+        help="Print Doppel ACP version and exit",
     )
     acp_parser.add_argument(
         "--check",
@@ -14070,12 +14155,12 @@ Examples:
     acp_parser.add_argument(
         "--setup",
         action="store_true",
-        help="Run interactive Hermes provider/model setup for ACP terminal auth",
+        help="Run interactive Doppel provider/model setup for ACP terminal auth",
     )
     acp_parser.add_argument(
         "--setup-browser",
         action="store_true",
-        help="Install agent-browser + Playwright Chromium into ~/.hermes/node/ "
+        help="Install agent-browser + Playwright Chromium into ~/.doppel/node/ "
              "for browser tool support (idempotent).",
     )
     acp_parser.add_argument(
@@ -14088,7 +14173,7 @@ Examples:
     )
 
     def cmd_acp(args):
-        """Launch Hermes Agent as an ACP server."""
+        """Launch Doppel Agent as an ACP server."""
         try:
             from acp_adapter.entry import main as acp_main
 
@@ -14116,7 +14201,7 @@ Examples:
     # =========================================================================
     profile_parser = subparsers.add_parser(
         "profile",
-        help="Manage profiles — multiple isolated Hermes instances",
+        help="Manage profiles — multiple isolated Doppel instances",
     )
     profile_subparsers = profile_parser.add_subparsers(dest="profile_action")
 
@@ -14153,14 +14238,14 @@ Examples:
     profile_create.add_argument(
         "--no-skills",
         action="store_true",
-        help="Create an empty profile with no bundled skills (opts out of `hermes update` skill sync)",
+        help="Create an empty profile with no bundled skills (opts out of `doppel update` skill sync)",
     )
     profile_create.add_argument(
         "--description",
         default=None,
         help="One- or two-sentence description of what this profile is good at. "
              "Used by the kanban decomposer to route tasks based on role instead "
-             "of profile name alone. Skip and add later via `hermes profile describe`.",
+             "of profile name alone. Skip and add later via `doppel profile describe`.",
     )
 
     profile_delete = profile_subparsers.add_parser("delete", help="Delete a profile")
@@ -14248,7 +14333,7 @@ Examples:
         "install",
         help="Install a profile distribution from a git URL or local directory",
         description=(
-            "Install a Hermes profile distribution. SOURCE can be a git URL "
+            "Install a Doppel profile distribution. SOURCE can be a git URL "
             "(github.com/user/repo, https://..., git@...) or a local "
             "directory containing distribution.yaml at its root."
         ),
@@ -14324,7 +14409,7 @@ Examples:
     dashboard_parser = subparsers.add_parser(
         "dashboard",
         help="Start the web UI dashboard",
-        description="Launch the Hermes Agent web dashboard for managing config, API keys, and sessions",
+        description="Launch the Doppel Agent web dashboard for managing config, API keys, and sessions",
     )
     dashboard_parser.add_argument(
         "--port", type=int, default=9119, help="Port (default 9119)"
@@ -14344,7 +14429,7 @@ Examples:
         "--tui",
         action="store_true",
         help=(
-            "Expose the in-browser Chat tab (embedded `hermes --tui` via PTY/WebSocket). "
+            "Expose the in-browser Chat tab (embedded `doppel --tui` via PTY/WebSocket). "
             "Alternatively set HERMES_DASHBOARD_TUI=1."
         ),
     )
@@ -14361,17 +14446,17 @@ Examples:
     # start-a-server flags above (if both are passed, --stop / --status win
     # because they exit before the server is started).  The dashboard has
     # no service manager and no PID file, so these scan the process table
-    # for `hermes dashboard` cmdlines and SIGTERM them directly — the same
-    # path `hermes update` uses to clean up stale dashboards.
+    # for `doppel dashboard` cmdlines and SIGTERM them directly — the same
+    # path `doppel update` uses to clean up stale dashboards.
     dashboard_parser.add_argument(
         "--stop",
         action="store_true",
-        help="Stop all running hermes dashboard processes and exit",
+        help="Stop all running doppel dashboard processes and exit",
     )
     dashboard_parser.add_argument(
         "--status",
         action="store_true",
-        help="List running hermes dashboard processes and exit",
+        help="List running doppel dashboard processes and exit",
     )
     dashboard_parser.set_defaults(func=cmd_dashboard)
 
@@ -14380,21 +14465,21 @@ Examples:
     # =========================================================================
     logs_parser = subparsers.add_parser(
         "logs",
-        help="View and filter Hermes log files",
+        help="View and filter Doppel log files",
         description="View, tail, and filter agent.log / errors.log / gateway.log",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 Examples:
-    hermes logs                    Show last 50 lines of agent.log
-    hermes logs -f                 Follow agent.log in real time
-    hermes logs errors             Show last 50 lines of errors.log
-    hermes logs gateway -n 100     Show last 100 lines of gateway.log
-    hermes logs --level WARNING    Only show WARNING and above
-    hermes logs --session abc123   Filter by session ID
-    hermes logs --component tools  Only show tool-related lines
-    hermes logs --since 1h         Lines from the last hour
-    hermes logs --since 30m -f     Follow, starting from 30 min ago
-    hermes logs list               List available log files with sizes
+    doppel logs                    Show last 50 lines of agent.log
+    doppel logs -f                 Follow agent.log in real time
+    doppel logs errors             Show last 50 lines of errors.log
+    doppel logs gateway -n 100     Show last 100 lines of gateway.log
+    doppel logs --level WARNING    Only show WARNING and above
+    doppel logs --session abc123   Filter by session ID
+    doppel logs --component tools  Only show tool-related lines
+    doppel logs --since 1h         Lines from the last hour
+    doppel logs --since 30m -f     Follow, starting from 30 min ago
+    doppel logs list               List available log files with sizes
 """,
     )
     logs_parser.add_argument(
@@ -14467,7 +14552,7 @@ Examples:
     # =========================================================================
     # Pre-process argv so unquoted multi-word session names after -c / -r
     # are merged into a single token before argparse sees them.
-    # e.g. ``hermes -c Pokemon Agent Dev`` → ``hermes -c 'Pokemon Agent Dev'``
+    # e.g. ``doppel -c Pokemon Agent Dev`` → ``doppel -c 'Pokemon Agent Dev'``
     # ── Container-aware routing ────────────────────────────────────────
     # When NixOS container mode is active, route ALL subcommands into
     # the managed container.  This MUST run before parse_args() so that

@@ -14,19 +14,19 @@ Operate the Antigravity CLI (agy): plugins, auth, sandbox.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/autonomous-ai-agents/antigravity-cli` |
+| Source | Optional — install with `doppel skills install official/autonomous-ai-agents/antigravity-cli` |
 | Path | `optional-skills/autonomous-ai-agents/antigravity-cli` |
 | Version | `0.1.0` |
-| Author | Tony Simons (asimons81), Hermes Agent |
+| Author | Tony Simons (asimons81), Doppel Agent |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `Coding-Agent`, `Antigravity`, `CLI`, `Auth`, `Plugins`, `Sandbox` |
-| Related skills | [`grok`](/docs/user-guide/skills/optional/autonomous-ai-agents/autonomous-ai-agents-grok), [`codex`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex), [`claude-code`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code), [`hermes-agent`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent) |
+| Related skills | [`grok`](/docs/user-guide/skills/optional/autonomous-ai-agents/autonomous-ai-agents-grok), [`codex`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex), [`claude-code`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code), [`hermes-agent`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-doppel-agent) |
 
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # Antigravity CLI (`agy`)

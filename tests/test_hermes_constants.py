@@ -8,10 +8,45 @@ import pytest
 import hermes_constants
 from hermes_constants import (
     VALID_REASONING_EFFORTS,
+    sync_customer_facing_env_aliases,
+    display_hermes_home,
+    get_api_server_model_owner,
+    get_api_server_platform_id,
+    get_default_api_server_model_name,
+    get_distribution_package_name,
     get_default_hermes_root,
+    get_docker_image_name,
+    get_docker_image_tags_url,
+    get_docs_page_url,
+    get_docs_url,
+    get_gateway_launchd_label,
+    get_gateway_launchd_plist_path,
+    get_gateway_service_name,
+    get_gateway_systemd_unit_path,
+    get_hermes_home,
+    get_homebrew_formula_name,
+    get_homebrew_formula_names,
+    get_managed_checkout_dir,
+    get_managed_checkout_names,
+    get_model_catalog_docs_url,
+    get_model_catalog_fallback_urls,
+    get_model_catalog_url,
+    get_nix_package_names,
+    get_nous_portal_base_url,
+    get_nous_portal_subscription_url,
+    get_official_repo_urls,
+    get_official_upstream_repo_url,
+    get_preferred_homebrew_formula_name,
+    get_preferred_nix_package_name,
+    find_managed_checkout_dir,
     is_container,
+    is_managed_checkout_name,
     parse_reasoning_effort,
     secure_parent_dir,
+    get_upstream_archive_filename,
+    get_upstream_archive_url,
+    get_upstream_extracted_dir_name,
+    get_upstream_install_script_url,
 )
 
 
@@ -19,11 +54,12 @@ class TestGetDefaultHermesRoot:
     """Tests for get_default_hermes_root() — Docker/custom deployment awareness."""
 
     def test_no_hermes_home_returns_native(self, tmp_path, monkeypatch):
-        """When HERMES_HOME is not set, returns ~/.hermes."""
+        """Fresh installs default to ~/.doppel when no override is set."""
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
         monkeypatch.delenv("HERMES_HOME", raising=False)
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-        assert get_default_hermes_root() == tmp_path / ".hermes"
+        assert get_default_hermes_root() == tmp_path / ".doppel"
 
     def test_hermes_home_is_native(self, tmp_path, monkeypatch):
         """When HERMES_HOME = ~/.hermes, returns ~/.hermes."""
@@ -32,6 +68,46 @@ class TestGetDefaultHermesRoot:
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(native))
         assert get_default_hermes_root() == native
+
+    def test_doppel_home_is_native(self, tmp_path, monkeypatch):
+        """When DOPPEL_HOME = ~/.doppel, returns ~/.doppel."""
+        native = tmp_path / ".doppel"
+        native.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(native))
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        assert get_default_hermes_root() == native
+
+    def test_existing_legacy_home_is_preserved_when_env_unset(self, tmp_path, monkeypatch):
+        """No env override should keep using ~/.hermes when that install already exists."""
+        legacy = tmp_path / ".hermes"
+        legacy.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        assert get_default_hermes_root() == legacy
+
+    def test_preferred_home_wins_when_both_native_homes_exist(self, tmp_path, monkeypatch):
+        """When both roots exist, prefer the rebrand-native ~/.doppel home."""
+        legacy = tmp_path / ".hermes"
+        current = tmp_path / ".doppel"
+        legacy.mkdir()
+        current.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+        assert get_default_hermes_root() == current
+
+    def test_doppel_home_override_beats_legacy_home_override(self, tmp_path, monkeypatch):
+        """DOPPEL_HOME is the preferred override when both env vars are set."""
+        doppel_home = tmp_path / "doppel-home"
+        hermes_home = tmp_path / "hermes-home"
+        doppel_home.mkdir()
+        hermes_home.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(doppel_home))
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        assert get_default_hermes_root() == doppel_home
 
     def test_hermes_home_is_profile(self, tmp_path, monkeypatch):
         """When HERMES_HOME is a profile under ~/.hermes, returns ~/.hermes."""
@@ -67,6 +143,372 @@ class TestGetDefaultHermesRoot:
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(profile))
         assert get_default_hermes_root() == docker_root
+
+
+class TestGetHermesHome:
+    def test_no_env_uses_preferred_native_home(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+
+        assert get_hermes_home() == tmp_path / ".doppel"
+
+    def test_existing_legacy_root_is_preserved_when_env_unset(self, tmp_path, monkeypatch):
+        legacy = tmp_path / ".hermes"
+        legacy.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+
+        assert get_hermes_home() == legacy
+
+    def test_doppel_home_override_wins(self, tmp_path, monkeypatch):
+        preferred = tmp_path / "preferred-home"
+        preferred.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.setenv("DOPPEL_HOME", str(preferred))
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "legacy-home"))
+
+        assert get_hermes_home() == preferred
+
+    def test_display_hermes_home_uses_preferred_native_path(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
+        monkeypatch.delenv("HERMES_HOME", raising=False)
+
+        assert display_hermes_home() == "~/.doppel"
+
+
+class TestCustomerFacingEnvAliases:
+    def test_preferred_alias_mirrors_to_legacy_name(self):
+        env = {"DOPPEL_TUI": "1"}
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_TUI"] == "1"
+
+    def test_preferred_model_alias_mirrors_to_legacy_name(self):
+        env = {"DOPPEL_MODEL": "anthropic/claude-sonnet-4.6"}
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_MODEL"] == "anthropic/claude-sonnet-4.6"
+
+    def test_preferred_stream_timeout_alias_mirrors_to_legacy_name(self):
+        env = {"DOPPEL_STREAM_READ_TIMEOUT": "1800"}
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_STREAM_READ_TIMEOUT"] == "1800"
+
+    def test_preferred_timeout_aliases_mirror_to_legacy_names(self):
+        env = {
+            "DOPPEL_API_TIMEOUT": "1800",
+            "DOPPEL_API_CALL_STALE_TIMEOUT": "300",
+            "DOPPEL_STREAM_STALE_TIMEOUT": "180",
+            "DOPPEL_CRON_TIMEOUT": "600",
+            "DOPPEL_CRON_SCRIPT_TIMEOUT": "120",
+            "DOPPEL_AGENT_TIMEOUT": "900",
+            "DOPPEL_AGENT_TIMEOUT_WARNING": "600",
+            "DOPPEL_CHECKPOINT_TIMEOUT": "30",
+            "DOPPEL_RESTART_DRAIN_TIMEOUT": "900",
+            "DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT": "30",
+            "DOPPEL_VISION_DOWNLOAD_TIMEOUT": "30",
+            "DOPPEL_NOUS_TIMEOUT_SECONDS": "15",
+            "DOPPEL_TELEGRAM_HTTP_CONNECT_TIMEOUT": "10",
+            "DOPPEL_TELEGRAM_HTTP_READ_TIMEOUT": "20",
+            "DOPPEL_TELEGRAM_HTTP_WRITE_TIMEOUT": "20",
+            "DOPPEL_TELEGRAM_HTTP_POOL_TIMEOUT": "8",
+        }
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_API_TIMEOUT"] == "1800"
+        assert env["HERMES_API_CALL_STALE_TIMEOUT"] == "300"
+        assert env["HERMES_STREAM_STALE_TIMEOUT"] == "180"
+        assert env["HERMES_CRON_TIMEOUT"] == "600"
+        assert env["HERMES_CRON_SCRIPT_TIMEOUT"] == "120"
+        assert env["HERMES_AGENT_TIMEOUT"] == "900"
+        assert env["HERMES_AGENT_TIMEOUT_WARNING"] == "600"
+        assert env["HERMES_CHECKPOINT_TIMEOUT"] == "30"
+        assert env["HERMES_RESTART_DRAIN_TIMEOUT"] == "900"
+        assert env["HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT"] == "30"
+        assert env["HERMES_VISION_DOWNLOAD_TIMEOUT"] == "30"
+        assert env["HERMES_NOUS_TIMEOUT_SECONDS"] == "15"
+        assert env["HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT"] == "10"
+        assert env["HERMES_TELEGRAM_HTTP_READ_TIMEOUT"] == "20"
+        assert env["HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT"] == "20"
+        assert env["HERMES_TELEGRAM_HTTP_POOL_TIMEOUT"] == "8"
+
+    def test_preferred_provider_auth_aliases_mirror_to_legacy_names(self):
+        env = {
+            "DOPPEL_OPENROUTER_CACHE": "true",
+            "DOPPEL_OPENROUTER_CACHE_TTL": "1800",
+            "DOPPEL_COPILOT_ACP_COMMAND": "/opt/copilot",
+            "DOPPEL_COPILOT_ACP_ARGS": "--acp --stdio --debug",
+            "DOPPEL_GEMINI_CLIENT_ID": "client.apps.googleusercontent.com",
+            "DOPPEL_GEMINI_CLIENT_SECRET": "secret",
+            "DOPPEL_GEMINI_PROJECT_ID": "paid-project",
+            "DOPPEL_QWEN_BASE_URL": "https://portal.example/v1",
+            "DOPPEL_PORTAL_BASE_URL": "https://portal.dev",
+            "DOPPEL_NOUS_MIN_KEY_TTL_SECONDS": "900",
+        }
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_OPENROUTER_CACHE"] == "true"
+        assert env["HERMES_OPENROUTER_CACHE_TTL"] == "1800"
+        assert env["HERMES_COPILOT_ACP_COMMAND"] == "/opt/copilot"
+        assert env["HERMES_COPILOT_ACP_ARGS"] == "--acp --stdio --debug"
+        assert env["HERMES_GEMINI_CLIENT_ID"] == "client.apps.googleusercontent.com"
+        assert env["HERMES_GEMINI_CLIENT_SECRET"] == "secret"
+        assert env["HERMES_GEMINI_PROJECT_ID"] == "paid-project"
+        assert env["HERMES_QWEN_BASE_URL"] == "https://portal.example/v1"
+        assert env["HERMES_PORTAL_BASE_URL"] == "https://portal.dev"
+        assert env["HERMES_NOUS_MIN_KEY_TTL_SECONDS"] == "900"
+
+    def test_preferred_local_runtime_aliases_mirror_to_legacy_names(self):
+        env = {
+            "DOPPEL_LOCAL_STT_COMMAND": "whisper {input_path} --output_dir {output_dir}",
+            "DOPPEL_LOCAL_STT_LANGUAGE": "fr",
+            "DOPPEL_TIMEZONE": "America/Chicago",
+            "DOPPEL_DOCKER_BINARY": "/usr/local/bin/podman",
+        }
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_LOCAL_STT_COMMAND"] == "whisper {input_path} --output_dir {output_dir}"
+        assert env["HERMES_LOCAL_STT_LANGUAGE"] == "fr"
+        assert env["HERMES_TIMEZONE"] == "America/Chicago"
+        assert env["HERMES_DOCKER_BINARY"] == "/usr/local/bin/podman"
+
+    def test_legacy_alias_backfills_preferred_name(self):
+        env = {"HERMES_IGNORE_RULES": "1"}
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["DOPPEL_IGNORE_RULES"] == "1"
+
+    def test_preferred_alias_wins_on_conflict(self):
+        env = {
+            "DOPPEL_MAX_ITERATIONS": "64",
+            "HERMES_MAX_ITERATIONS": "90",
+        }
+
+        sync_customer_facing_env_aliases(env)
+
+        assert env["HERMES_MAX_ITERATIONS"] == "64"
+
+
+class TestManagedCheckoutNames:
+    def test_includes_legacy_and_rebrand_checkout_names(self):
+        """Managed installs should recognize both legacy and rebrand dirs."""
+        assert get_managed_checkout_names() == ("doppel-agent", "hermes-agent")
+
+    def test_name_match_accepts_both_checkout_dirs(self):
+        """Both managed checkout names are valid while migration is in progress."""
+        assert is_managed_checkout_name("hermes-agent")
+        assert is_managed_checkout_name("doppel-agent")
+        assert not is_managed_checkout_name("hermes")
+
+    def test_canonical_checkout_dir_uses_rebrand_name(self, tmp_path):
+        assert get_managed_checkout_dir(tmp_path) == tmp_path / "doppel-agent"
+
+    def test_find_managed_checkout_dir_prefers_rebrand_dir(self, tmp_path):
+        legacy = tmp_path / "hermes-agent"
+        current = tmp_path / "doppel-agent"
+        legacy.mkdir()
+        current.mkdir()
+
+        assert find_managed_checkout_dir(tmp_path) == current
+
+    def test_find_managed_checkout_dir_falls_back_to_legacy_dir(self, tmp_path):
+        legacy = tmp_path / "hermes-agent"
+        legacy.mkdir()
+
+        assert find_managed_checkout_dir(tmp_path) == legacy
+
+
+class TestDistributionIdentity:
+    def test_api_server_default_model_name(self):
+        assert get_default_api_server_model_name() == "doppel-agent"
+
+    def test_api_server_platform_id(self):
+        assert get_api_server_platform_id() == "doppel-agent"
+
+    def test_api_server_model_owner(self):
+        assert get_api_server_model_owner() == "doppel"
+
+    def test_package_distribution_name(self):
+        assert get_distribution_package_name() == "doppel-agent"
+
+    def test_homebrew_formula_name(self):
+        assert get_homebrew_formula_name() == "hermes-agent"
+
+    def test_preferred_homebrew_formula_name(self):
+        assert get_preferred_homebrew_formula_name() == "doppel-agent"
+
+    def test_homebrew_formula_names(self):
+        assert get_homebrew_formula_names() == ("doppel-agent", "hermes-agent")
+
+    def test_preferred_nix_package_name(self):
+        assert get_preferred_nix_package_name() == "doppel-agent"
+
+    def test_nix_package_names(self):
+        assert get_nix_package_names() == ("doppel-agent", "hermes-agent")
+
+    def test_docker_image_name(self):
+        assert get_docker_image_name() == "nousresearch/hermes-agent"
+
+    def test_docker_image_tags_url(self):
+        assert get_docker_image_tags_url() == "https://hub.docker.com/r/nousresearch/hermes-agent/tags"
+
+    def test_model_catalog_url(self):
+        assert get_model_catalog_url() == "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json"
+
+    def test_model_catalog_docs_url(self):
+        assert get_model_catalog_docs_url() == "https://hermes-agent.nousresearch.com/docs/reference/model-catalog"
+
+    def test_model_catalog_fallback_urls(self):
+        assert get_model_catalog_fallback_urls() == (
+            "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/api/model-catalog.json",
+        )
+
+    def test_docs_base_url(self):
+        assert get_docs_url() == "https://hermes-agent.nousresearch.com/docs"
+
+    def test_docs_page_url(self):
+        assert get_docs_page_url("spotify") == "https://hermes-agent.nousresearch.com/docs/user-guide/features/spotify"
+
+    def test_docs_page_url_curator(self):
+        assert get_docs_page_url("curator") == "https://hermes-agent.nousresearch.com/docs/user-guide/features/curator"
+
+    def test_docs_page_url_kanban(self):
+        assert get_docs_page_url("kanban") == "https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban"
+
+    def test_docs_page_url_secrets_bitwarden(self):
+        assert (
+            get_docs_page_url("secrets_bitwarden")
+            == "https://hermes-agent.nousresearch.com/docs/user-guide/secrets/bitwarden"
+        )
+
+    def test_docs_page_url_with_fragment(self):
+        assert (
+            get_docs_page_url("messaging_webhooks", "configuring-routes")
+            == "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/webhooks#configuring-routes"
+        )
+
+    def test_nous_portal_urls(self):
+        assert get_nous_portal_base_url() == "https://portal.nousresearch.com"
+        assert get_nous_portal_subscription_url() == "https://portal.nousresearch.com/manage-subscription"
+
+
+class TestUpstreamIdentity:
+    def test_official_upstream_repo_url(self):
+        assert get_official_upstream_repo_url() == "https://github.com/NousResearch/hermes-agent.git"
+
+    def test_official_repo_urls(self):
+        assert get_official_repo_urls() == frozenset({
+            "https://github.com/NousResearch/hermes-agent.git",
+            "git@github.com:NousResearch/hermes-agent.git",
+            "https://github.com/NousResearch/hermes-agent",
+            "git@github.com:NousResearch/hermes-agent",
+        })
+
+    def test_upstream_archive_url(self):
+        assert (
+            get_upstream_archive_url("main")
+            == "https://github.com/NousResearch/hermes-agent/archive/refs/heads/main.zip"
+        )
+
+    def test_upstream_archive_filename(self):
+        assert get_upstream_archive_filename("main") == "hermes-agent-main.zip"
+
+    def test_upstream_extracted_dir_name(self):
+        assert get_upstream_extracted_dir_name("main") == "hermes-agent-main"
+
+    def test_upstream_install_script_url(self):
+        assert (
+            get_upstream_install_script_url()
+            == "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
+        )
+
+    def test_fork_install_script_url_default(self):
+        assert (
+            hermes_constants.get_fork_install_script_url()
+            == "https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.sh"
+        )
+
+    def test_fork_install_script_url_windows(self):
+        assert (
+            hermes_constants.get_fork_install_script_url("install.ps1")
+            == "https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1"
+        )
+
+
+class TestGatewayNamingHelpers:
+    def test_gateway_service_name_default_profile(self):
+        assert get_gateway_service_name() == "doppel-gateway"
+
+    def test_gateway_service_name_profile_suffix(self):
+        assert get_gateway_service_name("coder") == "doppel-gateway-coder"
+
+    def test_gateway_service_names_include_legacy_alias(self):
+        names_fn = getattr(hermes_constants, "get_gateway_service_names", None)
+        assert callable(names_fn)
+        assert names_fn("coder") == (
+            "doppel-gateway-coder",
+            "hermes-gateway-coder",
+        )
+
+    def test_gateway_systemd_unit_path_user_scope(self, tmp_path):
+        user_home = tmp_path / "alice"
+        assert get_gateway_systemd_unit_path("coder", user_home=user_home) == (
+            user_home / ".config" / "systemd" / "user" / "doppel-gateway-coder.service"
+        )
+
+    def test_gateway_systemd_unit_path_system_scope(self):
+        assert get_gateway_systemd_unit_path("coder", system=True) == Path(
+            "/etc/systemd/system/doppel-gateway-coder.service"
+        )
+
+    def test_gateway_launchd_label_default_profile(self):
+        assert get_gateway_launchd_label() == "ai.doppel.gateway"
+
+    def test_gateway_launchd_label_profile_suffix(self):
+        assert get_gateway_launchd_label("coder") == "ai.doppel.gateway-coder"
+
+    def test_gateway_launchd_labels_include_legacy_alias(self):
+        labels_fn = getattr(hermes_constants, "get_gateway_launchd_labels", None)
+        assert callable(labels_fn)
+        assert labels_fn("coder") == (
+            "ai.doppel.gateway-coder",
+            "ai.hermes.gateway-coder",
+        )
+
+    def test_gateway_launchd_plist_path(self, tmp_path):
+        user_home = tmp_path / "alice"
+        assert get_gateway_launchd_plist_path("coder", user_home=user_home) == (
+            user_home / "Library" / "LaunchAgents" / "ai.doppel.gateway-coder.plist"
+        )
+
+    def test_gateway_task_name_default_profile(self):
+        name_fn = getattr(hermes_constants, "get_gateway_task_name", None)
+        assert callable(name_fn)
+        assert name_fn() == "Doppel_Gateway"
+
+    def test_gateway_task_name_profile_suffix(self):
+        name_fn = getattr(hermes_constants, "get_gateway_task_name", None)
+        assert callable(name_fn)
+        assert name_fn("coder") == "Doppel_Gateway_coder"
+
+    def test_gateway_task_names_include_legacy_alias(self):
+        names_fn = getattr(hermes_constants, "get_gateway_task_names", None)
+        assert callable(names_fn)
+        assert names_fn("coder") == (
+            "Doppel_Gateway_coder",
+            "Hermes_Gateway_coder",
+        )
 
 
 class TestIsContainer:
@@ -261,5 +703,3 @@ class TestSecureParentDir:
         secure_parent_dir(link_target)
         assert len(called_with) == 1
         assert called_with[0] == (str(real_dir), 0o700)
-
-

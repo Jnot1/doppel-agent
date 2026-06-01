@@ -2,6 +2,7 @@
 
 import subprocess
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -38,6 +39,15 @@ def _force_remove_worktree(info: dict | None) -> None:
 
 
 class TestWorktreeIncludeSecurity:
+    def test_missing_repo_root_prints_doppel_worktree_hint(self, capsys):
+        import cli as cli_mod
+
+        with patch.object(cli_mod, "_git_repo_root", return_value=None):
+            assert cli_mod._setup_worktree() is None
+
+        out = capsys.readouterr().out
+        assert "run doppel -w" in out
+
     def test_rejects_parent_directory_file_traversal(self, git_repo):
         import cli as cli_mod
 

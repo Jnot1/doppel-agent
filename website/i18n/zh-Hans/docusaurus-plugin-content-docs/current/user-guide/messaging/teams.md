@@ -1,14 +1,16 @@
 ---
 sidebar_position: 5
 title: "Microsoft Teams"
-description: "将 Hermes Agent 设置为 Microsoft Teams 机器人"
+description: "将 Doppel Agent 设置为 Microsoft Teams 机器人"
 ---
 
 # Microsoft Teams 设置
 
-将 Hermes Agent 作为机器人接入 Microsoft Teams。与 Slack 的 Socket Mode 不同，Teams 通过调用**公开 HTTPS webhook**（钩子）来投递消息，因此你的实例需要一个可公开访问的端点——本地开发时使用开发隧道，生产环境使用真实域名。
+将 Doppel Agent 作为机器人接入 Microsoft Teams。与 Slack 的 Socket Mode 不同，Teams 通过调用**公开 HTTPS webhook**（钩子）来投递消息，因此你的实例需要一个可公开访问的端点——本地开发时使用开发隧道，生产环境使用真实域名。
 
 如果你需要的是来自 Microsoft Graph 事件的会议摘要，而非普通的机器人对话，请使用专用设置页面：[Teams 会议](/user-guide/messaging/teams-meetings)。
+
+> 运行 `doppel gateway setup` 并选择 **Microsoft Teams**，即可跟随引导完成配置。
 
 ## 机器人的响应方式
 
@@ -18,7 +20,7 @@ description: "将 Hermes Agent 设置为 Microsoft Teams 机器人"
 | **群聊** | 机器人仅在被 @提及时响应。 |
 | **频道** | 机器人仅在被 @提及时响应。 |
 
-Teams 将 @提及作为普通消息投递，其中包含 `<at>BotName</at>` 标签，Hermes 在处理前会自动去除这些标签。
+Teams 将 @提及作为普通消息投递，其中包含 `<at>BotName</at>` 标签，Doppel Agent 会在处理前自动去除这些标签。
 
 ---
 
@@ -45,9 +47,9 @@ Teams 无法向 `localhost` 投递消息。本地开发时，使用任意隧道�
 
 ```bash
 # devtunnel（Microsoft 官方）
-devtunnel create hermes-bot --allow-anonymous
-devtunnel port create hermes-bot -p 3978 --protocol https  # 如已修改 TEAMS_PORT，请替换 3978
-devtunnel host hermes-bot
+devtunnel create doppel-bot --allow-anonymous
+devtunnel port create doppel-bot -p 3978 --protocol https  # 如已修改 TEAMS_PORT，请替换 3978
+devtunnel host doppel-bot
 
 # ngrok
 ngrok http 3978  # 如已修改 TEAMS_PORT，请替换 3978
@@ -66,7 +68,7 @@ cloudflared tunnel --url http://localhost:3978  # 如已修改 TEAMS_PORT，请�
 
 ```bash
 teams app create \
-  --name "Hermes" \
+  --name "Doppel" \
   --endpoint "https://<your-tunnel-url>/api/messages"
 ```
 
@@ -76,7 +78,7 @@ CLI 会输出你的 `CLIENT_ID`、`CLIENT_SECRET` 和 `TENANT_ID`，以及第六
 
 ## 第四步：配置环境变量
 
-添加到 `~/.hermes/.env`：
+添加到 agent-home `.env` 文件中（全新安装通常是 `~/.doppel/.env`；旧安装的 `~/.hermes/.env` 仍可继续使用）：
 
 ```bash
 # 必填
@@ -138,7 +140,7 @@ teams app get <teamsAppId> --install-link
 
 ### config.yaml
 
-也可通过 `~/.hermes/config.yaml` 进行配置：
+也可通过 agent-home `config.yaml` 进行配置（全新安装通常是 `~/.doppel/config.yaml`；旧安装的 `~/.hermes/config.yaml` 仍可继续使用）：
 
 ```yaml
 platforms:
@@ -205,7 +207,7 @@ platforms:
 
 ```bash
 teams app create \
-  --name "Hermes" \
+  --name "Doppel" \
   --endpoint "https://your-domain.com/api/messages"
 ```
 
@@ -226,9 +228,9 @@ teams app update --id <teamsAppId> --endpoint "https://your-domain.com/api/messa
 | `health` 端点正常但机器人不响应 | 检查隧道是否仍在运行，以及机器人的消息端点是否与隧道 URL 匹配 |
 | 日志中出现 `KeyError: 'teams'` | 重启容器——此问题已在当前版本中修复 |
 | 机器人响应时出现认证错误 | 验证 `TEAMS_CLIENT_ID`、`TEAMS_CLIENT_SECRET` 和 `TEAMS_TENANT_ID` 是否均已正确设置 |
-| `No inference provider configured` | 检查 `~/.hermes/.env` 中是否设置了 `ANTHROPIC_API_KEY`（或其他提供商密钥） |
+| `No inference provider configured` | 检查 agent-home `.env` 文件中是否设置了 `ANTHROPIC_API_KEY`（或其他提供商密钥） |
 | 机器人收到消息但忽略它们 | 你的 AAD 对象 ID 可能不在 `TEAMS_ALLOWED_USERS` 中。运行 `teams status --verbose` 查找 |
-| 隧道 URL 在重启后变更 | 使用命名隧道（`devtunnel create hermes-bot`）时，devtunnel URL 是持久的。ngrok 和 cloudflared 每次运行都会生成新 URL（除非你有付费计划）——URL 变更时请用 `teams app update` 更新机器人端点 |
+| 隧道 URL 在重启后变更 | 使用命名隧道（`devtunnel create doppel-bot`）时，devtunnel URL 是持久的。ngrok 和 cloudflared 每次运行都会生成新 URL（除非你有付费计划）——URL 变更时请用 `teams app update` 更新机器人端点 |
 | Teams 显示"此机器人未响应" | Webhook 返回了错误。检查 `docker logs hermes` 中的错误堆栈 |
 | 日志中出现 `[teams] Failed to connect` | SDK 认证失败。仔细检查凭据，并确认租户 ID 与 `teams login` 时使用的账户匹配 |
 
@@ -242,7 +244,7 @@ teams app update --id <teamsAppId> --endpoint "https://your-domain.com/api/messa
 将 `TEAMS_CLIENT_SECRET` 视同密码对待——定期通过 Azure 门户或 Teams CLI 进行轮换。
 :::
 
-- 将凭据存储在权限为 `600` 的 `~/.hermes/.env` 中（`chmod 600 ~/.hermes/.env`）
+- 将凭据存储在权限为 `600` 的 agent-home `.env` 文件中（全新安装通常是 `~/.doppel/.env`；旧安装的 `~/.hermes/.env` 仍可继续使用）
 - 机器人仅接受 `TEAMS_ALLOWED_USERS` 中用户的消息；未授权的消息会被静默丢弃
 - 你的公开端点（`/api/messages`）由 Teams Bot Framework 进行认证——不含有效 JWT 的请求会被拒绝
 

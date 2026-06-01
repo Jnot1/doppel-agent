@@ -30,7 +30,7 @@ from hermes_cli.auth import (
     has_usable_secret,
 )
 from hermes_cli.config import get_compatible_custom_providers, load_config
-from hermes_constants import OPENROUTER_BASE_URL
+from hermes_constants import OPENROUTER_BASE_URL, get_customer_facing_env_value
 from utils import base_url_host_matches, base_url_hostname
 
 
@@ -570,7 +570,7 @@ def _get_named_custom_provider(requested_provider: str) -> Optional[Dict[str, An
         logger.warning(
             "custom_providers in config.yaml is a dict, not a list. "
             "Each entry must be prefixed with '-' in YAML. "
-            "Run 'hermes doctor' for details."
+            "Run 'doppel doctor' for details."
         )
         return None
 
@@ -944,7 +944,7 @@ def _resolve_azure_foundry_runtime(
     base_url = explicit_base_url_clean or cfg_base_url or env_base_url
     if not base_url:
         raise AuthError(
-            "Azure Foundry requires a base URL. Set it via 'hermes model' or "
+            "Azure Foundry requires a base URL. Set it via 'doppel model' or "
             "the AZURE_FOUNDRY_BASE_URL environment variable."
         )
 
@@ -1033,10 +1033,10 @@ def _resolve_azure_foundry_runtime(
     if not api_key:
         raise AuthError(
             "Azure Foundry requires an API key. Set AZURE_FOUNDRY_API_KEY in "
-            "~/.hermes/.env or run 'hermes model' to configure. To use "
+            "~/.doppel/.env or run 'doppel model' to configure. To use "
             "keyless Microsoft Entra ID auth instead, set "
             "model.auth_mode: entra_id in config.yaml (or pick "
-            "'Microsoft Entra ID' in 'hermes model')."
+            "'Microsoft Entra ID' in 'doppel model')."
         )
 
     source = "explicit" if (explicit_api_key or explicit_base_url) else "config"
@@ -1122,14 +1122,29 @@ def _resolve_explicit_runtime(
             str(state.get("agent_key") or "").strip()
             if _agent_key_is_usable(
                 state,
-                max(60, int(os.getenv("HERMES_NOUS_MIN_KEY_TTL_SECONDS", "1800"))),
+                max(
+                    60,
+                    int(
+                        get_customer_facing_env_value(
+                            "DOPPEL_NOUS_MIN_KEY_TTL_SECONDS",
+                            "HERMES_NOUS_MIN_KEY_TTL_SECONDS",
+                            "1800",
+                        )
+                    ),
+                ),
             )
             else ""
         )
         expires_at = state.get("agent_key_expires_at") or state.get("expires_at")
         if not api_key:
             creds = resolve_nous_runtime_credentials(
-                timeout_seconds=float(os.getenv("HERMES_NOUS_TIMEOUT_SECONDS", "15")),
+                timeout_seconds=float(
+                    get_customer_facing_env_value(
+                        "DOPPEL_NOUS_TIMEOUT_SECONDS",
+                        "HERMES_NOUS_TIMEOUT_SECONDS",
+                        "15",
+                    )
+                ),
             )
             api_key = creds.get("api_key", "")
             expires_at = creds.get("expires_at")
@@ -1321,7 +1336,16 @@ def resolve_runtime_provider(
         # expired, clear pool_api_key so we fall through to
         # resolve_nous_runtime_credentials() which handles refresh.
         if provider == "nous" and entry is not None and pool_api_key:
-            min_ttl = max(60, int(os.getenv("HERMES_NOUS_MIN_KEY_TTL_SECONDS", "1800")))
+            min_ttl = max(
+                60,
+                int(
+                    get_customer_facing_env_value(
+                        "DOPPEL_NOUS_MIN_KEY_TTL_SECONDS",
+                        "HERMES_NOUS_MIN_KEY_TTL_SECONDS",
+                        "1800",
+                    )
+                ),
+            )
             nous_state = {
                 "agent_key": getattr(entry, "agent_key", None),
                 "agent_key_expires_at": getattr(entry, "agent_key_expires_at", None),
@@ -1343,7 +1367,13 @@ def resolve_runtime_provider(
     if provider == "nous":
         try:
             creds = resolve_nous_runtime_credentials(
-                timeout_seconds=float(os.getenv("HERMES_NOUS_TIMEOUT_SECONDS", "15")),
+                timeout_seconds=float(
+                    get_customer_facing_env_value(
+                        "DOPPEL_NOUS_TIMEOUT_SECONDS",
+                        "HERMES_NOUS_TIMEOUT_SECONDS",
+                        "15",
+                    )
+                ),
             )
             return {
                 "provider": "nous",

@@ -4,6 +4,7 @@ import styles from "./styles.module.css";
 
 interface Skill {
   name: string;
+  displayName?: string;
   description: string;
   overview?: string;
   category: string;
@@ -273,7 +274,7 @@ function SkillCard({
           <span className={styles.cardIcon}>{icon}</span>
           <div className={styles.cardTitleGroup}>
             <h3 className={styles.cardTitle}>
-              {highlightMatch(skill.name, query)}
+              {highlightMatch(skill.displayName || skill.name, query)}
             </h3>
             <span
               className={styles.sourcePill}
@@ -378,7 +379,7 @@ function SkillCard({
               </div>
             )}
             <div className={styles.installHint}>
-              <code>{skill.installCmd || `hermes skills install ${skill.name}`}</code>
+              <code>{skill.installCmd || `doppel skills install ${skill.name}`}</code>
             </div>
             {skill.docsPath && (
               <a
@@ -421,6 +422,7 @@ function buildSearchHaystack(s: Skill): string {
   // load time instead of per-keystroke per-skill. With 50k+ skills the
   // per-keystroke variant was unusably slow.
   return [
+    s.displayName,
     s.name,
     s.description,
     s.overview,
@@ -582,13 +584,13 @@ export default function SkillsDashboard() {
   return (
     <Layout
       title="Skills Hub"
-      description="Browse all skills and plugins available for Hermes Agent"
+      description="Browse all skills and plugins available for Doppel Agent"
     >
       <div className={styles.page}>
         <header className={styles.hero}>
           <div className={styles.heroGlow} />
           <div className={styles.heroContent}>
-            <p className={styles.heroEyebrow}>Hermes Agent</p>
+            <p className={styles.heroEyebrow}>Doppel Agent</p>
             <h1 className={styles.heroTitle}>Skills Hub</h1>
             <p className={styles.heroSub}>
               Discover, search, and install from{" "}

@@ -48,7 +48,17 @@ class TestFindDocker:
         assert first == second == "/usr/local/bin/docker"
 
     def test_env_var_override_takes_precedence(self, tmp_path):
-        """HERMES_DOCKER_BINARY overrides PATH and known-location discovery."""
+        """DOPPEL_DOCKER_BINARY overrides PATH and known-location discovery."""
+        fake_binary = tmp_path / "podman"
+        fake_binary.write_text("#!/bin/sh\n")
+        fake_binary.chmod(0o755)
+
+        with patch.dict(os.environ, {"DOPPEL_DOCKER_BINARY": str(fake_binary)}), \
+             patch("tools.environments.docker.shutil.which", return_value="/usr/bin/docker"):
+            result = docker_mod.find_docker()
+        assert result == str(fake_binary)
+
+    def test_legacy_env_var_override_still_supported(self, tmp_path):
         fake_binary = tmp_path / "podman"
         fake_binary.write_text("#!/bin/sh\n")
         fake_binary.chmod(0o755)
@@ -59,19 +69,19 @@ class TestFindDocker:
         assert result == str(fake_binary)
 
     def test_env_var_override_ignored_if_not_executable(self, tmp_path):
-        """Non-executable HERMES_DOCKER_BINARY falls through to normal discovery."""
+        """Non-executable DOPPEL_DOCKER_BINARY falls through to normal discovery."""
         fake_binary = tmp_path / "podman"
         fake_binary.write_text("#!/bin/sh\n")
         fake_binary.chmod(0o644)  # not executable
 
-        with patch.dict(os.environ, {"HERMES_DOCKER_BINARY": str(fake_binary)}), \
+        with patch.dict(os.environ, {"DOPPEL_DOCKER_BINARY": str(fake_binary)}), \
              patch("tools.environments.docker.shutil.which", return_value="/usr/bin/docker"):
             result = docker_mod.find_docker()
         assert result == "/usr/bin/docker"
 
     def test_env_var_override_ignored_if_nonexistent(self):
-        """Non-existent HERMES_DOCKER_BINARY path falls through."""
-        with patch.dict(os.environ, {"HERMES_DOCKER_BINARY": "/nonexistent/podman"}), \
+        """Non-existent DOPPEL_DOCKER_BINARY path falls through."""
+        with patch.dict(os.environ, {"DOPPEL_DOCKER_BINARY": "/nonexistent/podman"}), \
              patch("tools.environments.docker.shutil.which", return_value="/usr/bin/docker"):
             result = docker_mod.find_docker()
         assert result == "/usr/bin/docker"

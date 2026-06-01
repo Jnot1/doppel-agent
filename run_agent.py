@@ -61,7 +61,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
 
-from hermes_constants import get_hermes_home
+from hermes_constants import get_customer_facing_env_value, get_hermes_home
 
 # OpenAI lazy proxy + safe stdio + proxy URL helpers — see agent/process_bootstrap.py.
 # `OpenAI` is re-exported here so `patch("run_agent.OpenAI", ...)` in tests works.
@@ -1025,19 +1025,25 @@ class AIAgent:
         Priority:
           1. ``providers.<id>.models.<model>.timeout_seconds`` (per-model override)
           2. ``providers.<id>.request_timeout_seconds`` (provider-wide)
-          3. ``HERMES_API_TIMEOUT`` env var (legacy escape hatch)
+          3. ``DOPPEL_API_TIMEOUT`` env var (legacy Hermes alias still works)
           4. 1800.0s default
 
         Used by OpenAI-wire chat completions (streaming and non-streaming) so
         the per-provider config knob wins over the 1800s default.  Without this
-        helper, the hardcoded ``HERMES_API_TIMEOUT`` fallback would always be
+        helper, the hardcoded timeout env fallback would always be
         passed as a per-call ``timeout=`` kwarg, overriding the client-level
         timeout the AIAgent.__init__ path configured.
         """
         cfg = get_provider_request_timeout(self.provider, self.model)
         if cfg is not None:
             return cfg
-        return float(os.getenv("HERMES_API_TIMEOUT", 1800.0))
+        return float(
+            get_customer_facing_env_value(
+                "DOPPEL_API_TIMEOUT",
+                "HERMES_API_TIMEOUT",
+                "1800.0",
+            )
+        )
 
     def _resolved_api_call_stale_timeout_base(self) -> tuple[float, bool]:
         """Resolve the base non-stream stale timeout and whether it is implicit.
@@ -1045,7 +1051,7 @@ class AIAgent:
         Priority:
           1. ``providers.<id>.models.<model>.stale_timeout_seconds``
           2. ``providers.<id>.stale_timeout_seconds``
-          3. ``HERMES_API_CALL_STALE_TIMEOUT`` env var
+          3. ``DOPPEL_API_CALL_STALE_TIMEOUT`` env var (legacy Hermes alias still works)
           4. 90.0s default (time-to-first-byte for non-streaming / Codex
              internal-streaming requests; lowered from 300s in May 2026 so
              fallback providers kick in faster when upstream providers
@@ -1061,7 +1067,10 @@ class AIAgent:
         if cfg is not None:
             return cfg, False
 
-        env_timeout = os.getenv("HERMES_API_CALL_STALE_TIMEOUT")
+        env_timeout = get_customer_facing_env_value(
+            "DOPPEL_API_CALL_STALE_TIMEOUT",
+            "HERMES_API_CALL_STALE_TIMEOUT",
+        )
         if env_timeout is not None:
             return float(env_timeout), False
 

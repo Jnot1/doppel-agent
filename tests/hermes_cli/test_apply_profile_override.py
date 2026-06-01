@@ -1,12 +1,13 @@
-"""Regression tests for _apply_profile_override HERMES_HOME guard (issue #22502).
+"""Regression tests for _apply_profile_override home-env guard (issue #22502).
 
-When HERMES_HOME is set to the hermes root (e.g. systemd hardcodes
-HERMES_HOME=/root/.hermes), _apply_profile_override must still read
-active_profile and update HERMES_HOME to the profile directory.
+When DOPPEL_HOME or HERMES_HOME is set to the root directory (for example a
+service unit hardcodes ``DOPPEL_HOME=/root/.doppel``), _apply_profile_override
+must still read ``active_profile`` and redirect both env vars to the named
+profile directory.
 
-When HERMES_HOME is already a profile directory (.../profiles/<name>),
+When either env var already points to ``.../profiles/<name>``,
 _apply_profile_override must trust it and return without re-reading
-active_profile (child-process inheritance contract).
+``active_profile`` (child-process inheritance contract).
 """
 
 from __future__ import annotations
@@ -16,17 +17,37 @@ import sys
 from pathlib import Path
 
 
+def _capture_home_env() -> tuple[str | None, str | None]:
+    return os.environ.get("DOPPEL_HOME"), os.environ.get("HERMES_HOME")
+
+
+def _restore_home_env(doppel_home: str | None, hermes_home: str | None) -> None:
+    if doppel_home is None:
+        os.environ.pop("DOPPEL_HOME", None)
+    else:
+        os.environ["DOPPEL_HOME"] = doppel_home
+
+    if hermes_home is None:
+        os.environ.pop("HERMES_HOME", None)
+    else:
+        os.environ["HERMES_HOME"] = hermes_home
+
 
 def _run_apply_profile_override(
-    tmp_path, monkeypatch, *, hermes_home: str | None, active_profile: str | None,
+    tmp_path,
+    monkeypatch,
+    *,
+    root_dir_name: str = ".hermes",
+    doppel_home: str | None = None,
+    hermes_home: str | None,
+    active_profile: str | None,
     argv: list[str] | None = None,
 ):
     """Run _apply_profile_override in isolation.
 
-    Returns the value of os.environ["HERMES_HOME"] after the call,
-    or None if unset.
+    Returns ``(DOPPEL_HOME, HERMES_HOME)`` after the call.
     """
-    hermes_root = tmp_path / ".hermes"
+    hermes_root = tmp_path / root_dir_name
     hermes_root.mkdir(parents=True, exist_ok=True)
 
     if active_profile is not None:
@@ -36,17 +57,24 @@ def _run_apply_profile_override(
         (hermes_root / "profiles" / active_profile).mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    if doppel_home is not None:
+        monkeypatch.setenv("DOPPEL_HOME", doppel_home)
+    else:
+        monkeypatch.delenv("DOPPEL_HOME", raising=False)
     if hermes_home is not None:
         monkeypatch.setenv("HERMES_HOME", hermes_home)
     else:
         monkeypatch.delenv("HERMES_HOME", raising=False)
 
-    monkeypatch.setattr(sys, "argv", argv or ["hermes", "gateway", "start"])
+    original_doppel_home, original_hermes_home = _capture_home_env()
+    try:
+        monkeypatch.setattr(sys, "argv", argv or ["hermes", "gateway", "start"])
 
-    from hermes_cli.main import _apply_profile_override
-    _apply_profile_override()
-
-    return os.environ.get("HERMES_HOME")
+        from hermes_cli.main import _apply_profile_override
+        _apply_profile_override()
+        return os.environ.get("DOPPEL_HOME"), os.environ.get("HERMES_HOME")
+    finally:
+        _restore_home_env(original_doppel_home, original_hermes_home)
 
 
 class TestApplyProfileOverrideHermesHomeGuard:
@@ -70,19 +98,20 @@ class TestApplyProfileOverrideHermesHomeGuard:
         hermes_root = tmp_path / ".hermes"
         hermes_root.mkdir(parents=True, exist_ok=True)
 
-        result = _run_apply_profile_override(
+        doppel_result, hermes_result = _run_apply_profile_override(
             tmp_path,
             monkeypatch,
             hermes_home=str(hermes_root),
             active_profile="coder",
         )
 
-        assert result is not None, "HERMES_HOME must be set after profile redirect"
-        assert "profiles" in result, (
-            f"Expected HERMES_HOME to point into profiles/ dir, got: {result!r}"
+        assert hermes_result is not None, "HERMES_HOME must be set after profile redirect"
+        assert doppel_result == hermes_result
+        assert "profiles" in hermes_result, (
+            f"Expected HERMES_HOME to point into profiles/ dir, got: {hermes_result!r}"
         )
-        assert result.endswith("coder"), (
-            f"Expected HERMES_HOME to end with 'coder', got: {result!r}"
+        assert hermes_result.endswith("coder"), (
+            f"Expected HERMES_HOME to end with 'coder', got: {hermes_result!r}"
         )
 
     def test_hermes_home_already_profile_dir_is_trusted(self, tmp_path, monkeypatch):
@@ -97,16 +126,15 @@ class TestApplyProfileOverrideHermesHomeGuard:
         profile_dir = hermes_root / "profiles" / "coder"
         profile_dir.mkdir(parents=True, exist_ok=True)
 
-        (hermes_root / "active_profile").write_text("other")
+        doppel_result, hermes_result = _run_apply_profile_override(
+            tmp_path,
+            monkeypatch,
+            hermes_home=str(profile_dir),
+            active_profile="other",
+        )
 
-        monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.setenv("HERMES_HOME", str(profile_dir))
-        monkeypatch.setattr(sys, "argv", ["hermes", "gateway", "start"])
-
-        from hermes_cli.main import _apply_profile_override
-        _apply_profile_override()
-
-        assert os.environ.get("HERMES_HOME") == str(profile_dir), (
+        assert doppel_result == str(profile_dir)
+        assert hermes_result == str(profile_dir), (
             "HERMES_HOME must remain unchanged when already pointing to a profile dir"
         )
 
@@ -114,27 +142,64 @@ class TestApplyProfileOverrideHermesHomeGuard:
         """Classic case: HERMES_HOME unset + active_profile=coder must set
         HERMES_HOME to the profile directory (existing behaviour must not regress).
         """
-        result = _run_apply_profile_override(
+        doppel_result, hermes_result = _run_apply_profile_override(
             tmp_path,
             monkeypatch,
+            root_dir_name=".doppel",
             hermes_home=None,
             active_profile="coder",
         )
 
-        assert result is not None
-        assert "coder" in result
+        assert hermes_result is not None
+        assert "coder" in hermes_result
+        assert doppel_result == hermes_result
 
     def test_hermes_home_unset_default_profile_no_redirect(self, tmp_path, monkeypatch):
         """active_profile=default must not redirect HERMES_HOME."""
-        hermes_root = tmp_path / ".hermes"
-        hermes_root.mkdir(parents=True, exist_ok=True)
+        doppel_result, hermes_result = _run_apply_profile_override(
+            tmp_path,
+            monkeypatch,
+            root_dir_name=".doppel",
+            hermes_home=None,
+            active_profile="default",
+        )
 
-        monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        monkeypatch.delenv("HERMES_HOME", raising=False)
-        monkeypatch.setattr(sys, "argv", ["hermes", "gateway", "start"])
-        (hermes_root / "active_profile").write_text("default")
+        assert doppel_result is None
+        assert hermes_result is None
 
-        from hermes_cli.main import _apply_profile_override
-        _apply_profile_override()
+    def test_doppel_home_at_root_with_active_profile_is_redirected(
+        self, tmp_path, monkeypatch
+    ):
+        doppel_root = tmp_path / ".doppel"
+        doppel_root.mkdir(parents=True, exist_ok=True)
 
-        assert os.environ.get("HERMES_HOME") is None
+        doppel_result, hermes_result = _run_apply_profile_override(
+            tmp_path,
+            monkeypatch,
+            root_dir_name=".doppel",
+            doppel_home=str(doppel_root),
+            hermes_home=None,
+            active_profile="coder",
+        )
+
+        assert doppel_result is not None
+        assert hermes_result == doppel_result
+        assert doppel_result.endswith("coder")
+
+    def test_doppel_home_already_profile_dir_is_trusted(self, tmp_path, monkeypatch):
+        doppel_root = tmp_path / ".doppel"
+        profile_dir = doppel_root / "profiles" / "coder"
+        profile_dir.mkdir(parents=True, exist_ok=True)
+
+        doppel_result, hermes_result = _run_apply_profile_override(
+            tmp_path,
+            monkeypatch,
+            root_dir_name=".doppel",
+            doppel_home=str(profile_dir),
+            hermes_home=None,
+            active_profile="other",
+            argv=["doppel", "gateway", "start"],
+        )
+
+        assert doppel_result == str(profile_dir)
+        assert hermes_result == str(profile_dir)

@@ -2,7 +2,7 @@
 #
 # Run from a PowerShell prompt:
 #
-#   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/tests/test-install-ps1-stage-protocol.ps1
+#   pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/tests/test-install-ps1-stage-protocol.ps1
 #
 # These tests only exercise the metadata surface (-ProtocolVersion, -Manifest,
 # unknown -Stage handling).  They DO NOT actually run any install stages --
@@ -18,6 +18,18 @@ $installScript = Join-Path $repoRoot "scripts\install.ps1"
 
 if (-not (Test-Path $installScript)) {
     throw "Could not locate install.ps1 at $installScript"
+}
+
+$powerShellExe = $null
+foreach ($candidate in @("pwsh", "powershell")) {
+    $cmd = Get-Command $candidate -ErrorAction SilentlyContinue
+    if ($cmd) {
+        $powerShellExe = $cmd.Source
+        break
+    }
+}
+if (-not $powerShellExe) {
+    throw "Could not locate pwsh or powershell on PATH"
 }
 
 $failures = 0
@@ -50,7 +62,7 @@ function Assert-True {
 # -----------------------------------------------------------------------------
 Write-Host ""
 Write-Host "-- -ProtocolVersion --"
-$output = & powershell -NoProfile -ExecutionPolicy Bypass -File $installScript -ProtocolVersion
+$output = & $powerShellExe -NoProfile -ExecutionPolicy Bypass -File $installScript -ProtocolVersion
 Assert-Equal -Expected 0 -Actual $LASTEXITCODE -Label "-ProtocolVersion exits 0"
 Assert-True ($output -match '^\d+$') -Label "-ProtocolVersion emits an integer (got: $output)"
 
@@ -59,7 +71,7 @@ Assert-True ($output -match '^\d+$') -Label "-ProtocolVersion emits an integer (
 # -----------------------------------------------------------------------------
 Write-Host ""
 Write-Host "-- -Manifest --"
-$manifestJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $installScript -Manifest
+$manifestJson = & $powerShellExe -NoProfile -ExecutionPolicy Bypass -File $installScript -Manifest
 Assert-Equal -Expected 0 -Actual $LASTEXITCODE -Label "-Manifest exits 0"
 
 $manifest = $null
@@ -104,7 +116,7 @@ if ($manifest) {
 # -----------------------------------------------------------------------------
 Write-Host ""
 Write-Host "-- -Stage with unknown name --"
-$errOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File $installScript -Stage "does-not-exist"
+$errOutput = & $powerShellExe -NoProfile -ExecutionPolicy Bypass -File $installScript -Stage "does-not-exist"
 Assert-Equal -Expected 2 -Actual $LASTEXITCODE -Label "unknown -Stage exits 2"
 
 $errFrame = $null

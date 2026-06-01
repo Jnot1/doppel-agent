@@ -1,4 +1,4 @@
-# nix/packages.nix — Hermes Agent package built with uv2nix
+# nix/packages.nix — Doppel Agent package built with uv2nix
 { inputs, ... }:
 {
   perSystem =
@@ -15,6 +15,8 @@
     {
       packages = {
         default = hermesAgent;
+        doppel-agent = hermesAgent;
+        hermes-agent = hermesAgent;
 
         # Ships discord.py + python-telegram-bot + slack-sdk so a plain
         # `nix profile install .#messaging` connects to Discord/Telegram/Slack

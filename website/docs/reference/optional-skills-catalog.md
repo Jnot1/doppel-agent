@@ -1,22 +1,22 @@
 ---
 sidebar_position: 9
 title: "Optional Skills Catalog"
-description: "Official optional skills shipped with hermes-agent — install via hermes skills install official/<category>/<skill>"
+description: "Official optional skills shipped with Doppel Agent — install via doppel skills install official/<category>/<skill>"
 ---
 
 # Optional Skills Catalog
 
-Optional skills ship with hermes-agent under `optional-skills/` but are **not active by default**. Install them explicitly:
+Optional skills ship with Doppel Agent under `optional-skills/` but are **not active by default**. Install them explicitly:
 
 ```bash
-hermes skills install official/<category>/<skill>
+doppel skills install official/<category>/<skill>
 ```
 
 For example:
 
 ```bash
-hermes skills install official/blockchain/solana
-hermes skills install official/mlops/flash-attention
+doppel skills install official/blockchain/solana
+doppel skills install official/mlops/flash-attention
 ```
 
 Each skill below links to a dedicated page with its full definition, setup, and usage.
@@ -24,7 +24,7 @@ Each skill below links to a dedicated page with its full definition, setup, and 
 To uninstall:
 
 ```bash
-hermes skills uninstall <skill-name>
+doppel skills uninstall <skill-name>
 ```
 
 ## autonomous-ai-agents
@@ -113,7 +113,7 @@ hermes skills uninstall <skill-name>
 
 | Skill | Description |
 |-------|-------------|
-| [**openclaw-migration**](/docs/user-guide/skills/optional/migration/migration-openclaw-migration) | Migrate a user's OpenClaw customization footprint into Hermes Agent. Imports Hermes-compatible memories, SOUL.md, command allowlists, user skills, and selected workspace assets from ~/.openclaw, then reports exactly what could not be mig... |
+| [**openclaw-migration**](/docs/user-guide/skills/optional/migration/migration-openclaw-migration) | Migrate a user's OpenClaw customization footprint into Doppel. Imports Doppel-compatible memories, SOUL.md, command allowlists, user skills, and selected workspace assets from ~/.openclaw, then reports exactly what could not be migrated... |
 
 ## mlops
 
@@ -158,7 +158,7 @@ hermes skills uninstall <skill-name>
 | [**shop-app**](/docs/user-guide/skills/optional/productivity/productivity-shop-app) | Shop.app: product search, order tracking, returns, reorder. |
 | [**shopify**](/docs/user-guide/skills/optional/productivity/productivity-shopify) | Shopify Admin & Storefront GraphQL APIs via curl. Products, orders, customers, inventory, metafields. |
 | [**siyuan**](/docs/user-guide/skills/optional/productivity/productivity-siyuan) | SiYuan Note API for searching, reading, creating, and managing blocks and documents in a self-hosted knowledge base via curl. |
-| [**telephony**](/docs/user-guide/skills/optional/productivity/productivity-telephony) | Give Hermes phone capabilities without core tool changes. Provision and persist a Twilio number, send and receive SMS/MMS, make direct calls, and place AI-driven outbound calls through Bland.ai or Vapi. |
+| [**telephony**](/docs/user-guide/skills/optional/productivity/productivity-telephony) | Give Doppel phone capabilities without core tool changes. Provision and persist a Twilio number, send and receive SMS/MMS, make direct calls, and place AI-driven outbound calls through Bland.ai or Vapi. |
 
 ## research
 

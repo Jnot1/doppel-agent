@@ -14,19 +14,19 @@ Delegate coding tasks to Blackbox AI CLI agent. Multi-model agent with built-in 
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/autonomous-ai-agents/blackbox` |
+| Source | Optional — install with `doppel skills install official/autonomous-ai-agents/blackbox` |
 | Path | `optional-skills/autonomous-ai-agents/blackbox` |
 | Version | `1.0.0` |
-| Author | Hermes Agent (Nous Research) |
+| Author | Doppel Agent (Nous Research) |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `Coding-Agent`, `Blackbox`, `Multi-Agent`, `Judge`, `Multi-Model` |
-| Related skills | [`claude-code`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code), [`codex`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex), [`hermes-agent`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent) |
+| Related skills | [`claude-code`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code), [`codex`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex), [`hermes-agent`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-doppel-agent) |
 
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # Blackbox CLI

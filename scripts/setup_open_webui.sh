@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Bootstrap Open WebUI against Hermes Agent's OpenAI-compatible API server.
+# Bootstrap Open WebUI against Doppel Agent's OpenAI-compatible API server.
 #
 # Idempotent by design:
-# - ensures ~/.hermes/.env has API server settings
+# - ensures your agent-home .env has API server settings
 # - installs Open WebUI into ~/.local/open-webui-venv
-# - writes a reusable launcher at ~/.local/bin/start-open-webui-hermes.sh
+# - writes a reusable launcher at ~/.local/bin/start-open-webui-doppel.sh
 # - optionally installs a user service (launchd on macOS, systemd --user on Linux)
 #
 # Usage:
@@ -15,30 +15,39 @@ set -euo pipefail
 # Optional environment overrides:
 #   OPEN_WEBUI_PORT=8080
 #   OPEN_WEBUI_HOST=127.0.0.1
-#   OPEN_WEBUI_NAME='Johnny Hermes'
+#   OPEN_WEBUI_NAME='Johnny Doppel'
+#   OPEN_WEBUI_MODEL_NAME='My Doppel Agent'
 #   OPEN_WEBUI_ENABLE_SIGNUP=true
 #   OPEN_WEBUI_ENABLE_SERVICE=auto   # auto|true|false
 #   OPEN_WEBUI_VENV=~/.local/open-webui-venv
 #   OPEN_WEBUI_DATA_DIR=~/.local/share/open-webui/data
-#   HERMES_API_PORT=8642
-#   HERMES_API_HOST=127.0.0.1
-#   HERMES_API_MODEL_NAME='Hermes Agent'
+#   DOPPEL_ENV_FILE=~/.doppel/.env   # legacy HERMES_ENV_FILE still works
+#   HERMES_API_PORT=8642             # legacy name kept for compatibility
+#   HERMES_API_HOST=127.0.0.1        # legacy name kept for compatibility
+#   DOPPEL_API_MODEL_NAME='My Doppel Agent'   # legacy HERMES_API_MODEL_NAME still works
 
 OPEN_WEBUI_PORT="${OPEN_WEBUI_PORT:-8080}"
 OPEN_WEBUI_HOST="${OPEN_WEBUI_HOST:-127.0.0.1}"
-OPEN_WEBUI_NAME="${OPEN_WEBUI_NAME:-Hermes Agent WebUI}"
+OPEN_WEBUI_NAME="${OPEN_WEBUI_NAME:-Doppel Agent WebUI}"
 OPEN_WEBUI_ENABLE_SIGNUP="${OPEN_WEBUI_ENABLE_SIGNUP:-true}"
 OPEN_WEBUI_ENABLE_SERVICE="${OPEN_WEBUI_ENABLE_SERVICE:-auto}"
 OPEN_WEBUI_VENV="${OPEN_WEBUI_VENV:-$HOME/.local/open-webui-venv}"
 OPEN_WEBUI_DATA_DIR="${OPEN_WEBUI_DATA_DIR:-$HOME/.local/share/open-webui/data}"
-HERMES_ENV_FILE="${HERMES_ENV_FILE:-$HOME/.hermes/.env}"
 HERMES_API_PORT="${HERMES_API_PORT:-8642}"
 HERMES_API_HOST="${HERMES_API_HOST:-127.0.0.1}"
 HERMES_API_CONNECT_HOST="${HERMES_API_CONNECT_HOST:-127.0.0.1}"
-HERMES_API_MODEL_NAME="${HERMES_API_MODEL_NAME:-Hermes Agent}"
+OPEN_WEBUI_MODEL_NAME="${OPEN_WEBUI_MODEL_NAME:-${DOPPEL_API_MODEL_NAME:-${HERMES_API_MODEL_NAME:-Doppel Agent}}}"
 HERMES_API_BASE_URL="http://${HERMES_API_CONNECT_HOST}:${HERMES_API_PORT}/v1"
-LAUNCHER_PATH="$HOME/.local/bin/start-open-webui-hermes.sh"
-LOG_DIR="$HOME/.hermes/logs"
+LAUNCHER_PATH="$HOME/.local/bin/start-open-webui-doppel.sh"
+LEGACY_LAUNCHER_PATH="$HOME/.local/bin/start-open-webui-hermes.sh"
+OPEN_WEBUI_LAUNCHD_LABEL="ai.openwebui.doppel"
+LEGACY_OPEN_WEBUI_LAUNCHD_LABEL="ai.openwebui.hermes"
+OPEN_WEBUI_SYSTEMD_UNIT_NAME="openwebui-doppel.service"
+LEGACY_OPEN_WEBUI_SYSTEMD_UNIT_NAME="openwebui-hermes.service"
+AGENT_CMD=""
+HERMES_ENV_FILE=""
+AGENT_HOME_DIR=""
+LOG_DIR=""
 
 log() {
   printf '[open-webui-bootstrap] %s\n' "$*"
@@ -60,6 +69,39 @@ choose_python() {
     echo "Python 3 is required." >&2
     exit 1
   fi
+}
+
+resolve_agent_command() {
+  if command -v doppel >/dev/null 2>&1; then
+    AGENT_CMD="doppel"
+  elif command -v hermes >/dev/null 2>&1; then
+    AGENT_CMD="hermes"
+  else
+    echo "Missing required command: doppel" >&2
+    exit 1
+  fi
+}
+
+resolve_agent_env_file() {
+  local requested_env_file
+  requested_env_file="${DOPPEL_ENV_FILE:-${HERMES_ENV_FILE:-}}"
+
+  if [[ -n "$requested_env_file" ]]; then
+    HERMES_ENV_FILE="$requested_env_file"
+  elif [[ -n "${DOPPEL_HOME:-}" ]]; then
+    HERMES_ENV_FILE="${DOPPEL_HOME%/}/.env"
+  elif [[ -n "${HERMES_HOME:-}" ]]; then
+    HERMES_ENV_FILE="${HERMES_HOME%/}/.env"
+  elif [[ -d "$HOME/.doppel" ]]; then
+    HERMES_ENV_FILE="$HOME/.doppel/.env"
+  elif [[ -d "$HOME/.hermes" ]]; then
+    HERMES_ENV_FILE="$HOME/.hermes/.env"
+  else
+    HERMES_ENV_FILE="$HOME/.doppel/.env"
+  fi
+
+  AGENT_HOME_DIR="$(dirname "$HERMES_ENV_FILE")"
+  LOG_DIR="$AGENT_HOME_DIR/logs"
 }
 
 upsert_env() {
@@ -170,26 +212,30 @@ install_open_webui() {
 write_launcher() {
   mkdir -p "$(dirname "$LAUNCHER_PATH")" "$OPEN_WEBUI_DATA_DIR" "$LOG_DIR"
 
-  local quoted_data_dir quoted_name quoted_base_url quoted_host quoted_port quoted_venv
+  local quoted_data_dir quoted_name quoted_base_url quoted_host quoted_port quoted_venv quoted_env_file
   quoted_data_dir="$(shell_quote "$OPEN_WEBUI_DATA_DIR")"
   quoted_name="$(shell_quote "$OPEN_WEBUI_NAME")"
   quoted_base_url="$(shell_quote "$HERMES_API_BASE_URL")"
   quoted_host="$(shell_quote "$OPEN_WEBUI_HOST")"
   quoted_port="$(shell_quote "$OPEN_WEBUI_PORT")"
   quoted_venv="$(shell_quote "$OPEN_WEBUI_VENV")"
+  quoted_env_file="$(shell_quote "$HERMES_ENV_FILE")"
 
   cat > "$LAUNCHER_PATH" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export DOPPEL_OPEN_WEBUI_ENV_FILE=${quoted_env_file}
 API_KEY=\$(python3 - <<'PY'
+import os
 from pathlib import Path
-p = Path.home()/'.hermes'/'.env'
-for raw in p.read_text().splitlines():
-    line = raw.strip()
-    if line.startswith('API_SERVER_KEY='):
-        print(line.split('=', 1)[1])
-        break
+p = Path(os.environ["DOPPEL_OPEN_WEBUI_ENV_FILE"])
+if p.exists():
+    for raw in p.read_text().splitlines():
+        line = raw.strip()
+        if line.startswith('API_SERVER_KEY='):
+            print(line.split('=', 1)[1])
+            break
 PY
 )
 export DATA_DIR=${quoted_data_dir}
@@ -217,20 +263,40 @@ EOF
   chmod +x "$LAUNCHER_PATH"
 }
 
+write_legacy_launcher_shim() {
+  if [[ "$LEGACY_LAUNCHER_PATH" == "$LAUNCHER_PATH" ]]; then
+    return 0
+  fi
+
+  local quoted_launcher_path
+  quoted_launcher_path="$(shell_quote "$LAUNCHER_PATH")"
+  mkdir -p "$(dirname "$LEGACY_LAUNCHER_PATH")"
+  cat > "$LEGACY_LAUNCHER_PATH" <<EOF
+#!/usr/bin/env bash
+exec ${quoted_launcher_path} "\$@"
+EOF
+  chmod +x "$LEGACY_LAUNCHER_PATH"
+}
+
 ensure_env_permissions() {
   chmod 600 "$HERMES_ENV_FILE" 2>/dev/null || true
 }
 
 install_launchd_service() {
-  local plist="$HOME/Library/LaunchAgents/ai.openwebui.hermes.plist"
+  local plist="$HOME/Library/LaunchAgents/${OPEN_WEBUI_LAUNCHD_LABEL}.plist"
+  local legacy_plist="$HOME/Library/LaunchAgents/${LEGACY_OPEN_WEBUI_LAUNCHD_LABEL}.plist"
   mkdir -p "$(dirname "$plist")"
+  if [[ -f "$legacy_plist" && "$legacy_plist" != "$plist" ]]; then
+    launchctl bootout "gui/$(id -u)" "$legacy_plist" >/dev/null 2>&1 || true
+    rm -f "$legacy_plist"
+  fi
   cat > "$plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>ai.openwebui.hermes</string>
+  <string>${OPEN_WEBUI_LAUNCHD_LABEL}</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
@@ -251,34 +317,39 @@ install_launchd_service() {
 EOF
   launchctl bootout "gui/$(id -u)" "$plist" >/dev/null 2>&1 || true
   launchctl bootstrap "gui/$(id -u)" "$plist"
-  launchctl enable "gui/$(id -u)/ai.openwebui.hermes"
-  launchctl kickstart -k "gui/$(id -u)/ai.openwebui.hermes"
+  launchctl enable "gui/$(id -u)/${OPEN_WEBUI_LAUNCHD_LABEL}"
+  launchctl kickstart -k "gui/$(id -u)/${OPEN_WEBUI_LAUNCHD_LABEL}"
 }
 
 install_systemd_user_service() {
   require_cmd systemctl
   local unit_dir="$HOME/.config/systemd/user"
-  local unit="$unit_dir/openwebui-hermes.service"
+  local unit="$unit_dir/${OPEN_WEBUI_SYSTEMD_UNIT_NAME}"
+  local legacy_unit="$unit_dir/${LEGACY_OPEN_WEBUI_SYSTEMD_UNIT_NAME}"
   mkdir -p "$unit_dir"
+  if [[ -f "$legacy_unit" && "$legacy_unit" != "$unit" ]]; then
+    systemctl --user disable --now "${LEGACY_OPEN_WEBUI_SYSTEMD_UNIT_NAME}" >/dev/null 2>&1 || true
+    rm -f "$legacy_unit"
+  fi
   cat > "$unit" <<EOF
 [Unit]
-Description=Open WebUI connected to Hermes Agent
+Description=Open WebUI connected to Doppel Agent
 After=default.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash %h/.local/bin/start-open-webui-hermes.sh
+ExecStart=/bin/bash %h/.local/bin/start-open-webui-doppel.sh
 Restart=always
 RestartSec=3
 WorkingDirectory=%h
-StandardOutput=append:%h/.hermes/logs/openwebui.log
-StandardError=append:%h/.hermes/logs/openwebui.error.log
+StandardOutput=append:${LOG_DIR}/openwebui.log
+StandardError=append:${LOG_DIR}/openwebui.error.log
 
 [Install]
 WantedBy=default.target
 EOF
   systemctl --user daemon-reload
-  systemctl --user enable --now openwebui-hermes.service
+  systemctl --user enable --now "${OPEN_WEBUI_SYSTEMD_UNIT_NAME}"
 }
 
 start_foreground_hint() {
@@ -287,9 +358,10 @@ start_foreground_hint() {
 }
 
 main() {
-  require_cmd hermes
   require_cmd curl
   require_cmd python3
+  resolve_agent_command
+  resolve_agent_env_file
 
   install_macos_dependencies
 
@@ -299,20 +371,20 @@ main() {
     api_key="$(generate_secret)"
   fi
 
-  log 'Ensuring Hermes API server is configured...'
+  log 'Ensuring Doppel API server is configured...'
   upsert_env API_SERVER_ENABLED true "$HERMES_ENV_FILE"
   upsert_env API_SERVER_HOST "$HERMES_API_HOST" "$HERMES_ENV_FILE"
   upsert_env API_SERVER_PORT "$HERMES_API_PORT" "$HERMES_ENV_FILE"
-  upsert_env API_SERVER_MODEL_NAME "$HERMES_API_MODEL_NAME" "$HERMES_ENV_FILE"
+  upsert_env API_SERVER_MODEL_NAME "$OPEN_WEBUI_MODEL_NAME" "$HERMES_ENV_FILE"
   upsert_env API_SERVER_KEY "$api_key" "$HERMES_ENV_FILE"
   ensure_env_permissions
 
-  log 'Restarting Hermes gateway so API server settings take effect...'
-  hermes gateway restart >/dev/null 2>&1 || true
+  log "Restarting ${AGENT_CMD} gateway so API server settings take effect..."
+  "$AGENT_CMD" gateway restart >/dev/null 2>&1 || true
   sleep 4
   if ! curl -fsS "http://${HERMES_API_CONNECT_HOST}:${HERMES_API_PORT}/health" >/dev/null; then
-    log 'Hermes API server did not answer on the first check. Trying to start gateway in the background...'
-    nohup hermes gateway run >/dev/null 2>&1 &
+    log 'Doppel API server did not answer on the first check. Trying to start the gateway in the background...'
+    nohup "$AGENT_CMD" gateway run >/dev/null 2>&1 &
     sleep 6
   fi
   curl -fsS "http://${HERMES_API_CONNECT_HOST}:${HERMES_API_PORT}/health" >/dev/null
@@ -320,6 +392,7 @@ main() {
   log 'Installing Open WebUI into a dedicated virtualenv...'
   install_open_webui
   write_launcher
+  write_legacy_launcher_shim
 
   case "$OPEN_WEBUI_ENABLE_SERVICE" in
     true|auto)
@@ -342,7 +415,7 @@ main() {
   esac
 
   log "Done. Open WebUI should be available at: http://${OPEN_WEBUI_HOST}:${OPEN_WEBUI_PORT}"
-  log "Hermes API endpoint: ${HERMES_API_BASE_URL}"
+  log "Doppel API endpoint: ${HERMES_API_BASE_URL}"
   log 'Important: Open WebUI persists connection settings after first launch. If you later save a wrong API key in the Admin UI, update/delete that connection there or reset its database.'
 }
 

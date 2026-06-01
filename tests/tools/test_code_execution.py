@@ -747,7 +747,7 @@ class TestEnvVarFiltering(unittest.TestCase):
     def test_timezone_injected_when_set(self):
         env_backup = os.environ.copy()
         try:
-            os.environ["HERMES_TIMEZONE"] = "America/New_York"
+            os.environ["DOPPEL_TIMEZONE"] = "America/New_York"
             child_env = self._get_child_env()
             self.assertEqual(child_env.get("TZ"), "America/New_York")
         finally:
@@ -757,6 +757,7 @@ class TestEnvVarFiltering(unittest.TestCase):
     def test_timezone_not_set_when_empty(self):
         env_backup = os.environ.copy()
         try:
+            os.environ.pop("DOPPEL_TIMEZONE", None)
             os.environ.pop("HERMES_TIMEZONE", None)
             child_env = self._get_child_env()
             if "TZ" in child_env:

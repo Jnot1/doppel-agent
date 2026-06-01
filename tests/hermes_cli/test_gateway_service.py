@@ -67,6 +67,7 @@ class TestSystemdServiceRefresh:
 
         monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", lambda system=False: unit_path)
         monkeypatch.setattr(gateway_cli, "generate_systemd_unit", lambda system=False, run_as_user=None: "new unit\n")
+        monkeypatch.setattr(gateway_cli, "_preflight_user_systemd", lambda: None)
 
         calls = []
 
@@ -90,6 +91,7 @@ class TestSystemdServiceRefresh:
 
         monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", lambda system=False: unit_path)
         monkeypatch.setattr(gateway_cli, "generate_systemd_unit", lambda system=False, run_as_user=None: "new unit\n")
+        monkeypatch.setattr(gateway_cli, "_preflight_user_systemd", lambda: None)
 
         calls = []
         monkeypatch.setattr("gateway.status.get_running_pid", lambda: None)
@@ -122,7 +124,11 @@ class TestSystemdServiceRefresh:
         markers = []
 
         monkeypatch.setattr(gateway_cli, "_select_systemd_scope", lambda system=False: False)
-        monkeypatch.setattr(gateway_cli, "_require_service_installed", lambda action, system=False: None)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_require_service_installed",
+            lambda action, system=False: ("hermes-gateway", Path("/tmp/hermes-gateway.service")),
+        )
         monkeypatch.setattr(status, "get_running_pid", lambda cleanup_stale=True: 321)
         monkeypatch.setattr(
             status,
@@ -139,13 +145,17 @@ class TestSystemdServiceRefresh:
         gateway_cli.systemd_stop()
 
         assert markers == [321]
-        assert calls == [["stop", gateway_cli.get_service_name()]]
+        assert calls == [["stop", "hermes-gateway"]]
 
     def test_systemd_stop_timeout_prints_status_guidance(self, monkeypatch, capsys):
         markers = []
 
         monkeypatch.setattr(gateway_cli, "_select_systemd_scope", lambda system=False: False)
-        monkeypatch.setattr(gateway_cli, "_require_service_installed", lambda action, system=False: None)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_require_service_installed",
+            lambda action, system=False: ("hermes-gateway", Path("/tmp/hermes-gateway.service")),
+        )
         monkeypatch.setattr(status, "get_running_pid", lambda cleanup_stale=True: 321)
         monkeypatch.setattr(
             status,
@@ -163,7 +173,7 @@ class TestSystemdServiceRefresh:
         assert markers == [321]
         output = capsys.readouterr().out
         assert "still stopping after 90s" in output
-        assert "hermes gateway status" in output
+        assert "doppel gateway status" in output
 
     def test_systemd_restart_timeout_prints_status_guidance(self, monkeypatch, capsys):
         """`hermes gateway restart` must not surface a raw TimeoutExpired traceback.
@@ -174,7 +184,11 @@ class TestSystemdServiceRefresh:
         follow-up: the same failure mode applies to restart, not just stop).
         """
         monkeypatch.setattr(gateway_cli, "_select_systemd_scope", lambda system=False: False)
-        monkeypatch.setattr(gateway_cli, "_require_service_installed", lambda action, system=False: None)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_require_service_installed",
+            lambda action, system=False: ("hermes-gateway", Path("/tmp/hermes-gateway.service")),
+        )
         monkeypatch.setattr(gateway_cli, "_preflight_user_systemd", lambda: None)
         monkeypatch.setattr(gateway_cli, "refresh_systemd_unit_if_needed", lambda system=False: None)
         monkeypatch.setattr(status, "get_running_pid", lambda cleanup_stale=True: None)
@@ -202,7 +216,7 @@ class TestSystemdServiceRefresh:
 
         output = capsys.readouterr().out
         assert "still restarting after 90s" in output
-        assert "hermes gateway status" in output
+        assert "doppel gateway status" in output
 
     def test_run_gateway_refreshes_outdated_unit_on_boot(self, tmp_path, monkeypatch):
         """run_gateway() should refresh the systemd unit on boot so that
@@ -300,7 +314,7 @@ class TestRequireServiceInstalled:
         assert exc_info.value.code == 1
         out = capsys.readouterr().out
         assert "not installed" in out
-        assert "hermes gateway install" in out
+        assert "doppel gateway install" in out
 
     def test_passes_when_unit_exists(self, tmp_path, monkeypatch):
         unit_path = tmp_path / "hermes-gateway.service"
@@ -451,6 +465,7 @@ class TestGatewayStopCleanup:
 
 class TestLaunchdServiceRecovery:
     def test_get_restart_drain_timeout_prefers_env_then_config_then_default(self, monkeypatch):
+        monkeypatch.delenv("DOPPEL_RESTART_DRAIN_TIMEOUT", raising=False)
         monkeypatch.delenv("HERMES_RESTART_DRAIN_TIMEOUT", raising=False)
         monkeypatch.setattr(gateway_cli, "read_raw_config", lambda: {})
 
@@ -466,10 +481,10 @@ class TestLaunchdServiceRecovery:
         )
         assert gateway_cli._get_restart_drain_timeout() == 14.0
 
-        monkeypatch.setenv("HERMES_RESTART_DRAIN_TIMEOUT", "9")
+        monkeypatch.setenv("DOPPEL_RESTART_DRAIN_TIMEOUT", "9")
         assert gateway_cli._get_restart_drain_timeout() == 9.0
 
-        monkeypatch.setenv("HERMES_RESTART_DRAIN_TIMEOUT", "invalid")
+        monkeypatch.setenv("DOPPEL_RESTART_DRAIN_TIMEOUT", "invalid")
         assert (
             gateway_cli._get_restart_drain_timeout()
             == DEFAULT_GATEWAY_RESTART_DRAIN_TIMEOUT
@@ -499,6 +514,43 @@ class TestLaunchdServiceRecovery:
             ["launchctl", "bootstrap", domain, str(plist_path)],
         ]
 
+    def test_launchd_install_migrates_legacy_plist_to_doppel_label(self, tmp_path, monkeypatch):
+        current_plist = tmp_path / "ai.doppel.gateway.plist"
+        legacy_plist = tmp_path / "ai.hermes.gateway.plist"
+        legacy_plist.write_text("<plist>old content</plist>", encoding="utf-8")
+
+        monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: current_plist)
+        monkeypatch.setattr(gateway_cli, "get_launchd_label", lambda: "ai.doppel.gateway")
+        monkeypatch.setattr(gateway_cli, "_launchd_domain", lambda: "gui/501")
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_plist_paths",
+            lambda: [legacy_plist],
+            raising=False,
+        )
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_labels",
+            lambda: ("ai.hermes.gateway",),
+            raising=False,
+        )
+
+        calls = []
+
+        def fake_run(cmd, check=False, **kwargs):
+            calls.append(cmd)
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr(gateway_cli.subprocess, "run", fake_run)
+
+        gateway_cli.launchd_install()
+
+        assert current_plist.exists()
+        assert not legacy_plist.exists()
+        assert current_plist.read_text(encoding="utf-8").startswith("<?xml")
+        assert ["launchctl", "bootout", "gui/501/ai.hermes.gateway"] in calls
+        assert ["launchctl", "bootstrap", "gui/501", str(current_plist)] in calls
+
     def test_launchd_start_reloads_unloaded_job_and_retries(self, tmp_path, monkeypatch):
         plist_path = tmp_path / "ai.hermes.gateway.plist"
         plist_path.write_text(gateway_cli.generate_launchd_plist(), encoding="utf-8")
@@ -525,6 +577,43 @@ class TestLaunchdServiceRecovery:
             ["launchctl", "bootstrap", domain, str(plist_path)],
             ["launchctl", "kickstart", target],
         ]
+
+    def test_launchd_start_migrates_legacy_plist_before_reloading(self, tmp_path, monkeypatch):
+        current_plist = tmp_path / "ai.doppel.gateway.plist"
+        legacy_plist = tmp_path / "ai.hermes.gateway.plist"
+        legacy_plist.write_text("<plist>legacy</plist>", encoding="utf-8")
+
+        monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: current_plist)
+        monkeypatch.setattr(gateway_cli, "get_launchd_label", lambda: "ai.doppel.gateway")
+        monkeypatch.setattr(gateway_cli, "_launchd_domain", lambda: "gui/501")
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_plist_paths",
+            lambda: [legacy_plist],
+            raising=False,
+        )
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_labels",
+            lambda: ("ai.hermes.gateway",),
+            raising=False,
+        )
+
+        calls = []
+
+        def fake_run(cmd, check=False, **kwargs):
+            calls.append(cmd)
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr(gateway_cli.subprocess, "run", fake_run)
+
+        gateway_cli.launchd_start()
+
+        assert current_plist.exists()
+        assert not legacy_plist.exists()
+        assert ["launchctl", "bootout", "gui/501/ai.hermes.gateway"] in calls
+        assert ["launchctl", "bootstrap", "gui/501", str(current_plist)] in calls
+        assert ["launchctl", "kickstart", "gui/501/ai.doppel.gateway"] in calls
 
     def test_launchd_start_reloads_on_kickstart_exit_code_113(self, tmp_path, monkeypatch):
         """Exit code 113 (\"Could not find service\") should also trigger bootstrap recovery."""
@@ -677,6 +766,40 @@ class TestLaunchdServiceRecovery:
         assert str(plist_path) in output
         assert "stale" in output.lower()
         assert "not loaded" in output.lower()
+
+    def test_launchd_uninstall_removes_legacy_plist_when_current_missing(self, tmp_path, monkeypatch):
+        current_plist = tmp_path / "ai.doppel.gateway.plist"
+        legacy_plist = tmp_path / "ai.hermes.gateway.plist"
+        legacy_plist.write_text("<plist>legacy</plist>", encoding="utf-8")
+
+        monkeypatch.setattr(gateway_cli, "get_launchd_plist_path", lambda: current_plist)
+        monkeypatch.setattr(gateway_cli, "get_launchd_label", lambda: "ai.doppel.gateway")
+        monkeypatch.setattr(gateway_cli, "_launchd_domain", lambda: "gui/501")
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_plist_paths",
+            lambda: [legacy_plist],
+            raising=False,
+        )
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_labels",
+            lambda: ("ai.hermes.gateway",),
+            raising=False,
+        )
+
+        calls = []
+
+        def fake_run(cmd, check=False, **kwargs):
+            calls.append(cmd)
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr(gateway_cli.subprocess, "run", fake_run)
+
+        gateway_cli.launchd_uninstall()
+
+        assert not legacy_plist.exists()
+        assert ["launchctl", "bootout", "gui/501/ai.hermes.gateway"] in calls
 
 
 class TestGatewayServiceDetection:
@@ -1015,7 +1138,7 @@ class TestGatewaySystemServiceRouting:
 
         out = capsys.readouterr().out
         assert "not supported on Termux" in out
-        assert "Run manually: hermes gateway" in out
+        assert "Run manually: doppel gateway run" in out
 
     def test_gateway_status_prefers_system_service_when_only_system_unit_exists(self, monkeypatch):
         user_unit = SimpleNamespace(exists=lambda: False)
@@ -1088,7 +1211,7 @@ class TestGatewaySystemServiceRouting:
 
         out = capsys.readouterr().out
         assert "Gateway is not running" in out
-        assert "nohup hermes gateway" in out
+        assert "nohup doppel gateway run" in out
         assert "install as user service" not in out
 
     def test_gateway_restart_does_not_fallback_to_foreground_when_launchd_restart_fails(self, tmp_path, monkeypatch):
@@ -1479,7 +1602,7 @@ class TestPreflightUserSystemd:
 
         msg = str(exc_info.value)
         assert "sudo loginctl enable-linger" in msg
-        assert "hermes gateway run" in msg  # foreground fallback mentioned
+        assert "doppel gateway run" in msg  # foreground fallback mentioned
         assert "Interactive authentication required" in msg
 
     def test_raises_when_loginctl_missing(self, monkeypatch):
@@ -1644,7 +1767,7 @@ class TestProfileArg:
 
         plist_path = gateway_cli.get_launchd_plist_path()
 
-        assert plist_path == machine_home / "Library" / "LaunchAgents" / "ai.hermes.gateway-orcha.plist"
+        assert plist_path == machine_home / "Library" / "LaunchAgents" / "ai.doppel.gateway-orcha.plist"
 
 
 class TestRemapPathForUser:
@@ -1742,6 +1865,148 @@ class TestDockerAwareGateway:
         assert len(calls) == 1
         assert "status" in calls[0]
 
+
+class TestInstalledSystemdScopeDetection:
+    def test_detects_current_doppel_gateway_unit(self, tmp_path, monkeypatch):
+        user_unit = tmp_path / "user" / "doppel-gateway.service"
+        user_unit.parent.mkdir(parents=True)
+        user_unit.write_text("[Unit]\n", encoding="utf-8")
+
+        def fake_get_unit_path(system: bool = False):
+            return (tmp_path / "system" / "doppel-gateway.service") if system else user_unit
+
+        monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", fake_get_unit_path)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_gateway_systemd_unit_paths",
+            lambda system=False: [tmp_path / ("system" if system else "user") / "hermes-gateway.service"],
+        )
+
+        assert gateway_cli.get_installed_systemd_scopes() == ["user"]
+
+    def test_detects_legacy_hermes_gateway_unit_when_current_unit_missing(self, tmp_path, monkeypatch):
+        legacy_user_unit = tmp_path / "user" / "hermes-gateway.service"
+        legacy_user_unit.parent.mkdir(parents=True)
+        legacy_user_unit.write_text("[Unit]\n", encoding="utf-8")
+
+        def fake_get_unit_path(system: bool = False):
+            return (tmp_path / "system" / "doppel-gateway.service") if system else (tmp_path / "user" / "doppel-gateway.service")
+
+        monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", fake_get_unit_path)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_gateway_systemd_unit_paths",
+            lambda system=False: [tmp_path / ("system" if system else "user") / "hermes-gateway.service"],
+        )
+
+        assert gateway_cli.get_installed_systemd_scopes() == ["user"]
+
+
+class TestLegacyGatewayServiceRouting:
+    def test_systemd_install_migrates_legacy_gateway_service_name(self, tmp_path, monkeypatch):
+        current_unit = tmp_path / "doppel-gateway.service"
+        legacy_unit = tmp_path / "hermes-gateway.service"
+        legacy_unit.write_text("[Unit]\nDescription=legacy\n", encoding="utf-8")
+
+        monkeypatch.setattr(gateway_cli, "has_legacy_hermes_units", lambda: False)
+        monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", lambda system=False: current_unit)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_gateway_systemd_unit_paths",
+            lambda system=False: [legacy_unit],
+        )
+        monkeypatch.setattr(
+            gateway_cli,
+            "generate_systemd_unit",
+            lambda system=False, run_as_user=None: "new unit\n",
+        )
+        monkeypatch.setattr(gateway_cli, "_ensure_linger_enabled", lambda: None)
+
+        calls = []
+        monkeypatch.setattr(
+            gateway_cli,
+            "_run_systemctl",
+            lambda args, **kwargs: calls.append(args) or SimpleNamespace(returncode=0, stdout="", stderr=""),
+        )
+
+        gateway_cli.systemd_install()
+
+        assert current_unit.exists()
+        assert current_unit.read_text(encoding="utf-8") == "new unit\n"
+        assert not legacy_unit.exists()
+        assert ["disable", "hermes-gateway"] in calls
+        assert ["enable", "doppel-gateway"] in calls
+
+    def test_systemd_start_migrates_legacy_hermes_gateway_service(self, tmp_path, monkeypatch):
+        legacy_user_unit = tmp_path / "user" / "hermes-gateway.service"
+        legacy_user_unit.parent.mkdir(parents=True)
+        legacy_user_unit.write_text("[Unit]\n", encoding="utf-8")
+
+        monkeypatch.setattr(gateway_cli, "_select_systemd_scope", lambda system=False: False)
+        monkeypatch.setattr(gateway_cli, "_preflight_user_systemd", lambda: None)
+        monkeypatch.setattr(gateway_cli, "refresh_systemd_unit_if_needed", lambda system=False: None)
+        monkeypatch.setattr(
+            gateway_cli,
+            "get_systemd_unit_path",
+            lambda system=False: tmp_path / ("system" if system else "user") / "doppel-gateway.service",
+        )
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_gateway_systemd_unit_paths",
+            lambda system=False: [tmp_path / ("system" if system else "user") / "hermes-gateway.service"],
+        )
+
+        calls = []
+        monkeypatch.setattr(
+            gateway_cli,
+            "_run_systemctl",
+            lambda args, **kwargs: calls.append(args) or SimpleNamespace(returncode=0, stdout="", stderr=""),
+        )
+
+        gateway_cli.systemd_start()
+
+        assert calls == [
+            ["disable", "hermes-gateway"],
+            ["daemon-reload"],
+            ["enable", "doppel-gateway"],
+            ["start", "doppel-gateway"],
+        ]
+
+    def test_systemd_start_migrates_legacy_gateway_service_before_start(self, tmp_path, monkeypatch):
+        current_unit = tmp_path / "user" / "doppel-gateway.service"
+        legacy_unit = tmp_path / "user" / "hermes-gateway.service"
+        legacy_unit.parent.mkdir(parents=True)
+        legacy_unit.write_text("[Unit]\nDescription=legacy\n", encoding="utf-8")
+
+        monkeypatch.setattr(gateway_cli, "_select_systemd_scope", lambda system=False: False)
+        monkeypatch.setattr(gateway_cli, "_preflight_user_systemd", lambda: None)
+        monkeypatch.setattr(gateway_cli, "get_systemd_unit_path", lambda system=False: current_unit)
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_gateway_systemd_unit_paths",
+            lambda system=False: [legacy_unit],
+        )
+        monkeypatch.setattr(
+            gateway_cli,
+            "generate_systemd_unit",
+            lambda system=False, run_as_user=None: "new unit\n",
+        )
+        monkeypatch.setattr(gateway_cli, "refresh_systemd_unit_if_needed", lambda system=False: None)
+
+        calls = []
+        monkeypatch.setattr(
+            gateway_cli,
+            "_run_systemctl",
+            lambda args, **kwargs: calls.append(args) or SimpleNamespace(returncode=0, stdout="", stderr=""),
+        )
+
+        gateway_cli.systemd_start()
+
+        assert current_unit.exists()
+        assert current_unit.read_text(encoding="utf-8") == "new unit\n"
+        assert not legacy_unit.exists()
+        assert ["start", "doppel-gateway"] in calls
+
     def test_install_in_container_prints_docker_guidance(self, monkeypatch, capsys):
         """'hermes gateway install' inside Docker exits 0 with container guidance."""
         import pytest
@@ -1762,6 +2027,27 @@ class TestDockerAwareGateway:
         assert "Docker" in out or "docker" in out
         assert "restart" in out.lower()
 
+    def test_install_in_container_with_s6_prints_doppel_profile_guidance(self, monkeypatch, capsys):
+        monkeypatch.setattr(gateway_cli, "is_managed", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_wsl", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_container", lambda: True)
+        monkeypatch.setattr(
+            "hermes_cli.service_manager.detect_service_manager",
+            lambda: "s6",
+        )
+
+        gateway_cli.gateway_command(
+            SimpleNamespace(gateway_command="install", force=False, system=False, run_as_user=None)
+        )
+
+        out = capsys.readouterr().out
+        assert "doppel profile create <name>" in out
+        assert "doppel -p <name> gateway start" in out
+        assert "doppel status" in out
+
     def test_uninstall_in_container_prints_docker_guidance(self, monkeypatch, capsys):
         """'hermes gateway uninstall' inside Docker exits 0 with container guidance."""
         import pytest
@@ -1780,6 +2066,23 @@ class TestDockerAwareGateway:
         out = capsys.readouterr().out
         assert "docker" in out.lower()
 
+    def test_uninstall_in_container_with_s6_prints_doppel_profile_guidance(self, monkeypatch, capsys):
+        monkeypatch.setattr(gateway_cli, "is_managed", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_termux", lambda: False)
+        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_macos", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_container", lambda: True)
+        monkeypatch.setattr(
+            "hermes_cli.service_manager.detect_service_manager",
+            lambda: "s6",
+        )
+
+        gateway_cli.gateway_command(SimpleNamespace(gateway_command="uninstall", system=False))
+
+        out = capsys.readouterr().out
+        assert "doppel profile delete <name>" in out
+        assert "doppel -p <name> gateway stop" in out
+
     def test_start_in_container_prints_docker_guidance(self, monkeypatch, capsys):
         """'hermes gateway start' inside Docker exits 0 with container guidance."""
         import pytest
@@ -1797,7 +2100,7 @@ class TestDockerAwareGateway:
         assert exc_info.value.code == 0
         out = capsys.readouterr().out
         assert "docker" in out.lower()
-        assert "hermes gateway run" in out
+        assert "doppel gateway run" in out
 
 
 class TestLegacyHermesUnitDetection:
@@ -1963,9 +2266,11 @@ class TestLegacyHermesUnitDetection:
         gateway_cli.print_legacy_unit_warning()
         out = capsys.readouterr().out
 
-        assert "Legacy" in out
+        assert "Legacy gateway unit(s) detected from an older install:" in out
+        assert "Legacy Hermes gateway" not in out
         assert "hermes.service" in out
-        assert "hermes gateway migrate-legacy" in out
+        assert "doppel gateway migrate-legacy" in out
+        assert "doppel-gateway service" in out
 
     def test_handles_unreadable_unit_file_gracefully(self, tmp_path, monkeypatch):
         """A permission error reading a unit file must not crash detection."""
@@ -2024,7 +2329,7 @@ class TestRemoveLegacyHermesUnits:
 
         assert removed == 0
         assert remaining == []
-        assert "No legacy" in capsys.readouterr().out
+        assert "No legacy gateway units found." in capsys.readouterr().out
 
     def test_dry_run_lists_without_removing(self, tmp_path, monkeypatch, capsys):
         user_dir, _, calls = self._setup(tmp_path, monkeypatch)
@@ -2040,6 +2345,7 @@ class TestRemoveLegacyHermesUnits:
         assert legacy.exists()  # Not removed
         assert calls == []  # No systemctl invocations
         out = capsys.readouterr().out
+        assert "Legacy gateway unit(s) found:" in out
         assert "dry-run" in out
 
     def test_removes_user_scope_legacy_unit(self, tmp_path, monkeypatch, capsys):
@@ -2069,7 +2375,7 @@ class TestRemoveLegacyHermesUnits:
         assert remaining == [legacy]
         assert legacy.exists()  # Not removed — requires sudo
         out = capsys.readouterr().out
-        assert "sudo hermes gateway migrate-legacy" in out
+        assert "sudo doppel gateway migrate-legacy" in out
 
     def test_system_scope_with_root_removes(self, tmp_path, monkeypatch, capsys):
         _, system_dir, calls = self._setup(tmp_path, monkeypatch, as_root=True)
@@ -2169,6 +2475,25 @@ class TestMigrateLegacyCommand:
         assert result.returncode == 0
         assert "migrate-legacy" in result.stdout
 
+    def test_migrate_legacy_help_mentions_launchd_and_doppel_examples(self):
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, "-m", "hermes_cli.main", "gateway", "migrate-legacy", "--help"],
+            cwd=str(gateway_cli.PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+
+        assert result.returncode == 0
+        assert "launchd" in result.stdout
+        assert "Current Doppel profile units" in result.stdout
+        assert "legacy profile units" in result.stdout
+        assert "hermes-gateway-<profile>.service" in result.stdout.replace("\n", "")
+        assert "legacy Hermes gateway service artifacts" not in result.stdout
+
     def test_gateway_command_migrate_legacy_dispatches(
         self, tmp_path, monkeypatch, capsys
     ):
@@ -2241,7 +2566,99 @@ class TestGatewayStatusParser:
         gateway_cli.gateway_command(args)
 
         out = capsys.readouterr().out
-        assert "only applies to systemd" in out
+        assert "systemd-based Linux hosts or macOS launchd agents" in out
+
+    def test_gateway_command_migrate_legacy_dispatches_to_launchd_cleanup_on_macos(
+        self, monkeypatch
+    ):
+        called = {}
+
+        def fake_remove(interactive=True, dry_run=False):
+            called["interactive"] = interactive
+            called["dry_run"] = dry_run
+            return 0, []
+
+        monkeypatch.setattr(gateway_cli, "supports_systemd_services", lambda: False)
+        monkeypatch.setattr(gateway_cli, "is_macos", lambda: True)
+        monkeypatch.setattr(gateway_cli, "remove_legacy_launchd_plists", fake_remove, raising=False)
+
+        args = SimpleNamespace(
+            gateway_command="migrate-legacy", dry_run=False, yes=True
+        )
+        gateway_cli.gateway_command(args)
+
+        assert called == {"interactive": False, "dry_run": False}
+
+
+class TestLegacyLaunchdPlistCleanup:
+    def test_remove_legacy_launchd_plists_returns_zero_when_empty(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        monkeypatch.setattr(gateway_cli, "_legacy_launchd_candidates", lambda: [])
+
+        removed, remaining = gateway_cli.remove_legacy_launchd_plists(
+            interactive=False,
+            dry_run=False,
+        )
+
+        assert removed == 0
+        assert remaining == []
+        assert "No legacy launchd plists found." in capsys.readouterr().out
+
+    def test_remove_legacy_launchd_plists_dry_run_lists_targets(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        legacy_plist = tmp_path / "ai.hermes.gateway.plist"
+        legacy_plist.write_text("<plist>legacy</plist>", encoding="utf-8")
+
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_candidates",
+            lambda: [("ai.hermes.gateway", legacy_plist)],
+        )
+
+        removed, remaining = gateway_cli.remove_legacy_launchd_plists(
+            interactive=False,
+            dry_run=True,
+        )
+
+        assert removed == 0
+        assert remaining == [legacy_plist]
+        assert legacy_plist.exists()
+        out = capsys.readouterr().out
+        assert "Legacy launchd plist(s) found:" in out
+        assert "ai.hermes.gateway.plist" in out
+
+    def test_remove_legacy_launchd_plists_removes_legacy_plist_on_macos(
+        self, tmp_path, monkeypatch
+    ):
+        legacy_plist = tmp_path / "ai.hermes.gateway.plist"
+        legacy_plist.write_text("<plist>legacy</plist>", encoding="utf-8")
+
+        monkeypatch.setattr(
+            gateway_cli,
+            "_legacy_launchd_candidates",
+            lambda: [("ai.hermes.gateway", legacy_plist)],
+        )
+        monkeypatch.setattr(gateway_cli, "_launchd_domain", lambda: "gui/501")
+
+        calls = []
+
+        def fake_run(cmd, check=False, **kwargs):
+            calls.append(cmd)
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr(gateway_cli.subprocess, "run", fake_run)
+
+        removed, remaining = gateway_cli.remove_legacy_launchd_plists(
+            interactive=False,
+            dry_run=False,
+        )
+
+        assert removed == 1
+        assert remaining == []
+        assert not legacy_plist.exists()
+        assert calls == [["launchctl", "bootout", "gui/501/ai.hermes.gateway"]]
 
 
 class TestSystemdInstallOffersLegacyRemoval:
@@ -2481,8 +2898,8 @@ class TestSystemScopeRemediationOutput:
         assert "system-wide service" in out
         assert "start requires root" in out
         assert "sudo systemctl start hermes-gateway" in out
-        assert "sudo hermes gateway uninstall --system" in out
-        assert "hermes gateway install" in out
+        assert "sudo doppel gateway uninstall --system" in out
+        assert "doppel gateway install" in out
 
     def test_restart_remediation_uses_systemctl_restart(self, capsys, monkeypatch):
         monkeypatch.setattr(gateway_cli, "get_service_name", lambda: "hermes-gateway")

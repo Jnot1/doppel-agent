@@ -17,16 +17,46 @@ def test_get_managed_system_homebrew(monkeypatch):
     assert recommended_update_command() == "brew upgrade hermes-agent"
 
 
+def test_get_managed_system_homebrew_descriptor(monkeypatch):
+    monkeypatch.setenv("HERMES_MANAGED", "homebrew:doppel-agent")
+
+    assert get_managed_system() == "Homebrew"
+    assert recommended_update_command() == "brew upgrade doppel-agent"
+
+
 def test_format_managed_message_homebrew(monkeypatch):
     monkeypatch.setenv("HERMES_MANAGED", "homebrew")
 
-    message = format_managed_message("update Hermes Agent")
+    message = format_managed_message("update Doppel Agent")
 
+    assert "Doppel Agent installation" in message
     assert "managed by Homebrew" in message
     assert "brew upgrade hermes-agent" in message
 
 
-def test_recommended_update_command_defaults_to_hermes_update(monkeypatch):
+def test_format_managed_message_homebrew_descriptor_prefers_descriptor_formula(monkeypatch):
+    monkeypatch.setenv("HERMES_MANAGED", "homebrew:doppel-agent")
+
+    message = format_managed_message("update Doppel Agent")
+
+    assert "managed by Homebrew" in message
+    assert "HERMES_MANAGED=homebrew:doppel-agent" in message
+    assert "brew upgrade doppel-agent" in message
+
+
+def test_format_managed_message_nixos_prefers_doppel_service_alias(monkeypatch):
+    monkeypatch.setenv("HERMES_MANAGED", "true")
+
+    message = format_managed_message("modify configuration")
+
+    assert "managed by NixOS" in message
+    assert "HERMES_MANAGED=true" in message
+    assert "services.doppel-agent.settings" in message
+    assert "services.hermes-agent" in message
+    assert "sudo nixos-rebuild switch" in message
+
+
+def test_recommended_update_command_defaults_to_doppel_update(monkeypatch):
     monkeypatch.delenv("HERMES_MANAGED", raising=False)
 
     # Also short-circuit the .managed marker path — CI runners may have an
@@ -36,7 +66,7 @@ def test_recommended_update_command_defaults_to_hermes_update(monkeypatch):
     # detect_install_method().
     with patch("hermes_cli.config.get_managed_update_command", return_value=None), \
          patch("hermes_cli.config.detect_install_method", return_value="git"):
-        assert recommended_update_command() == "hermes update"
+        assert recommended_update_command() == "doppel update"
 
 
 def test_cmd_update_blocks_managed_homebrew(monkeypatch, capsys):

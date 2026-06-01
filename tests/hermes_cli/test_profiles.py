@@ -242,7 +242,7 @@ class TestCreateProfile:
         assert not (profile_dir / "profiles").exists()
 
     def test_clone_all_excludes_default_infrastructure(self, profile_env):
-        """--clone-all from default profile excludes hermes-agent, .worktrees,
+        """--clone-all from default profile excludes managed checkout dirs, .worktrees,
         bin, node_modules at root, plus __pycache__/*.pyc/*.pyo/*.sock/*.tmp
         at any depth.  Profile data (config, env, skills, sessions, logs,
         state.db) must be preserved — clone-all means "complete snapshot
@@ -251,9 +251,10 @@ class TestCreateProfile:
         tmp_path = profile_env
         default_home = tmp_path / ".hermes"
         # Simulate infrastructure dirs that only the default profile has
-        (default_home / "hermes-agent" / ".git").mkdir(parents=True)
-        (default_home / "hermes-agent" / "venv" / "bin").mkdir(parents=True)
-        (default_home / "hermes-agent" / "README.md").write_text("repo")
+        for checkout_name in ("hermes-agent", "doppel-agent"):
+            (default_home / checkout_name / ".git").mkdir(parents=True)
+            (default_home / checkout_name / "venv" / "bin").mkdir(parents=True)
+            (default_home / checkout_name / "README.md").write_text("repo")
         (default_home / ".worktrees" / "some-tree").mkdir(parents=True)
         (default_home / "profiles" / "other").mkdir(parents=True)
         (default_home / "profiles" / "other" / "config.yaml").write_text("x")
@@ -281,6 +282,7 @@ class TestCreateProfile:
 
         # Infrastructure must be excluded
         assert not (profile_dir / "hermes-agent").exists()
+        assert not (profile_dir / "doppel-agent").exists()
         assert not (profile_dir / ".worktrees").exists()
         assert not (profile_dir / "profiles").exists()
         assert not (profile_dir / "bin").exists()
@@ -322,7 +324,10 @@ class TestNoSkillsOptOut:
         # Marker file is present
         marker = profile_dir / NO_BUNDLED_SKILLS_MARKER
         assert marker.is_file(), "expected .no-bundled-skills marker in profile root"
-        assert "--no-skills" in marker.read_text()
+        marker_text = marker.read_text()
+        assert "--no-skills" in marker_text
+        assert "doppel profile create --no-skills" in marker_text
+        assert "doppel update" in marker_text
 
         # has_bundled_skills_opt_out() agrees
         assert has_bundled_skills_opt_out(profile_dir) is True
@@ -435,7 +440,7 @@ class TestDeleteProfile:
         assert not profile_dir.is_dir()
 
     def test_default_raises_value_error(self, profile_env):
-        with pytest.raises(ValueError, match="default"):
+        with pytest.raises(ValueError, match="doppel uninstall"):
             delete_profile("default", yes=True)
 
     def test_nonexistent_raises_file_not_found(self, profile_env):
@@ -510,7 +515,7 @@ class TestActiveProfile:
         assert not active_path.exists()
 
     def test_set_nonexistent_raises(self, profile_env):
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError, match="doppel profile create nonexistent"):
             set_active_profile("nonexistent")
 
 
@@ -563,7 +568,7 @@ class TestResolveProfileEnv:
         assert result == str(tmp_path / ".hermes")
 
     def test_nonexistent_raises_file_not_found(self, profile_env):
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError, match="doppel profile create nonexistent"):
             resolve_profile_env("nonexistent")
 
     def test_invalid_name_raises_value_error(self, profile_env):
@@ -987,7 +992,7 @@ class TestExportImport:
         (default_dir / "config.yaml").write_text("ok")
 
         # Create dirs/files that should be excluded
-        for d in ("hermes-agent", ".worktrees", "profiles", "bin",
+        for d in ("hermes-agent", "doppel-agent", ".worktrees", "profiles", "bin",
                   "image_cache", "logs", "sandboxes", "checkpoints"):
             sub = default_dir / d
             sub.mkdir(exist_ok=True)
@@ -1010,7 +1015,8 @@ class TestExportImport:
 
         # Infrastructure excluded
         excluded_prefixes = [
-            "default/hermes-agent", "default/.worktrees", "default/profiles",
+            "default/hermes-agent", "default/doppel-agent",
+            "default/.worktrees", "default/profiles",
             "default/bin", "default/image_cache", "default/logs",
             "default/sandboxes", "default/checkpoints",
         ]
@@ -1054,7 +1060,10 @@ class TestExportImport:
         archive.parent.mkdir(parents=True, exist_ok=True)
         export_profile("default", str(archive))
 
-        with pytest.raises(ValueError, match="Cannot import as 'default'"):
+        with pytest.raises(
+            ValueError,
+            match=r"doppel profile import <archive> --name <name>",
+        ):
             import_profile(str(archive))
 
     def test_import_default_with_explicit_default_name_raises(self, profile_env, tmp_path):
@@ -1066,7 +1075,10 @@ class TestExportImport:
         archive.parent.mkdir(parents=True, exist_ok=True)
         export_profile("default", str(archive))
 
-        with pytest.raises(ValueError, match="Cannot import as 'default'"):
+        with pytest.raises(
+            ValueError,
+            match=r"doppel profile import <archive> --name <name>",
+        ):
             import_profile(str(archive), name="default")
 
     def test_import_default_export_with_new_name_roundtrip(self, profile_env, tmp_path):

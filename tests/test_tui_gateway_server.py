@@ -678,6 +678,22 @@ def test_resolve_model_uses_inference_model_env(monkeypatch):
     assert server._resolve_model() == "anthropic/claude-sonnet-4.6"
 
 
+def test_resolve_model_uses_preferred_inference_model_env(monkeypatch):
+    monkeypatch.delenv("HERMES_MODEL", raising=False)
+    monkeypatch.delenv("HERMES_INFERENCE_MODEL", raising=False)
+    monkeypatch.setenv("DOPPEL_INFERENCE_MODEL", " anthropic/claude-sonnet-4.6\n")
+
+    assert server._resolve_model() == "anthropic/claude-sonnet-4.6"
+
+
+def test_resolve_model_uses_preferred_model_env(monkeypatch):
+    monkeypatch.delenv("HERMES_MODEL", raising=False)
+    monkeypatch.delenv("HERMES_INFERENCE_MODEL", raising=False)
+    monkeypatch.setenv("DOPPEL_MODEL", " anthropic/claude-sonnet-4.6\n")
+
+    assert server._resolve_model() == "anthropic/claude-sonnet-4.6"
+
+
 def test_resolve_model_strips_config_model(monkeypatch):
     monkeypatch.delenv("HERMES_MODEL", raising=False)
     monkeypatch.delenv("HERMES_INFERENCE_MODEL", raising=False)
@@ -2000,6 +2016,7 @@ def test_config_set_model_syncs_tui_provider_env(monkeypatch):
 
         assert resp["result"]["value"] == "anthropic/claude-sonnet-4.6"
         assert os.environ["HERMES_TUI_PROVIDER"] == "anthropic"
+        assert os.environ["DOPPEL_MODEL"] == "anthropic/claude-sonnet-4.6"
         assert os.environ["HERMES_MODEL"] == "anthropic/claude-sonnet-4.6"
         assert os.environ["HERMES_INFERENCE_MODEL"] == "anthropic/claude-sonnet-4.6"
     finally:

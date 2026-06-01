@@ -28,6 +28,11 @@ def _parse(argv):
 
 
 class TestBundlesCli:
+    def test_list_empty_shows_doppel_create_hint(self, bundles_env, capsys):
+        bundles_command(_parse(["list"]))
+        out = capsys.readouterr().out
+        assert "doppel bundles create" in out
+
     def test_create_and_list(self, bundles_env, capsys):
         args = _parse(["create", "my-bundle", "--skill", "a", "--skill", "b", "-d", "desc"])
         bundles_command(args)
@@ -90,3 +95,19 @@ class TestBundlesCli:
         bundles_command(_parse(["reload"]))
         out = capsys.readouterr().out
         assert "No changes" in out or "0" in out
+
+    def test_create_help_uses_doppel_bundles_list_reference(self, capsys):
+        parser = argparse.ArgumentParser()
+        register_cli(parser)
+
+        subparsers = next(
+            action for action in parser._actions
+            if isinstance(action, argparse._SubParsersAction)
+        )
+        create_parser = subparsers.choices["create"]
+        description_action = next(
+            action for action in create_parser._actions
+            if "--description" in action.option_strings
+        )
+
+        assert "doppel bundles list" in description_action.help

@@ -66,7 +66,7 @@ _MODELS: Dict[str, Dict[str, Any]] = {
 
 DEFAULT_MODEL = "krea-2-medium"
 
-# Hermes uses 3 abstract aspect ratios. Map to Krea's enum (which is wider).
+# Doppel uses 3 abstract aspect ratios. Map to Krea's enum (which is wider).
 # Krea accepts: 1:1, 4:3, 3:2, 16:9, 2.35:1, 4:5, 2:3, 9:16
 _ASPECT_MAP = {
     "landscape": "16:9",
@@ -227,7 +227,7 @@ class KreaImageGenProvider(ImageGenProvider):
         if not api_key:
             return error_response(
                 error=(
-                    "KREA_API_KEY not set. Run `hermes tools` → Image "
+                    "KREA_API_KEY not set. Run `doppel tools` → Image "
                     "Generation → Krea to configure, or get a key at "
                     "https://www.krea.ai/settings/api-tokens."
                 ),

@@ -38,6 +38,13 @@ import sys
 import time
 from pathlib import Path
 
+from hermes_constants import (
+    PREFERRED_CLI_COMMAND,
+    WINDOWS_GATEWAY_TASK_DESCRIPTION,
+    get_gateway_task_name,
+    get_gateway_task_names,
+)
+
 # Short timeouts: schtasks occasionally wedges and we don't want to hang forever.
 _SCHTASKS_TIMEOUT_S = 15
 _SCHTASKS_NO_OUTPUT_TIMEOUT_S = 30
@@ -47,9 +54,6 @@ _FALLBACK_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 _ACCESS_DENIED_PATTERN = re.compile(r"(access is denied|acceso denegado)", re.IGNORECASE)
-
-_TASK_NAME_DEFAULT = "Hermes_Gateway"
-_TASK_DESCRIPTION = "Hermes Agent Gateway - Messaging Platform Integration"
 
 
 # ---------------------------------------------------------------------------
@@ -227,20 +231,27 @@ def _launch_elevated_uninstall() -> bool:
 # Paths: where we stash our task script and where Startup lives
 # ---------------------------------------------------------------------------
 
+def _profile_suffix() -> str:
+    """Return the active profile suffix used in task/file naming."""
+    from hermes_cli.gateway import _profile_suffix as _gateway_profile_suffix
+
+    return _gateway_profile_suffix()
+
+
 def get_task_name() -> str:
     """Scheduled Task name, scoped per profile.
 
-    Default profile: ``Hermes_Gateway``
-    Named profile X: ``Hermes_Gateway_<X>``
+    Default profile: ``Doppel_Gateway``
+    Named profile X: ``Doppel_Gateway_<X>``
     """
     _assert_windows()
-    # Local import to avoid circular module initialization during hermes_cli boot.
-    from hermes_cli.gateway import _profile_suffix
+    return get_gateway_task_name(_profile_suffix())
 
-    suffix = _profile_suffix()
-    if not suffix:
-        return _TASK_NAME_DEFAULT
-    return f"{_TASK_NAME_DEFAULT}_{suffix}"
+
+def get_task_names() -> tuple[str, ...]:
+    """Return current + legacy Scheduled Task names for the active profile."""
+    _assert_windows()
+    return get_gateway_task_names(_profile_suffix())
 
 
 def _sanitize_filename(value: str) -> str:
@@ -248,7 +259,7 @@ def _sanitize_filename(value: str) -> str:
     return re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", value)
 
 
-def get_task_script_path() -> Path:
+def get_task_script_path(task_name: str | None = None) -> Path:
     """The generated ``gateway.cmd`` wrapper that the schtasks entry invokes.
 
     Lives under ``%LOCALAPPDATA%\\hermes\\gateway-service\\<task_name>.cmd``
@@ -260,7 +271,20 @@ def get_task_script_path() -> Path:
 
     script_dir = Path(get_hermes_home()) / "gateway-service"
     script_dir.mkdir(parents=True, exist_ok=True)
-    return script_dir / f"{_sanitize_filename(get_task_name())}.cmd"
+    return script_dir / f"{_sanitize_filename(task_name or get_task_name())}.cmd"
+
+
+def get_task_script_paths() -> tuple[Path, ...]:
+    """Return canonical + legacy task-script paths for the active profile."""
+    return tuple(get_task_script_path(task_name) for task_name in get_task_names())
+
+
+def find_task_script_path() -> Path | None:
+    """Return the first existing task-script path for the active profile."""
+    for candidate in get_task_script_paths():
+        if candidate.exists():
+            return candidate
+    return None
 
 
 def _startup_dir() -> Path:
@@ -282,9 +306,22 @@ def _startup_dir() -> Path:
     )
 
 
-def get_startup_entry_path() -> Path:
+def get_startup_entry_path(task_name: str | None = None) -> Path:
     _assert_windows()
-    return _startup_dir() / f"{_sanitize_filename(get_task_name())}.cmd"
+    return _startup_dir() / f"{_sanitize_filename(task_name or get_task_name())}.cmd"
+
+
+def get_startup_entry_paths() -> tuple[Path, ...]:
+    """Return canonical + legacy Startup-folder entry paths for the active profile."""
+    return tuple(get_startup_entry_path(task_name) for task_name in get_task_names())
+
+
+def find_startup_entry_path() -> Path | None:
+    """Return the first existing Startup-folder entry path for the active profile."""
+    for candidate in get_startup_entry_paths():
+        if candidate.exists():
+            return candidate
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -309,7 +346,7 @@ def _build_gateway_cmd_script(
     the per-user PATH the Scheduled Task was created with, and forcibly
     rewriting PATH tends to break Homebrew/nvm-style installations.
     """
-    lines = ["@echo off", f"rem {_TASK_DESCRIPTION}"]
+    lines = ["@echo off", f"rem {WINDOWS_GATEWAY_TASK_DESCRIPTION}"]
     lines.append(f"cd /d {_quote_cmd_script_arg(working_dir)}")
     lines.append(f'set "HERMES_HOME={hermes_home}"')
     lines.append('set "PYTHONIOENCODING=utf-8"')
@@ -339,7 +376,7 @@ def _build_startup_launcher(script_path: Path) -> str:
     """The tiny .cmd that goes in the Startup folder. Just minimizes and chains."""
     lines = [
         "@echo off",
-        f"rem {_TASK_DESCRIPTION}",
+        f"rem {WINDOWS_GATEWAY_TASK_DESCRIPTION}",
         # ``start "" /min`` detaches with a minimized console window.
         # ``/d /c`` on cmd.exe skips AUTORUN and runs the target script once.
         f'start "" /min cmd.exe /d /c {_quote_cmd_script_arg(str(script_path))}',
@@ -666,7 +703,7 @@ def _install_startup_fallback(script_path: Path, start_now: bool, detail: str) -
     print(f"✓ Installed Windows login item: {entry}")
     print(f"  Task script: {script_path}")
 
-    # Re-running `hermes -p <profile> gateway install` must be safe.
+    # Re-running the gateway install for a profile must be safe.
     # Startup-folder fallback only installs login persistence. Starting is
     # controlled by the pre-UAC start_now answer so all user decisions happen
     # before any elevation prompt.
@@ -680,7 +717,11 @@ def _install_startup_fallback(script_path: Path, start_now: bool, detail: str) -
         _report_gateway_start(f"direct spawn (PID {pid})")
     else:
         profile_arg = _profile_arg()
-        start_cmd = f"hermes {profile_arg} gateway start" if profile_arg else "hermes gateway start"
+        start_cmd = (
+            f"{PREFERRED_CLI_COMMAND} {profile_arg} gateway start"
+            if profile_arg
+            else f"{PREFERRED_CLI_COMMAND} gateway start"
+        )
         print("ℹ Startup fallback installed; gateway not started now.")
         print(f"  Start manually with: {start_cmd}")
     _print_next_steps()
@@ -713,7 +754,7 @@ def install(
                 _report_gateway_start(f"direct spawn (PID {pid})")
         else:
             print("ℹ Gateway not started and no auto-start service installed.")
-            print("  Run later with: hermes gateway start")
+            print(f"  Run later with: {PREFERRED_CLI_COMMAND} gateway start")
         return
 
     task_name = get_task_name()
@@ -730,11 +771,11 @@ def install(
         print("  UAC is Windows' admin approval prompt; it is needed to create/update the Scheduled Task.")
         if prompt_yes_no("  Open the UAC prompt now?", False):
             if _launch_elevated_install(force=force, start_now=start_now, start_on_login=start_on_login):
-                print("✓ Launched elevated Hermes gateway install prompt.")
+                print("✓ Launched elevated Doppel gateway install prompt.")
                 if start_now:
                     print("  Approve the Windows UAC prompt; the elevated install will start the gateway afterwards.")
                 else:
-                    print("  Approve the Windows UAC prompt, then run: hermes gateway status")
+                    print(f"  Approve the Windows UAC prompt, then run: {PREFERRED_CLI_COMMAND} gateway status")
                 return
             print("⚠ Falling back to Startup folder because elevation was unavailable or cancelled.")
         else:
@@ -744,6 +785,7 @@ def install(
 
     ok, detail = _install_scheduled_task(task_name, script_path)
     if ok:
+        _remove_legacy_task_artifacts(task_name)
         print(f"✓ {detail}")
         print(f"  Task script: {script_path}")
         print("ℹ Gateway auto-start installed for Windows login.")
@@ -756,7 +798,7 @@ def install(
                 _report_gateway_start(f"direct spawn (PID {pid})")
         else:
             print("ℹ Gateway not started now.")
-            print("  Start manually with: hermes gateway start")
+            print(f"  Start manually with: {PREFERRED_CLI_COMMAND} gateway start")
         _print_next_steps()
         return
 
@@ -771,11 +813,11 @@ def install(
         print("  UAC is Windows' admin approval prompt; it is needed to create/update the Scheduled Task.")
         if prompt_yes_no("  Open the UAC prompt now?", False):
             if _launch_elevated_install(force=force, start_now=start_now, start_on_login=start_on_login):
-                print("✓ Launched elevated Hermes gateway install prompt.")
+                print("✓ Launched elevated Doppel gateway install prompt.")
                 if start_now:
                     print("  Approve the Windows UAC prompt; the elevated install will start the gateway afterwards.")
                 else:
-                    print("  Approve the Windows UAC prompt, then run: hermes gateway status")
+                    print(f"  Approve the Windows UAC prompt, then run: {PREFERRED_CLI_COMMAND} gateway status")
                 return
             print("⚠ Falling back to Startup folder because elevation was unavailable or cancelled.")
         else:
@@ -788,7 +830,7 @@ def install(
         print(f"✓ Installed Windows login item: {entry}")
         print(f"  Task script: {script_path}")
 
-        # Re-running `hermes -p <profile> gateway install` must be safe.
+        # Re-running the gateway install for a profile must be safe.
         # Startup-folder fallback only installs login persistence. Starting is
         # controlled by the pre-UAC start_now answer so all user decisions happen
         # before any elevation prompt.
@@ -802,7 +844,11 @@ def install(
             _report_gateway_start(f"direct spawn (PID {pid})")
         else:
             profile_arg = _profile_arg()
-            start_cmd = f"hermes {profile_arg} gateway start" if profile_arg else "hermes gateway start"
+            start_cmd = (
+                f"{PREFERRED_CLI_COMMAND} {profile_arg} gateway start"
+                if profile_arg
+                else f"{PREFERRED_CLI_COMMAND} gateway start"
+            )
             print("ℹ Startup fallback installed; gateway not started now.")
             print(f"  Start manually with: {start_cmd}")
         _print_next_steps()
@@ -847,19 +893,60 @@ def _print_next_steps() -> None:
     hermes_home = Path(get_hermes_home()).resolve()
     print()
     print("Next steps:")
-    print("  hermes gateway status                      # Check status")
+    print(f"  {PREFERRED_CLI_COMMAND} gateway status                      # Check status")
     print(f"  type {hermes_home}\\logs\\gateway.log       # View logs")
+
+
+def get_registered_task_names() -> tuple[str, ...]:
+    """Return every registered Scheduled Task name for the active profile."""
+    registered = []
+    for task_name in get_task_names():
+        code, _out, _err = _exec_schtasks(["/Query", "/TN", task_name])
+        if code == 0:
+            registered.append(task_name)
+    return tuple(registered)
+
+
+def find_registered_task_name() -> str | None:
+    """Return the canonical or legacy Scheduled Task name currently installed."""
+    registered = get_registered_task_names()
+    return registered[0] if registered else None
+
+
+def _remove_legacy_task_artifacts(current_task_name: str) -> None:
+    """Best-effort cleanup for legacy Windows gateway task identities."""
+    for task_name in get_task_names():
+        if task_name == current_task_name:
+            continue
+        code, out, err = _exec_schtasks(["/Delete", "/F", "/TN", task_name])
+        detail = (err or out or "").strip()
+        if code == 0:
+            print(f"✓ Removed legacy Scheduled Task {task_name!r}")
+        elif detail and "cannot find" not in detail.lower():
+            print(f"⚠ Could not remove legacy Scheduled Task {task_name!r}: {detail}")
+
+    canonical_script = get_task_script_path(current_task_name)
+    canonical_startup = get_startup_entry_path(current_task_name)
+    for path, canonical_path, label in (
+        *((path, canonical_startup, "Windows login item") for path in get_startup_entry_paths()),
+        *((path, canonical_script, "Task script") for path in get_task_script_paths()),
+    ):
+        if path == canonical_path:
+            continue
+        try:
+            path.unlink()
+            print(f"✓ Removed legacy {label}: {path}")
+        except FileNotFoundError:
+            pass
 
 
 def uninstall() -> None:
     """Remove both the Scheduled Task and the Startup-folder fallback, if present."""
     _assert_windows()
-    task_name = get_task_name()
-    script_path = get_task_script_path()
-    startup_entry = get_startup_entry_path()
+    registered_task_names = get_registered_task_names()
 
     scheduled_task_removed = False
-    if is_task_registered():
+    for task_name in registered_task_names:
         code, _out, err = _exec_schtasks(["/Delete", "/F", "/TN", task_name])
         detail = err.strip()
         if code == 0:
@@ -872,8 +959,8 @@ def uninstall() -> None:
             print("  UAC is Windows' admin approval prompt; it is needed to remove the Scheduled Task.")
             if prompt_yes_no("  Open the UAC prompt now?", False):
                 if _launch_elevated_uninstall():
-                    print("✓ Launched elevated Hermes gateway uninstall prompt.")
-                    print("  Approve the Windows UAC prompt, then run: hermes gateway status")
+                    print("✓ Launched elevated Doppel gateway uninstall prompt.")
+                    print(f"  Approve the Windows UAC prompt, then run: {PREFERRED_CLI_COMMAND} gateway status")
                     return
                 print("⚠ Elevated uninstall prompt was unavailable or cancelled.")
             else:
@@ -881,15 +968,19 @@ def uninstall() -> None:
         else:
             print(f"⚠ schtasks /Delete returned code {code}: {detail}")
 
-    for path, label in [(startup_entry, "Windows login item"), (script_path, "Task script")]:
+    for path, label in (
+        *((path, "Windows login item") for path in get_startup_entry_paths()),
+        *((path, "Task script") for path in get_task_script_paths()),
+    ):
         try:
             path.unlink()
             print(f"✓ Removed {label}: {path}")
         except FileNotFoundError:
             pass
 
-    if is_task_registered() and not scheduled_task_removed:
-        print(f"⚠ Scheduled Task still registered: {task_name}")
+    remaining_tasks = get_registered_task_names()
+    if remaining_tasks and not scheduled_task_removed:
+        print(f"⚠ Scheduled Task still registered: {remaining_tasks[0]}")
 
 
 # ---------------------------------------------------------------------------
@@ -897,12 +988,11 @@ def uninstall() -> None:
 # ---------------------------------------------------------------------------
 
 def is_task_registered() -> bool:
-    code, _out, _err = _exec_schtasks(["/Query", "/TN", get_task_name()])
-    return code == 0
+    return find_registered_task_name() is not None
 
 
 def is_startup_entry_installed() -> bool:
-    return get_startup_entry_path().exists()
+    return find_startup_entry_path() is not None
 
 
 def is_installed() -> bool:
@@ -910,26 +1000,29 @@ def is_installed() -> bool:
     return is_task_registered() or is_startup_entry_installed()
 
 
-def query_task_status() -> dict[str, str]:
+def query_task_status(task_name: str | None = None) -> dict[str, str]:
     """Parse ``schtasks /Query /V /FO LIST`` and pull the interesting keys."""
-    code, out, err = _exec_schtasks(["/Query", "/TN", get_task_name(), "/V", "/FO", "LIST"])
-    if code != 0:
-        return {}
-    info: dict[str, str] = {}
-    for raw in out.splitlines():
-        line = raw.strip()
-        if not line or ":" not in line:
+    task_names = (task_name,) if task_name is not None else get_task_names()
+    for candidate in task_names:
+        code, out, _err = _exec_schtasks(["/Query", "/TN", candidate, "/V", "/FO", "LIST"])
+        if code != 0:
             continue
-        key, _, value = line.partition(":")
-        key = key.strip().lower()
-        value = value.strip()
-        # Some Windows locales emit "Last Result" instead of "Last Run Result".
-        if key in {"status", "last run time", "last run result", "last result"}:
-            if key == "last result":
-                info.setdefault("last run result", value)
-            else:
-                info[key] = value
-    return info
+        info: dict[str, str] = {}
+        for raw in out.splitlines():
+            line = raw.strip()
+            if not line or ":" not in line:
+                continue
+            key, _, value = line.partition(":")
+            key = key.strip().lower()
+            value = value.strip()
+            # Some Windows locales emit "Last Result" instead of "Last Run Result".
+            if key in {"status", "last run time", "last run result", "last result"}:
+                if key == "last result":
+                    info.setdefault("last run result", value)
+                else:
+                    info[key] = value
+        return info
+    return {}
 
 
 def _gateway_pids() -> list[int]:
@@ -942,20 +1035,22 @@ def _gateway_pids() -> list[int]:
 def status(deep: bool = False) -> None:
     """Print a status report for the Windows gateway service."""
     _assert_windows()
-    task_name = get_task_name()
-    task_installed = is_task_registered()
-    startup_installed = is_startup_entry_installed()
+    registered_task_name = find_registered_task_name()
+    task_name = registered_task_name or get_task_name()
+    task_installed = registered_task_name is not None
+    startup_entry = find_startup_entry_path() or get_startup_entry_path()
+    startup_installed = startup_entry.exists()
     pids = _gateway_pids()
 
     if task_installed:
         print(f"✓ Scheduled Task registered: {task_name}")
-        info = query_task_status()
+        info = query_task_status(task_name)
         if info:
             for key in ("status", "last run time", "last run result"):
                 if key in info:
                     print(f"  {key.title()}: {info[key]}")
     elif startup_installed:
-        print(f"✓ Windows login item installed: {get_startup_entry_path()}")
+        print(f"✓ Windows login item installed: {startup_entry}")
     else:
         print("✗ Gateway service not installed")
 
@@ -965,15 +1060,16 @@ def status(deep: bool = False) -> None:
         print("✗ No gateway process detected")
 
     if deep:
+        task_script = find_task_script_path() or get_task_script_path()
         print()
         print(f"  Task name:     {task_name}")
-        print(f"  Task script:   {get_task_script_path()}")
-        print(f"  Startup entry: {get_startup_entry_path()}")
+        print(f"  Task script:   {task_script}")
+        print(f"  Startup entry: {startup_entry}")
 
     if not task_installed and not startup_installed and not pids:
         print()
         print("To install:")
-        print("  hermes gateway install")
+        print(f"  {PREFERRED_CLI_COMMAND} gateway install")
 
 
 def start() -> None:
@@ -984,7 +1080,8 @@ def start() -> None:
         print(f"✓ Gateway already running (PID: {', '.join(map(str, running_pids))})")
         return
 
-    task_installed = is_task_registered()
+    registered_task_name = find_registered_task_name()
+    task_installed = registered_task_name is not None
     startup_installed = is_startup_entry_installed()
 
     if not task_installed and not startup_installed:
@@ -992,20 +1089,22 @@ def start() -> None:
 
         print("✗ Gateway service is not installed")
         if not prompt_yes_no("  Install it now so the gateway starts on login?", True):
-            print("  Run: hermes gateway install")
+            print(f"  Run: {PREFERRED_CLI_COMMAND} gateway install")
             return
         install(force=False)
-        task_installed = is_task_registered()
+        registered_task_name = find_registered_task_name()
+        task_installed = registered_task_name is not None
         startup_installed = is_startup_entry_installed()
         if not task_installed and not startup_installed:
             print("⚠ Gateway install did not complete in this process.")
-            print("  If a UAC prompt opened, approve it, then run: hermes gateway start")
+            print(f"  If a UAC prompt opened, approve it, then run: {PREFERRED_CLI_COMMAND} gateway start")
             return
 
     if task_installed:
-        code, _out, err = _exec_schtasks(["/Run", "/TN", get_task_name()])
+        assert registered_task_name is not None
+        code, _out, err = _exec_schtasks(["/Run", "/TN", registered_task_name])
         if code == 0:
-            _report_gateway_start(f"Scheduled Task {get_task_name()!r}")
+            _report_gateway_start(f"Scheduled Task {registered_task_name!r}")
             return
         print(f"⚠ schtasks /Run failed (code {code}): {err.strip()} — falling back to direct spawn")
 
@@ -1078,8 +1177,8 @@ def stop() -> None:
         drained = _drain_gateway_pid(pid, drain_timeout)
 
     stopped_any = drained
-    if is_task_registered():
-        code, _out, err = _exec_schtasks(["/End", "/TN", get_task_name()])
+    for task_name in get_registered_task_names():
+        code, _out, err = _exec_schtasks(["/End", "/TN", task_name])
         # schtasks returns nonzero when the task isn't currently running — don't treat that as an error.
         if code == 0:
             stopped_any = True

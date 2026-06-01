@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate llms.txt and llms-full.txt for the Hermes docs site.
+"""Generate llms.txt and llms-full.txt for the Doppel Agent docs site.
 
 Outputs:
   website/static/llms.txt        — short curated index of the docs, one link per page,
@@ -8,9 +8,9 @@ Outputs:
                                     with `# <title>` headings and `<!-- source: … -->`
                                     comments separating files.
 
-Both publish at:
-  https://hermes-agent.nousresearch.com/docs/llms.txt
-  https://hermes-agent.nousresearch.com/docs/llms-full.txt
+Both publish at the current live docs host configured in ``site-urls.json``:
+  <liveDocsBaseUrl>/llms.txt
+  <liveDocsBaseUrl>/llms-full.txt
 
 The `/docs/` prefix is not a mistake — Docusaurus serves `website/static/`
 at the `docs/` base path. Clients and IDE plugins that probe the classic
@@ -23,6 +23,7 @@ Called from `website/scripts/prebuild.mjs` on every `npm run start` /
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -30,8 +31,14 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 WEBSITE = SCRIPT_DIR.parent
 DOCS = WEBSITE / "docs"
 STATIC = WEBSITE / "static"
+SITE_URLS = json.loads((SCRIPT_DIR / "site-urls.json").read_text(encoding="utf-8"))
 
-SITE_BASE = "https://hermes-agent.nousresearch.com/docs"
+PREFERRED_AGENT_NAME = SITE_URLS["preferredAgentName"]
+FORK_REPO_URL = SITE_URLS["forkRepoUrl"]
+INSTALL_SCRIPT_URL = SITE_URLS["installScriptUrl"]
+SITE_BASE = SITE_URLS["liveDocsBaseUrl"]
+LLMS_INDEX_URL = SITE_URLS["llmsIndexUrl"]
+LLMS_FULL_URL = SITE_URLS["llmsFullUrl"]
 
 # Curated sections for llms.txt — mirrors the product story, not the filesystem.
 # Each entry: (docs-relative path without .md, display title, optional short desc).
@@ -45,7 +52,7 @@ SECTIONS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
         ("getting-started/termux", "Termux (Android)", None),
         ("getting-started/nix-setup", "Nix Setup", None),
     ]),
-    ("Using Hermes", [
+    ("Using Doppel Agent", [
         ("user-guide/cli", "CLI", None),
         ("user-guide/tui", "TUI (Ink terminal UI)", None),
         ("user-guide/configuration", "Configuration", None),
@@ -117,11 +124,11 @@ SECTIONS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
         ("guides/local-llm-on-mac", "Local LLMs on Mac", None),
         ("guides/daily-briefing-bot", "Daily Briefing Bot", None),
         ("guides/team-telegram-assistant", "Team Telegram Assistant", None),
-        ("guides/python-library", "Use Hermes as a Python Library", None),
-        ("guides/use-mcp-with-hermes", "Use MCP with Hermes", None),
-        ("guides/use-voice-mode-with-hermes", "Use Voice Mode with Hermes", None),
-        ("guides/use-soul-with-hermes", "Use SOUL.md with Hermes", None),
-        ("guides/build-a-hermes-plugin", "Build a Hermes Plugin", None),
+        ("guides/python-library", "Use Doppel Agent as a Python Library", None),
+        ("guides/use-mcp-with-doppel-agent", "Use MCP with Doppel Agent", None),
+        ("guides/use-voice-mode-with-doppel-agent", "Use Voice Mode with Doppel Agent", None),
+        ("guides/use-soul-with-doppel-agent", "Use SOUL.md with Doppel Agent", None),
+        ("guides/build-a-doppel-plugin", "Build a Doppel Agent Plugin", None),
         ("guides/automate-with-cron", "Automate with Cron", None),
         ("guides/work-with-skills", "Work with Skills", None),
         ("guides/delegation-patterns", "Delegation Patterns", None),
@@ -151,7 +158,7 @@ SECTIONS: list[tuple[str, list[tuple[str, str, str | None]]]] = [
         ("reference/toolsets-reference", "Toolsets Reference", None),
         ("reference/mcp-config-reference", "MCP Config Reference", None),
         ("reference/model-catalog", "Model Catalog", None),
-        ("reference/skills-catalog", "Bundled Skills Catalog", "Table of all ~90 skills bundled with Hermes"),
+        ("reference/skills-catalog", "Bundled Skills Catalog", "Table of all ~90 skills bundled with Doppel Agent"),
         ("reference/optional-skills-catalog", "Optional Skills Catalog", "Table of ~60 additional installable skills"),
         ("reference/faq", "FAQ & Troubleshooting", None),
     ]),
@@ -197,25 +204,21 @@ def resolve_desc(slug: str, provided: str | None) -> str:
 def emit_llms_index() -> str:
     """Build the short llms.txt index."""
     lines: list[str] = []
-    lines.append("# Hermes Agent")
+    lines.append(f"# {PREFERRED_AGENT_NAME}")
     lines.append("")
     lines.append(
-        "> The self-improving AI agent built by Nous Research. A terminal-native "
-        "autonomous coding and task agent with persistent memory, agent-created skills, "
-        "and a messaging gateway that lives on 21+ messaging platforms — 19 native to "
-        "the gateway plus IRC and Microsoft Teams via plugins (Telegram, Discord, Slack, "
-        "SMS, Matrix, ...). Runs on local, Docker, SSH, Daytona, Modal, or Singularity "
-        "backends. Works with Nous Portal, OpenRouter, OpenAI, Anthropic, Google, or any "
-        "OpenAI-compatible endpoint."
+        "> Your Everyday Personal AI Assistant. Doppel Agent is a terminal-native "
+        "assistant for coding and daily life with persistent memory, reusable skills, "
+        "and a messaging gateway that can help with email triage, calendar organization, "
+        "groceries, to-dos, personal training, cooking assistance, and multi-platform chat."
     )
     lines.append("")
     lines.append(
-        "Install: `curl -fsSL https://raw.githubusercontent.com/NousResearch/"
-        "hermes-agent/main/scripts/install.sh | bash`  "
+        f"Install: `curl -fsSL {INSTALL_SCRIPT_URL} | bash`  "
         "(Linux, macOS, WSL2, Termux)"
     )
     lines.append("")
-    lines.append("Repo: https://github.com/NousResearch/hermes-agent")
+    lines.append(f"Repo: {FORK_REPO_URL}")
     lines.append("")
 
     for section, items in SECTIONS:
@@ -241,15 +244,16 @@ def emit_llms_full() -> str:
     """
     seen: set[Path] = set()
     chunks: list[str] = [
-        "# Hermes Agent — Full Documentation\n",
+        f"# {PREFERRED_AGENT_NAME} — Full Documentation\n",
         (
-            "This file is the entire Hermes Agent documentation concatenated for LLM "
-            "context ingestion. Section order reflects docs-site navigation: Getting "
-            "Started, Using Hermes, Features, Messaging, Integrations, Guides, "
+            f"This file is the entire {PREFERRED_AGENT_NAME} documentation concatenated "
+            "for LLM context ingestion. Section order reflects docs-site navigation: "
+            "Getting Started, Using Doppel Agent, Features, Messaging, Integrations, Guides, "
             "Developer Guide, Reference, then everything else.\n"
         ),
-        "Canonical site: https://hermes-agent.nousresearch.com/docs\n",
-        "Short index: https://hermes-agent.nousresearch.com/docs/llms.txt\n",
+        f"Canonical site: {SITE_BASE}\n",
+        f"Short index: {LLMS_INDEX_URL}\n",
+        f"Full index: {LLMS_FULL_URL}\n",
         "\n---\n\n",
     ]
 

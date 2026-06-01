@@ -1,14 +1,15 @@
 ---
 sidebar_position: 7
-title: "Use SOUL.md with Hermes"
-description: "How to use SOUL.md to shape Hermes Agent's default voice, what belongs there, and how it differs from AGENTS.md and /personality"
+slug: /guides/use-soul-with-doppel-agent
+title: "Use SOUL.md with Doppel Agent"
+description: "How to use SOUL.md to shape Doppel Agent's default voice, what belongs there, and how it differs from AGENTS.md and /personality"
 ---
 
-# Use SOUL.md with Hermes
+# Use SOUL.md with Doppel Agent
 
-`SOUL.md` is the **primary identity** for your Hermes instance. It's the first thing in the system prompt — it defines who the agent is, how it speaks, and what it avoids.
+`SOUL.md` is the **primary identity** for your Doppel Agent instance. It's the first thing in the system prompt — it defines who the agent is, how it speaks, and what it avoids.
 
-If you want Hermes to feel like the same assistant every time you talk to it — or if you want to replace the Hermes persona entirely with your own — this is the file to use.
+If you want Doppel Agent to feel like the same assistant every time you talk to it — or if you want to replace the built-in default persona entirely with your own — this is the file to use.
 
 ## What SOUL.md is for
 
@@ -16,12 +17,12 @@ Use `SOUL.md` for:
 - tone
 - personality
 - communication style
-- how direct or warm Hermes should be
-- what Hermes should avoid stylistically
-- how Hermes should relate to uncertainty, disagreement, and ambiguity
+- how direct or warm Doppel Agent should be
+- what Doppel Agent should avoid stylistically
+- how Doppel Agent should relate to uncertainty, disagreement, and ambiguity
 
 In short:
-- `SOUL.md` is about who Hermes is and how Hermes speaks
+- `SOUL.md` is about who Doppel Agent is and how Doppel Agent speaks
 
 ## What SOUL.md is not for
 
@@ -41,33 +42,33 @@ A good rule:
 
 ## Where it lives
 
-Hermes now uses only the global SOUL file for the current instance:
+Doppel Agent uses the global SOUL file for the current instance:
 
 ```text
-~/.hermes/SOUL.md
+~/.doppel/SOUL.md
 ```
 
-If you run Hermes with a custom home directory, it becomes:
+If you run Doppel Agent with a custom home directory, it becomes:
 
 ```text
-$HERMES_HOME/SOUL.md
+$DOPPEL_HOME/SOUL.md
 ```
 
 ## First-run behavior
 
-Hermes automatically seeds a starter `SOUL.md` for you if one does not already exist.
+Doppel Agent automatically seeds a starter `SOUL.md` for you if one does not already exist.
 
 That means most users now begin with a real file they can read and edit immediately.
 
 Important:
-- if you already have a `SOUL.md`, Hermes does not overwrite it
-- if the file exists but is empty, Hermes adds nothing from it to the prompt
+- if you already have a `SOUL.md`, Doppel Agent does not overwrite it
+- if the file exists but is empty, Doppel Agent adds nothing from it to the prompt
 
-## How Hermes uses it
+## How Doppel Agent uses it
 
-When Hermes starts a session, it reads `SOUL.md` from `HERMES_HOME`, scans it for prompt-injection patterns, truncates it if needed, and uses it as the **agent identity** — slot #1 in the system prompt. This means SOUL.md completely replaces the built-in default identity text.
+When Doppel Agent starts a session, it reads `SOUL.md` from the resolved home root. It scans the file for prompt-injection patterns, truncates it if needed, and uses it as the **agent identity** — slot #1 in the system prompt. This means SOUL.md completely replaces the built-in default identity text.
 
-If SOUL.md is missing, empty, or cannot be loaded, Hermes falls back to a built-in default identity.
+If SOUL.md is missing, empty, or cannot be loaded, Doppel Agent falls back to a built-in default identity.
 
 No wrapper language is added around the file. The content itself matters — write the way you want your agent to think and speak.
 
@@ -84,7 +85,7 @@ Push back clearly when an idea is weak.
 Keep answers compact unless deeper detail is useful.
 ```
 
-That alone can noticeably change how Hermes feels.
+That alone can noticeably change how Doppel Agent feels.
 
 ## Example styles
 
@@ -159,7 +160,7 @@ A weak `SOUL.md` is:
 - trying to micro-manage every response shape
 - mostly generic filler like "be helpful" and "be clear"
 
-Hermes already tries to be helpful and clear. `SOUL.md` should add real personality and style, not restate obvious defaults.
+Doppel Agent already tries to be helpful and clear. `SOUL.md` should add real personality and style, not restate obvious defaults.
 
 ## Suggested structure
 
@@ -169,16 +170,16 @@ A simple structure that works well:
 
 ```markdown
 # Identity
-Who Hermes is.
+Who Doppel Agent is.
 
 # Style
-How Hermes should sound.
+How Doppel Agent should sound.
 
 # Avoid
-What Hermes should not do.
+What Doppel Agent should not do.
 
 # Defaults
-How Hermes should behave when ambiguity appears.
+How Doppel Agent should behave when ambiguity appears.
 ```
 
 ## SOUL.md vs /personality
@@ -212,39 +213,39 @@ This is the most common mistake.
 ## How to edit it
 
 ```bash
-nano ~/.hermes/SOUL.md
+nano ~/.doppel/SOUL.md
 ```
 
 or
 
 ```bash
-vim ~/.hermes/SOUL.md
+vim ~/.doppel/SOUL.md
 ```
 
-Then restart Hermes or start a new session.
+Then restart Doppel Agent or start a new session.
 
 ## A practical workflow
 
 1. Start with the seeded default file
 2. Trim anything that does not feel like the voice you want
 3. Add 4–8 lines that clearly define tone and defaults
-4. Talk to Hermes for a while
+4. Talk to Doppel Agent for a while
 5. Adjust based on what still feels off
 
 That iterative approach works better than trying to design the perfect personality in one shot.
 
 ## Troubleshooting
 
-### I edited SOUL.md but Hermes still sounds the same
+### I edited SOUL.md but Doppel Agent still sounds the same
 
 Check:
-- you edited `~/.hermes/SOUL.md` or `$HERMES_HOME/SOUL.md`
+- you edited `~/.doppel/SOUL.md` or `$DOPPEL_HOME/SOUL.md`
 - not some repo-local `SOUL.md`
 - the file is not empty
 - your session was restarted after the edit
 - a `/personality` overlay is not dominating the result
 
-### Hermes is ignoring parts of my SOUL.md
+### Doppel Agent is ignoring parts of my SOUL.md
 
 Possible causes:
 - higher-priority instructions are overriding it

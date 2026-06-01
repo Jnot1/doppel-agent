@@ -406,7 +406,7 @@ def test_termux_ultrafast_version_runs_before_heavy_startup(
     assert main_mod._try_termux_ultrafast_version() is True
 
     out = capsys.readouterr().out
-    assert "Hermes Agent v" in out
+    assert "Doppel Agent v" in out
     assert "Project:" in out
     assert "Python:" in out
     assert "OpenAI SDK:" in out
@@ -636,6 +636,32 @@ def test_oneshot_rejects_invalid_only_toolsets(monkeypatch, capsys):
     err = capsys.readouterr().err
     assert "nope" in err
     assert "did not contain any valid toolsets" in err
+
+
+def test_oneshot_provider_accepts_preferred_inference_model_env(monkeypatch, capsys):
+    _stub_plugin_discovery(monkeypatch)
+    import hermes_cli.oneshot as oneshot_mod
+
+    monkeypatch.setenv("DOPPEL_INFERENCE_MODEL", "anthropic/claude-sonnet-4.6")
+    monkeypatch.delenv("HERMES_INFERENCE_MODEL", raising=False)
+    monkeypatch.setattr(oneshot_mod, "_run_agent", lambda *_args, **_kwargs: "done")
+
+    assert oneshot_mod.run_oneshot("hello", provider="anthropic") == 0
+    captured = capsys.readouterr()
+    assert captured.out == "done\n"
+    assert captured.err == ""
+
+
+def test_oneshot_provider_error_mentions_preferred_inference_model_env(monkeypatch, capsys):
+    _stub_plugin_discovery(monkeypatch)
+    import hermes_cli.oneshot as oneshot_mod
+
+    monkeypatch.delenv("DOPPEL_INFERENCE_MODEL", raising=False)
+    monkeypatch.delenv("HERMES_INFERENCE_MODEL", raising=False)
+
+    assert oneshot_mod.run_oneshot("hello", provider="anthropic") == 2
+    captured = capsys.readouterr()
+    assert "DOPPEL_INFERENCE_MODEL" in captured.err
 
 
 def test_oneshot_fails_closed_on_empty_final_response(monkeypatch, capsys):
@@ -883,6 +909,7 @@ def test_launch_tui_exports_model_provider_and_toolsets(monkeypatch, main_mod):
         )
 
     env = captured["env"]
+    assert env["DOPPEL_MODEL"] == "nous/hermes-test"
     assert env["HERMES_MODEL"] == "nous/hermes-test"
     assert env["HERMES_INFERENCE_MODEL"] == "nous/hermes-test"
     assert env["HERMES_TUI_PROVIDER"] == "nous"
@@ -1013,8 +1040,8 @@ def test_print_tui_exit_summary_includes_resume_and_token_totals(monkeypatch, ca
     out = capsys.readouterr().out
 
     assert "Resume this session with:" in out
-    assert "hermes --tui --resume 20260409_000001_abc123" in out
-    assert 'hermes --tui -c "demo title"' in out
+    assert "doppel --tui --resume 20260409_000001_abc123" in out
+    assert 'doppel --tui -c "demo title"' in out
     assert "Tokens:         21 (in 10, out 6, cache 4, reasoning 1)" in out
 
 
@@ -1053,5 +1080,5 @@ def test_print_tui_exit_summary_prefers_actual_active_session_file(
     out = capsys.readouterr().out
 
     assert seen == ["actual_session"]
-    assert "hermes --tui --resume actual_session" in out
+    assert "doppel --tui --resume actual_session" in out
     assert "startup_resume" not in out

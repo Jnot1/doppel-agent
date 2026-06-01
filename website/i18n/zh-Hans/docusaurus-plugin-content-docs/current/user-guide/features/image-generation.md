@@ -1,13 +1,13 @@
 ---
 title: 文生图（Image Generation）
-description: 通过 FAL.ai 文生图；支持 8 个模型，含 FLUX 2、GPT-Image、Nano Banana Pro、Ideogram、Recraft V4 Pro 等，可用 hermes tools 切换。
+description: 通过 FAL.ai 文生图；支持 11 个模型，含 FLUX 2、GPT Image（1.5 与 2）、Nano Banana Pro、Ideogram、Recraft V4 Pro、Krea 2 等，可用 `doppel tools` 切换。
 sidebar_label: 文生图
 sidebar_position: 6
 ---
 
 # 文生图（Image Generation）
 
-Hermes Agent 通过 FAL.ai 根据文字提示生成图像。默认内置 8 个模型，在速度、画质与成本上各有取舍。当前模型可通过 `hermes tools` 配置，并持久化在 `config.yaml`。
+Doppel Agent 通过 FAL.ai 根据文字提示生成图像。默认内置 11 个模型，在速度、画质与成本上各有取舍。当前模型可通过 `doppel tools` 配置，并持久化在 `config.yaml`。
 
 ## 支持的模型
 
@@ -18,9 +18,12 @@ Hermes Agent 通过 FAL.ai 根据文字提示生成图像。默认内置 8 个�
 | `fal-ai/z-image/turbo` | ~2s | 中英双语，6B | $0.005/MP |
 | `fal-ai/nano-banana-pro` | ~8s | Gemini 3 Pro、推理与文字渲染 | $0.15/张（1K） |
 | `fal-ai/gpt-image-1.5` | ~15s | 强指令遵循 | $0.034/张 |
+| `fal-ai/gpt-image-2` | ~20s | 顶级文字渲染 + CJK、具备世界知识的写实能力 | $0.04–0.06/张 |
 | `fal-ai/ideogram/v3` | ~5s | 排版最佳 | $0.03–0.09/张 |
 | `fal-ai/recraft/v4/pro/text-to-image` | ~8s | 设计 / 品牌系统 / 可交付生产 | $0.25/张 |
 | `fal-ai/qwen-image` | ~12s | 偏 LLM 式、复杂文字 | $0.02/MP |
+| `fal-ai/krea/v2/medium/text-to-image` | ~15-25s | 插画、动漫、绘画、富表现力的艺术风格 | $0.030–0.035/张 |
+| `fal-ai/krea/v2/large/text-to-image` | ~25-60s | 写实、原始质感风格（运动模糊、颗粒、胶片感） | $0.060–0.065/张 |
 
 价格为撰写时的 FAL 官方口径；最新计费请以 [fal.ai](https://fal.ai/) 为准。
 
@@ -28,6 +31,8 @@ Hermes Agent 通过 FAL.ai 根据文字提示生成图像。默认内置 8 个�
 
 :::tip Nous 订阅用户
 若你持有付费 [Nous Portal](https://portal.nousresearch.com) 订阅，可通过 **[Tool Gateway](tool-gateway.md)** 使用文生图，**无需** `FAL_KEY`。模型选择在「直连 FAL」与「订阅网关」两条路径下保持一致。
+
+新安装可以直接运行 `doppel setup --portal` 登录，并一次性开启所有 gateway 工具；已有安装可通过 `doppel tools` 将 **Nous Subscription** 选为图像生成后端。
 
 若托管网关对某一模型返回 `HTTP 4xx`，通常表示该模型尚未在 Portal 侧代理——智能体会给出处理建议（例如配置 `FAL_KEY` 直连，或换用其他模型）。
 :::
@@ -42,7 +47,7 @@ Hermes Agent 通过 FAL.ai 根据文字提示生成图像。默认内置 8 个�
 执行：
 
 ```bash
-hermes tools
+doppel tools
 ```
 
 进入 **🎨 Image Generation**，选择后端（Nous Subscription 或 FAL.ai），随后在表格中用方向键选择模型，回车确认：
@@ -65,7 +70,7 @@ image_gen:
 
 ### GPT-Image 画质档位
 
-`fal-ai/gpt-image-1.5` 的请求画质固定为 `medium`（约 1024×1024 下 $0.034/张）。面向用户**不开放** `low` / `high` 档位，以便 Nous Portal 侧计费在全体用户间更可预期（档位价差约 22×）。若需要更便宜的 GPT-Image 路线，请换其他模型；若追求更高画质，可考虑 Klein 9B 或同类 Imagen 系模型。
+`fal-ai/gpt-image-1.5` 与 `fal-ai/gpt-image-2` 的请求画质固定为 `medium`（约 1024×1024 下 $0.034–$0.06/张）。面向用户**不开放** `low` / `high` 档位，以便 Nous Portal 侧计费在全体用户间更可预期（不同档位价差约 3–22×）。若需要更便宜的选项，可改用 Klein 9B 或 Z-Image Turbo；若追求更高画质，可考虑 Nano Banana Pro 或 Recraft V4 Pro。
 
 ## 使用方式
 
@@ -87,11 +92,13 @@ Make me a futuristic cityscape, landscape orientation
 
 从智能体视角，三个宽高比词对所有模型通用；内部会映射到各模型原生参数：
 
-| 智能体输入 | image_size（flux/z-image/qwen/recraft/ideogram） | aspect_ratio（nano-banana-pro） | image_size（gpt-image） |
-|---|---|---|---|
-| `landscape` | `landscape_16_9` | `16:9` | `1536x1024` |
-| `square` | `square_hd` | `1:1` | `1024x1024` |
-| `portrait` | `portrait_16_9` | `9:16` | `1024x1536` |
+| 智能体输入 | image_size（flux/z-image/qwen/recraft/ideogram） | aspect_ratio（nano-banana-pro） | image_size（gpt-image-1.5） | image_size（gpt-image-2） |
+|---|---|---|---|---|
+| `landscape` | `landscape_16_9` | `16:9` | `1536x1024` | `landscape_4_3`（1024×768） |
+| `square` | `square_hd` | `1:1` | `1024x1024` | `square_hd`（1024×1024） |
+| `portrait` | `portrait_16_9` | `9:16` | `1024x1536` | `portrait_4_3`（768×1024） |
+
+GPT Image 2 映射到 4:3 预设，而不是 16:9，因为其最小像素数要求是 655,360 —— `landscape_16_9` 预设（1024×576 = 589,824）会被拒绝。
 
 该映射在 `_build_fal_payload()` 中完成，智能体代码无需了解各模型 schema 差异。
 

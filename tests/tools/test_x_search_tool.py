@@ -375,7 +375,7 @@ def test_x_search_returns_tool_error_when_no_credentials(monkeypatch):
     # surfaces a friendly error rather than an HTTP exception.
     result = x_search_tool(query="anything")
     assert "No xAI credentials available" in result
-    assert "hermes auth add xai-oauth" in result
+    assert "doppel auth add xai-oauth" in result
 
 
 def test_x_search_check_fn_false_when_resolver_raises(monkeypatch):
@@ -722,4 +722,3 @@ def test_x_search_not_degraded_when_no_filters_active(monkeypatch):
     assert result["success"] is True
     assert result["degraded"] is False
     assert result["degraded_reason"] is None
-

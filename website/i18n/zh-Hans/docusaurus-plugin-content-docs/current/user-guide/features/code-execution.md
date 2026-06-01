@@ -6,14 +6,14 @@ description: "通过 RPC 工具访问实现程序化 Python 执行——将多�
 
 # 代码执行（程序化工具调用）
 
-`execute_code` 工具允许 agent 编写调用 Hermes 工具的 Python 脚本，将多步骤工作流压缩至单次 LLM 对话轮次。脚本在 agent 宿主机的子进程中运行，通过 Unix 域套接字 RPC 与 Hermes 通信。
+`execute_code` 工具允许 agent 编写调用 Doppel Agent 工具的 Python 脚本，将多步骤工作流压缩至单次 LLM 对话轮次。脚本在 agent 宿主机的子进程中运行，通过 RPC 与 Doppel Agent 通信。
 
 ## 工作原理
 
 1. Agent 编写使用 `from hermes_tools import ...` 的 Python 脚本
-2. Hermes 生成带有 RPC 函数的 `hermes_tools.py` 存根模块
-3. Hermes 打开 Unix 域套接字并启动 RPC 监听线程
-4. 脚本在子进程中运行——工具调用通过套接字传回 Hermes
+2. Doppel Agent 生成带有 RPC 函数的 `hermes_tools.py` 存根模块
+3. Doppel Agent 启动 RPC 监听线程
+4. 脚本在子进程中运行——工具调用通过当前传输通道回传给 Doppel Agent
 5. 只有脚本的 `print()` 输出会返回给 LLM；中间工具结果不会进入上下文窗口
 
 ```python
@@ -128,19 +128,19 @@ print(json.dumps(report, indent=2))
 
 ## 执行模式
 
-`execute_code` 有两种执行模式，通过 `~/.hermes/config.yaml` 中的 `code_execution.mode` 控制：
+`execute_code` 有两种执行模式，通过 `~/.doppel/config.yaml` 中的 `code_execution.mode` 控制。旧安装仍可能在 `~/.hermes/config.yaml` 中保留相同配置。
 
 | 模式 | 工作目录 | Python 解释器 |
 |------|----------|---------------|
-| **`project`**（默认） | 会话的工作目录（与 `terminal()` 相同） | 活跃的 `VIRTUAL_ENV` / `CONDA_PREFIX` python，回退至 Hermes 自身的 python |
-| `strict` | 与用户项目隔离的临时暂存目录 | `sys.executable`（Hermes 自身的 python） |
+| **`project`**（默认） | 会话的工作目录（与 `terminal()` 相同） | 活跃的 `VIRTUAL_ENV` / `CONDA_PREFIX` python，回退至 Doppel Agent 自身的 python |
+| `strict` | 与用户项目隔离的临时暂存目录 | `sys.executable`（Doppel Agent 自身的 python） |
 
 **何时保持 `project` 模式：** 当你希望 `import pandas`、`from my_project import foo` 或 `open(".env")` 等相对路径与 `terminal()` 中的行为一致时。这几乎是你始终想要的模式。
 
 **何时切换至 `strict` 模式：** 当你需要最大可复现性时——希望无论用户激活哪个 venv，每次会话都使用相同的解释器，并且希望脚本与项目目录隔离（避免通过相对路径意外读取项目文件）。
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.doppel/config.yaml
 code_execution:
   mode: project   # or "strict"
 ```
@@ -160,14 +160,14 @@ code_execution:
 | 资源 | 限制 | 说明 |
 |------|------|------|
 | **超时** | 5 分钟（300 秒） | 脚本先收到 SIGTERM，5 秒宽限期后收到 SIGKILL |
-| **Stdout** | 50 KB | 输出截断并附加 `[output truncated at 50KB]` 提示 |
+| **Stdout** | 50 KB | 输出截断并附加 `... [OUTPUT TRUNCATED - X chars omitted out of Y total] ...` 提示 |
 | **Stderr** | 10 KB | 非零退出时包含在输出中，用于调试 |
 | **工具调用** | 每次执行 50 次 | 达到上限时返回错误 |
 
 所有限制均可通过 `config.yaml` 配置：
 
 ```yaml
-# In ~/.hermes/config.yaml
+# In ~/.doppel/config.yaml
 code_execution:
   mode: project      # project (default) | strict
   timeout: 300       # Max seconds per script (default: 300)
@@ -178,12 +178,12 @@ code_execution:
 
 当脚本调用 `web_search("query")` 等函数时：
 
-1. 调用被序列化为 JSON，通过 Unix 域套接字发送至父进程
+1. 调用被序列化为 JSON，并通过当前 RPC 传输通道发送至父进程
 2. 父进程通过标准 `handle_function_call` 处理器进行分发
 3. 结果通过套接字发回
 4. 函数返回解析后的结果
 
-这意味着脚本内的工具调用与普通工具调用行为完全一致——相同的速率限制、相同的错误处理、相同的能力。唯一的限制是 `terminal()` 仅支持前台模式（不支持 `background` 或 `pty` 参数）。
+这意味着脚本内的工具调用与普通工具调用行为完全一致——相同的速率限制、相同的错误处理、相同的能力。唯一的限制是 `terminal()` 仅支持前台模式，并会剥离 `background`、`pty`、`notify_on_complete` 和 `watch_patterns` 这类不适用于沙箱脚本的参数。
 
 ## 错误处理
 
@@ -219,7 +219,44 @@ terminal:
 
 详情参见[安全指南](/user-guide/security#environment-variable-passthrough)。
 
-Hermes 始终将脚本和自动生成的 `hermes_tools.py` RPC 存根写入临时暂存目录，执行完成后清理。在 `strict` 模式下，脚本也在该目录中*运行*；在 `project` 模式下，脚本在会话的工作目录中运行（暂存目录保留在 `PYTHONPATH` 中以确保导入正常解析）。子进程在独立的进程组中运行，以便在超时或中断时干净地终止。
+### 子进程中的 `HERMES_*` 变量
+
+子进程只会按精确名称接收一小组固定的运行期 `HERMES_*` 变量：
+
+- `HERMES_HOME`
+- `HERMES_PROFILE`
+- `HERMES_CONFIG`
+- `HERMES_ENV`
+
+（另外还会显式注入 `HERMES_RPC_DIR` / `HERMES_RPC_SOCKET` / `TZ` / `HOME`，以确保 RPC 通道正常工作。）
+
+:::note 行为变更
+较早版本会将**所有**以 `HERMES_` 开头的变量透传给子进程。出于安全加固，这种宽泛前缀已被移除：它可能将不含秘密关键字的 `HERMES_*` 配置（例如 `HERMES_BASE_URL`、`HERMES_KANBAN_DB` 或 `HERMES_*_WEBHOOK` 端点）泄露到任意沙箱代码中。
+
+如果某个 `execute_code` 脚本，或它在导入时加载的仓库/插件模块，依赖上述四个运行期名称之外的 `HERMES_*` 变量，那么该变量现在会在子进程中显示为**未设置**。这是有意的安全行为，并非 bug。
+:::
+
+**解决方式：显式重新放行该变量。** 下面两种方式都会让该变量透传给 `execute_code` 和 `terminal` 子进程，同时不会削弱秘密剥离保证（Doppel 管理的 provider 凭据仍然无法通过这种方式重新放行）：
+
+1. **按机器，在 `config.yaml` 中配置** —— 将精确变量名加入透传白名单：
+
+   ```yaml
+   terminal:
+     env_passthrough:
+       - HERMES_KANBAN_DB
+       - HERMES_BASE_URL
+   ```
+
+2. **按 skill，在 skill frontmatter 中声明** —— 这样每次加载该 skill 时都会自动注册：
+
+   ```yaml
+   required_environment_variables:
+     - HERMES_KANBAN_DB
+   ```
+
+**如何诊断。** 当子进程丢弃一个或多个未白名单放行的 `HERMES_*` 变量时，Doppel Agent 会输出一行 `debug` 日志，列出这些变量并指向 `env_passthrough` 逃生口。可使用调试日志（`doppel logs --level DEBUG`，或检查 `~/.doppel/logs/agent.log`；旧安装仍可能写入 `~/.hermes/logs/agent.log`），并查找 `execute_code: dropped N non-allowlisted HERMES_* var(s)`，以判断脚本是否因为缺少某个 `HERMES_*` 变量而表现异常。
+
+Doppel Agent 始终将脚本和自动生成的 `hermes_tools.py` RPC 存根写入临时暂存目录，执行完成后清理。在 `strict` 模式下，脚本也在该目录中*运行*；在 `project` 模式下，脚本在会话的工作目录中运行（暂存目录保留在 `PYTHONPATH` 中以确保导入正常解析）。子进程在独立的进程组中运行，以便在超时或中断时干净地终止。
 
 ## execute_code 与 terminal 对比
 
@@ -233,8 +270,8 @@ Hermes 始终将脚本和自动生成的 `hermes_tools.py` RPC 存根写入临�
 | 交互式/后台进程 | ❌ | ✅ |
 | 需要环境变量中的 API key | ⚠️ 仅通过[透传](/user-guide/security#environment-variable-passthrough) | ✅（大多数可透传） |
 
-**经验法则：** 需要在调用之间含逻辑地程序化调用 Hermes 工具时，使用 `execute_code`。运行 shell 命令、构建和进程时，使用 `terminal`。
+**经验法则：** 需要在调用之间含逻辑地程序化调用 Doppel Agent 工具时，使用 `execute_code`。运行 shell 命令、构建和进程时，使用 `terminal`。
 
 ## 平台支持
 
-代码执行依赖 Unix 域套接字，仅在 **Linux 和 macOS** 上可用。在 Windows 上会自动禁用——agent 回退至常规的顺序工具调用。
+本地代码执行在 **Linux 和 macOS** 上使用 Unix 域套接字，在 **Windows** 上使用回环 TCP。远程终端后端（Docker、SSH、Modal、Daytona 等）使用基于文件的 RPC。传输方式会随运行环境变化，但 `execute_code` 的用户侧行为保持一致。

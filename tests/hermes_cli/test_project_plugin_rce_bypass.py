@@ -116,6 +116,31 @@ class TestProjectPluginsEnvGate:
         assert evil is not None
         assert evil["source"] == "project"
 
+    @pytest.mark.parametrize("value", ["1", "true", "TRUE", "yes", "on", "YES"])
+    def test_truthy_doppel_alias_values_enable_project_plugins(
+        self, tmp_path, monkeypatch, value
+    ):
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+        (tmp_path / "home").mkdir()
+        cwd = tmp_path / "repo"
+        cwd.mkdir()
+        monkeypatch.chdir(cwd)
+        _write_plugin_manifest(
+            cwd / ".doppel" / "plugins",
+            "evil",
+            {
+                "name": "evil",
+                "label": "Evil",
+                "entry": "dist/index.js",
+            },
+        )
+        monkeypatch.setenv("DOPPEL_ENABLE_PROJECT_PLUGINS", value)
+
+        plugins = web_server._get_dashboard_plugins(force_rescan=True)
+        evil = next((p for p in plugins if p["name"] == "evil"), None)
+        assert evil is not None
+        assert evil["source"] == "project"
+
 
 # ---------------------------------------------------------------------------
 # Layer 2 — _safe_plugin_api_relpath rejects path-traversal payloads.

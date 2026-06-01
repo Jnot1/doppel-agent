@@ -92,6 +92,7 @@ def test_restore_stashed_changes_prompts_before_applying(monkeypatch, tmp_path, 
     out = capsys.readouterr().out
     assert "Restore local changes now? [Y/n]" in out
     assert "restored on top of the updated codebase" in out
+    assert "Doppel Agent behaves unexpectedly" in out
     assert "git diff" in out
     assert "git status" in out
 
@@ -176,6 +177,7 @@ def test_restore_stashed_changes_keeps_going_when_stash_entry_cannot_be_resolved
     assert calls[1] == (["git", "diff", "--name-only", "--diff-filter=U"], {"cwd": tmp_path, "capture_output": True, "text": True})
     assert calls[2] == (["git", "stash", "list", "--format=%gd %H"], {"cwd": tmp_path, "capture_output": True, "text": True, "check": True})
     out = capsys.readouterr().out
+    assert "Doppel Agent behaves unexpectedly" in out
     assert "couldn't find the stash entry to drop" in out
     assert "stash was left in place" in out
     assert "Check `git status` first" in out
@@ -206,7 +208,8 @@ def test_restore_stashed_changes_keeps_going_when_drop_fails(monkeypatch, tmp_pa
     assert restored is True
     assert calls[3][0] == ["git", "stash", "drop", "stash@{0}"]
     out = capsys.readouterr().out
-    assert "couldn't drop the saved stash entry" in out
+    assert "Doppel Agent couldn't drop the saved stash entry" in out
+    assert "Hermes couldn't drop the saved stash entry" not in out
     assert "drop failed" in out
     assert "Check `git status` first" in out
     assert "git stash list --format='%gd %H %s'" in out

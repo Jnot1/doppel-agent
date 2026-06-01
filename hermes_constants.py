@@ -1,11 +1,13 @@
-"""Shared constants for Hermes Agent.
+"""Shared constants for Doppel Agent.
 
 Import-safe module with no dependencies — can be imported from anywhere
 without risk of circular imports.
 """
 
 import os
+import sys
 import sysconfig
+from collections.abc import Mapping, MutableMapping
 from contextvars import ContextVar, Token
 from pathlib import Path
 
@@ -15,6 +17,485 @@ _UNSET = object()
 _HERMES_HOME_OVERRIDE: ContextVar[str | object] = ContextVar(
     "_HERMES_HOME_OVERRIDE", default=_UNSET
 )
+
+
+PREFERRED_AGENT_NAME = "Doppel Agent"
+LEGACY_AGENT_NAME = "Hermes Agent"
+PREFERRED_SHORT_NAME = "Doppel"
+LEGACY_SHORT_NAME = "Hermes"
+PREFERRED_CLI_COMMAND = "doppel"
+LEGACY_CLI_COMMAND = "hermes"
+PREFERRED_HOME_ENV = "DOPPEL_HOME"
+LEGACY_HOME_ENV = "HERMES_HOME"
+PREFERRED_NATIVE_HOME_DIR = ".doppel"
+LEGACY_NATIVE_HOME_DIR = ".hermes"
+DEFAULT_API_SERVER_MODEL_NAME = "doppel-agent"
+API_SERVER_PLATFORM_ID = DEFAULT_API_SERVER_MODEL_NAME
+API_SERVER_MODEL_OWNER = "doppel"
+# Active wire-compatibility literals kept for external clients. Centralize
+# them here so future aliasing or permanent-preservation decisions happen from
+# one seam instead of scattered string literals across runtime code and tests.
+API_SERVER_SESSION_ID_HEADER = "X-Doppel-Session-Id"
+LEGACY_API_SERVER_SESSION_ID_HEADER = "X-Hermes-Session-Id"
+API_SERVER_SESSION_KEY_HEADER = "X-Doppel-Session-Key"
+LEGACY_API_SERVER_SESSION_KEY_HEADER = "X-Hermes-Session-Key"
+API_SERVER_COMPLETED_HEADER = "X-Doppel-Completed"
+LEGACY_API_SERVER_COMPLETED_HEADER = "X-Hermes-Completed"
+API_SERVER_PARTIAL_HEADER = "X-Doppel-Partial"
+LEGACY_API_SERVER_PARTIAL_HEADER = "X-Hermes-Partial"
+API_SERVER_ERROR_HEADER = "X-Doppel-Error"
+LEGACY_API_SERVER_ERROR_HEADER = "X-Hermes-Error"
+API_SERVER_CAPABILITIES_OBJECT = "doppel.api_server.capabilities"
+API_SERVER_SESSION_OBJECT = "doppel.session"
+API_SERVER_SESSION_DELETED_OBJECT = "doppel.session.deleted"
+API_SERVER_SESSION_CHAT_COMPLETION_OBJECT = "doppel.session.chat.completion"
+API_SERVER_RUN_OBJECT = "doppel.run"
+API_SERVER_RUN_APPROVAL_RESPONSE_OBJECT = "doppel.run.approval_response"
+API_SERVER_TOOL_PROGRESS_EVENT = "doppel.tool.progress"
+PACKAGE_DISTRIBUTION_NAME = "doppel-agent"
+PREFERRED_HOMEBREW_FORMULA_NAME = "doppel-agent"
+HOMEBREW_FORMULA_NAME = "hermes-agent"
+HOMEBREW_FORMULA_NAMES = (
+    PREFERRED_HOMEBREW_FORMULA_NAME,
+    HOMEBREW_FORMULA_NAME,
+)
+PREFERRED_NIX_PACKAGE_NAME = "doppel-agent"
+LEGACY_NIX_PACKAGE_NAME = "hermes-agent"
+NIX_PACKAGE_NAMES = (
+    PREFERRED_NIX_PACKAGE_NAME,
+    LEGACY_NIX_PACKAGE_NAME,
+)
+DOCKER_IMAGE_NAME = "nousresearch/hermes-agent"
+DOCKER_IMAGE_TAGS_URL = f"https://hub.docker.com/r/{DOCKER_IMAGE_NAME}/tags"
+DOCS_SITE_BASE_URL = "https://hermes-agent.nousresearch.com/docs"
+NOUS_PORTAL_BASE_URL = "https://portal.nousresearch.com"
+NOUS_PORTAL_SUBSCRIPTION_URL = f"{NOUS_PORTAL_BASE_URL}/manage-subscription"
+DOCS_PAGE_PATHS: dict[str, str] = {
+    "configuration": "user-guide/configuration",
+    "curator": "user-guide/features/curator",
+    "developer_environments": "developer-guide/environments",
+    "fallback_providers": "user-guide/features/fallback-providers",
+    "integrations_providers": "integrations/providers",
+    "kanban": "user-guide/features/kanban",
+    "messaging_slack": "user-guide/messaging/slack",
+    "messaging_webhooks": "user-guide/messaging/webhooks",
+    "oauth_over_ssh": "guides/oauth-over-ssh",
+    "secrets_bitwarden": "user-guide/secrets/bitwarden",
+    "spotify": "user-guide/features/spotify",
+    "tool_gateway": "user-guide/features/tool-gateway",
+    "tools": "user-guide/features/tools",
+    "xai_grok_oauth": "guides/xai-grok-oauth",
+}
+MANAGED_CHECKOUT_NAMES = ("doppel-agent", "hermes-agent")
+GATEWAY_SERVICE_BASE = "doppel-gateway"
+LEGACY_GATEWAY_SERVICE_BASES = ("hermes-gateway",)
+LAUNCHD_GATEWAY_LABEL_BASE = "ai.doppel.gateway"
+LEGACY_LAUNCHD_GATEWAY_LABEL_BASES = ("ai.hermes.gateway",)
+WINDOWS_GATEWAY_TASK_BASE = "Doppel_Gateway"
+LEGACY_WINDOWS_GATEWAY_TASK_BASES = ("Hermes_Gateway",)
+WINDOWS_GATEWAY_TASK_DESCRIPTION = f"{PREFERRED_AGENT_NAME} Gateway - Messaging Platform Integration"
+FORK_REPO_SLUG = "Jnot1/doppel-agent"
+UPSTREAM_REPO_SLUG = "NousResearch/hermes-agent"
+FORK_REPO_WEB_URL = f"https://github.com/{FORK_REPO_SLUG}"
+FORK_REPO_URL = f"{FORK_REPO_WEB_URL}.git"
+FORK_INSTALLER_RAW_BASE_URL = f"https://raw.githubusercontent.com/{FORK_REPO_SLUG}/main/scripts"
+UPSTREAM_REPO_WEB_URL = f"https://github.com/{UPSTREAM_REPO_SLUG}"
+UPSTREAM_REPO_URL = f"{UPSTREAM_REPO_WEB_URL}.git"
+UPSTREAM_REPO_SSH_URL = f"git@github.com:{UPSTREAM_REPO_SLUG}"
+UPSTREAM_REPO_GIT_URLS = frozenset({
+    UPSTREAM_REPO_URL,
+    f"{UPSTREAM_REPO_SSH_URL}.git",
+    UPSTREAM_REPO_WEB_URL,
+    UPSTREAM_REPO_SSH_URL,
+})
+UPSTREAM_ARCHIVE_BASENAME = "hermes-agent"
+MODEL_CATALOG_URL = f"{DOCS_SITE_BASE_URL}/api/model-catalog.json"
+MODEL_CATALOG_DOCS_URL = f"{DOCS_SITE_BASE_URL}/reference/model-catalog"
+MODEL_CATALOG_FALLBACK_URLS = (
+    f"https://raw.githubusercontent.com/{UPSTREAM_REPO_SLUG}/main/website/static/api/model-catalog.json",
+)
+CUSTOMER_FACING_ENV_ALIASES: tuple[tuple[str, str], ...] = (
+    ("DOPPEL_ACCEPT_HOOKS", "HERMES_ACCEPT_HOOKS"),
+    ("DOPPEL_AGENT_TIMEOUT", "HERMES_AGENT_TIMEOUT"),
+    ("DOPPEL_AGENT_TIMEOUT_WARNING", "HERMES_AGENT_TIMEOUT_WARNING"),
+    ("DOPPEL_API_CALL_STALE_TIMEOUT", "HERMES_API_CALL_STALE_TIMEOUT"),
+    ("DOPPEL_API_TIMEOUT", "HERMES_API_TIMEOUT"),
+    ("DOPPEL_CHECKPOINT_TIMEOUT", "HERMES_CHECKPOINT_TIMEOUT"),
+    ("DOPPEL_COPILOT_ACP_ARGS", "HERMES_COPILOT_ACP_ARGS"),
+    ("DOPPEL_COPILOT_ACP_COMMAND", "HERMES_COPILOT_ACP_COMMAND"),
+    ("DOPPEL_CRON_SCRIPT_TIMEOUT", "HERMES_CRON_SCRIPT_TIMEOUT"),
+    ("DOPPEL_CRON_TIMEOUT", "HERMES_CRON_TIMEOUT"),
+    ("DOPPEL_EPHEMERAL_SYSTEM_PROMPT", "HERMES_EPHEMERAL_SYSTEM_PROMPT"),
+    ("DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT", "HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT"),
+    ("DOPPEL_GEMINI_CLIENT_ID", "HERMES_GEMINI_CLIENT_ID"),
+    ("DOPPEL_GEMINI_CLIENT_SECRET", "HERMES_GEMINI_CLIENT_SECRET"),
+    ("DOPPEL_GEMINI_PROJECT_ID", "HERMES_GEMINI_PROJECT_ID"),
+    ("DOPPEL_IGNORE_RULES", "HERMES_IGNORE_RULES"),
+    ("DOPPEL_IGNORE_USER_CONFIG", "HERMES_IGNORE_USER_CONFIG"),
+    ("DOPPEL_INFERENCE_MODEL", "HERMES_INFERENCE_MODEL"),
+    ("DOPPEL_DOCKER_BINARY", "HERMES_DOCKER_BINARY"),
+    ("DOPPEL_LOCAL_STT_COMMAND", "HERMES_LOCAL_STT_COMMAND"),
+    ("DOPPEL_LOCAL_STT_LANGUAGE", "HERMES_LOCAL_STT_LANGUAGE"),
+    ("DOPPEL_MAX_ITERATIONS", "HERMES_MAX_ITERATIONS"),
+    ("DOPPEL_MODEL", "HERMES_MODEL"),
+    ("DOPPEL_NOUS_TIMEOUT_SECONDS", "HERMES_NOUS_TIMEOUT_SECONDS"),
+    ("DOPPEL_NOUS_MIN_KEY_TTL_SECONDS", "HERMES_NOUS_MIN_KEY_TTL_SECONDS"),
+    ("DOPPEL_OPENROUTER_CACHE", "HERMES_OPENROUTER_CACHE"),
+    ("DOPPEL_OPENROUTER_CACHE_TTL", "HERMES_OPENROUTER_CACHE_TTL"),
+    ("DOPPEL_PORTAL_BASE_URL", "HERMES_PORTAL_BASE_URL"),
+    ("DOPPEL_QUIET", "HERMES_QUIET"),
+    ("DOPPEL_QWEN_BASE_URL", "HERMES_QWEN_BASE_URL"),
+    ("DOPPEL_REDACT_SECRETS", "HERMES_REDACT_SECRETS"),
+    ("DOPPEL_RESTART_DRAIN_TIMEOUT", "HERMES_RESTART_DRAIN_TIMEOUT"),
+    ("DOPPEL_STREAM_READ_TIMEOUT", "HERMES_STREAM_READ_TIMEOUT"),
+    ("DOPPEL_STREAM_STALE_TIMEOUT", "HERMES_STREAM_STALE_TIMEOUT"),
+    ("DOPPEL_TELEGRAM_HTTP_CONNECT_TIMEOUT", "HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT"),
+    ("DOPPEL_TELEGRAM_HTTP_POOL_TIMEOUT", "HERMES_TELEGRAM_HTTP_POOL_TIMEOUT"),
+    ("DOPPEL_TELEGRAM_HTTP_READ_TIMEOUT", "HERMES_TELEGRAM_HTTP_READ_TIMEOUT"),
+    ("DOPPEL_TELEGRAM_HTTP_WRITE_TIMEOUT", "HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT"),
+    ("DOPPEL_TIMEZONE", "HERMES_TIMEZONE"),
+    ("DOPPEL_TUI", "HERMES_TUI"),
+    ("DOPPEL_TUI_DIR", "HERMES_TUI_DIR"),
+    ("DOPPEL_TUI_NO_EARLY_DISABLE", "HERMES_TUI_NO_EARLY_DISABLE"),
+    ("DOPPEL_TUI_RESUME", "HERMES_TUI_RESUME"),
+    ("DOPPEL_TUI_THEME", "HERMES_TUI_THEME"),
+    ("DOPPEL_VISION_DOWNLOAD_TIMEOUT", "HERMES_VISION_DOWNLOAD_TIMEOUT"),
+    ("DOPPEL_YOLO_MODE", "HERMES_YOLO_MODE"),
+)
+
+
+def get_cli_prog_name(argv0: str | None = None) -> str:
+    """Return the user-facing CLI command name for the current invocation."""
+    raw = argv0 if argv0 is not None else (sys.argv[0] if sys.argv else "")
+    stem = Path(raw).stem.lower()
+    if stem in {"hermes", "hermes-agent"}:
+        return LEGACY_CLI_COMMAND
+    if stem in {"doppel", "doppel-agent"}:
+        return PREFERRED_CLI_COMMAND
+    return PREFERRED_CLI_COMMAND
+
+
+def sync_customer_facing_env_aliases(
+    env: MutableMapping[str, str] | None = None,
+) -> MutableMapping[str, str]:
+    """Mirror preferred Doppel env names to legacy Hermes aliases.
+
+    Preferred ``DOPPEL_*`` values win when both names are set. When only the
+    legacy name exists, backfill the preferred alias so customer-facing docs
+    and runtime surfaces can move to Doppel-first naming without breaking
+    compatibility.
+    """
+
+    target = os.environ if env is None else env
+    for preferred, legacy in CUSTOMER_FACING_ENV_ALIASES:
+        preferred_value = target.get(preferred)
+        legacy_value = target.get(legacy)
+        if preferred_value not in (None, ""):
+            target[legacy] = preferred_value
+            continue
+        if legacy_value not in (None, ""):
+            target[preferred] = legacy_value
+
+    preferred_home = target.get(PREFERRED_HOME_ENV)
+    legacy_home = target.get(LEGACY_HOME_ENV)
+    if preferred_home not in (None, ""):
+        target[LEGACY_HOME_ENV] = preferred_home
+    elif legacy_home not in (None, ""):
+        target[PREFERRED_HOME_ENV] = legacy_home
+
+    return target
+
+
+def get_customer_facing_env_value(
+    preferred: str,
+    legacy: str,
+    default: str | None = None,
+    env: Mapping[str, str] | None = None,
+) -> str | None:
+    """Return the preferred Doppel env value with legacy Hermes fallback.
+
+    This is for call sites that read env vars directly and may execute before
+    a broader alias-sync step runs. Preferred ``DOPPEL_*`` values win. When
+    only the legacy name is set, it is still honored.
+    """
+
+    target = os.environ if env is None else env
+    preferred_value = target.get(preferred)
+    if preferred_value not in (None, ""):
+        return preferred_value
+    legacy_value = target.get(legacy)
+    if legacy_value not in (None, ""):
+        return legacy_value
+    return default
+
+
+def get_distribution_package_name() -> str:
+    """Return the Python package distribution name used for upgrades."""
+    return PACKAGE_DISTRIBUTION_NAME
+
+
+def get_fork_install_script_url(script_name: str = "install.sh") -> str:
+    """Return the current fork-owned installer script URL."""
+    normalized = str(script_name or "install.sh").strip().lstrip("/")
+    return f"{FORK_INSTALLER_RAW_BASE_URL}/{normalized}"
+
+
+def get_default_api_server_model_name() -> str:
+    """Return the default model id advertised by the API server."""
+    return DEFAULT_API_SERVER_MODEL_NAME
+
+
+def get_api_server_platform_id() -> str:
+    """Return the API platform id exposed by health/capabilities endpoints."""
+    return API_SERVER_PLATFORM_ID
+
+
+def get_api_server_model_owner() -> str:
+    """Return the provider slug exposed in the OpenAI model listing."""
+    return API_SERVER_MODEL_OWNER
+
+
+def get_homebrew_formula_name() -> str:
+    """Return the Homebrew formula name for this distribution."""
+    return HOMEBREW_FORMULA_NAME
+
+
+def get_preferred_homebrew_formula_name() -> str:
+    """Return the preferred Homebrew formula alias for fresh installs."""
+    return PREFERRED_HOMEBREW_FORMULA_NAME
+
+
+def get_homebrew_formula_names() -> tuple[str, ...]:
+    """Return all supported Homebrew formula names for this distribution."""
+    return HOMEBREW_FORMULA_NAMES
+
+
+def get_preferred_nix_package_name() -> str:
+    """Return the preferred flake package alias for fresh Nix installs."""
+    return PREFERRED_NIX_PACKAGE_NAME
+
+
+def get_nix_package_names() -> tuple[str, ...]:
+    """Return all supported flake package names for this distribution."""
+    return NIX_PACKAGE_NAMES
+
+
+def get_docker_image_name() -> str:
+    """Return the published Docker image name for this distribution."""
+    return DOCKER_IMAGE_NAME
+
+
+def get_docker_image_tags_url() -> str:
+    """Return the Docker Hub tags page for the published image."""
+    return DOCKER_IMAGE_TAGS_URL
+
+
+def get_docs_site_base_url() -> str:
+    """Return the current hosted docs base URL for this project."""
+    return DOCS_SITE_BASE_URL
+
+
+def get_docs_url(path: str = "") -> str:
+    """Return a URL under the current hosted docs base."""
+    normalized = str(path or "").strip().lstrip("/")
+    if not normalized:
+        return DOCS_SITE_BASE_URL
+    return f"{DOCS_SITE_BASE_URL}/{normalized}"
+
+
+def get_docs_page_url(page_key: str, fragment: str | None = None) -> str:
+    """Return a named docs page URL, optionally with a fragment."""
+    path = DOCS_PAGE_PATHS[page_key]
+    url = get_docs_url(path)
+    if fragment:
+        return f"{url}#{str(fragment).lstrip('#')}"
+    return url
+
+
+def get_nous_portal_base_url() -> str:
+    """Return the current Nous Portal host used by this project."""
+    return NOUS_PORTAL_BASE_URL
+
+
+def get_nous_portal_subscription_url() -> str:
+    """Return the current Nous Portal subscription-management URL."""
+    return NOUS_PORTAL_SUBSCRIPTION_URL
+
+
+def get_model_catalog_url() -> str:
+    """Return the current hosted model-catalog manifest URL."""
+    return MODEL_CATALOG_URL
+
+
+def get_model_catalog_docs_url() -> str:
+    """Return the docs page that explains the hosted model catalog."""
+    return MODEL_CATALOG_DOCS_URL
+
+
+def get_model_catalog_fallback_urls() -> tuple[str, ...]:
+    """Return fallback URLs for the hosted model-catalog manifest."""
+    return MODEL_CATALOG_FALLBACK_URLS
+
+
+def get_official_upstream_repo_slug() -> str:
+    """Return the canonical upstream GitHub slug."""
+    return UPSTREAM_REPO_SLUG
+
+
+def get_official_upstream_repo_url() -> str:
+    """Return the canonical upstream git remote URL."""
+    return UPSTREAM_REPO_URL
+
+
+def get_official_repo_urls() -> frozenset[str]:
+    """Return normalized official upstream remote URL variants."""
+    return UPSTREAM_REPO_GIT_URLS
+
+
+def get_upstream_extracted_dir_name(branch: str) -> str:
+    """Return the extracted top-level directory name for an upstream ZIP."""
+    return f"{UPSTREAM_ARCHIVE_BASENAME}-{branch}"
+
+
+def get_upstream_archive_filename(branch: str) -> str:
+    """Return the downloaded ZIP filename for an upstream branch archive."""
+    return f"{get_upstream_extracted_dir_name(branch)}.zip"
+
+
+def get_upstream_archive_url(branch: str) -> str:
+    """Return the GitHub archive URL for an upstream branch."""
+    return f"{UPSTREAM_REPO_WEB_URL}/archive/refs/heads/{branch}.zip"
+
+
+def get_upstream_install_script_url(ref: str = "main") -> str:
+    """Return the raw install-script URL for the official upstream repo."""
+    return (
+        f"https://raw.githubusercontent.com/"
+        f"{get_official_upstream_repo_slug()}/{ref}/scripts/install.sh"
+    )
+
+
+def get_managed_checkout_names() -> tuple[str, ...]:
+    """Return managed checkout directory names recognized during migration.
+
+    Order matters: the current on-disk default stays first until the managed
+    checkout rename is explicitly migrated in a later phase.
+    """
+    return MANAGED_CHECKOUT_NAMES
+
+
+def is_managed_checkout_name(name: str) -> bool:
+    """Return True when *name* is a recognized managed checkout directory."""
+    return name in MANAGED_CHECKOUT_NAMES
+
+
+def get_managed_checkout_dir(root: str | Path | None = None) -> Path:
+    """Return the canonical managed checkout path for the current phase."""
+    base = Path(root) if root is not None else get_default_hermes_root()
+    return base / MANAGED_CHECKOUT_NAMES[0]
+
+
+def get_managed_checkout_candidates(root: str | Path | None = None) -> tuple[Path, ...]:
+    """Return every managed checkout path accepted during migration."""
+    base = Path(root) if root is not None else get_default_hermes_root()
+    return tuple(base / name for name in MANAGED_CHECKOUT_NAMES)
+
+
+def find_managed_checkout_dir(root: str | Path | None = None) -> Path | None:
+    """Return the first existing managed checkout dir under *root*, if any."""
+    for candidate in get_managed_checkout_candidates(root):
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def get_gateway_service_name(profile_suffix: str = "") -> str:
+    """Return the gateway service name for the default profile or a suffix."""
+    suffix = str(profile_suffix).strip()
+    return f"{GATEWAY_SERVICE_BASE}-{suffix}" if suffix else GATEWAY_SERVICE_BASE
+
+
+def get_gateway_service_names(profile_suffix: str = "") -> tuple[str, ...]:
+    """Return current + legacy gateway service names for a profile suffix."""
+    suffix = str(profile_suffix).strip()
+    names = [get_gateway_service_name(suffix)]
+    for base in LEGACY_GATEWAY_SERVICE_BASES:
+        names.append(f"{base}-{suffix}" if suffix else base)
+    return tuple(dict.fromkeys(names))
+
+
+def get_gateway_service_glob() -> str:
+    """Return the systemd unit glob used to discover gateway services."""
+    return f"{GATEWAY_SERVICE_BASE}*"
+
+
+def get_gateway_systemd_unit_path(
+    profile_suffix: str = "",
+    *,
+    system: bool = False,
+    user_home: str | Path | None = None,
+) -> Path:
+    """Return the systemd unit path for the gateway service."""
+    name = get_gateway_service_name(profile_suffix)
+    if system:
+        return Path("/etc/systemd/system") / f"{name}.service"
+    home = Path(user_home) if user_home is not None else Path.home()
+    return home / ".config" / "systemd" / "user" / f"{name}.service"
+
+
+def get_gateway_launchd_label(profile_suffix: str = "") -> str:
+    """Return the launchd label for the default profile or a suffix."""
+    suffix = str(profile_suffix).strip()
+    return (
+        f"{LAUNCHD_GATEWAY_LABEL_BASE}-{suffix}"
+        if suffix
+        else LAUNCHD_GATEWAY_LABEL_BASE
+    )
+
+
+def get_gateway_launchd_labels(profile_suffix: str = "") -> tuple[str, ...]:
+    """Return current + legacy gateway launchd labels for a profile suffix."""
+    suffix = str(profile_suffix).strip()
+    labels = [get_gateway_launchd_label(suffix)]
+    for base in LEGACY_LAUNCHD_GATEWAY_LABEL_BASES:
+        labels.append(f"{base}-{suffix}" if suffix else base)
+    return tuple(dict.fromkeys(labels))
+
+
+def get_gateway_task_name(profile_suffix: str = "") -> str:
+    """Return the Windows Scheduled Task name for a gateway profile."""
+    suffix = str(profile_suffix).strip()
+    return (
+        f"{WINDOWS_GATEWAY_TASK_BASE}_{suffix}"
+        if suffix
+        else WINDOWS_GATEWAY_TASK_BASE
+    )
+
+
+def get_gateway_task_names(profile_suffix: str = "") -> tuple[str, ...]:
+    """Return current + legacy Windows task names for a profile suffix."""
+    suffix = str(profile_suffix).strip()
+    names = [get_gateway_task_name(suffix)]
+    for base in LEGACY_WINDOWS_GATEWAY_TASK_BASES:
+        names.append(f"{base}_{suffix}" if suffix else base)
+    return tuple(dict.fromkeys(names))
+
+
+def _get_launchd_user_home() -> Path:
+    """Return the real OS account home for launchd agents."""
+    import pwd
+
+    return Path(pwd.getpwuid(os.getuid()).pw_dir)
+
+
+def get_gateway_launchd_plist_path(
+    profile_suffix: str = "",
+    *,
+    user_home: str | Path | None = None,
+) -> Path:
+    """Return the launchd plist path for the gateway service."""
+    home = Path(user_home) if user_home is not None else _get_launchd_user_home()
+    return home / "Library" / "LaunchAgents" / f"{get_gateway_launchd_label(profile_suffix)}.plist"
 
 
 def set_hermes_home_override(path: str | Path | None) -> Token:
@@ -40,39 +521,95 @@ def get_hermes_home_override() -> str | None:
     return str(override)
 
 
-def get_hermes_home() -> Path:
-    """Return the Hermes home directory (default: ~/.hermes).
+def _get_env_home_value() -> str:
+    """Return the preferred home override from the process environment."""
+    return (
+        os.environ.get(PREFERRED_HOME_ENV, "").strip()
+        or os.environ.get(LEGACY_HOME_ENV, "").strip()
+    )
 
-    Reads HERMES_HOME env var, falls back to ~/.hermes.
+
+def _get_native_home_roots(home: Path | None = None) -> tuple[Path, Path]:
+    """Return the preferred and legacy native home roots for *home*."""
+    base = home if home is not None else Path.home()
+    return (
+        base / PREFERRED_NATIVE_HOME_DIR,
+        base / LEGACY_NATIVE_HOME_DIR,
+    )
+
+
+def _select_native_home_root(home: Path | None = None) -> Path:
+    """Choose the native home root when no env override is set.
+
+    Fresh installs use the preferred Doppel root. Existing legacy Hermes roots
+    are preserved in place until explicitly migrated. When both exist, prefer
+    the current Doppel root.
+    """
+    preferred, legacy = _get_native_home_roots(home)
+    if preferred.exists():
+        return preferred
+    if legacy.exists():
+        return legacy
+    return preferred
+
+
+def _display_home_path(path: Path) -> str:
+    """Render *path* using ``~/`` shorthand when it lives under ``Path.home()``."""
+    try:
+        return "~/" + str(path.relative_to(Path.home()))
+    except ValueError:
+        return str(path)
+
+
+def _resolve_env_home_root(env_path: Path) -> Path:
+    """Resolve an env-specified home or profile path to its root directory."""
+    preferred_root, legacy_root = _get_native_home_roots()
+    resolved_env_path = env_path.resolve()
+    for native_root in (preferred_root, legacy_root):
+        try:
+            resolved_env_path.relative_to(native_root.resolve())
+            return native_root
+        except ValueError:
+            continue
+
+    if env_path.parent.name == "profiles":
+        return env_path.parent.parent
+
+    return env_path
+
+
+def get_hermes_home() -> Path:
+    """Return the Hermes home directory (default: ~/.doppel).
+
+    Reads ``DOPPEL_HOME`` first, then ``HERMES_HOME``, and finally falls back
+    to the native Doppel or legacy Hermes root for local installs.
     This is the single source of truth — all other copies should import this.
 
-    When ``HERMES_HOME`` is unset but an ``active_profile`` file indicates
-    a non-default profile is active, logs a loud one-shot warning to
-    ``errors.log`` so cross-profile data corruption is diagnosable instead
-    of silent.  Behavior is unchanged otherwise — we still return
-    ``~/.hermes`` — because raising here would brick 30+ module-level
-    callers that import this at load time.  Subprocess spawners are
-    expected to propagate ``HERMES_HOME`` explicitly (see the systemd
-    template in ``hermes_cli/gateway.py`` and the kanban dispatcher in
-    ``hermes_cli/kanban_db.py``).  See https://github.com/NousResearch/hermes-agent/issues/18594.
+    When neither home env is set but an ``active_profile`` file indicates a
+    non-default profile is active, emits a loud one-shot warning to stderr so
+    cross-profile data corruption is diagnosable instead of silent. Behavior
+    is unchanged otherwise — we still return the selected native root —
+    because raising here would brick 30+ module-level callers that import
+    this at load time. Subprocess spawners are expected to propagate
+    ``DOPPEL_HOME`` explicitly (legacy ``HERMES_HOME`` also works). See
+    https://github.com/NousResearch/hermes-agent/issues/18594.
     """
     override = get_hermes_home_override()
     if override:
         return Path(override)
 
-    val = os.environ.get("HERMES_HOME", "").strip()
+    val = _get_env_home_value()
     if val:
         return Path(val)
+
+    native_root = _select_native_home_root()
 
     # Guard: if a non-default profile is sticky-active, warn once that
     # the fallback to the default profile is almost certainly wrong.
     global _profile_fallback_warned
     if not _profile_fallback_warned:
         try:
-            # Inline the default-root resolution from get_default_hermes_root()
-            # to stay import-safe (this function is called from module scope
-            # in 30+ files; we cannot afford to trigger logging setup here).
-            active_path = (Path.home() / ".hermes" / "active_profile")
+            active_path = native_root / "active_profile"
             active = active_path.read_text().strip() if active_path.exists() else ""
         except (UnicodeDecodeError, OSError):
             active = ""
@@ -85,12 +622,14 @@ def get_hermes_home() -> Path:
             # on consoles where a StreamHandler is already attached.
             import sys
             msg = (
-                f"[HERMES_HOME fallback] HERMES_HOME is unset but active "
-                f"profile is {active!r}. Falling back to ~/.hermes, which "
-                f"is the DEFAULT profile — not {active!r}. Any data this "
-                f"process writes will land in the wrong profile. The "
-                f"subprocess spawner should pass HERMES_HOME explicitly "
-                f"(see issue #18594)."
+                f"[{PREFERRED_HOME_ENV} fallback] {PREFERRED_HOME_ENV}/"
+                f"{LEGACY_HOME_ENV} are unset but active profile is "
+                f"{active!r}. Falling back to {_display_home_path(native_root)}, "
+                f"which is the DEFAULT profile root — not {active!r}. Any "
+                f"data this process writes will land in the wrong profile. "
+                f"The subprocess spawner should pass {PREFERRED_HOME_ENV} "
+                f"explicitly (legacy {LEGACY_HOME_ENV} also works; see issue "
+                f"#18594)."
             )
             try:
                 sys.stderr.write(msg + "\n")
@@ -98,46 +637,31 @@ def get_hermes_home() -> Path:
             except Exception:
                 pass
 
-    return Path.home() / ".hermes"
+    return native_root
 
 
 def get_default_hermes_root() -> Path:
     """Return the root Hermes directory for profile-level operations.
 
-    In standard deployments this is ``~/.hermes``.
+    In standard deployments this prefers ``~/.doppel`` while preserving an
+    existing ``~/.hermes`` root in place until migration.
 
-    In Docker or custom deployments where ``HERMES_HOME`` points outside
-    ``~/.hermes`` (e.g. ``/opt/data``), returns ``HERMES_HOME`` directly
+    In Docker or custom deployments where the selected home env points outside
+    the native roots (e.g. ``/opt/data``), returns that env path directly
     — that IS the root.
 
-    In profile mode where ``HERMES_HOME`` is ``<root>/profiles/<name>``,
+    In profile mode where the selected home env is ``<root>/profiles/<name>``,
     returns ``<root>`` so that ``profile list`` can see all profiles.
-    Works both for standard (``~/.hermes/profiles/coder``) and Docker
+    Works both for standard (``~/.doppel/profiles/coder`` or
+    ``~/.hermes/profiles/coder``) and Docker
     (``/opt/data/profiles/coder``) layouts.
 
     Import-safe — no dependencies beyond stdlib.
     """
-    native_home = Path.home() / ".hermes"
-    env_home = os.environ.get("HERMES_HOME", "")
+    env_home = _get_env_home_value()
     if not env_home:
-        return native_home
-    env_path = Path(env_home)
-    try:
-        env_path.resolve().relative_to(native_home.resolve())
-        # HERMES_HOME is under ~/.hermes (normal or profile mode)
-        return native_home
-    except ValueError:
-        pass
-
-    # Docker / custom deployment.
-    # Check if this is a profile path: <root>/profiles/<name>
-    # If the immediate parent dir is named "profiles", the root is
-    # the grandparent — this covers Docker profiles correctly.
-    if env_path.parent.name == "profiles":
-        return env_path.parent.parent
-
-    # Not a profile path — HERMES_HOME itself is the root
-    return env_path
+        return _select_native_home_root()
+    return _resolve_env_home_root(Path(env_home))
 
 
 def _get_packaged_data_dir(name: str) -> Path | None:
@@ -239,19 +763,15 @@ def display_hermes_home() -> str:
 
     Uses ``~/`` shorthand for readability::
 
-        default:  ``~/.hermes``
-        profile:  ``~/.hermes/profiles/coder``
-        custom:   ``/opt/hermes-custom``
+        default:  ``~/.doppel``
+        profile:  ``~/.doppel/profiles/coder``
+        custom:   ``/opt/doppel-custom``
 
     Use this in **user-facing** print/log messages instead of hardcoding
-    ``~/.hermes``.  For code that needs a real ``Path``, use
+    ``~/.doppel`` or ``~/.hermes``. For code that needs a real ``Path``, use
     :func:`get_hermes_home` instead.
     """
-    home = get_hermes_home()
-    try:
-        return "~/" + str(home.relative_to(Path.home()))
-    except ValueError:
-        return str(home)
+    return _display_home_path(get_hermes_home())
 
 
 def secure_parent_dir(path: Path) -> None:
@@ -291,7 +811,11 @@ def get_subprocess_home() -> str | None:
     Activation is directory-based: if the ``home/`` subdirectory doesn't
     exist, returns ``None`` and behavior is unchanged.
     """
-    hermes_home = get_hermes_home_override() or os.getenv("HERMES_HOME")
+    hermes_home = (
+        get_hermes_home_override()
+        or os.getenv(PREFERRED_HOME_ENV)
+        or os.getenv(LEGACY_HOME_ENV)
+    )
     if not hermes_home:
         return None
     profile_home = os.path.join(hermes_home, "home")

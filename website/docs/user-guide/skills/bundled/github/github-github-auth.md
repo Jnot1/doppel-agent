@@ -17,7 +17,7 @@ GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login.
 | Source | Bundled (installed by default) |
 | Path | `skills/github/github-auth` |
 | Version | `1.1.0` |
-| Author | Hermes Agent |
+| Author | Doppel Agent |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `GitHub`, `Authentication`, `Git`, `gh-cli`, `SSH`, `Setup` |
@@ -26,7 +26,7 @@ GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login.
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # GitHub Authentication Setup

@@ -39,7 +39,7 @@ def test_archive_refuses_pinned(monkeypatch, capsys):
     assert called == []
     out = capsys.readouterr().out
     assert "pinned" in out.lower()
-    assert "hermes curator unpin" in out
+    assert "doppel curator unpin" in out
 
 
 def test_archive_calls_archive_skill(monkeypatch, capsys):
@@ -68,6 +68,19 @@ def test_archive_reports_failure(monkeypatch, capsys):
     rc = curator_cli._cmd_archive(_ns(skill="hub-slug"))
     assert rc == 1
     assert "bundled or hub-installed" in capsys.readouterr().out
+
+
+def test_rollback_without_snapshots_shows_doppel_backup_hint(monkeypatch, capsys):
+    import hermes_cli.curator as curator_cli
+    import agent.curator_backup as curator_backup
+
+    monkeypatch.setattr(curator_backup, "_resolve_backup", lambda backup_id: None)
+    monkeypatch.setattr(curator_backup, "list_backups", lambda: [])
+
+    rc = curator_cli._cmd_rollback(_ns(list=False, backup_id=None, yes=False))
+    assert rc == 1
+    out = capsys.readouterr().out
+    assert "`doppel curator backup`" in out
 
 
 # ─── prune ──────────────────────────────────────────────────────────────────
@@ -263,3 +276,11 @@ def test_prune_defaults():
     assert args.days == 90
     assert args.yes is False
     assert args.dry_run is False
+
+
+def test_cli_main_help_uses_doppel_prog(capsys):
+    import hermes_cli.curator as curator_cli
+
+    assert curator_cli.cli_main([]) == 0
+    out = capsys.readouterr().out
+    assert "usage: doppel curator" in out

@@ -1,4 +1,4 @@
-# nix/hermes-agent.nix — Overridable Hermes Agent package
+# nix/hermes-agent.nix — Overridable Doppel Agent package
 #
 # callPackage auto-wires nixpkgs args; flake inputs are passed explicitly.
 # Users override via:
@@ -137,7 +137,7 @@ let
   '';
 in
 stdenv.mkDerivation {
-  pname = "hermes-agent";
+  pname = "doppel-agent";
   version = (fromTOML (builtins.readFile ../pyproject.toml)).project.version;
 
   dontUnpack = true;
@@ -169,6 +169,9 @@ stdenv.mkDerivation {
           ${lib.optionalString (extraPythonPackages != [ ]) ''--suffix PYTHONPATH : "${pythonPath}"''}
       '')
       [
+        "doppel"
+        "doppel-agent"
+        "doppel-acp"
         "hermes"
         "hermes-agent"
         "hermes-acp"
@@ -211,9 +214,9 @@ stdenv.mkDerivation {
   };
 
   meta = with lib; {
-    description = "AI agent with advanced tool-calling capabilities";
-    homepage = "https://github.com/NousResearch/hermes-agent";
-    mainProgram = "hermes";
+    description = "Doppel Agent: Your Everyday Personal AI Assistant";
+    homepage = "https://github.com/Jnot1/doppel-agent";
+    mainProgram = "doppel";
     license = licenses.mit;
     platforms = platforms.unix;
   };

@@ -22,6 +22,7 @@ from gateway.platforms.api_server import (
     cors_middleware,
     security_headers_middleware,
 )
+from hermes_constants import API_SERVER_RUN_OBJECT
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +123,7 @@ class TestStartRun:
                 status = await status_resp.json()
                 assert status["run_id"] == data["run_id"]
                 assert status["status"] in {"queued", "running", "completed"}
-                assert status["object"] == "hermes.run"
+                assert status["object"] == API_SERVER_RUN_OBJECT
 
     @pytest.mark.asyncio
     async def test_start_invalid_json_returns_400(self, adapter):

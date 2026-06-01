@@ -1,6 +1,6 @@
 # 会话存储
 
-Hermes Agent 使用 SQLite 数据库（`~/.hermes/state.db`）跨 CLI 和 gateway 会话持久化会话元数据、完整消息历史及模型配置。这替代了早期的逐会话 JSONL 文件方案。
+Doppel Agent 使用 SQLite 数据库（新安装默认 `~/.doppel/state.db`，保留既有 legacy 根目录上的 `~/.hermes/state.db`）跨 CLI 和 gateway 会话持久化会话元数据、完整消息历史及模型配置。这替代了早期的逐会话 JSONL 文件方案。
 
 源文件：`hermes_state.py`
 
@@ -8,7 +8,7 @@ Hermes Agent 使用 SQLite 数据库（`~/.hermes/state.db`）跨 CLI 和 gatewa
 ## 架构概览
 
 ```
-~/.hermes/state.db (SQLite, WAL mode)
+~/.doppel/state.db (SQLite, WAL mode；既有 ~/.hermes/state.db 安装会原地保留)
 ├── sessions              — 会话元数据、token 计数、计费信息
 ├── messages              — 每个会话的完整消息历史
 ├── messages_fts          — FTS5 虚拟表（content + tool_name + tool_calls）
@@ -153,7 +153,7 @@ END;
 
 ## 写入竞争处理
 
-多个 hermes 进程（gateway + CLI 会话 + worktree agent）共享同一个 `state.db`。`SessionDB` 类通过以下方式处理写入竞争：
+多个 Doppel 进程（gateway + CLI 会话 + worktree agent）共享同一个 `state.db`。`SessionDB` 类通过以下方式处理写入竞争：
 
 - **短 SQLite 超时**（1 秒），而非默认的 30 秒
 - **应用层重试**，带随机抖动（20–150ms，最多 15 次重试）
@@ -177,7 +177,7 @@ _CHECKPOINT_EVERY_N_WRITES = 50
 ```python
 from hermes_state import SessionDB
 
-db = SessionDB()                           # 默认：~/.hermes/state.db
+db = SessionDB()                           # 默认：~/.doppel/state.db（既有 ~/.hermes 根目录会原地保留）
 db = SessionDB(db_path=Path("/tmp/test.db"))  # 自定义路径
 ```
 
@@ -379,8 +379,10 @@ db.delete_session("sess_abc123")
 
 ## 数据库位置
 
-默认路径：`~/.hermes/state.db`
+首选默认路径：`~/.doppel/state.db`
 
-该路径由 `hermes_constants.get_hermes_home()` 推导，默认解析为 `~/.hermes/`，或 `HERMES_HOME` 环境变量的值。
+该路径由 `hermes_constants.get_hermes_home()` 推导：先读取 `DOPPEL_HOME`，再读取 `HERMES_HOME`，否则优先使用 `~/.doppel/`，同时原地保留既有 `~/.hermes/` 根目录。
+
+已经部署在 `~/.hermes/` 下的 legacy 安装在迁移前会继续使用 `~/.hermes/state.db`。
 
 数据库文件、WAL 文件（`state.db-wal`）和共享内存文件（`state.db-shm`）均创建于同一目录。

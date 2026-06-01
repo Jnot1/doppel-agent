@@ -296,12 +296,17 @@ class TestSlackNativeSlashes:
             assert isinstance(desc, str)
             assert isinstance(hint, str)
 
-    def test_hermes_catchall_is_first(self):
-        """``/hermes`` must be reserved as the first slot so the legacy
-        ``/hermes <subcommand>`` form keeps working after we add new
-        commands and hit the 50-slash cap."""
+    def test_doppel_catchall_is_first(self):
+        """``/doppel`` is the preferred catch-all slash for new manifests."""
         slashes = slack_native_slashes()
-        assert slashes[0][0] == "hermes"
+        assert slashes[0][0] == "doppel"
+
+    def test_legacy_hermes_not_advertised_as_native_slash(self):
+        """Legacy ``/hermes`` stays runtime-compatible but should not remain
+        on the customer-facing generated manifest."""
+        names = {n for n, _d, _h in slack_native_slashes()}
+        assert "doppel" in names
+        assert "hermes" not in names
 
     def test_names_respect_slack_limits(self):
         for name, _desc, _hint in slack_native_slashes():

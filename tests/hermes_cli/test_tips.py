@@ -31,6 +31,47 @@ class TestTipsCorpus:
         for i, tip in enumerate(TIPS):
             assert tip == tip.strip(), f"Tip {i} has leading/trailing whitespace"
 
+    def test_cron_tip_is_doppel_first(self):
+        assert (
+            'Cron jobs can attach skills: doppel cron add --skill blogwatcher "Check for new posts".'
+            in TIPS
+        )
+        assert not any("hermes cron add --skill blogwatcher" in tip for tip in TIPS)
+
+    def test_cli_tip_examples_are_doppel_first(self):
+        assert (
+            'doppel -c resumes your most recent CLI session. doppel -c "project name" resumes by title.'
+            in TIPS
+        )
+        assert (
+            "doppel doctor --fix diagnoses and auto-repairs config and dependency issues."
+            in TIPS
+        )
+        assert not any("hermes " in tip for tip in TIPS)
+
+    def test_product_branding_in_tips_is_doppel_first(self):
+        assert (
+            "Ctrl+Z suspends Doppel to the background — run fg in your shell to resume."
+            in TIPS
+        )
+        assert (
+            "Doppel runs on 21 messaging platforms: Telegram, Discord, Slack, WhatsApp, Signal, Matrix, IRC, Microsoft Teams, email, and more."
+            in TIPS
+        )
+        assert not any("Hermes" in tip for tip in TIPS)
+
+    def test_context_file_tips_prefer_doppel_filenames(self):
+        assert (
+            "Context files (.doppel.md, AGENTS.md) are security-scanned for prompt injection before loading."
+            in TIPS
+        )
+        assert (
+            "Doppel loads project context from .doppel.md, AGENTS.md, CLAUDE.md, or .cursorrules (first match)."
+            in TIPS
+        )
+        assert not any(".hermes.md" in tip for tip in TIPS)
+        assert not any("legacy .hermes.md" in tip for tip in TIPS)
+
 
 class TestGetRandomTip:
     """Validate the get_random_tip() function."""

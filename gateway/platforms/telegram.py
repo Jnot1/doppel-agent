@@ -1116,8 +1116,8 @@ class TelegramAdapter(BasePlatformAdapter):
             "Telegram polling could not recover after %d retries (%ds total wait). "
             "The previous gateway session is still held open on Telegram's servers, "
             "or another process is using the same bot token. "
-            "To recover: ensure no other Hermes or OpenClaw instance is running "
-            "with this token, then restart the gateway with 'hermes gateway restart'."
+            "To recover: ensure no other Doppel or OpenClaw instance is running "
+            "with this token, then restart the gateway with 'doppel gateway restart'."
             % (MAX_CONFLICT_RETRIES, sum(10 + i * 10 for i in range(1, MAX_CONFLICT_RETRIES + 1)))
         )
         logger.error(
@@ -1514,10 +1514,22 @@ class TelegramAdapter(BasePlatformAdapter):
 
             request_kwargs = {
                 "connection_pool_size": _env_int("HERMES_TELEGRAM_HTTP_POOL_SIZE", 512),
-                "pool_timeout": _env_float("HERMES_TELEGRAM_HTTP_POOL_TIMEOUT", 8.0),
-                "connect_timeout": _env_float("HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT", 10.0),
-                "read_timeout": _env_float("HERMES_TELEGRAM_HTTP_READ_TIMEOUT", 20.0),
-                "write_timeout": _env_float("HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT", 20.0),
+                "pool_timeout": _env_float(
+                    "DOPPEL_TELEGRAM_HTTP_POOL_TIMEOUT",
+                    _env_float("HERMES_TELEGRAM_HTTP_POOL_TIMEOUT", 8.0),
+                ),
+                "connect_timeout": _env_float(
+                    "DOPPEL_TELEGRAM_HTTP_CONNECT_TIMEOUT",
+                    _env_float("HERMES_TELEGRAM_HTTP_CONNECT_TIMEOUT", 10.0),
+                ),
+                "read_timeout": _env_float(
+                    "DOPPEL_TELEGRAM_HTTP_READ_TIMEOUT",
+                    _env_float("HERMES_TELEGRAM_HTTP_READ_TIMEOUT", 20.0),
+                ),
+                "write_timeout": _env_float(
+                    "DOPPEL_TELEGRAM_HTTP_WRITE_TIMEOUT",
+                    _env_float("HERMES_TELEGRAM_HTTP_WRITE_TIMEOUT", 20.0),
+                ),
             }
 
             disable_fallback = (os.getenv("HERMES_TELEGRAM_DISABLE_FALLBACK_IPS", "").strip().lower() in {"1", "true", "yes", "on"})
@@ -2541,7 +2553,7 @@ class TelegramAdapter(BasePlatformAdapter):
     ) -> SendResult:
         """Send an inline-keyboard update prompt (Yes / No buttons).
 
-        Used by the gateway ``/update`` watcher when ``hermes update --gateway``
+        Used by the gateway ``/update`` watcher when ``doppel update --gateway``
         needs user input (stash restore, config migration).
         """
         if not self._bot:
@@ -2859,7 +2871,7 @@ class TelegramAdapter(BasePlatformAdapter):
         a single ``mpg:<gid>`` button; tapping it drills into a member
         sub-keyboard. Single providers (and groups with only one authenticated
         member) render as direct ``mp:<slug>`` buttons. Grouping mirrors the
-        CLI ``hermes model`` picker via the shared ``group_providers`` fold,
+        CLI ``doppel model`` picker via the shared ``group_providers`` fold,
         so all surfaces stay consistent.
         """
         try:
@@ -3509,7 +3521,7 @@ class TelegramAdapter(BasePlatformAdapter):
             logger.error("Failed to write update response from callback: %s", exc)
 
     # Maps `gt:<verb>` -> (script-name, extra-args, success-label, is_state).
-    # Scripts live in ~/.hermes/scripts/gmail-triage/. `arg` from the callback
+    # Scripts live in ~/.doppel/scripts/gmail-triage/. `arg` from the callback
     # data is always passed as the first positional arg.
     # is_state=True means the verb is a sticky sender-rule change (mute, trust,
     # vip) that should leave the keyboard tappable for follow-on actions.
@@ -4729,7 +4741,7 @@ class TelegramAdapter(BasePlatformAdapter):
     def _explicit_bot_mentions_exclude_self(self, message: Message) -> bool:
         """Return True when explicit bot handles target other bots, not this one.
 
-        Telegram groups can contain several Hermes bot profiles. A message like
+        Telegram groups can contain several Doppel bot profiles. A message like
         ``@bot3 hi @bot4`` must not wake ``@bot1`` through reply/wake-word
         fallbacks. Treat explicit bot-handle mentions as an exclusive routing
         hint: if at least one @...bot username is present and none matches this

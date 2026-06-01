@@ -17,7 +17,7 @@ Design notes
   with ``shell=False`` — no shell injection footguns.  Users that need
   pipes/redirection wrap their logic in a script.
 * First-use consent is gated by the allowlist under
-  ``~/.hermes/shell-hooks-allowlist.json``.  Non-TTY callers must pass
+  ``~/.doppel/shell-hooks-allowlist.json``.  Non-TTY callers must pass
   ``accept_hooks=True`` (resolved from ``--accept-hooks``,
   ``HERMES_ACCEPT_HOOKS``, or ``hooks_auto_accept: true`` in config)
   for registration to succeed without a prompt.
@@ -223,7 +223,7 @@ def register_from_config(
 
 def iter_configured_hooks(cfg: Optional[Dict[str, Any]]) -> List[ShellHookSpec]:
     """Return the parsed ``ShellHookSpec`` entries from config without
-    registering anything.  Used by ``hermes hooks list`` and ``doctor``."""
+    registering anything.  Used by ``doppel hooks list`` and ``doctor``."""
     if not isinstance(cfg, dict):
         return []
     return _parse_hooks_block(cfg.get("hooks"))
@@ -774,7 +774,7 @@ def _resolve_effective_accept(
 
 
 # ---------------------------------------------------------------------------
-# Introspection (used by `hermes hooks` CLI)
+# Introspection (used by `doppel hooks` CLI)
 # ---------------------------------------------------------------------------
 
 def allowlist_entry_for(event: str, command: str) -> Optional[Dict[str, Any]]:
@@ -831,12 +831,12 @@ def run_once(
     spec: ShellHookSpec, kwargs: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Fire a single shell-hook invocation with a synthetic payload.
-    Used by ``hermes hooks test`` and ``hermes hooks doctor``.
+    Used by ``doppel hooks test`` and ``doppel hooks doctor``.
 
     ``kwargs`` is the same dict that :func:`hermes_cli.plugins.invoke_hook`
     would pass at runtime.  It is routed through :func:`_serialize_payload`
     so the synthetic stdin exactly matches what a real hook firing would
-    produce — otherwise scripts tested via ``hermes hooks test`` could
+    produce — otherwise scripts tested via ``doppel hooks test`` could
     diverge silently from production behaviour.
 
     Returns the :func:`_spawn` diagnostic dict plus a ``parsed`` field

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Hermes Agent CLI - Interactive Terminal Interface
+Doppel Agent CLI - Interactive Terminal Interface
 
-A beautiful command-line interface for the Hermes Agent, inspired by Claude Code.
+A beautiful command-line interface for Doppel Agent, inspired by Claude Code.
 Features ASCII art branding, interactive REPL, toolset selection, and rich formatting.
 
 Usage:
@@ -18,7 +18,7 @@ try:
     import hermes_bootstrap  # noqa: F401
 except ModuleNotFoundError:
     # Graceful fallback when hermes_bootstrap isn't registered in the venv
-    # yet — happens during partial ``hermes update`` where git-reset landed
+    # yet — happens during partial ``doppel update`` where git-reset landed
     # new code but ``uv pip install -e .`` didn't finish.  Missing bootstrap
     # means UTF-8 stdio setup is skipped on Windows; POSIX is unaffected.
     pass
@@ -44,9 +44,14 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
+from hermes_constants import sync_customer_facing_env_aliases
+
 logger = logging.getLogger(__name__)
 
+sync_customer_facing_env_aliases()
+
 # Suppress startup messages for clean CLI experience
+os.environ["DOPPEL_QUIET"] = "1"
 os.environ["HERMES_QUIET"] = "1"  # Our own modules
 
 import yaml
@@ -163,7 +168,7 @@ from hermes_cli.banner import _format_context_length, format_banner_version_labe
 _COMMAND_SPINNER_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
 
 
-# Load .env from ~/.hermes/.env first, then project root as dev fallback.
+# Load .env from ~/.doppel/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
 from hermes_constants import get_hermes_home, display_hermes_home
 from hermes_cli.browser_connect import (
@@ -290,7 +295,7 @@ def _load_prefill_messages(file_path: str) -> List[Dict[str, Any]]:
     The file should contain a JSON array of {role, content} dicts, e.g.:
         [{"role": "user", "content": "Hi"}, {"role": "assistant", "content": "Hello!"}]
     
-    Relative paths are resolved from ~/.hermes/.
+    Relative paths are resolved from ~/.doppel/.
     Returns an empty list if the path is empty or the file doesn't exist.
     """
     if not file_path:
@@ -337,18 +342,20 @@ def load_cli_config() -> Dict[str, Any]:
     Load CLI configuration from config files.
     
     Config lookup order:
-    1. ~/.hermes/config.yaml (user config - preferred)
+    1. ~/.doppel/config.yaml (user config - preferred)
     2. ./cli-config.yaml (project config - fallback)
     
     Environment variables take precedence over config file values.
     Returns default values if no config file exists.
 
-    If HERMES_IGNORE_USER_CONFIG=1 is set (via ``hermes chat --ignore-user-config``),
-    the user config at ``~/.hermes/config.yaml`` is skipped entirely and only the
+    If HERMES_IGNORE_USER_CONFIG=1 is set (via ``doppel chat --ignore-user-config``),
+    the user config at ``~/.doppel/config.yaml`` is skipped entirely and only the
     built-in defaults plus the project-level ``cli-config.yaml`` (if any) are used.
     Credentials in ``.env`` are still loaded — this flag only suppresses
     behavioral/config settings.
     """
+    sync_customer_facing_env_aliases()
+
     # Check user config first ({HERMES_HOME}/config.yaml)
     user_config_path = _hermes_home / 'config.yaml'
     project_config_path = Path(__file__).parent / 'cli-config.yaml'
@@ -682,7 +689,7 @@ def load_cli_config() -> Dict[str, Any]:
 CLI_CONFIG = load_cli_config()
 
 
-# Initialize centralized logging early — agent.log + errors.log in ~/.hermes/logs/.
+# Initialize centralized logging early — agent.log + errors.log in ~/.doppel/logs/.
 # This ensures CLI sessions produce a log trail even before AIAgent is instantiated.
 try:
     from hermes_logging import setup_logging
@@ -734,7 +741,7 @@ try:
         """Defer ``AsyncHttpxClientWrapper.__del__`` neutering until import.
 
         Saves ~166ms on cold CLI start where openai is never used (e.g.
-        ``hermes --help`` paths inside the chat command flow).  See
+        ``doppel --help`` paths inside the chat command flow).  See
         ``agent.auxiliary_client.neuter_async_httpx_del`` for full rationale
         on why ``__del__`` must be a no-op.
         """
@@ -1050,7 +1057,7 @@ def _setup_worktree(repo_root: str = None) -> Optional[Dict[str, str]]:
     repo_root = repo_root or _git_repo_root()
     if not repo_root:
         print("\033[31m✗ --worktree requires being inside a git repository.\033[0m")
-        print("  cd into your project repo first, then run hermes -w")
+        print("  cd into your project repo first, then run doppel -w")
         return None
 
     short_id = uuid.uuid4().hex[:8]
@@ -2729,7 +2736,7 @@ def _build_compact_banner() -> str:
         line1 = "⚕ NOUS HERMES - AI Agent Framework"
         tiny_line = "⚕ NOUS HERMES"
     else:
-        agent_name = _skin.get_branding("agent_name", "Hermes Agent") if _skin else "Hermes Agent"
+        agent_name = _skin.get_branding("agent_name", "Doppel Agent") if _skin else "Doppel Agent"
         line1 = f"{agent_name} - AI Agent Framework"
         tiny_line = agent_name
 
@@ -2737,13 +2744,13 @@ def _build_compact_banner() -> str:
         from hermes_cli import __release_date__ as _release_date
         from hermes_cli import __version__ as _version
 
-        version_line = f"Hermes Agent v{_version} ({_release_date})"
+        version_line = f"Doppel Agent v{_version} ({_release_date})"
     else:
         version_line = format_banner_version_label()
 
     w = min(shutil.get_terminal_size().columns - 2, 88)
     if w < 30:
-        return f"\n[{title_color}]{tiny_line}[/] [dim {dim_color}]- Nous Research[/]\n"
+        return f"\n[{title_color}]{tiny_line}[/] [dim {dim_color}]- Doppelme[/]\n"
 
     inner = w - 2  # inside the box border
     bar = "═" * w
@@ -2870,7 +2877,7 @@ def save_config_value(key_path: str, value: any) -> bool:
     Save a value to the active config file at the specified key path.
     
     Respects the same lookup order as load_cli_config():
-    1. ~/.hermes/config.yaml (user config - preferred, used if it exists)
+    1. ~/.doppel/config.yaml (user config - preferred, used if it exists)
     2. ./cli-config.yaml (project config - fallback)
     
     Args:
@@ -2886,7 +2893,7 @@ def save_config_value(key_path: str, value: any) -> bool:
     config_path = user_config_path if user_config_path.exists() else project_config_path
     
     try:
-        # Ensure parent directory exists (for ~/.hermes/config.yaml on first use)
+        # Ensure parent directory exists (for ~/.doppel/config.yaml on first use)
         config_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Save back atomically while preserving comments, ordering, quotes, and
@@ -2914,7 +2921,7 @@ def save_config_value(key_path: str, value: any) -> bool:
 
 class HermesCLI:
     """
-    Interactive CLI for the Hermes Agent.
+    Interactive CLI for Doppel Agent.
     
     Provides a REPL interface with rich formatting, command history,
     and tool execution capabilities.
@@ -2950,6 +2957,8 @@ class HermesCLI:
             resume: Session ID to resume (restores conversation history from SQLite)
             pass_session_id: Include the session ID in the agent's system prompt
         """
+        sync_customer_facing_env_aliases()
+
         # Initialize Rich console
         self.console = Console()
         self.config = CLI_CONFIG
@@ -3121,7 +3130,7 @@ class HermesCLI:
         self.checkpoint_max_file_size_mb = cp_cfg.get("max_file_size_mb", 10)
         self.pass_session_id = pass_session_id
         # --ignore-rules: honor either the constructor flag or the env var set
-        # by `hermes chat --ignore-rules` in hermes_cli/main.py. When true we
+        # by `doppel chat --ignore-rules` in hermes_cli/main.py. When true we
         # pass skip_context_files=True and skip_memory=True to AIAgent so
         # AGENTS.md/SOUL.md/.cursorrules and persistent memory are not loaded.
         self.ignore_rules = ignore_rules or os.environ.get("HERMES_IGNORE_RULES") == "1"
@@ -3208,7 +3217,7 @@ class HermesCLI:
         _run_state_db_auto_maintenance(self._session_db)
 
         # Opportunistic shadow-repo cleanup — deletes orphan/stale
-        # checkpoint repos under ~/.hermes/checkpoints/.  Opt-in via
+        # checkpoint repos under ~/.doppel/checkpoints/.  Opt-in via
         # checkpoints.auto_prune, idempotent via .last_prune marker.
         _run_checkpoint_auto_maintenance()
 
@@ -3834,7 +3843,7 @@ class HermesCLI:
                 parts.append("⚠ YOLO")
             return self._trim_status_bar_text(" │ ".join(parts), width)
         except Exception:
-            return f"⚕ {self.model if getattr(self, 'model', None) else 'Hermes'}"
+            return f"⚕ {self.model if getattr(self, 'model', None) else 'Doppel'}"
 
     def _get_status_bar_fragments(self):
         if not self._status_bar_visible or getattr(self, '_model_picker_state', None):
@@ -4433,10 +4442,10 @@ class HermesCLI:
             try:
                 from hermes_cli.skin_engine import get_active_skin
                 _skin = get_active_skin()
-                label = _skin.get_branding("response_label", "⚕ Hermes")
+                label = _skin.get_branding("response_label", "⚕ Doppel")
                 _text_hex = _skin.get_color("banner_text", "#FFF8DC")
             except Exception:
-                label = "⚕ Hermes"
+                label = "⚕ Doppel"
                 _text_hex = "#FFF8DC"
             # Build a true-color ANSI escape for the response text color
             # so streamed content matches the Rich Panel appearance.
@@ -4723,11 +4732,11 @@ class HermesCLI:
                 )
             else:
                 print("\n⚠️  Provider resolver returned an empty API key. "
-                      "Set OPENROUTER_API_KEY or run: hermes setup")
+                      "Set OPENROUTER_API_KEY or run: doppel setup")
                 return False
         if not isinstance(base_url, str) or not base_url:
             print("\n⚠️  Provider resolver returned an empty base URL. "
-                  "Check your provider config or run: hermes setup")
+                  "Check your provider config or run: doppel setup")
             return False
 
         credentials_changed = api_key != self.api_key or base_url != self.base_url
@@ -4748,7 +4757,7 @@ class HermesCLI:
 
         # When a custom_provider entry carries an explicit `model` field,
         # use it as the effective model name.  Without this, running
-        # `hermes chat --model <provider-name>` sends the provider name
+        # `doppel chat --model <provider-name>` sends the provider name
         # (e.g. "my-provider") as the model string to the API instead of
         # the configured model (e.g. "qwen3.6-plus"), causing 400 errors.
         runtime_model = runtime.get("model")
@@ -4762,8 +4771,8 @@ class HermesCLI:
             if should_use_runtime_model:
                 self.model = runtime_model
 
-        # If model is still empty (e.g. user ran `hermes auth add openai-codex`
-        # without `hermes model`), fall back to the provider's first catalog
+        # If model is still empty (e.g. user ran `doppel auth add openai-codex`
+        # without `doppel model`), fall back to the provider's first catalog
         # model so the API call doesn't fail with "model must be non-empty".
         if not self.model and resolved_provider:
             try:
@@ -4905,7 +4914,7 @@ class HermesCLI:
         # is non-empty and we skip the DB round-trip.
         if self._resumed and self._session_db and not self.conversation_history:
             session_meta = self._session_db.get_session(self.session_id)
-            # In quiet mode (`hermes chat -Q` / --quiet, surfaced via
+            # In quiet mode (`doppel chat -Q` / --quiet, surfaced via
             # tool_progress_mode == "off"), resume status lines go to stderr
             # so stdout stays machine-readable for automation wrappers that
             # do `$(hermes chat -Q --resume <id> -q "...")`. Without this,
@@ -4915,12 +4924,12 @@ class HermesCLI:
                 if _quiet_mode:
                     print(f"Session not found: {self.session_id}", file=sys.stderr)
                     print(
-                        "Use a session ID from a previous CLI run (hermes sessions list).",
+                        "Use a session ID from a previous CLI run (doppel sessions list).",
                         file=sys.stderr,
                     )
                 else:
                     _cprint(f"\033[1;31mSession not found: {self.session_id}{_RST}")
-                    _cprint(f"{_DIM}Use a session ID from a previous CLI run (hermes sessions list).{_RST}")
+                    _cprint(f"{_DIM}Use a session ID from a previous CLI run (doppel sessions list).{_RST}")
                 return False
             # If the requested session is the (empty) head of a compression
             # chain, walk to the descendant that actually holds the messages.
@@ -5075,9 +5084,9 @@ class HermesCLI:
         """Show a startup banner if any unacked security advisories match.
 
         Renders a single bold-red box on stderr (so piped stdout remains
-        clean) listing the worst hit and pointing at ``hermes doctor``.
+        clean) listing the worst hit and pointing at ``doppel doctor``.
         Banner-cache rate-limits this to once per 24h per advisory; full
-        remediation lives behind ``hermes doctor`` so the banner stays
+        remediation lives behind ``doppel doctor`` so the banner stays
         small.
         """
         try:
@@ -5144,7 +5153,7 @@ class HermesCLI:
                 f"this is likely too low for agent use with tools.[/]"
             )
             self._console_print(
-                f"[dim]   Hermes needs at least {MINIMUM_CONTEXT_LENGTH:,} tokens. Tool schemas + system prompt use a large fixed prefix.[/]"
+                f"[dim]   Doppel needs at least {MINIMUM_CONTEXT_LENGTH:,} tokens. Tool schemas + system prompt use a large fixed prefix.[/]"
             )
             base_url = getattr(self, "base_url", "") or ""
             if "11434" in base_url or "ollama" in base_url.lower():
@@ -5168,7 +5177,7 @@ class HermesCLI:
             self._console_print()
             self._console_print(
                 "[bold yellow]⚠  Nous Research Hermes 3 & 4 models are NOT agentic and are not "
-                "designed for use with Hermes Agent.[/]"
+                "designed for use with Doppel Agent.[/]"
             )
             self._console_print(
                 "[dim]   They lack tool-calling capabilities required for agent workflows. "
@@ -5201,7 +5210,7 @@ class HermesCLI:
             )
             self._console_print(
                 "[dim]Use a session ID from a previous CLI run "
-                "(hermes sessions list).[/]"
+                "(doppel sessions list).[/]"
             )
             return False
 
@@ -5399,13 +5408,13 @@ class HermesCLI:
                     lines.append(f"         {ml}\n", style="dim")
             elif role == "assistant_last":
                 # Last assistant response shown in full, non-dim
-                lines.append("  ◆ Hermes: ", style=f"bold {_assistant_label_c}")
+                lines.append("  ◆ Doppel: ", style=f"bold {_assistant_label_c}")
                 msg_lines = text.splitlines()
                 lines.append(msg_lines[0] + "\n", style="")
                 for ml in msg_lines[1:]:
                     lines.append(f"            {ml}\n", style="")
             else:
-                lines.append("  ◆ Hermes: ", style=f"dim bold {_assistant_label_c}")
+                lines.append("  ◆ Doppel: ", style=f"dim bold {_assistant_label_c}")
                 msg_lines = text.splitlines()
                 lines.append(msg_lines[0] + "\n", style="dim")
                 for ml in msg_lines[1:]:
@@ -5444,7 +5453,7 @@ class HermesCLI:
     def _try_attach_clipboard_image(self) -> bool:
         """Check clipboard for an image and attach it if found.
 
-        Saves the image to ~/.hermes/images/ and appends the path to
+        Saves the image to ~/.doppel/images/ and appends the path to
         ``_attached_images``.  Returns True if an image was attached.
         """
         from hermes_cli.clipboard import save_clipboard_image
@@ -5478,7 +5487,7 @@ class HermesCLI:
         mgr = self.agent._checkpoint_mgr
         if not mgr.enabled:
             print("  Checkpoints are not enabled.")
-            print("  Enable with: hermes --checkpoints")
+            print("  Enable with: doppel --checkpoints")
             print("  Or in config.yaml: checkpoints: { enabled: true }")
             return
 
@@ -5568,7 +5577,7 @@ class HermesCLI:
             return ref
 
     def _handle_snapshot_command(self, command: str):
-        """Handle /snapshot — lightweight state snapshots for Hermes config/state.
+        """Handle /snapshot — lightweight state snapshots for Doppel config/state.
 
         Syntax:
             /snapshot                  — list recent snapshots
@@ -5826,7 +5835,7 @@ class HermesCLI:
         if _remainder:
             _cprint(f"  {_DIM}Now type your prompt (or use --image in single-query mode): {_remainder}{_RST}")
         elif _is_termux_environment():
-            _cprint(f"  {_DIM}Tip: type your next message, or run hermes chat -q --image {_termux_example_image_path(image_path.name)} \"What do you see?\"{_RST}")
+            _cprint(f"  {_DIM}Tip: type your next message, or run doppel chat -q --image {_termux_example_image_path(image_path.name)} \"What do you see?\"{_RST}")
 
     def _preprocess_images_with_vision(self, text: str, images: list, *, announce: bool = True) -> str:
         """Analyze attached images via the vision tool and return enriched text.
@@ -5912,7 +5921,7 @@ class HermesCLI:
                     if len(item["tools"]) > 2:
                         tools_str += f", +{len(item['tools'])-2} more"
                     self._console_print(f"   [dim]• {item['name']}[/] [dim italic]({', '.join(item['missing_vars'])})[/]")
-                self._console_print("[dim]   Run 'hermes setup' to configure[/]")
+                self._console_print("[dim]   Run 'doppel setup' to configure[/]")
         except Exception:
             pass  # Don't crash on import errors
     
@@ -5997,7 +6006,7 @@ class HermesCLI:
         is_running = bool(getattr(self, "_agent_running", False))
 
         lines = [
-            "Hermes CLI Status",
+            "Doppel CLI Status",
             "",
             f"Session ID: {self.session_id}",
             f"Path: {display_hermes_home()}",
@@ -6088,7 +6097,7 @@ class HermesCLI:
                     f"{_escape(desc)} [dim]({skill_count} skills)[/]"
                 )
 
-        _cprint(f"\n  {_DIM}Tip: Just type your message to chat with Hermes!{_RST}")
+        _cprint(f"\n  {_DIM}Tip: Just type your message to chat with Doppel!{_RST}")
         _cprint(f"  {_DIM}Multi-line: Alt+Enter for a new line{_RST}")
         _cprint(f"  {_DIM}Draft editor: Ctrl+G (Alt+G in VSCode/Cursor){_RST}")
         if _is_termux_environment():
@@ -6412,7 +6421,7 @@ class HermesCLI:
                 )
                 continue
 
-            print(f"\n  [Hermes #{visible_index}]")
+            print(f"\n  [Doppel #{visible_index}]")
             tool_calls = msg.get("tool_calls") or []
             if content_text:
                 preview = content_text[:preview_limit]
@@ -6694,7 +6703,7 @@ class HermesCLI:
             self._session_db.fail_handoff(self.session_id, "timed out waiting for gateway")
         except Exception:
             pass
-        _cprint("  Timed out waiting for the gateway. Is `hermes gateway` running?")
+        _cprint("  Timed out waiting for the gateway. Is `doppel gateway` running?")
         _cprint("  Your CLI session is intact.")
         return True
 
@@ -6727,7 +6736,7 @@ class HermesCLI:
                 # #34584.
                 self._pending_resume_sessions = self._list_recent_sessions(limit=10)
                 return
-            _cprint("  Tip:   Use /history or `hermes sessions list` to find sessions.")
+            _cprint("  Tip:   Use /history or `doppel sessions list` to find sessions.")
             return
 
         # Any explicit /resume <target> supersedes a previously-armed bare
@@ -6757,7 +6766,7 @@ class HermesCLI:
         session_meta = self._session_db.get_session(target_id)
         if not session_meta:
             _cprint(f"  Session not found: {target}")
-            _cprint("  Use /history or `hermes sessions list` to see available sessions.")
+            _cprint("  Use /history or `doppel sessions list` to see available sessions.")
             return
 
         # If the target is the empty head of a compression chain, redirect to
@@ -7048,11 +7057,11 @@ class HermesCLI:
         _cprint(f"  Branch session:   {new_session_id}")
 
     def save_conversation(self):
-        """Save the current conversation to a JSON snapshot under ~/.hermes/sessions/saved/.
+        """Save the current conversation to a JSON snapshot under ~/.doppel/sessions/saved/.
 
         The snapshot is a convenience export for sharing or off-line inspection;
         every message is already persisted incrementally to the SQLite session
-        DB, so the live session remains resumable via ``hermes --resume <id>``
+        DB, so the live session remains resumable via ``doppel --resume <id>``
         regardless of whether the user ever runs ``/save``.
         """
         if not self.conversation_history:
@@ -7078,7 +7087,7 @@ class HermesCLI:
                 }, f, indent=2, ensure_ascii=False)
             print(f"(^_^)v Conversation snapshot saved to: {path}")
             if self.session_id:
-                print(f"       Resume the live session with: hermes --resume {self.session_id}")
+                print(f"       Resume the live session with: doppel --resume {self.session_id}")
         except Exception as e:
             print(f"(x_x) Failed to save: {e}")
     
@@ -7613,7 +7622,7 @@ class HermesCLI:
                 return
             provider_data = providers[selected]
             # Use the curated model list from list_authenticated_providers()
-            # (same lists as `hermes model` and gateway pickers).
+            # (same lists as `doppel model` and gateway pickers).
             # Only fall back to the live provider catalog when the curated
             # list is empty (e.g. user-defined endpoints with no curated list).
             model_list = provider_data.get("models", [])
@@ -8286,7 +8295,7 @@ class HermesCLI:
     def _handle_curator_command(self, cmd: str):
         """Handle /curator slash command.
 
-        Delegates to hermes_cli.curator so the CLI and the `hermes curator`
+        Delegates to hermes_cli.curator so the CLI and the `doppel curator`
         subcommand share the same handler set.
         """
         import shlex
@@ -8373,7 +8382,7 @@ class HermesCLI:
             
             print()
             print("  To start the gateway:")
-            print("    python cli.py --gateway")
+            print("    doppel gateway start")
             print()
             print(f"  Configuration file: {display_hermes_home()}/config.yaml")
             print()
@@ -8995,11 +9004,11 @@ class HermesCLI:
                     try:
                         from hermes_cli.skin_engine import get_active_skin
                         _skin = get_active_skin()
-                        label = _skin.get_branding("response_label", "⚕ Hermes")
+                        label = _skin.get_branding("response_label", "⚕ Doppel")
                         _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#CD7F32"))
                         _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#FFF8DC"))
                     except Exception:
-                        label = "⚕ Hermes"
+                        label = "⚕ Doppel"
                         _resp_color = "#CD7F32"
                         _resp_text = "#FFF8DC"
 
@@ -9061,7 +9070,7 @@ class HermesCLI:
     def _handle_bundles_command(self, cmd: str) -> None:
         """In-session ``/bundles`` — show installed skill bundles.
 
-        Mirrors ``hermes bundles list`` but renders inside the running
+        Mirrors ``doppel bundles list`` but renders inside the running
         CLI so users can discover what's available without dropping out
         of their session. Bundles are loaded via ``/<bundle-name>``.
         """
@@ -9075,7 +9084,7 @@ class HermesCLI:
         if not bundles:
             _cprint("  No skill bundles installed.")
             _cprint(
-                f"  {_DIM}Create one with: hermes bundles create "
+                f"  {_DIM}Create one with: doppel bundles create "
                 f"<name> --skill <s1> --skill <s2>{_RST}"
             )
             _cprint(f"  {_DIM}Directory: {_bundles_dir()}{_RST}")
@@ -9093,7 +9102,7 @@ class HermesCLI:
                 ChatConsole().print(f"        [dim]· {_escape(s)}[/]")
         _cprint(
             f"\n  {_DIM}Invoke a bundle with /<slug>. "
-            f"Manage with `hermes bundles`.{_RST}"
+            f"Manage with `doppel bundles`.{_RST}"
         )
 
     def _handle_browser_command(self, cmd: str):
@@ -9392,7 +9401,7 @@ class HermesCLI:
         _cprint(f"  ⊙ Goal set ({state.max_turns}-turn budget): {state.goal}")
         _cprint(
             f"  {_DIM}After each turn, a judge model will check if the goal is done. "
-            f"Hermes keeps working until it is, you pause/clear it, or the budget is "
+            f"Doppel keeps working until it is, you pause/clear it, or the budget is "
             f"exhausted. Use /goal status, /goal pause, /goal resume, /goal clear.{_RST}"
         )
         # Kick the loop off immediately so the user doesn't have to send a
@@ -9873,7 +9882,7 @@ class HermesCLI:
             _cprint(f"  {_ACCENT}✓ Reasoning effort set to '{arg}' (session only){_RST}")
 
     def _handle_busy_command(self, cmd: str):
-        """Handle /busy — control what Enter does while Hermes is working.
+        """Handle /busy — control what Enter does while Doppel is working.
 
         Usage:
             /busy               Show current busy input mode
@@ -9904,11 +9913,11 @@ class HermesCLI:
         self.busy_input_mode = arg
         if save_config_value("display.busy_input_mode", arg):
             if arg == "queue":
-                behavior = "Enter will queue follow-up input while Hermes is busy."
+                behavior = "Enter will queue follow-up input while Doppel is busy."
             elif arg == "steer":
                 behavior = "Enter will steer your message into the current run (after the next tool call)."
             else:
-                behavior = "Enter will interrupt the current run while Hermes is busy."
+                behavior = "Enter will interrupt the current run while Doppel is busy."
             _cprint(f"  {_ACCENT}✓ Busy input mode set to '{arg}' (saved to config){_RST}")
             _cprint(f"  {_DIM}{behavior}{_RST}")
         else:
@@ -10121,10 +10130,10 @@ class HermesCLI:
         run_debug_share(args)
 
     def _handle_update_command(self) -> bool:
-        """Handle /update — update Hermes Agent to the latest version.
+        """Handle /update — update Doppel Agent to the latest version.
 
         In the classic CLI this exits the session and relaunches as
-        ``hermes update`` so the user sees update output directly and gets
+        ``doppel update`` so the user sees update output directly and gets
         the new version on next launch.
 
         Returns ``True`` when the update was confirmed (caller should trigger
@@ -10135,7 +10144,7 @@ class HermesCLI:
         from hermes_cli.config import is_managed, format_managed_message
 
         if is_managed():
-            print(f"  ✗ {format_managed_message('update Hermes Agent')}")
+            print(f"  ✗ {format_managed_message('update Doppel Agent')}")
             return False
 
         # Use the prompt_toolkit-native modal so the confirmation panel
@@ -10143,12 +10152,12 @@ class HermesCLI:
         # with the prompt_toolkit event loop (same pattern as
         # _confirm_destructive_slash).
         choices = [
-            ("once", "Update Now", "exit the current session and update Hermes Agent"),
+            ("once", "Update Now", "exit the current session and update Doppel Agent"),
             ("cancel", "Cancel", "keep the current session"),
         ]
         raw = self._prompt_text_input_modal(
-            title="⚕  Update Hermes Agent",
-            detail="This will exit the current session and run `hermes update`.",
+            title="⚕  Update Doppel Agent",
+            detail="This will exit the current session and run `doppel update`.",
             choices=choices,
         )
         if raw is None:
@@ -10658,7 +10667,7 @@ class HermesCLI:
             print(f"  ❌ MCP reload failed: {e}")
 
     def _reload_skills(self) -> None:
-        """Reload skills: rescan ~/.hermes/skills/ and queue a note for the
+        """Reload skills: rescan ~/.doppel/skills/ and queue a note for the
         next user turn.
 
         Skills don't need to live in the system prompt for the model to use
@@ -11948,7 +11957,7 @@ class HermesCLI:
                     if not _streaming_box_opened:
                         _streaming_box_opened = True
                         w = self._scrollback_box_width(getattr(self.console, "width", 80))
-                        label = " ⚕ Hermes "
+                        label = " ⚕ Doppel "
                         if self.show_timestamps:
                             label = f"{label}{datetime.now().strftime('%H:%M')} "
                         fill = w - 2 - HermesCLI._status_bar_display_width(label)
@@ -12278,11 +12287,11 @@ class HermesCLI:
                 try:
                     from hermes_cli.skin_engine import get_active_skin
                     _skin = get_active_skin()
-                    label = _skin.get_branding("response_label", "⚕ Hermes")
+                    label = _skin.get_branding("response_label", "⚕ Doppel")
                     _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#CD7F32"))
                     _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#FFF8DC"))
                 except Exception:
-                    label = "⚕ Hermes"
+                    label = "⚕ Doppel"
                     _resp_color = _maybe_remap_for_light_mode("#CD7F32")
                     _resp_text = _maybe_remap_for_light_mode("#FFF8DC")
 
@@ -12423,9 +12432,9 @@ class HermesCLI:
             profile_flag = (
                 "" if _active_profile in ("default", "custom") else f" -p {_active_profile}"
             )
-            print(f"  hermes --resume {self.session_id}{profile_flag}")
+            print(f"  doppel --resume {self.session_id}{profile_flag}")
             if session_title:
-                print(f"  hermes -c \"{session_title}\"{profile_flag}")
+                print(f"  doppel -c \"{session_title}\"{profile_flag}")
             print()
             print(f"Session:        {self.session_id}")
             if session_title:
@@ -12694,10 +12703,10 @@ class HermesCLI:
         try:
             from hermes_cli.skin_engine import get_active_skin
             _welcome_skin = get_active_skin()
-            _welcome_text = _welcome_skin.get_branding("welcome", "Welcome to Hermes Agent! Type your message or /help for commands.")
+            _welcome_text = _welcome_skin.get_branding("welcome", "Welcome to Doppel Agent! Type your message or /help for commands.")
             _welcome_color = _welcome_skin.get_color("banner_text", "#FFF8DC")
         except Exception:
-            _welcome_text = "Welcome to Hermes Agent! Type your message or /help for commands."
+            _welcome_text = "Welcome to Doppel Agent! Type your message or /help for commands."
             _welcome_color = "#FFF8DC"
         self._console_print(f"[{_welcome_color}]{_welcome_text}[/]")
 
@@ -13525,7 +13534,7 @@ class HermesCLI:
             import signal as _sig
             from prompt_toolkit.application import run_in_terminal
             from hermes_cli.skin_engine import get_active_skin
-            agent_name = get_active_skin().get_branding("agent_name", "Hermes Agent")
+            agent_name = get_active_skin().get_branding("agent_name", "Doppel Agent")
             msg = f"\n{agent_name} has been suspended. Run `fg` to bring {agent_name} back."
             def _suspend():
                 os.write(1, msg.encode())
@@ -14064,7 +14073,7 @@ class HermesCLI:
                 else f"  {other_num_prefix}. Other (type your answer)"
             )
             preview_lines.extend(_wrap_panel_text(other_label, 60, subsequent_indent="    "))
-            box_width = _panel_box_width("Hermes needs your input", preview_lines)
+            box_width = _panel_box_width("Doppel needs your input", preview_lines)
             inner_text_width = max(8, box_width - 2)
 
             # Pre-wrap choices + Other option — these are mandatory.
@@ -14159,8 +14168,8 @@ class HermesCLI:
             lines = []
             # Box top border
             lines.append(('class:clarify-border', '╭─ '))
-            lines.append(('class:clarify-title', 'Hermes needs your input'))
-            lines.append(('class:clarify-border', ' ' + ('─' * max(0, box_width - len("Hermes needs your input") - 3)) + '╮\n'))
+            lines.append(('class:clarify-title', 'Doppel needs your input'))
+            lines.append(('class:clarify-border', ' ' + ('─' * max(0, box_width - len("Doppel needs your input") - 3)) + '╮\n'))
             if not use_compact_chrome:
                 _append_blank_panel_line(lines, 'class:clarify-border', box_width)
 
@@ -14925,7 +14934,7 @@ class HermesCLI:
             print(
                 "Error: stdin (fd 0) is not available.\n"
                 "This can happen with certain Python installations (e.g. uv-managed cPython on macOS).\n"
-                "Try reinstalling Python via pyenv or Homebrew, then re-run: hermes setup"
+                "Try reinstalling Python via pyenv or Homebrew, then re-run: doppel setup"
             )
             _run_cleanup()
             self._print_exit_summary()
@@ -14989,7 +14998,7 @@ class HermesCLI:
                     f"\nError: stdin is not usable ({_stdin_err}).\n"
                     "This can happen with certain Python installations (e.g. uv-managed cPython on macOS)\n"
                     "where kqueue cannot register fd 0.\n"
-                    "Try reinstalling Python via pyenv or Homebrew, then re-run: hermes setup"
+                    "Try reinstalling Python via pyenv or Homebrew, then re-run: doppel setup"
                 )
             else:
                 raise
@@ -15100,7 +15109,7 @@ def main(
     ignore_rules: bool = False,
 ):
     """
-    Hermes Agent CLI - Interactive AI Assistant
+    Doppel Agent CLI - Interactive AI Assistant
     
     Args:
         query: Single query to execute (then exit). Alias: -q
@@ -15129,8 +15138,8 @@ def main(
         python cli.py -q "Describe this" --image ~/storage/shared/Pictures/cat.png
         python cli.py --list-tools               # List tools and exit
         python cli.py --resume 20260225_143052_a1b2c3  # Resume session
-        python cli.py -w                         # Start in isolated git worktree
-        python cli.py -w -q "Fix issue #123"     # Single query in worktree
+        doppel -w                               # Start in isolated git worktree
+        doppel -w -q "Fix issue #123"           # Single query in worktree
     """
     global _active_worktree
 
@@ -15151,7 +15160,7 @@ def main(
     if gateway:
         import asyncio
         from gateway.run import start_gateway
-        print("Starting Hermes Gateway (messaging platforms)...")
+        print("Starting Doppel Gateway (messaging platforms)...")
         asyncio.run(start_gateway())
         return
 
@@ -15332,7 +15341,7 @@ def main(
     # Handle single query mode
     if query or image:
         query, single_query_images = _collect_query_images(query, image)
-        # Kanban workers spawn with ``hermes chat -q "work kanban task <id>"``;
+        # Kanban workers spawn with ``doppel chat -q "work kanban task <id>"``;
         # the actual task description lives in the task body. Mirror the
         # gateway/CLI behaviour for inbound images by scanning the body for
         # local image paths and http(s) image URLs and attaching them to the
@@ -15480,7 +15489,7 @@ def main(
             # Exit with error code if credentials or agent init fails
             sys.exit(1)
         else:
-            # Single-query mode (`hermes chat -q "…"`): skip the welcome
+            # Single-query mode (`doppel chat -q "…"`): skip the welcome
             # banner. Building the banner takes ~420 ms on cold start —
             # ~200 ms of that is the version-update check, the rest is
             # toolset / skill enumeration and Rich panel rendering. None

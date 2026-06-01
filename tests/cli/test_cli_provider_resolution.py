@@ -172,6 +172,50 @@ def test_runtime_resolution_failure_is_not_sticky(monkeypatch):
     assert shell.agent is not None
 
 
+def test_runtime_resolution_empty_api_key_uses_doppel_setup_hint(monkeypatch, capsys):
+    cli = _import_cli()
+
+    def _runtime_resolve(**kwargs):
+        return {
+            "provider": "openrouter",
+            "api_mode": "chat_completions",
+            "base_url": "https://openrouter.ai/api/v1",
+            "api_key": "",
+            "source": "env/config",
+        }
+
+    monkeypatch.setattr("hermes_cli.runtime_provider.resolve_runtime_provider", _runtime_resolve)
+    monkeypatch.setattr("hermes_cli.runtime_provider.format_runtime_provider_error", lambda exc: str(exc))
+
+    shell = cli.HermesCLI(model="gpt-5", compact=True, max_turns=1)
+
+    assert shell._init_agent() is False
+    out = capsys.readouterr().out
+    assert "Set OPENROUTER_API_KEY or run: doppel setup" in out
+
+
+def test_runtime_resolution_empty_base_url_uses_doppel_setup_hint(monkeypatch, capsys):
+    cli = _import_cli()
+
+    def _runtime_resolve(**kwargs):
+        return {
+            "provider": "openrouter",
+            "api_mode": "chat_completions",
+            "base_url": "",
+            "api_key": "test-key",
+            "source": "env/config",
+        }
+
+    monkeypatch.setattr("hermes_cli.runtime_provider.resolve_runtime_provider", _runtime_resolve)
+    monkeypatch.setattr("hermes_cli.runtime_provider.format_runtime_provider_error", lambda exc: str(exc))
+
+    shell = cli.HermesCLI(model="gpt-5", compact=True, max_turns=1)
+
+    assert shell._init_agent() is False
+    out = capsys.readouterr().out
+    assert "Check your provider config or run: doppel setup" in out
+
+
 def test_runtime_resolution_rebuilds_agent_on_routing_change(monkeypatch):
     cli = _import_cli()
 
@@ -505,8 +549,25 @@ def test_cmd_model_falls_back_to_auto_on_invalid_provider(monkeypatch, capsys):
     output = capsys.readouterr().out
 
     assert "Warning:" in output
+    assert "Check 'doppel model' for available providers" in output
     assert "falling back to auto provider detection" in output.lower()
     assert "No change." in output
+
+
+def test_require_tty_error_is_doppel_first(monkeypatch, capsys):
+    monkeypatch.setattr(
+        hermes_main.sys,
+        "stdin",
+        type("FakeNonTTY", (), {"isatty": lambda self: False})(),
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        hermes_main._require_tty("model")
+
+    assert exc_info.value.code == 1
+    err = capsys.readouterr().err
+    assert "Error: 'doppel model' requires an interactive terminal." in err
+    assert "non-interactive subprocess" in err
 
 
 def test_model_flow_custom_saves_verified_v1_base_url(monkeypatch, capsys):
@@ -552,7 +613,7 @@ def test_model_flow_custom_saves_verified_v1_base_url(monkeypatch, capsys):
     assert saved_env["MODEL"] == "llm"
 
 
-def test_model_flow_custom_persists_selected_api_mode(monkeypatch):
+def test_model_flow_custom_persists_selected_api_mode(monkeypatch, capsys):
     saved_cfg = {"model": {"default": "", "provider": "custom", "base_url": ""}}
     captured_provider = {}
 
@@ -601,12 +662,53 @@ def test_model_flow_custom_persists_selected_api_mode(monkeypatch):
     monkeypatch.setattr("hermes_cli.secret_prompt.masked_secret_prompt", lambda _prompt="": "test-key")
 
     hermes_main._model_flow_custom({"model": {"provider": "custom"}})
-
     assert saved_cfg["model"]["provider"] == "custom"
     assert saved_cfg["model"]["base_url"] == "https://codex.example.com/v1"
     assert saved_cfg["model"]["api_key"] == "test-key"
     assert saved_cfg["model"]["api_mode"] == "codex_responses"
     assert captured_provider["api_mode"] == "codex_responses"
+
+
+def test_model_flow_custom_without_model_shows_doppel_followup(monkeypatch, capsys):
+    saved_cfg = {"model": {"default": "", "provider": "custom", "base_url": ""}}
+
+    monkeypatch.setattr(
+        "hermes_cli.config.get_env_value",
+        lambda key: "" if key in {"OPENAI_BASE_URL", "OPENAI_API_KEY"} else "",
+    )
+    monkeypatch.setattr("hermes_cli.auth.deactivate_provider", lambda: None)
+    monkeypatch.setattr("hermes_cli.main._save_custom_provider", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "hermes_cli.models.probe_api_models",
+        lambda api_key, base_url: {
+            "models": [],
+            "probed_url": f"{base_url.rstrip('/')}/models",
+            "resolved_base_url": None,
+            "suggested_base_url": None,
+            "used_fallback": False,
+        },
+    )
+    monkeypatch.setattr("hermes_cli.config.load_config", lambda: saved_cfg)
+    monkeypatch.setattr("hermes_cli.config.save_config", lambda cfg: saved_cfg.update(cfg))
+
+    answers = iter(
+        [
+            "https://custom.example.com/v1",
+            "",
+            "",
+            "",
+            "",
+        ]
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
+    monkeypatch.setattr("hermes_cli.secret_prompt.masked_secret_prompt", lambda _prompt="": "")
+
+    hermes_main._model_flow_custom(saved_cfg)
+    output = capsys.readouterr().out
+
+    assert saved_cfg["model"]["provider"] == "custom"
+    assert saved_cfg["model"]["base_url"] == "https://custom.example.com/v1"
+    assert "Endpoint saved. Use `/model` in chat or `doppel model` to set a model." in output
 
 
 def test_cmd_model_forwards_nous_login_tls_options(monkeypatch):

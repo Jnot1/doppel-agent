@@ -25,12 +25,17 @@ Himalaya CLI: IMAP/SMTP email from terminal.
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # Himalaya Email CLI
 
 Himalaya is a CLI email client that lets you manage emails from the terminal using IMAP, SMTP, Notmuch, or Sendmail backends.
+
+This skill is separate from the Hermes Email gateway adapter. The gateway
+adapter lets people email the agent and uses Hermes' built-in IMAP/SMTP
+adapter; this skill lets the agent operate a mailbox from terminal tools and
+requires the external `himalaya` CLI.
 
 ## References
 

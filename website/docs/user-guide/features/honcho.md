@@ -6,7 +6,7 @@ description: "AI-native persistent memory via Honcho — dialectic reasoning, mu
 
 # Honcho Memory
 
-[Honcho](https://github.com/plastic-labs/honcho) is an AI-native memory backend that adds dialectic reasoning and deep user modeling on top of Hermes's built-in memory system. Instead of simple key-value storage, Honcho maintains a running model of who the user is — their preferences, communication style, goals, and patterns — by reasoning about conversations after they happen.
+[Honcho](https://github.com/plastic-labs/honcho) is an AI-native memory backend that adds dialectic reasoning and deep user modeling on top of Doppel Agent's built-in memory system. Instead of simple key-value storage, Honcho maintains a running model of who the user is — their preferences, communication style, goals, and patterns — by reasoning about conversations after they happen.
 
 :::info Honcho is a Memory Provider Plugin
 Honcho is integrated into the [Memory Providers](./memory-providers.md) system. All features below are available through the unified memory provider interface.
@@ -28,27 +28,29 @@ Honcho is integrated into the [Memory Providers](./memory-providers.md) system. 
 
 **Session-scoped context**: Base context now includes the session summary alongside the user representation and peer card. This gives the agent awareness of what has already been discussed in the current session, reducing repetition and enabling continuity.
 
-**Multi-agent profiles**: When multiple Hermes instances talk to the same user (e.g., a coding assistant and a personal assistant), Honcho maintains separate "peer" profiles. Each peer sees only its own observations and conclusions, preventing cross-contamination of context.
+**Multi-agent profiles**: When multiple Doppel Agent instances talk to the same user (e.g., a coding assistant and a personal assistant), Honcho maintains separate "peer" profiles. Each peer sees only its own observations and conclusions, preventing cross-contamination of context.
 
 ## Setup
 
 ```bash
-hermes memory setup    # select "honcho" from the provider list
+doppel memory setup    # select "honcho" from the provider list
 ```
 
 Or configure manually:
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.doppel/config.yaml
 memory:
   provider: honcho
 ```
 
 ```bash
-echo 'HONCHO_API_KEY=***' >> ~/.hermes/.env
+echo 'HONCHO_API_KEY=***' >> ~/.doppel/.env
 ```
 
 Get an API key at [honcho.dev](https://honcho.dev).
+
+Legacy installs may still keep the same config under `~/.hermes/config.yaml` and `~/.hermes/.env`.
 
 ## Architecture
 
@@ -104,11 +106,11 @@ The auto-injected dialectic scales `dialecticReasoningLevel` by query length: +1
 
 ## Configuration Options
 
-Honcho is configured in `~/.honcho/config.json` (global) or `$HERMES_HOME/honcho.json` (profile-local). The setup wizard handles this for you.
+Honcho is configured in `~/.honcho/config.json` (global) or `$DOPPEL_HOME/honcho.json` (profile-local; legacy `$HERMES_HOME/honcho.json` still works). The setup wizard handles this for you.
 
 ### Self-Hosted Honcho with Authentication
 
-When pointing Hermes at a self-hosted Honcho server, `hermes honcho setup` (and `hermes memory setup`) ask for a **local JWT / bearer token** after the base URL. Paste a JWT signed with the server's `AUTH_JWT_SECRET` (the Honcho compose env var) to enable authenticated access; leave it blank for servers running with `AUTH_USE_AUTH=false`. The local token is stored under the host block (`hosts.<host>.apiKey` in `honcho.json`), separate from any cloud `apiKey`, so you can flip the `Cloud or local?` prompt back to `cloud` later without losing either credential.
+When pointing Doppel Agent at a self-hosted Honcho server, `doppel honcho setup` (and `doppel memory setup`) ask for a **local JWT / bearer token** after the base URL. Paste a JWT signed with the server's `AUTH_JWT_SECRET` (the Honcho compose env var) to enable authenticated access; leave it blank for servers running with `AUTH_USE_AUTH=false`. The local token is stored under the host block (`hosts.<host>.apiKey` in `honcho.json`), separate from any cloud `apiKey`, so you can flip the `Cloud or local?` prompt back to `cloud` later without losing either credential.
 
 ### Full Config Reference
 
@@ -131,7 +133,7 @@ When pointing Hermes at a self-hosted Honcho server, `hermes honcho setup` (and 
 | `sessionStrategy` | `'per-directory'` | `per-directory`, `per-repo`, `per-session`, or `global` |
 
 **Session strategy** controls how Honcho sessions map to your work:
-- `per-session` — each `hermes` run gets a fresh session. Clean starts, memory via tools. Recommended for new users.
+- `per-session` — each `doppel` run gets a fresh session. Clean starts, memory via tools. Recommended for new users.
 - `per-directory` — one Honcho session per working directory. Context accumulates across runs.
 - `per-repo` — one session per git repository.
 - `global` — single session across all directories.
@@ -187,7 +189,7 @@ Common patterns:
 | AI shouldn't re-model the user from its own replies | `"ai": {"observeMe": true, "observeOthers": false}` |
 | Strong persona the AI peer shouldn't update from self-observation | `"ai": {"observeMe": false, "observeOthers": true}` |
 
-Server-side toggles set via the [Honcho dashboard](https://app.honcho.dev) win over local defaults — Hermes syncs them back at session init.
+Server-side toggles set via the [Honcho dashboard](https://app.honcho.dev) win over local defaults — Doppel Agent syncs them back at session init.
 
 ## Tools
 
@@ -203,24 +205,24 @@ When Honcho is active as the memory provider, five tools become available:
 
 ## CLI Commands
 
-The `hermes honcho` subcommand is **only registered when Honcho is the active memory provider** (`memory.provider: honcho` in `config.yaml`). On a fresh install, configure Honcho directly with `hermes memory setup honcho` (or run `hermes memory setup` and pick it from the list); the `hermes honcho` subcommand then appears on the next invocation.
+The `doppel honcho` subcommand is **only registered when Honcho is the active memory provider** (`memory.provider: honcho` in `config.yaml`). On a fresh install, configure Honcho directly with `doppel memory setup honcho` (or run `doppel memory setup` and pick it from the list); the `doppel honcho` subcommand then appears on the next invocation.
 
 ```bash
-hermes memory setup honcho    # Configure Honcho directly (works before activation)
-hermes honcho status          # Connection status, config, and key settings
-hermes honcho setup           # Redirects to `hermes memory setup` (post-activation alias)
-hermes honcho strategy        # Show or set session strategy (per-session/per-directory/per-repo/global)
-hermes honcho peer            # Show or update peer names + dialectic reasoning level
-hermes honcho mode            # Show or set recall mode (hybrid/context/tools)
-hermes honcho tokens          # Show or set token budget for context and dialectic
-hermes honcho identity        # Seed or show the AI peer's Honcho identity
-hermes honcho sync            # Sync Honcho config to all existing profiles
-hermes honcho peers           # Show peer identities across all profiles
-hermes honcho sessions        # List known Honcho session mappings
-hermes honcho map             # Map current directory to a Honcho session name
-hermes honcho enable          # Enable Honcho for the active profile
-hermes honcho disable         # Disable Honcho for the active profile
-hermes honcho migrate         # Step-by-step migration guide from openclaw-honcho
+doppel memory setup honcho    # Configure Honcho directly (works before activation)
+doppel honcho status          # Connection status, config, and key settings
+doppel honcho setup           # Redirects to `doppel memory setup` (post-activation alias)
+doppel honcho strategy        # Show or set session strategy (per-session/per-directory/per-repo/global)
+doppel honcho peer            # Show or update peer names + dialectic reasoning level
+doppel honcho mode            # Show or set recall mode (hybrid/context/tools)
+doppel honcho tokens          # Show or set token budget for context and dialectic
+doppel honcho identity        # Seed or show the AI peer's Honcho identity
+doppel honcho sync            # Sync Honcho config to all existing profiles
+doppel honcho peers           # Show peer identities across all profiles
+doppel honcho sessions        # List known Honcho session mappings
+doppel honcho map             # Map current directory to a Honcho session name
+doppel honcho enable          # Enable Honcho for the active profile
+doppel honcho disable         # Disable Honcho for the active profile
+doppel honcho migrate         # Step-by-step migration guide from openclaw-honcho
 ```
 
 ## Migrating from `hermes honcho`
@@ -231,7 +233,7 @@ If you previously used the standalone `hermes honcho setup`:
 2. Your server-side data (memories, conclusions, user profiles) is intact
 3. Set `memory.provider: honcho` in config.yaml to reactivate
 
-No re-login or re-setup needed. Run `hermes memory setup` and select "honcho" — the wizard detects your existing config.
+No re-login or re-setup needed. Run `doppel memory setup` and select "honcho" — the wizard detects your existing config.
 
 ## Full Documentation
 

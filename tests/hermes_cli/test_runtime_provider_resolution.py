@@ -1889,8 +1889,10 @@ class TestAzureFoundryResolution:
         monkeypatch.setattr(rp, "_get_model_config", lambda: {})
         monkeypatch.setattr(rp, "load_pool", lambda provider: None)
 
-        with pytest.raises(rp.AuthError, match="base URL"):
+        with pytest.raises(rp.AuthError, match="base URL") as exc_info:
             rp.resolve_runtime_provider(requested="azure-foundry")
+
+        assert "doppel model" in str(exc_info.value)
 
     def test_azure_foundry_missing_api_key_raises(self, monkeypatch):
         monkeypatch.delenv("AZURE_FOUNDRY_API_KEY", raising=False)
@@ -1904,8 +1906,13 @@ class TestAzureFoundryResolution:
         ))
         monkeypatch.setattr(rp, "load_pool", lambda provider: None)
 
-        with pytest.raises(rp.AuthError, match="API key"):
+        with pytest.raises(rp.AuthError, match="API key") as exc_info:
             rp.resolve_runtime_provider(requested="azure-foundry")
+
+        msg = str(exc_info.value)
+        assert "doppel model" in msg
+        assert "~/.doppel/.env" in msg
+        assert "~/.hermes/.env" not in msg
 
     # -- Model-family api_mode inference -------------------------------------
     # Azure rejects /chat/completions on GPT-5.x / codex / o-series with

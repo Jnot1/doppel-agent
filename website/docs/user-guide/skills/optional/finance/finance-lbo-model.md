@@ -14,7 +14,7 @@ Build leveraged buyout models in Excel — sources & uses, debt schedule, cash s
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/finance/lbo-model` |
+| Source | Optional — install with `doppel skills install official/finance/lbo-model` |
 | Path | `optional-skills/finance/lbo-model` |
 | Version | `1.0.0` |
 | Author | Anthropic (adapted by Nous Research) |
@@ -26,7 +26,7 @@ Build leveraged buyout models in Excel — sources & uses, debt schedule, cash s
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 ## Environment

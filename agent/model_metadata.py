@@ -127,7 +127,7 @@ CONTEXT_PROBE_TIERS = [
 # Default context length when no detection method succeeds.
 DEFAULT_FALLBACK_CONTEXT = CONTEXT_PROBE_TIERS[0]
 
-# Minimum context length required to run Hermes Agent.  Models with fewer
+# Minimum context length required to run Doppel Agent.  Models with fewer
 # tokens cannot maintain enough working memory for tool-calling workflows.
 # Sessions, model switches, and cron jobs should reject models below this.
 MINIMUM_CONTEXT_LENGTH = 64_000
@@ -363,7 +363,7 @@ _URL_TO_PROVIDER: Dict[str, str] = {
     "models.github.ai": "copilot",
     # GitHub Models free tier (Azure-hosted prototyping endpoint) — same
     # canonical provider as the Copilot API.  Hard per-request token cap
-    # (often 8K) makes it unusable for Hermes' system prompt, but mapping
+    # (often 8K) makes it unusable for Doppel Agent's system prompt, but mapping
     # it here lets us recognize the endpoint and emit a targeted hint
     # instead of falling through the unknown-custom-endpoint path.
     "models.inference.ai.azure.com": "copilot",

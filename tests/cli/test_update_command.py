@@ -133,6 +133,25 @@ def test_none_response_cancels(capsys):
     assert not result
 
 
+def test_update_modal_detail_is_doppel_first():
+    captured = {}
+
+    self_ = SimpleNamespace(
+        _app=None,
+        _pending_relaunch=None,
+        _prompt_text_input_modal=lambda **kwargs: captured.update(kwargs) or None,
+    )
+    self_._normalize_slash_confirm_choice = _bound(
+        HermesCLI._normalize_slash_confirm_choice, self_
+    )
+
+    with patch("hermes_cli.config.is_managed", return_value=False):
+        result = _call(self_)
+
+    assert not result
+    assert captured["detail"] == "This will exit the current session and run `doppel update`."
+
+
 @pytest.mark.parametrize("answer", ["nope", "cancel", "sure", "2", "3", "abort", ""])
 def test_unrecognized_or_cancel_input_cancels(answer, capsys):
     """Unrecognised input and explicit "cancel" do not proceed.

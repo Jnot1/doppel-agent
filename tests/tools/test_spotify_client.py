@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -121,6 +122,61 @@ def test_spotify_client_formats_friendly_api_errors(
         client.request("GET", path)
 
     assert str(exc.value) == expected
+
+
+def test_spotify_client_401_and_scope_errors_prefer_doppel_auth_guidance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        spotify_mod,
+        "resolve_spotify_runtime_credentials",
+        lambda **kwargs: {
+            "access_token": "token-1",
+            "base_url": "https://api.spotify.com/v1",
+        },
+    )
+
+    client = spotify_mod.SpotifyClient()
+
+    responses_401 = iter([
+        _FakeResponse(401, {"error": {"message": "expired token"}}),
+        _FakeResponse(401, {"error": {"message": "expired token"}}),
+    ])
+
+    def fake_request_401(method, url, headers=None, params=None, json=None, timeout=None):
+        return next(responses_401)
+
+    monkeypatch.setattr(spotify_mod.httpx, "request", fake_request_401)
+    with pytest.raises(spotify_mod.SpotifyAPIError) as exc_401:
+        client.request("GET", "/me")
+    assert str(exc_401.value) == (
+        "Spotify authentication failed or expired. Run `doppel auth spotify` again."
+    )
+
+    monkeypatch.setattr(
+        spotify_mod.httpx,
+        "request",
+        lambda method, url, headers=None, params=None, json=None, timeout=None: _FakeResponse(
+            403,
+            {"error": {"message": "insufficient scope"}},
+        ),
+    )
+    with pytest.raises(spotify_mod.SpotifyAPIError) as exc_403:
+        client.request("GET", "/users/me/playlists")
+    assert str(exc_403.value) == (
+        "Spotify rejected the request because the current auth scope is insufficient. "
+        "Re-run `doppel auth spotify` to refresh permissions."
+    )
+
+
+def test_spotify_plugin_manifest_prefers_doppel_auth_and_home() -> None:
+    manifest = Path("plugins/spotify/plugin.yaml").read_text(encoding="utf-8")
+
+    assert "`doppel auth spotify`" in manifest
+    assert "~/.doppel/auth.json" in manifest
+
+    assert "`hermes auth spotify`" not in manifest
+    assert "~/.hermes/auth.json" not in manifest
 
 
 def test_get_currently_playing_returns_explanatory_empty_payload(monkeypatch: pytest.MonkeyPatch) -> None:

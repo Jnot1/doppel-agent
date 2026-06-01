@@ -99,6 +99,7 @@ def test_first_run_defers(curator_env):
         "first observation should seed last_run_at so the interval clock "
         "starts ticking instead of firing immediately next tick"
     )
+    assert "`doppel curator run --dry-run`" in state.get("last_run_summary", "")
     # A second immediate call still returns False (seeded, not yet stale).
     assert c.should_run_now() is False
 

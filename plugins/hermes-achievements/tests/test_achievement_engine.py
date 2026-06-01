@@ -1,4 +1,5 @@
 import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -9,6 +10,43 @@ spec.loader.exec_module(plugin_api)
 
 
 class AchievementEngineTests(unittest.TestCase):
+    def test_state_paths_prefer_doppel_dir_and_fallback_to_legacy_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            plugin_api.get_hermes_home = lambda: home
+
+            legacy_dir = home / "plugins" / "hermes-achievements"
+            doppel_dir = home / "plugins" / "doppel-achievements"
+            legacy_dir.mkdir(parents=True)
+
+            self.assertEqual(
+                plugin_api.state_path(),
+                legacy_dir / "state.json",
+            )
+            self.assertEqual(
+                plugin_api.snapshot_path(),
+                legacy_dir / "scan_snapshot.json",
+            )
+            self.assertEqual(
+                plugin_api.checkpoint_path(),
+                legacy_dir / "scan_checkpoint.json",
+            )
+
+            doppel_dir.mkdir(parents=True)
+
+            self.assertEqual(
+                plugin_api.state_path(),
+                doppel_dir / "state.json",
+            )
+            self.assertEqual(
+                plugin_api.snapshot_path(),
+                doppel_dir / "scan_snapshot.json",
+            )
+            self.assertEqual(
+                plugin_api.checkpoint_path(),
+                doppel_dir / "scan_checkpoint.json",
+            )
+
     def test_tool_call_stats_detect_tool_names_and_errors(self):
         messages = [
             {"role": "assistant", "tool_calls": [{"function": {"name": "terminal"}}]},

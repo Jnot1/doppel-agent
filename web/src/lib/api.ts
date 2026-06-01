@@ -1,21 +1,22 @@
 // The dashboard can be served either at the root of its host (e.g.
 // https://kanban.tilos.com/) or under a URL prefix when reverse-proxied
 // (e.g. https://mission-control.tilos.com/hermes/). The Python backend
-// injects ``window.__HERMES_BASE_PATH__`` into index.html based on the
+// injects ``window.__DOPPEL_BASE_PATH__`` into index.html based on the
 // incoming ``X-Forwarded-Prefix`` header so the SPA can address its own
 // ``/api/...`` and ``/dashboard-plugins/...`` URLs correctly without a
 // rebuild. Empty string means "served at root".
 function readBasePath(): string {
   if (typeof window === "undefined") return "";
-  const raw = window.__HERMES_BASE_PATH__ ?? "";
+  const raw = window.__DOPPEL_BASE_PATH__ ?? "";
   if (!raw) return "";
   // Normalise: ensure leading slash, strip trailing slash.
   const withLead = raw.startsWith("/") ? raw : `/${raw}`;
   return withLead.replace(/\/+$/, "");
 }
 
-export const HERMES_BASE_PATH = readBasePath();
-const BASE = HERMES_BASE_PATH;
+export const DOPPEL_BASE_PATH = readBasePath();
+export const HERMES_BASE_PATH = DOPPEL_BASE_PATH;
+const BASE = DOPPEL_BASE_PATH;
 
 import type { DashboardTheme } from "@/themes/types";
 
@@ -23,17 +24,17 @@ import type { DashboardTheme } from "@/themes/types";
 // Injected into index.html by the server — never fetched via API.
 declare global {
   interface Window {
-    __HERMES_SESSION_TOKEN__?: string;
-    __HERMES_BASE_PATH__?: string;
+    __DOPPEL_SESSION_TOKEN__?: string;
+    __DOPPEL_BASE_PATH__?: string;
     /** Server-injected flag: ``true`` when the dashboard's OAuth gate is
      * engaged (public bind, no ``--insecure``). Toggles the SPA's
      * WS-upgrade path from legacy ``?token=`` to single-use ``?ticket=``
      * fetched via :func:`getWsTicket`. */
-    __HERMES_AUTH_REQUIRED__?: boolean;
+    __DOPPEL_AUTH_REQUIRED__?: boolean;
   }
 }
 let _sessionToken: string | null = null;
-const SESSION_HEADER = "X-Hermes-Session-Token";
+const SESSION_HEADER = "X-Doppel-Session-Token";
 
 function setSessionHeader(headers: Headers, token: string): void {
   if (!headers.has(SESSION_HEADER)) {
@@ -48,7 +49,7 @@ export async function fetchJSON<T>(
 ): Promise<T> {
   // Inject the session token into all /api/ requests.
   const headers = new Headers(init?.headers);
-  const token = window.__HERMES_SESSION_TOKEN__;
+  const token = window.__DOPPEL_SESSION_TOKEN__;
   if (token) {
     setSessionHeader(headers, token);
   }
@@ -84,10 +85,7 @@ export async function fetchJSON<T>(
       // /sessions/<id> deep link. Save the current location as a
       // fallback the post-login handler can read.
       try {
-        sessionStorage.setItem(
-          "hermes.lastLocation",
-          window.location.pathname + window.location.search,
-        );
+        sessionStorage.setItem("doppel.lastLocation", window.location.pathname + window.location.search);
       } catch {
         /* SSR / privacy mode — ignore */
       }
@@ -96,25 +94,25 @@ export async function fetchJSON<T>(
       return new Promise<T>(() => {});
     }
     // Loopback mode: ``_SESSION_TOKEN`` rotates on every server restart
-    // (``hermes update``, ``hermes gateway restart``, etc.). A tab kept
+    // (``doppel update``, ``doppel gateway restart``, etc.). A tab kept
     // open across the restart holds the OLD token in
-    // ``window.__HERMES_SESSION_TOKEN__`` from the previous HTML render,
+    // ``window.__DOPPEL_SESSION_TOKEN__`` from the previous HTML render,
     // so every fetch returns 401. The HTML is served ``Cache-Control:
     // no-store`` so a reload picks up the freshly-injected token. Trigger
     // that reload once on the first stale-token 401 — gated mode is
     // handled above, so reaching here in gated mode means a real
     // middleware failure that should not reload-loop.
-    if (!window.__HERMES_AUTH_REQUIRED__ && !options?.allowUnauthorized) {
+    if (!window.__DOPPEL_AUTH_REQUIRED__ && !options?.allowUnauthorized) {
       let alreadyReloaded = false;
       try {
         alreadyReloaded =
-          sessionStorage.getItem("hermes.tokenReloadAttempted") === "1";
+          sessionStorage.getItem("doppel.tokenReloadAttempted") === "1";
       } catch {
         /* SSR / privacy mode — fall through to throw */
       }
       if (!alreadyReloaded) {
         try {
-          sessionStorage.setItem("hermes.tokenReloadAttempted", "1");
+          sessionStorage.setItem("doppel.tokenReloadAttempted", "1");
         } catch {
           /* SSR / privacy mode — best effort */
         }
@@ -125,10 +123,10 @@ export async function fetchJSON<T>(
   }
   if (res.ok) {
     // Clear the stale-token reload guard: a successful 2xx proves the
-    // current ``window.__HERMES_SESSION_TOKEN__`` is valid, so the next
+    // current ``window.__DOPPEL_SESSION_TOKEN__`` is valid, so the next
     // 401 — if any — should be allowed to trigger its own reload cycle.
     try {
-      sessionStorage.removeItem("hermes.tokenReloadAttempted");
+      sessionStorage.removeItem("doppel.tokenReloadAttempted");
     } catch {
       /* SSR / privacy mode — ignore */
     }
@@ -147,12 +145,12 @@ function pluginPath(name: string): string {
 
 async function getSessionToken(): Promise<string> {
   if (_sessionToken) return _sessionToken;
-  const injected = window.__HERMES_SESSION_TOKEN__;
+  const injected = window.__DOPPEL_SESSION_TOKEN__;
   if (injected) {
     _sessionToken = injected;
     return _sessionToken;
   }
-  throw new Error("Session token not available — page must be served by the Hermes dashboard server");
+  throw new Error("Session token not available — page must be served by the Doppel dashboard server");
 }
 
 /**
@@ -184,11 +182,11 @@ export async function getWsTicket(): Promise<{ ticket: string; ttl_seconds: numb
  * mode returns the injected session token.
  */
 export async function buildWsAuthParam(): Promise<[string, string]> {
-  if (window.__HERMES_AUTH_REQUIRED__) {
+  if (window.__DOPPEL_AUTH_REQUIRED__) {
     const { ticket } = await getWsTicket();
     return ["ticket", ticket];
   }
-  const token = window.__HERMES_SESSION_TOKEN__ ?? "";
+  const token = window.__DOPPEL_SESSION_TOKEN__ ?? "";
   return ["token", token];
 }
 

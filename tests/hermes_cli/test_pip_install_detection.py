@@ -36,7 +36,43 @@ def test_recommended_update_command_pip():
     cmd = recommended_update_command_for_method("pip")
     assert "pip install" in cmd or "uv pip install" in cmd
     assert "--upgrade" in cmd
-    assert "hermes-agent" in cmd
+    assert "doppel-agent" in cmd
+
+
+def test_recommended_update_command_pip_uses_shared_distribution_name(monkeypatch):
+    from hermes_cli.config import recommended_update_command_for_method
+
+    monkeypatch.setattr(
+        "hermes_constants.get_distribution_package_name",
+        lambda: "doppel-agent-test",
+    )
+
+    cmd = recommended_update_command_for_method("pip")
+    assert "doppel-agent-test" in cmd
+
+
+def test_recommended_update_command_docker_uses_shared_image_name(monkeypatch):
+    from hermes_cli.config import recommended_update_command_for_method
+
+    monkeypatch.setattr(
+        "hermes_constants.get_docker_image_name",
+        lambda: "example/doppel-agent",
+    )
+
+    cmd = recommended_update_command_for_method("docker")
+    assert cmd == "docker pull example/doppel-agent:latest"
+
+
+def test_managed_update_command_homebrew_uses_shared_formula_name(monkeypatch):
+    from hermes_cli.config import get_managed_update_command
+
+    monkeypatch.setattr("hermes_cli.config.get_managed_system", lambda: "Homebrew")
+    monkeypatch.setattr(
+        "hermes_constants.get_homebrew_formula_name",
+        lambda: "doppel-agent-formula",
+    )
+
+    assert get_managed_update_command() == "brew upgrade doppel-agent-formula"
 
 
 def test_stamp_file_takes_precedence(tmp_path):

@@ -1,5 +1,5 @@
 """
-Hermes MCP Server — expose messaging conversations as MCP tools.
+Doppel MCP Server — expose messaging conversations as MCP tools.
 
 Starts a stdio MCP server that lets any MCP client (Claude Code, Cursor, Codex,
 etc.) list conversations, read message history, send messages, poll for live
@@ -10,17 +10,17 @@ Matches OpenClaw's 9-tool MCP channel bridge surface:
   events_poll, events_wait, messages_send, permissions_list_open,
   permissions_respond
 
-Plus: channels_list (Hermes-specific extra)
+Plus: channels_list (Doppel-specific extra)
 
 Usage:
-    hermes mcp serve
-    hermes mcp serve --verbose
+    doppel mcp serve
+    doppel mcp serve --verbose
 
 MCP client config (e.g. claude_desktop_config.json):
     {
         "mcpServers": {
-            "hermes": {
-                "command": "hermes",
+            "doppel": {
+                "command": "doppel",
                 "args": ["mcp", "serve"]
             }
         }
@@ -59,13 +59,20 @@ except ImportError:
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _fallback_home() -> Path:
+    """Return Doppel home with legacy HERMES_HOME compatibility fallback."""
+    preferred = os.environ.get("DOPPEL_HOME")
+    legacy = os.environ.get("HERMES_HOME")
+    return Path(preferred or legacy or (Path.home() / ".doppel"))
+
+
 def _get_sessions_dir() -> Path:
-    """Return the sessions directory using HERMES_HOME."""
+    """Return the sessions directory using DOPPEL_HOME with legacy fallback."""
     try:
         from hermes_constants import get_hermes_home
         return get_hermes_home() / "sessions"
     except ImportError:
-        return Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "sessions"
+        return _fallback_home() / "sessions"
 
 
 def _get_session_db():
@@ -101,9 +108,7 @@ def _load_channel_directory() -> dict:
         from hermes_constants import get_hermes_home
         directory_file = get_hermes_home() / "channel_directory.json"
     except ImportError:
-        directory_file = Path(
-            os.environ.get("HERMES_HOME", Path.home() / ".hermes")
-        ) / "channel_directory.json"
+        directory_file = _fallback_home() / "channel_directory.json"
 
     if not directory_file.exists():
         return {}
@@ -205,7 +210,7 @@ class EventBridge:
     """Background poller that watches SessionDB for new messages and
     maintains an in-memory event queue with waiter support.
 
-    This is the Hermes equivalent of OpenClaw's WebSocket gateway bridge.
+    This is the Doppel equivalent of OpenClaw's WebSocket gateway bridge.
     Instead of WebSocket events, we poll the SQLite database for changes.
     """
 
@@ -365,7 +370,7 @@ class EventBridge:
             from hermes_constants import get_hermes_home
             db_file = get_hermes_home() / "state.db"
         except ImportError:
-            db_file = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "state.db"
+            db_file = _fallback_home() / "state.db"
 
         try:
             db_mtime = db_file.stat().st_mtime if db_file.exists() else 0.0
@@ -448,7 +453,7 @@ class EventBridge:
 # ---------------------------------------------------------------------------
 
 def create_mcp_server(event_bridge: Optional[EventBridge] = None) -> "FastMCP":
-    """Create and return the Hermes MCP server with all tools registered."""
+    """Create and return the Doppel MCP server with all tools registered."""
     if not _MCP_SERVER_AVAILABLE:
         raise ImportError(
             "MCP server requires the 'mcp' package. "
@@ -456,9 +461,9 @@ def create_mcp_server(event_bridge: Optional[EventBridge] = None) -> "FastMCP":
         )
 
     mcp = FastMCP(
-        "hermes",
+        "doppel",
         instructions=(
-            "Hermes Agent messaging bridge. Use these tools to interact with "
+            "Doppel Agent messaging bridge. Use these tools to interact with "
             "conversations across Telegram, Discord, Slack, WhatsApp, Signal, "
             "Matrix, and other connected platforms."
         ),
@@ -864,7 +869,7 @@ def create_mcp_server(event_bridge: Optional[EventBridge] = None) -> "FastMCP":
 # ---------------------------------------------------------------------------
 
 def run_mcp_server(verbose: bool = False) -> None:
-    """Start the Hermes MCP server on stdio."""
+    """Start the Doppel MCP server on stdio."""
     if not _MCP_SERVER_AVAILABLE:
         print(
             "Error: MCP server requires the 'mcp' package.\n"

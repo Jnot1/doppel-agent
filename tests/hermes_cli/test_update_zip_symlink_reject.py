@@ -129,3 +129,56 @@ def test_update_via_zip_accepts_normal_member(tmp_path, monkeypatch, capsys):
     # confirming the extraction + copy phases ran past the validation gate.
     assert (fake_root / "README.md").exists()
     assert (fake_root / "README.md").read_text() == "ok\n"
+
+
+def test_update_via_zip_uses_shared_archive_identity(tmp_path, monkeypatch):
+    """ZIP fallback should source archive URL/name/layout from shared helpers."""
+    zip_path = tmp_path / "custom.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        zf.writestr("custom-extracted/README.md", "ok\n")
+
+    fake_root = tmp_path / "install_dir"
+    fake_root.mkdir()
+
+    from hermes_cli import main as hermes_main
+
+    monkeypatch.setattr(hermes_main, "PROJECT_ROOT", fake_root)
+    monkeypatch.setattr(
+        "hermes_constants.get_upstream_archive_url",
+        lambda branch: "https://example.com/custom-agent.zip",
+    )
+    monkeypatch.setattr(
+        "hermes_constants.get_upstream_archive_filename",
+        lambda branch: "custom-agent-main.zip",
+    )
+    monkeypatch.setattr(
+        "hermes_constants.get_upstream_extracted_dir_name",
+        lambda branch: "custom-extracted",
+    )
+
+    captured = {}
+    args = type("Args", (), {})()
+
+    def fake_urlretrieve(url, dest):
+        captured["url"] = url
+        captured["dest_name"] = os.path.basename(dest)
+        with open(zip_path, "rb") as src, open(dest, "wb") as dst:
+            dst.write(src.read())
+        return dest, None
+
+    monkeypatch.setattr(
+        hermes_main,
+        "_install_python_dependencies_with_optional_fallback",
+        lambda *a, **kw: None,
+    )
+    monkeypatch.setattr(hermes_main, "_update_node_dependencies", lambda: None)
+    monkeypatch.setattr(hermes_main, "_build_web_ui", lambda *_a, **_kw: None)
+
+    with patch("urllib.request.urlretrieve", side_effect=fake_urlretrieve), \
+         patch("subprocess.run") as fake_run:
+        fake_run.return_value = type("R", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+        hermes_main._update_via_zip(args)
+
+    assert captured["url"] == "https://example.com/custom-agent.zip"
+    assert captured["dest_name"] == "custom-agent-main.zip"
+    assert (fake_root / "README.md").exists()

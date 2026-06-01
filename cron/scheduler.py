@@ -4,7 +4,7 @@ Cron job scheduler - executes due jobs.
 Provides tick() which checks for due jobs and runs them. The gateway
 calls this every 60 seconds from a background thread.
 
-Uses a file-based lock (~/.hermes/cron/.tick.lock) so only one tick
+Uses a file-based lock (~/.doppel/cron/.tick.lock) so only one tick
 runs at a time if multiple processes overlap.
 """
 
@@ -32,11 +32,15 @@ from pathlib import Path
 from typing import List, Optional
 
 # Add parent directory to path for imports BEFORE repo-level imports.
-# Without this, standalone invocations (e.g. after `hermes update` reloads
+# Without this, standalone invocations (e.g. after `doppel update` reloads
 # the module) fail with ModuleNotFoundError for hermes_time et al.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from hermes_constants import get_hermes_home
+from hermes_constants import (
+    get_customer_facing_env_value,
+    get_hermes_home,
+    sync_customer_facing_env_aliases,
+)
 from hermes_cli._subprocess_compat import windows_hide_flags
 from hermes_cli.config import load_config, _expand_env_vars
 from hermes_time import now as _hermes_now
@@ -825,14 +829,24 @@ def _get_script_timeout() -> int:
         except Exception:
             logger.warning("Invalid patched _SCRIPT_TIMEOUT=%r; using env/config/default", _SCRIPT_TIMEOUT)
 
-    env_value = os.getenv("HERMES_CRON_SCRIPT_TIMEOUT", "").strip()
+    env_value = (
+        get_customer_facing_env_value(
+            "DOPPEL_CRON_SCRIPT_TIMEOUT",
+            "HERMES_CRON_SCRIPT_TIMEOUT",
+            "",
+        )
+        or ""
+    ).strip()
     if env_value:
         try:
             timeout = int(float(env_value))
             if timeout > 0:
                 return timeout
         except Exception:
-            logger.warning("Invalid HERMES_CRON_SCRIPT_TIMEOUT=%r; using config/default", env_value)
+            logger.warning(
+                "Invalid DOPPEL_CRON_SCRIPT_TIMEOUT/HERMES_CRON_SCRIPT_TIMEOUT=%r; using config/default",
+                env_value,
+            )
 
     try:
         cfg = load_config() or {}
@@ -1472,6 +1486,7 @@ def _run_job_impl(job: dict) -> tuple[bool, str, str, Optional[str]]:
             load_dotenv(str(_get_hermes_home() / ".env"), override=True, encoding="utf-8")
         except UnicodeDecodeError:
             load_dotenv(str(_get_hermes_home() / ".env"), override=True, encoding="latin-1")
+        sync_customer_facing_env_aliases()
 
         delivery_target = _resolve_delivery_target(job)
         if delivery_target:
@@ -1659,17 +1674,25 @@ def _run_job_impl(job: dict) -> tuple[bool, str, str, Optional[str]]:
         # for hours if it's actively calling tools / receiving stream tokens,
         # but a hung API call or stuck tool with no activity for the configured
         # duration is caught and killed.  Default 600s (10 min inactivity);
-        # override via HERMES_CRON_TIMEOUT env var.  0 = unlimited.
+        # override via DOPPEL_CRON_TIMEOUT env var (legacy Hermes alias still
+        # works). 0 = unlimited.
         #
         # Uses the agent's built-in activity tracker (updated by
         # _touch_activity() on every tool call, API call, and stream delta).
-        _raw_cron_timeout = os.getenv("HERMES_CRON_TIMEOUT", "").strip()
+        _raw_cron_timeout = (
+            get_customer_facing_env_value(
+                "DOPPEL_CRON_TIMEOUT",
+                "HERMES_CRON_TIMEOUT",
+                "",
+            )
+            or ""
+        ).strip()
         if _raw_cron_timeout:
             try:
                 _cron_timeout = float(_raw_cron_timeout)
             except (ValueError, TypeError):
                 logger.warning(
-                    "Invalid HERMES_CRON_TIMEOUT=%r; using default 600s",
+                    "Invalid DOPPEL_CRON_TIMEOUT/HERMES_CRON_TIMEOUT=%r; using default 600s",
                     _raw_cron_timeout,
                 )
                 _cron_timeout = 600.0

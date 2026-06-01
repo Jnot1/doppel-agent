@@ -10,6 +10,7 @@ import yaml
 from hermes_cli.config import (
     DEFAULT_CONFIG,
     get_hermes_home,
+    get_env_value,
     ensure_hermes_home,
     get_compatible_custom_providers,
     load_config,
@@ -39,7 +40,10 @@ class TestGetHermesHome:
 
 class TestEnsureHermesHome:
     def test_creates_subdirs(self, tmp_path):
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(
+            os.environ,
+            {"DOPPEL_HOME": str(tmp_path), "HERMES_HOME": str(tmp_path)},
+        ):
             ensure_hermes_home()
             assert (tmp_path / "cron").is_dir()
             assert (tmp_path / "sessions").is_dir()
@@ -47,14 +51,23 @@ class TestEnsureHermesHome:
             assert (tmp_path / "memories").is_dir()
 
     def test_creates_default_soul_md_if_missing(self, tmp_path):
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(
+            os.environ,
+            {"DOPPEL_HOME": str(tmp_path), "HERMES_HOME": str(tmp_path)},
+        ):
             ensure_hermes_home()
             soul_path = tmp_path / "SOUL.md"
             assert soul_path.exists()
-            assert soul_path.read_text(encoding="utf-8").strip() != ""
+            content = soul_path.read_text(encoding="utf-8")
+            assert content.strip() != ""
+            assert "You are Doppel Agent" in content
+            assert "You are Hermes Agent" not in content
 
     def test_does_not_overwrite_existing_soul_md(self, tmp_path):
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(
+            os.environ,
+            {"DOPPEL_HOME": str(tmp_path), "HERMES_HOME": str(tmp_path)},
+        ):
             soul_path = tmp_path / "SOUL.md"
             soul_path.write_text("custom soul", encoding="utf-8")
             ensure_hermes_home()
@@ -88,7 +101,7 @@ class TestLoadConfigParseFailure:
     Before issue #23570 this was a single ``print(...)`` that scrolled past
     on the first invocation — users saw aux-fallback misbehavior with no clue
     their config.yaml was being ignored. The helper must:
-      * log at WARNING (so ``hermes logs`` surfaces it)
+      * log at WARNING (so ``doppel logs`` surfaces it)
       * also write to stderr (so it's visible at startup even before
         ``setup_logging()`` has wired up file handlers)
       * dedup on (path, mtime_ns, size) so concurrent loads don't spam
@@ -119,9 +132,9 @@ class TestLoadConfigParseFailure:
             ), f"expected WARNING log, got: {[r.message for r in caplog.records]}"
 
             # stderr also got a user-visible message (with the ⚠️ marker so it
-            # stands out at hermes startup before logging is configured)
+            # stands out at doppel startup before logging is configured)
             captured = capsys.readouterr()
-            assert "hermes config:" in captured.err
+            assert "doppel config:" in captured.err
             assert str(tmp_path / "config.yaml") in captured.err
 
     def test_dedup_on_repeated_load_same_file(self, tmp_path, capsys):
@@ -133,7 +146,7 @@ class TestLoadConfigParseFailure:
 
             load_config()
             first = capsys.readouterr().err
-            assert "hermes config:" in first
+            assert "doppel config:" in first
 
             load_config()
             second = capsys.readouterr().err
@@ -154,7 +167,7 @@ class TestLoadConfigParseFailure:
             (tmp_path / "config.yaml").write_text("\tstill broken differently:\n")
             load_config()
             after_edit = capsys.readouterr().err
-            assert "hermes config:" in after_edit, "edited file should re-warn"
+            assert "doppel config:" in after_edit, "edited file should re-warn"
 
 
 class TestSaveAndLoadRoundtrip:
@@ -840,6 +853,8 @@ class TestEnvWriteDenylist:
     @pytest.mark.parametrize(
         "allowed_key",
         [
+            "DOPPEL_GEMINI_CLIENT_ID",
+            "DOPPEL_QWEN_BASE_URL",
             "HERMES_GEMINI_CLIENT_ID",
             "HERMES_LANGFUSE_PUBLIC_KEY",
             "HERMES_SPOTIFY_CLIENT_ID",
@@ -856,6 +871,11 @@ class TestEnvWriteDenylist:
         save_env_value(allowed_key, "test-value-123")
         env = load_env()
         assert env[allowed_key] == "test-value-123"
+
+    def test_get_env_value_prefers_doppel_alias_for_legacy_query(self):
+        save_env_value("DOPPEL_GEMINI_PROJECT_ID", "preferred-project")
+
+        assert get_env_value("HERMES_GEMINI_PROJECT_ID") == "preferred-project"
 
     def test_legitimate_provider_key_still_works(self):
         """The denylist must not regress on real provider key writes."""
@@ -892,4 +912,3 @@ class TestEnvWriteDenylist:
         # But the write path still refuses to update it
         with pytest.raises(ValueError, match="denylist"):
             save_env_value("LD_PRELOAD", "/tmp/evil.so")
-

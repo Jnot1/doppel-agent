@@ -1,4 +1,4 @@
-"""ACP tool-call helpers for mapping hermes tools to ACP ToolKind and building content."""
+"""ACP tool-call helpers for mapping doppel tools to ACP ToolKind and building content."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from acp.schema import (
 )
 
 # ---------------------------------------------------------------------------
-# Map hermes tool names -> ACP ToolKind
+# Map doppel tool names -> ACP ToolKind
 # ---------------------------------------------------------------------------
 
 TOOL_KIND_MAP: Dict[str, ToolKind] = {

@@ -19,7 +19,7 @@ try:
     import hermes_bootstrap  # noqa: F401
 except ModuleNotFoundError:
     # Graceful fallback when hermes_bootstrap isn't registered in the venv
-    # yet — happens during partial ``hermes update`` where git-reset landed
+    # yet — happens during partial ``doppel update`` where git-reset landed
     # new code but ``uv pip install -e .`` didn't finish.  Missing bootstrap
     # means UTF-8 stdio setup is skipped on Windows; POSIX is unaffected.
     pass
@@ -55,6 +55,7 @@ from agent.async_utils import safe_schedule_threadsafe
 from agent.i18n import t
 from hermes_cli.config import cfg_get
 from hermes_cli.fallback_config import get_fallback_chain
+from hermes_constants import API_SERVER_SESSION_ID_HEADER, get_customer_facing_env_value
 
 # --- Agent cache tuning ---------------------------------------------------
 # Bounds the per-session AIAgent cache to prevent unbounded growth in
@@ -426,13 +427,17 @@ def _auto_continue_freshness_window() -> float:
         return float(_AUTO_CONTINUE_FRESHNESS_SECS_DEFAULT)
 
 
-def _float_env(name: str, default: float) -> float:
+def _float_env(name: str, default: float, preferred_name: str | None = None) -> float:
     """Read an env var as float, falling back to ``default`` on typos/empty.
 
     A misconfigured env var (e.g. ``HERMES_AGENT_TIMEOUT=abc``) must not
     crash the gateway or an agent turn.  Unset/empty also falls back.
     """
-    raw = os.environ.get(name)
+    raw = (
+        get_customer_facing_env_value(preferred_name, name)
+        if preferred_name
+        else os.environ.get(name)
+    )
     if raw is None or raw == "":
         return float(default)
     try:
@@ -749,7 +754,7 @@ from hermes_constants import get_hermes_home
 from utils import atomic_json_write, atomic_yaml_write, base_url_host_matches, is_truthy_value
 _hermes_home = get_hermes_home()
 
-# Load environment variables from ~/.hermes/.env first.
+# Load environment variables from ~/.doppel/.env first.
 # User-managed env files should override stale shell exports on restart.
 from dotenv import load_dotenv  # noqa: F401  # backward-compat for tests that monkeypatch this symbol
 from hermes_cli.env_loader import load_hermes_dotenv
@@ -760,7 +765,7 @@ load_hermes_dotenv(hermes_home=_hermes_home, project_env=Path(__file__).resolve(
 def _reload_runtime_env_preserving_config_authority() -> None:
     """Reload .env for fresh credentials without letting stale .env override config.
 
-    Gateway processes are long-lived, so per-turn code reloads ~/.hermes/.env to
+    Gateway processes are long-lived, so per-turn code reloads ~/.doppel/.env to
     pick up rotated API keys. config.yaml remains authoritative for agent budget
     settings such as agent.max_turns; otherwise a stale HERMES_MAX_ITERATIONS in
     .env can replace the startup bridge on later turns.
@@ -898,7 +903,7 @@ if _config_path.exists():
         # settings — it unconditionally wins over .env values. Previously
         # the guards below read `if X not in os.environ` and let stale
         # .env entries (e.g. HERMES_MAX_ITERATIONS=60 written by an old
-        # `hermes setup` run) silently shadow the user's current config.
+        # `doppel setup` run) silently shadow the user's current config.
         # See PR #18413 / the 60-vs-500 max_turns incident.
         _agent_cfg = _cfg.get("agent", {})
         if _agent_cfg and isinstance(_agent_cfg, dict):
@@ -924,10 +929,13 @@ if _config_path.exists():
                 os.environ["HERMES_GATEWAY_BUSY_TEXT_MODE"] = str(_display_cfg["busy_text_mode"])
             if "busy_ack_enabled" in _display_cfg:
                 os.environ["HERMES_GATEWAY_BUSY_ACK_ENABLED"] = str(_display_cfg["busy_ack_enabled"])
-        # Timezone: bridge config.yaml → HERMES_TIMEZONE env var.
+        # Timezone: bridge config.yaml → preferred/legacy timezone env vars.
         _tz_cfg = _cfg.get("timezone", "")
         if _tz_cfg and isinstance(_tz_cfg, str):
-            os.environ["HERMES_TIMEZONE"] = _tz_cfg.strip()
+            _tz_value = _tz_cfg.strip()
+            if _tz_value:
+                os.environ["DOPPEL_TIMEZONE"] = _tz_value
+                os.environ["HERMES_TIMEZONE"] = _tz_value
         # Security settings
         _security_cfg = _cfg.get("security", {})
         if isinstance(_security_cfg, dict):
@@ -975,7 +983,7 @@ if _config_path.exists():
         )
         print(
             "  Gateway will fall back to .env values, which may not match "
-            "your current config.yaml. Run `hermes doctor` to investigate.",
+            "your current config.yaml. Run `doppel doctor` to investigate.",
             file=sys.stderr,
         )
 
@@ -1368,7 +1376,7 @@ def _check_unavailable_skill(command_name: str) -> str | None:
                 if slug == normalized and declared_name in disabled:
                     return (
                         f"The **{command_name}** skill is installed but disabled.\n"
-                        f"Enable it with: `hermes skills config`"
+                        f"Enable it with: `doppel skills config`"
                     )
 
         # Check optional skills (shipped with repo but not installed)
@@ -1389,7 +1397,7 @@ def _check_unavailable_skill(command_name: str) -> str | None:
                     install_path = f"official/{'/'.join(parts)}"
                     return (
                         f"The **{command_name}** skill is available but not installed.\n"
-                        f"Install it with: `hermes skills install {install_path}`"
+                        f"Install it with: `doppel skills install {install_path}`"
                     )
     except Exception:
         pass
@@ -1411,7 +1419,7 @@ def _teams_pipeline_plugin_enabled() -> bool:
 
 
 def _load_gateway_config() -> dict:
-    """Load and parse ~/.hermes/config.yaml, returning {} on any error.
+    """Load and parse ~/.doppel/config.yaml, returning {} on any error.
 
     Uses the module-level ``_hermes_home`` (so tests that monkeypatch it
     still see their fixture) and shares the mtime-keyed raw-yaml cache
@@ -1878,7 +1886,7 @@ class GatewayRunner:
                 logger.debug("state.db auto-maintenance skipped: %s", exc)
 
         # Opportunistic shadow-repo cleanup — deletes orphan/stale
-        # checkpoint repos under ~/.hermes/checkpoints/.  Opt-in via
+        # checkpoint repos under ~/.doppel/checkpoints/.  Opt-in via
         # checkpoints.auto_prune, idempotent via .last_prune marker.
         try:
             from hermes_cli.config import load_config as _load_full_config
@@ -2169,13 +2177,20 @@ class GatewayRunner:
 
     def _platform_connect_timeout_secs(self) -> float:
         """Return the per-platform connect timeout used during startup/retry."""
-        raw = os.getenv("HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT", "").strip()
+        raw = (
+            get_customer_facing_env_value(
+                "DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT",
+                "HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT",
+                "",
+            )
+            or ""
+        ).strip()
         if raw:
             try:
                 timeout = float(raw)
             except ValueError:
                 logger.warning(
-                    "Ignoring invalid HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT=%r",
+                    "Ignoring invalid DOPPEL_GATEWAY_PLATFORM_CONNECT_TIMEOUT/HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT=%r",
                     raw,
                 )
             else:
@@ -2296,18 +2311,18 @@ class GatewayRunner:
     def _telegram_topic_root_lobby_message(self) -> str:
         return (
             "This main chat is reserved for system commands.\n\n"
-            "To start a new Hermes chat, open the All Messages topic at the top "
+            "To start a new Doppel chat, open the All Messages topic at the top "
             "of this bot interface and send any message there. Telegram will "
             "create a new topic for that message; each topic works as an "
-            "independent Hermes session."
+            "independent Doppel session."
         )
 
     def _telegram_topic_root_new_message(self) -> str:
         return (
-            "To start a new parallel Hermes chat, open the All Messages topic "
+            "To start a new parallel Doppel chat, open the All Messages topic "
             "at the top of this bot interface and send any message there. "
             "Telegram will create a new topic for it.\n\n"
-            "Each topic is an independent Hermes session. Use /new inside an "
+            "Each topic is an independent Doppel session. Use /new inside an "
             "existing topic only if you want to replace that topic's current session."
         )
 
@@ -2315,7 +2330,7 @@ class GatewayRunner:
         if not self._is_telegram_topic_lane(source):
             return None
         return (
-            "Started a new Hermes session in this topic.\n\n"
+            "Started a new Doppel session in this topic.\n\n"
             "Tip: for parallel work, open All Messages and send a message there "
             "to create a separate topic instead of using /new here. /new replaces "
             "the session attached to the current topic."
@@ -2481,7 +2496,7 @@ class GatewayRunner:
             )
 
         # When the config has no model.default but a provider was resolved
-        # (e.g. user ran `hermes auth add openai-codex` without `hermes model`),
+        # (e.g. user ran `doppel auth add openai-codex` without `doppel model`),
         # fall back to the provider's first catalog model so the API call
         # doesn't fail with "model must be a non-empty string".
         if not model and runtime_kwargs.get("provider"):
@@ -2847,7 +2862,7 @@ class GatewayRunner:
         logger.warning(
             "%s paused after %d consecutive failures (%s) — "
             "fix the underlying issue then run `/platform resume %s` "
-            "to retry, or `hermes gateway restart` to restart the gateway.",
+            "to retry, or `doppel gateway restart` to restart the gateway.",
             platform.value, info.get("attempts", 0),
             info["pause_reason"], platform.value,
         )
@@ -2883,8 +2898,8 @@ class GatewayRunner:
         """Load ephemeral prefill messages from config or env var.
         
         Checks HERMES_PREFILL_MESSAGES_FILE env var first, then falls back to
-        the prefill_messages_file key in ~/.hermes/config.yaml.
-        Relative paths are resolved from ~/.hermes/.
+        the prefill_messages_file key in ~/.doppel/config.yaml.
+        Relative paths are resolved from ~/.doppel/.
         """
         file_path = os.getenv("HERMES_PREFILL_MESSAGES_FILE", "")
         if not file_path:
@@ -2914,7 +2929,7 @@ class GatewayRunner:
         """Load ephemeral system prompt from config or env var.
         
         Checks HERMES_EPHEMERAL_SYSTEM_PROMPT env var first, then falls back to
-        agent.system_prompt in ~/.hermes/config.yaml.
+        agent.system_prompt in ~/.doppel/config.yaml.
         """
         prompt = os.getenv("HERMES_EPHEMERAL_SYSTEM_PROMPT", "")
         if prompt:
@@ -3053,7 +3068,14 @@ class GatewayRunner:
     @staticmethod
     def _load_restart_drain_timeout() -> float:
         """Load graceful gateway restart/stop drain timeout in seconds."""
-        raw = os.getenv("HERMES_RESTART_DRAIN_TIMEOUT", "").strip()
+        raw = (
+            get_customer_facing_env_value(
+                "DOPPEL_RESTART_DRAIN_TIMEOUT",
+                "HERMES_RESTART_DRAIN_TIMEOUT",
+                "",
+            )
+            or ""
+        ).strip()
         if not raw:
             cfg = _load_gateway_runtime_config()
             raw = str(cfg_get(cfg, "agent", "restart_drain_timeout", default="") or "").strip()
@@ -3779,7 +3801,7 @@ class GatewayRunner:
 
         hermes_cmd = _resolve_hermes_bin()
         if not hermes_cmd:
-            logger.error("Could not locate hermes binary for detached /restart")
+            logger.error("Could not locate doppel binary for detached /restart")
             return
 
         current_pid = os.getpid()
@@ -3972,7 +3994,7 @@ class GatewayRunner:
         
         Returns True if at least one adapter connected successfully.
         """
-        logger.info("Starting Hermes Gateway...")
+        logger.info("Starting Doppel Gateway...")
         try:
             self._gateway_loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -3981,7 +4003,7 @@ class GatewayRunner:
 
         # Sanity-check that systemd's TimeoutStopSec covers our drain
         # window.  When the user upgraded hermes-agent without re-running
-        # ``hermes setup``, their unit file may still encode the old
+        # ``doppel setup``, their unit file may still encode the old
         # default — in which case SIGKILL hits mid-drain and looks like
         # a phantom kill in the journal.  Best-effort, never raises.
         try:
@@ -3991,7 +4013,7 @@ class GatewayRunner:
                 logger.warning(
                     "Stale systemd unit detected: %s has TimeoutStopSec=%.0fs but "
                     "drain_timeout=%.0fs (expected >=%.0fs). systemd may SIGKILL the "
-                    "gateway mid-drain. Run `hermes gateway service install --replace` "
+                    "gateway mid-drain. Run `doppel gateway service install --replace` "
                     "to regenerate the unit, or shorten agent.restart_drain_timeout.",
                     _alignment.get("unit", "(unknown)"),
                     _alignment["timeout_stop_sec"],
@@ -4063,7 +4085,7 @@ class GatewayRunner:
             if _adv_msg:
                 logger.warning("%s", _adv_msg)
                 logger.warning(
-                    "Run `hermes doctor` on the gateway host for full "
+                    "Run `doppel doctor` on the gateway host for full "
                     "remediation steps."
                 )
         except Exception:
@@ -4132,7 +4154,7 @@ class GatewayRunner:
         if not _any_allowlist and not _allow_all:
             logger.warning(
                 "No user allowlists configured. All unauthorized users will be denied. "
-                "Set GATEWAY_ALLOW_ALL_USERS=true in ~/.hermes/.env to allow open access, "
+                "Set GATEWAY_ALLOW_ALL_USERS=true in ~/.doppel/.env to allow open access, "
                 "or configure platform allowlists (e.g., TELEGRAM_ALLOWED_USERS=your_id)."
             )
         
@@ -4189,8 +4211,8 @@ class GatewayRunner:
         #
         # SKIP suspension after a clean (graceful) shutdown — the previous
         # process already drained active agents, so sessions aren't stuck.
-        # This prevents unwanted auto-resets after `hermes update`,
-        # `hermes gateway restart`, or `/restart`.
+        # This prevents unwanted auto-resets after `doppel update`,
+        # `doppel gateway restart`, or `/restart`.
         _clean_marker = _hermes_home / ".clean_shutdown"
         if _clean_marker.exists():
             logger.info("Previous gateway exited cleanly — skipping session suspension")
@@ -4595,7 +4617,7 @@ class GatewayRunner:
         # (no permission, topics-mode off, parent is a DM, etc.). When
         # None we fall through to using the home channel directly — the
         # synthetic turn still lands; just without thread isolation.
-        thread_name = f"Hermes — {cli_title}"
+        thread_name = f"Doppel — {cli_title}"
         try:
             new_thread_id = await adapter.create_handoff_thread(
                 str(home.chat_id), thread_name,
@@ -5655,7 +5677,7 @@ class GatewayRunner:
                         "SQLite database; pausing dispatch for this board until "
                         "the file changes, the gateway restarts, or the "
                         "quarantine timer expires. Move or restore the file, "
-                        "then run `hermes kanban init` if you need a fresh board.",
+                        "then run `doppel kanban init` if you need a fresh board.",
                         slug,
                         fingerprint[0],
                     )
@@ -5670,7 +5692,7 @@ class GatewayRunner:
                         "SQLite database; pausing dispatch for this board until "
                         "the file changes, the gateway restarts, or the "
                         "quarantine timer expires. Move or restore the file, "
-                        "then run `hermes kanban init` if you need a fresh board.",
+                        "then run `doppel kanban init` if you need a fresh board.",
                         slug,
                         fingerprint[0],
                     )
@@ -5880,7 +5902,7 @@ class GatewayRunner:
                             "kanban dispatcher stuck: ready queue non-empty for "
                             "%d consecutive ticks but 0 workers spawned. Check "
                             "profile health (venv, PATH, credentials) and "
-                            "`hermes kanban list --status ready`.",
+                            "`doppel kanban list --status ready`.",
                             bad_ticks,
                         )
                         last_warn_at = now
@@ -6456,7 +6478,7 @@ class GatewayRunner:
         elif platform == Platform.SLACK:
             from gateway.platforms.slack import SlackAdapter, check_slack_requirements
             if not check_slack_requirements():
-                logger.warning("Slack: slack-bolt not installed. Run: pip install 'hermes-agent[slack]'")
+                logger.warning("Slack: slack-bolt not installed. Run: pip install 'doppel-agent[slack]'")
                 return None
             return SlackAdapter(config)
 
@@ -7039,7 +7061,7 @@ class GatewayRunner:
                             f"Hi~ I don't recognize you yet!\n\n"
                             f"Here's your pairing code: `{code}`\n\n"
                             f"Ask the bot owner to run:\n"
-                            f"`hermes pairing approve {platform_name} {code}`"
+                            f"`doppel pairing approve {platform_name} {code}`"
                         )
                 else:
                     adapter = self.adapters.get(source.platform)
@@ -7217,7 +7239,11 @@ class GatewayRunner:
         # wall-clock age alone isn't sufficient.  Evict only when the agent
         # has been *idle* beyond the inactivity threshold (or when the agent
         # object has no activity tracker and wall-clock age is extreme).
-        _raw_stale_timeout = _float_env("HERMES_AGENT_TIMEOUT", 1800)
+            _raw_stale_timeout = _float_env(
+                "HERMES_AGENT_TIMEOUT",
+                1800,
+                preferred_name="DOPPEL_AGENT_TIMEOUT",
+            )
         _stale_ts = self._running_agents_ts.get(_quick_key, 0)
         if _quick_key in self._running_agents and _stale_ts:
             _stale_age = time.time() - _stale_ts
@@ -7993,7 +8019,7 @@ class GatewayRunner:
                         if _skill_name in _get_plat_disabled(platform=_plat):
                             return (
                                 f"The **{_skill_name}** skill is disabled for {_plat}.\n"
-                                f"Enable it with: `hermes skills config`"
+                                f"Enable it with: `doppel skills config`"
                             )
                     user_instruction = event.get_command_args().strip()
                     msg = build_skill_invocation_message(
@@ -8211,13 +8237,13 @@ class GatewayRunner:
                                 "🎤 I received your voice message but can't transcribe it — "
                                 "no speech-to-text provider is configured.\n\n"
                                 "To enable voice: install faster-whisper "
-                                "(`uv pip install faster-whisper` in the Hermes venv; "
+                                "(`uv pip install faster-whisper` in the active Doppel environment; "
                                 "`pip install faster-whisper` also works if pip is on PATH) "
                                 "and set `stt.enabled: true` in config.yaml, "
                                 "then /restart the gateway."
                             )
                             if self._has_setup_skill():
-                                _stt_msg += "\n\nFor full setup instructions, type: `/skill hermes-agent-setup`"
+                                _stt_msg += "\n\nFor guided host setup, run `doppel setup` on the host."
                             await _stt_adapter.send(
                                 source.chat_id,
                                 _stt_msg,
@@ -8944,17 +8970,13 @@ class GatewayRunner:
             platform_name = source.platform.value
             env_key = _home_target_env_var(platform_name)
             if not os.getenv(env_key):
-                # Slack dispatches all Hermes commands through a single
-                # parent slash command `/hermes`; bare `/sethome` is not
-                # registered and would fail with "app did not respond".
-                sethome_cmd = (
-                    "/hermes sethome"
-                    if source.platform == Platform.SLACK
-                    else "/sethome"
-                )
+                # Slack now registers /sethome natively in generated
+                # manifests, so the same onboarding hint works across
+                # messaging platforms.
+                sethome_cmd = "/sethome"
                 notice = (
                     f"📬 No home channel is set for {platform_name.title()}. "
-                    f"A home channel is where Hermes delivers cron job results "
+                    f"A home channel is where Doppel delivers cron job results "
                     f"and cross-platform messages.\n\n"
                     f"Type {sethome_cmd} to make this chat your home channel, "
                     f"or ignore to skip."
@@ -10218,7 +10240,7 @@ class GatewayRunner:
                 return (
                     f"✓ {platform.value} paused. "
                     f"Resume with `/platform resume {platform.value}` or "
-                    f"`hermes gateway restart` to reset."
+                    f"`doppel gateway restart` to reset."
                 )
             # action == "resume"
             if platform not in failed:
@@ -10870,7 +10892,7 @@ class GatewayRunner:
 
         Same surface as the CLI handler in cli.py:
             /codex-runtime                  — show current state
-            /codex-runtime auto             — Hermes default runtime
+            /codex-runtime auto             — Doppel default runtime
             /codex-runtime codex_app_server — codex subprocess runtime
             /codex-runtime on / off         — synonyms
 
@@ -12730,7 +12752,7 @@ class GatewayRunner:
         try:
             send_result = await adapter.send(
                 source.chat_id,
-                "System topic for Hermes commands and status.",
+                "System topic for Doppel commands and status.",
                 metadata={"thread_id": str(thread_id)},
             )
             message_id = getattr(send_result, "message_id", None)
@@ -12773,7 +12795,7 @@ class GatewayRunner:
         """Return a Bot API-safe forum topic name from a generated session title."""
         cleaned = re.sub(r"\s+", " ", str(title or "")).strip()
         if not cleaned:
-            return "Hermes Chat"
+            return "Doppel Chat"
         # Telegram forum topic names are short (currently 1-128 chars). Keep
         # extra room for multi-byte titles and avoid trailing ellipsis churn.
         if len(cleaned) > 120:
@@ -12957,11 +12979,11 @@ class GatewayRunner:
             "  /topic <id>        Inside a topic: restore a previous session by ID\n"
             "\n"
             "How it works:\n"
-            "1. Run /topic once in this DM — Hermes checks BotFather Threads\n"
+            "1. Run /topic once in this DM — Doppel checks BotFather Threads\n"
             "   Settings are enabled and flips on multi-session mode.\n"
             "2. Tap All Messages at the top of the bot and send any message.\n"
             "   Telegram creates a new topic for that message; each topic is\n"
-            "   an independent Hermes session (fresh history, fresh context).\n"
+            "   an independent Doppel session (fresh history, fresh context).\n"
             "3. The root DM becomes a system lobby — send /topic, /status,\n"
             "   /help, /usage there. Normal prompts go in a topic.\n"
             "4. /new inside a topic resets just that topic's session.\n"
@@ -13001,7 +13023,7 @@ class GatewayRunner:
             "Multi-session topic mode is now OFF for this chat.\n\n"
             "Existing topics in Telegram aren't removed — they'll just stop "
             "being gated as independent sessions. The root DM works as a "
-            "normal Hermes chat again. Run /topic to re-enable later."
+            "normal Doppel chat again. Run /topic to re-enable later."
         )
 
     async def _handle_topic_command(self, event: MessageEvent, args: str = "") -> str:
@@ -13097,7 +13119,7 @@ class GatewayRunner:
         lines = [
             "Telegram multi-session topics are enabled.",
             "",
-            "To create a new Hermes chat, open All Messages at the top of this "
+            "To create a new Doppel chat, open All Messages at the top of this "
             "bot interface and send any message there. Telegram will create a "
             "new topic for it.",
             "",
@@ -13190,7 +13212,7 @@ class GatewayRunner:
 
         response = f"Session restored: {title}"
         if last_assistant:
-            response += f"\n\nLast Hermes message:\n{last_assistant}"
+            response += f"\n\nLast Doppel message:\n{last_assistant}"
         return response
 
     async def _handle_title_command(self, event: MessageEvent) -> str:
@@ -13913,7 +13935,7 @@ class GatewayRunner:
             return (
                 "No skill bundles installed.\n"
                 "Create one on the host with:\n"
-                "  `hermes bundles create <name> --skill <s1> --skill <s2>`\n"
+                "  `doppel bundles create <name> --skill <s1> --skill <s2>`\n"
                 f"Directory: `{_bundles_dir()}`"
             )
 
@@ -14302,10 +14324,10 @@ class GatewayRunner:
         return await loop.run_in_executor(None, _collect_and_upload)
 
     async def _handle_update_command(self, event: MessageEvent) -> str:
-        """Handle /update command — update Hermes Agent to the latest version.
+        """Handle /update command — update Doppel Agent to the latest version.
 
-        Spawns ``hermes update`` in a detached session (via ``setsid``) so it
-        survives the gateway restart that ``hermes update`` may trigger. Marker
+        Spawns ``doppel update`` in a detached session (via ``setsid``) so it
+        survives the gateway restart that ``doppel update`` may trigger. Marker
         files are written so either the current gateway process or the next one
         can notify the user when the update finishes.
         """
@@ -14329,7 +14351,7 @@ class GatewayRunner:
                 return t("gateway.update.platform_not_messaging")
 
         if is_managed():
-            return f"✗ {format_managed_message('update Hermes Agent')}"
+            return f"✗ {format_managed_message('update Doppel Agent')}"
 
         project_root = Path(__file__).parent.parent.resolve()
         git_dir = project_root / '.git'
@@ -14359,7 +14381,7 @@ class GatewayRunner:
         _tmp_pending.replace(pending_path)
         exit_code_path.unlink(missing_ok=True)
 
-        # Spawn `hermes update --gateway` detached so it survives gateway restart.
+        # Spawn `doppel update --gateway` detached so it survives gateway restart.
         # --gateway enables file-based IPC for interactive prompts (stash
         # restore, config migration) so the gateway can forward them to the
         # user instead of silently skipping them.
@@ -14367,7 +14389,7 @@ class GatewayRunner:
         # where systemd-run --user fails due to missing D-Bus session).
         # PYTHONUNBUFFERED ensures output is flushed line-by-line so the
         # gateway can stream it to the messenger in near-real-time.
-        # Spawn `hermes update --gateway` detached so it survives gateway restart.
+        # Spawn `doppel update --gateway` detached so it survives gateway restart.
         # --gateway enables file-based IPC for interactive prompts (stash
         # restore, config migration) so the gateway can forward them to the
         # user instead of silently skipping them.
@@ -14376,7 +14398,7 @@ class GatewayRunner:
         # PYTHONUNBUFFERED ensures output is flushed line-by-line so the
         # gateway can stream it to the messenger in near-real-time.
         #
-        # Windows: no bash/setsid chain.  Run `hermes update --gateway`
+        # Windows: no bash/setsid chain.  Run `doppel update --gateway`
         # directly via sys.executable; redirect stdout/stderr to the same
         # output files via Popen file handles; write the exit code in a
         # follow-up write.  A tiny Python watcher would be cleaner but
@@ -14470,7 +14492,7 @@ class GatewayRunner:
         stream_interval: float = 4.0,
         timeout: float = 1800.0,
     ) -> None:
-        """Watch ``hermes update --gateway``, streaming output + forwarding prompts.
+        """Watch ``doppel update --gateway``, streaming output + forwarding prompts.
 
         Polls ``.update_output.txt`` for new content and sends chunks to the
         user periodically.  Detects ``.update_prompt.json`` (written by the
@@ -14571,11 +14593,11 @@ class GatewayRunner:
                     exit_code_raw = exit_code_path.read_text().strip() or "1"
                     exit_code = int(exit_code_raw)
                     if exit_code == 0:
-                        await adapter.send(chat_id, "✅ Hermes update finished.", metadata=metadata)
+                        await adapter.send(chat_id, "✅ Doppel update finished.", metadata=metadata)
                     else:
                         await adapter.send(
                             chat_id,
-                            "❌ Hermes update failed (exit code {}).".format(exit_code),
+                            "❌ Doppel update failed (exit code {}).".format(exit_code),
                             metadata=metadata,
                         )
                     logger.info("Update finished (exit=%s), notified %s", exit_code, session_key)
@@ -14663,7 +14685,7 @@ class GatewayRunner:
             try:
                 await adapter.send(
                     chat_id,
-                    "❌ Hermes update timed out after 30 minutes.",
+                    "❌ Doppel update timed out after 30 minutes.",
                     metadata=metadata,
                 )
             except Exception:
@@ -14736,13 +14758,13 @@ class GatewayRunner:
                     if len(output) > 3500:
                         output = "…" + output[-3500:]
                     if exit_code == 0:
-                        msg = f"✅ Hermes update finished.\n\n```\n{output}\n```"
+                        msg = f"✅ Doppel update finished.\n\n```\n{output}\n```"
                     else:
-                        msg = f"❌ Hermes update failed.\n\n```\n{output}\n```"
+                        msg = f"❌ Doppel update failed.\n\n```\n{output}\n```"
                 elif exit_code == 0:
-                    msg = "✅ Hermes update finished successfully."
+                    msg = "✅ Doppel update finished successfully."
                 else:
-                    msg = "❌ Hermes update failed. Check the gateway logs or run `hermes update` manually for details."
+                    msg = "❌ Doppel update failed. Check the gateway logs or run `doppel update` manually for details."
                 await adapter.send(chat_id, msg, metadata=metadata)
                 logger.info(
                     "Sent post-update notification to %s:%s (exit=%s)",
@@ -14837,7 +14859,7 @@ class GatewayRunner:
         """
         delivered: set[tuple[str, str, Optional[str]]] = set()
         skipped = skip_targets or set()
-        message = "♻️ Gateway online — Hermes is back and ready."
+        message = "♻️ Gateway online — Doppel is back and ready."
 
         for platform, adapter in self.adapters.items():
             home = self.config.get_home_channel(platform)
@@ -15075,8 +15097,8 @@ class GatewayRunner:
                         )
                         if self._has_setup_skill():
                             _no_stt_note += (
-                                " You have a skill called hermes-agent-setup "
-                                "that can help users configure Hermes features "
+                                " You have setup guidance available "
+                                "that can help users configure Doppel features "
                                 "including voice, tools, and more."
                             )
                         _no_stt_note += "]"
@@ -16015,7 +16037,7 @@ class GatewayRunner:
         if proxy_key:
             headers["Authorization"] = f"Bearer {proxy_key}"
         if session_id:
-            headers["X-Hermes-Session-Id"] = session_id
+            headers[API_SERVER_SESSION_ID_HEADER] = session_id
 
         body = {
             "model": "hermes-agent",
@@ -17985,11 +18007,19 @@ class GatewayRunner:
             # configured duration is caught and killed.  (#4815)
             #
             # Config: agent.gateway_timeout in config.yaml, or
-            # HERMES_AGENT_TIMEOUT env var (env var takes precedence).
+            # DOPPEL_AGENT_TIMEOUT env var (legacy Hermes alias still works).
             # Default 1800s (30 min inactivity).  0 = unlimited.
-            _agent_timeout_raw = _float_env("HERMES_AGENT_TIMEOUT", 1800)
+            _agent_timeout_raw = _float_env(
+                "HERMES_AGENT_TIMEOUT",
+                1800,
+                preferred_name="DOPPEL_AGENT_TIMEOUT",
+            )
             _agent_timeout = _agent_timeout_raw if _agent_timeout_raw > 0 else None
-            _agent_warning_raw = _float_env("HERMES_AGENT_TIMEOUT_WARNING", 900)
+            _agent_warning_raw = _float_env(
+                "HERMES_AGENT_TIMEOUT_WARNING",
+                900,
+                preferred_name="DOPPEL_AGENT_TIMEOUT_WARNING",
+            )
             _agent_warning = _agent_warning_raw if _agent_warning_raw > 0 else None
             _warning_fired = False
             _executor_task = asyncio.ensure_future(
@@ -18566,7 +18596,7 @@ def _run_planned_stop_watcher(
 
     On Windows, ``asyncio.add_signal_handler`` raises NotImplementedError
     for SIGTERM/SIGINT, so the standard signal-driven shutdown path
-    never runs when ``hermes gateway stop`` signals the gateway. The
+    never runs when ``doppel gateway stop`` signals the gateway. The
     consequence is that the drain loop is skipped — in-flight agent
     sessions are killed mid-turn and ``resume_pending`` is never set,
     so the next gateway boot has no idea those sessions need to be
@@ -18849,15 +18879,15 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         else:
             hermes_home = str(get_hermes_home())
             logger.error(
-                "Another gateway instance is already running (PID %d, HERMES_HOME=%s). "
-                "Use 'hermes gateway restart' to replace it, or 'hermes gateway stop' first.",
+                "Another gateway instance is already running (PID %d, DOPPEL_HOME=%s). "
+                "Use 'doppel gateway restart' to replace it, or 'doppel gateway stop' first.",
                 existing_pid, hermes_home,
             )
             print(
                 f"\n❌ Gateway already running (PID {existing_pid}).\n"
-                f"   Use 'hermes gateway restart' to replace it,\n"
-                f"   or 'hermes gateway stop' to kill it first.\n"
-                f"   Or use 'hermes gateway run --replace' to auto-replace.\n"
+                f"   Use 'doppel gateway restart' to replace it,\n"
+                f"   or 'doppel gateway stop' to kill it first.\n"
+                f"   Or use 'doppel gateway run --replace' to auto-replace.\n"
             )
             return False
 
@@ -18943,7 +18973,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         except Exception as e:
             logger.debug("Takeover marker check failed: %s", e)
 
-        # Planned stop check: service managers and `hermes gateway stop`
+        # Planned stop check: service managers and `doppel gateway stop`
         # also send SIGTERM, which is indistinguishable from an unexpected
         # external kill unless the CLI marks it first. SIGINT comes from an
         # interactive Ctrl+C and is likewise an intentional foreground stop.
@@ -19049,12 +19079,12 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         logger.info("Skipping signal handlers (not running in main thread).")
 
     # Windows fallback: asyncio.add_signal_handler raises NotImplementedError
-    # on Windows, so `hermes gateway stop`'s SIGTERM (which Python maps to
+    # on Windows, so `doppel gateway stop`'s SIGTERM (which Python maps to
     # TerminateProcess on Windows) never invokes shutdown_signal_handler.
     # That means the drain loop never runs, mark_resume_pending never fires,
     # and sessions are silently lost across restarts (issue #33778).
     #
-    # The fix is a marker-polling thread: `hermes gateway stop` writes the
+    # The fix is a marker-polling thread: `doppel gateway stop` writes the
     # planned-stop marker BEFORE killing, and this thread notices it and
     # drives the same shutdown path the signal handler would have.  Runs
     # on every platform (cheap, defensive) so non-signal-bearing
@@ -19173,10 +19203,10 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     # When an unexpected SIGTERM caused the shutdown and it wasn't a planned
     # restart (/restart, /update, SIGUSR1), exit non-zero so systemd's
     # Restart=on-failure revives the process.  This covers:
-    #   - hermes update killing the gateway mid-work
+    #   - doppel update killing the gateway mid-work
     #   - External kill commands
     #   - WSL2/container runtime sending unexpected signals
-    # `hermes gateway stop` and interactive Ctrl+C are handled above as
+    # `doppel gateway stop` and interactive Ctrl+C are handled above as
     # planned stops and should not trigger service-manager revival.
     if _signal_initiated_shutdown and not runner._restart_requested:
         logger.info(
@@ -19213,7 +19243,7 @@ def main():
 
     import argparse
     
-    parser = argparse.ArgumentParser(description="Hermes Gateway - Multi-platform messaging")
+    parser = argparse.ArgumentParser(description="Doppel Gateway - Multi-platform messaging")
     parser.add_argument("--config", "-c", help="Path to gateway config file")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     

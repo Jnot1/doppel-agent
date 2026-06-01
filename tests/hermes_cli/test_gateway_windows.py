@@ -68,13 +68,13 @@ def test_build_gateway_argv_uses_base_pythonw_for_uv_venv_launcher(monkeypatch, 
 
 
 def _arrange_startup_fallback(monkeypatch, tmp_path, running_pids):
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
-    startup_entry = tmp_path / "Startup" / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
+    startup_entry = tmp_path / "Startup" / "Doppel_Gateway_alice.cmd"
     calls = []
 
     monkeypatch.setattr(gateway_windows, "_prompt_install_choices", lambda *args, **kwargs: (False, True))
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
-    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Hermes_Gateway_alice")
+    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Doppel_Gateway_alice")
     monkeypatch.setattr(gateway_windows, "_write_task_script", lambda: script_path)
     monkeypatch.setattr(
         gateway_windows,
@@ -155,7 +155,7 @@ def test_elevated_gateway_command_uses_pythonw_hidden_console(monkeypatch):
 def test_install_scheduled_task_recreates_instead_of_change(monkeypatch, tmp_path):
     """Install must delete+create so stale minute-repeat task settings are not preserved."""
     calls = []
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
 
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
 
@@ -168,11 +168,11 @@ def test_install_scheduled_task_recreates_instead_of_change(monkeypatch, tmp_pat
         raise AssertionError(f"unexpected schtasks args: {args}")
 
     monkeypatch.setattr(gateway_windows, "_exec_schtasks", fake_schtasks)
-    ok, detail = gateway_windows._install_scheduled_task("Hermes_Gateway_alice", script_path)
+    ok, detail = gateway_windows._install_scheduled_task("Doppel_Gateway_alice", script_path)
 
     assert ok is True
     assert "/Change" not in [arg for call in calls for arg in call]
-    assert calls[0][:4] == ("/Delete", "/F", "/TN", "Hermes_Gateway_alice")
+    assert calls[0][:4] == ("/Delete", "/F", "/TN", "Doppel_Gateway_alice")
     assert calls[1][0] == "/Create"
     assert "/SC" in calls[1]
     assert "ONLOGON" in calls[1]
@@ -180,18 +180,18 @@ def test_install_scheduled_task_recreates_instead_of_change(monkeypatch, tmp_pat
 
 def test_install_scheduled_task_success_start_now_uses_direct_spawn_not_task_run(monkeypatch, tmp_path, capsys):
     """Install start-now should not /Run the task; that preserved old restart loops."""
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
     calls = []
 
     monkeypatch.setattr(gateway_windows, "_prompt_install_choices", lambda *args, **kwargs: (True, True))
     monkeypatch.setattr(gateway_windows, "_is_running_as_admin", lambda: True)
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
-    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Hermes_Gateway_alice")
+    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Doppel_Gateway_alice")
     monkeypatch.setattr(gateway_windows, "_write_task_script", lambda: script_path)
     monkeypatch.setattr(
         gateway_windows,
         "_install_scheduled_task",
-        lambda task_name, script_path: (True, "Created Scheduled Task 'Hermes_Gateway_alice'"),
+        lambda task_name, script_path: (True, "Created Scheduled Task 'Doppel_Gateway_alice'"),
     )
     monkeypatch.setattr(gateway_windows, "_gateway_pids", lambda: [])
     monkeypatch.setattr(gateway_windows, "_exec_schtasks", lambda args: calls.append(("schtasks", tuple(args))) or (0, "", ""))
@@ -210,18 +210,18 @@ def test_install_scheduled_task_success_start_now_uses_direct_spawn_not_task_run
 
 def test_install_scheduled_task_success_does_not_auto_start(monkeypatch, tmp_path, capsys):
     """Install should register/update the task only; start is explicit."""
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
     calls = []
 
     monkeypatch.setattr(gateway_windows, "_prompt_install_choices", lambda *args, **kwargs: (False, True))
     monkeypatch.setattr(gateway_windows, "_is_running_as_admin", lambda: True)
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
-    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Hermes_Gateway_alice")
+    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Doppel_Gateway_alice")
     monkeypatch.setattr(gateway_windows, "_write_task_script", lambda: script_path)
     monkeypatch.setattr(
         gateway_windows,
         "_install_scheduled_task",
-        lambda task_name, script_path: (True, "Created Scheduled Task 'Hermes_Gateway_alice'"),
+        lambda task_name, script_path: (True, "Created Scheduled Task 'Doppel_Gateway_alice'"),
     )
     monkeypatch.setattr(gateway_windows, "_exec_schtasks", lambda args: calls.append(("schtasks", tuple(args))) or (0, "", ""))
     monkeypatch.setattr(gateway_windows, "_spawn_detached", lambda path=None: calls.append(("spawn", path)) or 12345)
@@ -238,14 +238,72 @@ def test_install_scheduled_task_success_does_not_auto_start(monkeypatch, tmp_pat
     assert "auto-start installed for Windows login" in out
 
 
+def test_install_reconciles_legacy_task_and_artifacts_after_canonical_install(monkeypatch, tmp_path, capsys):
+    calls = []
+    canonical_script = tmp_path / "Doppel_Gateway_alice.cmd"
+    legacy_script = tmp_path / "Hermes_Gateway_alice.cmd"
+    canonical_startup = tmp_path / "Startup" / "Doppel_Gateway_alice.cmd"
+    legacy_startup = tmp_path / "Startup" / "Hermes_Gateway_alice.cmd"
+    legacy_script.write_text("legacy-task", encoding="utf-8")
+    canonical_startup.parent.mkdir(parents=True)
+    legacy_startup.write_text("legacy-startup", encoding="utf-8")
+
+    monkeypatch.setattr(gateway_windows, "_prompt_install_choices", lambda *args, **kwargs: (False, True))
+    monkeypatch.setattr(gateway_windows, "_is_running_as_admin", lambda: True)
+    monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
+    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Doppel_Gateway_alice")
+    monkeypatch.setattr(
+        gateway_windows,
+        "get_task_names",
+        lambda: ("Doppel_Gateway_alice", "Hermes_Gateway_alice"),
+    )
+    monkeypatch.setattr(gateway_windows, "_write_task_script", lambda: canonical_script)
+    monkeypatch.setattr(
+        gateway_windows,
+        "get_task_script_paths",
+        lambda: (canonical_script, legacy_script),
+    )
+    monkeypatch.setattr(
+        gateway_windows,
+        "get_startup_entry_paths",
+        lambda: (canonical_startup, legacy_startup),
+    )
+    monkeypatch.setattr(
+        gateway_windows,
+        "_install_scheduled_task",
+        lambda task_name, script_path: (True, "Created Scheduled Task 'Doppel_Gateway_alice'"),
+    )
+    monkeypatch.setattr(
+        gateway_windows,
+        "_exec_schtasks",
+        lambda args: calls.append(tuple(args)) or (0, "", ""),
+    )
+    monkeypatch.setattr(gateway_windows, "_print_next_steps", lambda: calls.append(("next_steps",)))
+    monkeypatch.setattr(gateway_windows, "_spawn_detached", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("spawn should not run")))
+    monkeypatch.setattr(gateway_windows, "_report_gateway_start", lambda via: (_ for _ in ()).throw(AssertionError("report should not run")))
+
+    gateway_windows.install(force=False)
+
+    assert calls == [
+        ("/Delete", "/F", "/TN", "Hermes_Gateway_alice"),
+        ("next_steps",),
+    ]
+    assert not legacy_script.exists()
+    assert not legacy_startup.exists()
+    out = capsys.readouterr().out
+    assert "Removed legacy Scheduled Task 'Hermes_Gateway_alice'" in out
+    assert "Removed legacy Windows login item" in out
+    assert "Removed legacy Task script" in out
+
+
 def test_install_access_denied_launches_elevated_install_before_startup_fallback(monkeypatch, tmp_path, capsys):
     """Non-admin Scheduled Task access denied should hand off to UAC elevation."""
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
     calls = []
 
     monkeypatch.setattr(gateway_windows, "_prompt_install_choices", lambda *args, **kwargs: (False, True))
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
-    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Hermes_Gateway_alice")
+    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Doppel_Gateway_alice")
     monkeypatch.setattr(gateway_windows, "_write_task_script", lambda: script_path)
     monkeypatch.setattr(
         gateway_windows,
@@ -271,17 +329,17 @@ def test_install_access_denied_launches_elevated_install_before_startup_fallback
     out = capsys.readouterr().out
     assert "administrator approval" in out
     assert "UAC is Windows' admin approval prompt" in out
-    assert "Launched elevated Hermes gateway install prompt" in out
+    assert "Launched elevated Doppel gateway install prompt" in out
 
 
 def test_install_prompts_start_choices_before_uac(monkeypatch, tmp_path, capsys):
     """Windows install asks start-now and auto-start before any UAC handoff."""
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
     calls = []
     answers = iter([True, True, True])
 
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
-    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Hermes_Gateway_alice")
+    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Doppel_Gateway_alice")
     monkeypatch.setattr(gateway_windows, "_write_task_script", lambda: script_path)
     monkeypatch.setattr(
         gateway_windows,
@@ -309,6 +367,103 @@ def test_install_prompts_start_choices_before_uac(monkeypatch, tmp_path, capsys)
     ]
     out = capsys.readouterr().out
     assert "elevated install will start the gateway afterwards" in out
+
+
+def test_get_task_name_uses_doppel_identity(monkeypatch):
+    monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
+    monkeypatch.setattr("hermes_cli.gateway._profile_suffix", lambda: "alice")
+
+    assert gateway_windows.get_task_name() == "Doppel_Gateway_alice"
+
+
+def test_is_task_registered_accepts_legacy_task_name(monkeypatch):
+    calls = []
+
+    monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
+    monkeypatch.setattr("hermes_cli.gateway._profile_suffix", lambda: "alice")
+
+    def fake_schtasks(args):
+        calls.append(tuple(args))
+        if args == ["/Query", "/TN", "Doppel_Gateway_alice"]:
+            return (1, "", "ERROR: The system cannot find the file specified.")
+        if args == ["/Query", "/TN", "Hermes_Gateway_alice"]:
+            return (0, "", "")
+        raise AssertionError(f"unexpected schtasks args: {args}")
+
+    monkeypatch.setattr(gateway_windows, "_exec_schtasks", fake_schtasks)
+
+    assert gateway_windows.is_task_registered() is True
+    assert calls == [
+        ("/Query", "/TN", "Doppel_Gateway_alice"),
+        ("/Query", "/TN", "Hermes_Gateway_alice"),
+    ]
+
+
+def test_query_task_status_reads_legacy_task_when_canonical_missing(monkeypatch):
+    calls = []
+
+    monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
+    monkeypatch.setattr("hermes_cli.gateway._profile_suffix", lambda: "alice")
+
+    def fake_schtasks(args):
+        calls.append(tuple(args))
+        if args == ["/Query", "/TN", "Doppel_Gateway_alice", "/V", "/FO", "LIST"]:
+            return (1, "", "ERROR: The system cannot find the file specified.")
+        if args == ["/Query", "/TN", "Hermes_Gateway_alice", "/V", "/FO", "LIST"]:
+            return (0, "Status: Running\nLast Result: 0x0\n", "")
+        raise AssertionError(f"unexpected schtasks args: {args}")
+
+    monkeypatch.setattr(gateway_windows, "_exec_schtasks", fake_schtasks)
+
+    assert gateway_windows.query_task_status() == {
+        "status": "Running",
+        "last run result": "0x0",
+    }
+    assert calls == [
+        ("/Query", "/TN", "Doppel_Gateway_alice", "/V", "/FO", "LIST"),
+        ("/Query", "/TN", "Hermes_Gateway_alice", "/V", "/FO", "LIST"),
+    ]
+
+
+def test_start_runs_legacy_task_when_canonical_missing(monkeypatch, capsys):
+    calls = []
+
+    monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
+    monkeypatch.setattr("hermes_cli.gateway._profile_suffix", lambda: "alice")
+    monkeypatch.setattr(gateway_windows, "_gateway_pids", lambda: [])
+    monkeypatch.setattr(gateway_windows, "is_startup_entry_installed", lambda: False)
+    monkeypatch.setattr(
+        "hermes_cli.setup.prompt_yes_no",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("prompt should not run")),
+    )
+    monkeypatch.setattr(gateway_windows, "_report_gateway_start", lambda via: calls.append(("report", via)))
+    monkeypatch.setattr(
+        gateway_windows,
+        "_spawn_detached",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("direct spawn should not run")),
+    )
+
+    def fake_schtasks(args):
+        calls.append(tuple(args))
+        if args == ["/Query", "/TN", "Doppel_Gateway_alice"]:
+            return (1, "", "ERROR: The system cannot find the file specified.")
+        if args == ["/Query", "/TN", "Hermes_Gateway_alice"]:
+            return (0, "", "")
+        if args == ["/Run", "/TN", "Hermes_Gateway_alice"]:
+            return (0, "", "")
+        raise AssertionError(f"unexpected schtasks args: {args}")
+
+    monkeypatch.setattr(gateway_windows, "_exec_schtasks", fake_schtasks)
+
+    gateway_windows.start()
+
+    assert calls == [
+        ("/Query", "/TN", "Doppel_Gateway_alice"),
+        ("/Query", "/TN", "Hermes_Gateway_alice"),
+        ("/Run", "/TN", "Hermes_Gateway_alice"),
+        ("report", "Scheduled Task 'Hermes_Gateway_alice'"),
+    ]
+    assert capsys.readouterr().out == ""
 
 
 def test_install_start_now_without_login_autostart_never_escalates(monkeypatch, capsys):
@@ -376,17 +531,17 @@ def test_install_startup_fallback_does_not_auto_spawn_when_gateway_stopped(monke
     assert ("next_steps", None) in calls
     out = capsys.readouterr().out
     assert "gateway not started now" in out
-    assert "hermes --profile alice gateway start" in out
+    assert "doppel --profile alice gateway start" in out
 
 
 def test_install_access_denied_declined_elevation_uses_startup_fallback(monkeypatch, tmp_path, capsys):
     """Install should ask before UAC; declining keeps the non-jarring fallback path."""
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
     calls = []
 
     monkeypatch.setattr(gateway_windows, "_prompt_install_choices", lambda *args, **kwargs: (False, True))
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
-    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Hermes_Gateway_alice")
+    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Doppel_Gateway_alice")
     monkeypatch.setattr(gateway_windows, "_write_task_script", lambda: script_path)
     monkeypatch.setattr(
         gateway_windows,
@@ -421,15 +576,14 @@ def test_install_access_denied_declined_elevation_uses_startup_fallback(monkeypa
 def test_uninstall_access_denied_prompts_before_elevating(monkeypatch, tmp_path, capsys):
     """Uninstall should hand off to an elevated uninstall only after user consent."""
     calls = []
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
-    startup_entry = tmp_path / "Startup" / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
+    startup_entry = tmp_path / "Startup" / "Doppel_Gateway_alice.cmd"
 
     monkeypatch.setattr(gateway_windows, "_prompt_install_choices", lambda *args, **kwargs: (False, True))
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
-    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Hermes_Gateway_alice")
-    monkeypatch.setattr(gateway_windows, "get_task_script_path", lambda: script_path)
-    monkeypatch.setattr(gateway_windows, "get_startup_entry_path", lambda: startup_entry)
-    monkeypatch.setattr(gateway_windows, "is_task_registered", lambda: True)
+    monkeypatch.setattr(gateway_windows, "get_registered_task_names", lambda: ("Doppel_Gateway_alice",))
+    monkeypatch.setattr(gateway_windows, "get_task_script_paths", lambda: (script_path,))
+    monkeypatch.setattr(gateway_windows, "get_startup_entry_paths", lambda: (startup_entry,))
     monkeypatch.setattr(
         gateway_windows,
         "_exec_schtasks",
@@ -446,24 +600,23 @@ def test_uninstall_access_denied_prompts_before_elevating(monkeypatch, tmp_path,
     out = capsys.readouterr().out
     assert "uninstall needs administrator approval" in out
     assert "UAC is Windows' admin approval prompt" in out
-    assert "Launched elevated Hermes gateway uninstall prompt" in out
+    assert "Launched elevated Doppel gateway uninstall prompt" in out
 
 
 def test_uninstall_access_denied_declined_keeps_task_and_cleans_files(monkeypatch, tmp_path, capsys):
     """Declining UAC should not surprise the user, but should still remove user-writable artifacts."""
     calls = []
-    script_path = tmp_path / "Hermes_Gateway_alice.cmd"
-    startup_entry = tmp_path / "Startup" / "Hermes_Gateway_alice.cmd"
+    script_path = tmp_path / "Doppel_Gateway_alice.cmd"
+    startup_entry = tmp_path / "Startup" / "Doppel_Gateway_alice.cmd"
     startup_entry.parent.mkdir(parents=True)
     script_path.write_text("task", encoding="utf-8")
     startup_entry.write_text("startup", encoding="utf-8")
 
     monkeypatch.setattr(gateway_windows, "_prompt_install_choices", lambda *args, **kwargs: (False, True))
     monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
-    monkeypatch.setattr(gateway_windows, "get_task_name", lambda: "Hermes_Gateway_alice")
-    monkeypatch.setattr(gateway_windows, "get_task_script_path", lambda: script_path)
-    monkeypatch.setattr(gateway_windows, "get_startup_entry_path", lambda: startup_entry)
-    monkeypatch.setattr(gateway_windows, "is_task_registered", lambda: True)
+    monkeypatch.setattr(gateway_windows, "get_registered_task_names", lambda: ("Doppel_Gateway_alice",))
+    monkeypatch.setattr(gateway_windows, "get_task_script_paths", lambda: (script_path,))
+    monkeypatch.setattr(gateway_windows, "get_startup_entry_paths", lambda: (startup_entry,))
     monkeypatch.setattr(
         gateway_windows,
         "_exec_schtasks",
@@ -482,6 +635,53 @@ def test_uninstall_access_denied_declined_keeps_task_and_cleans_files(monkeypatc
     assert "Skipped elevation" in out
     assert "UAC is Windows' admin approval prompt" in out
     assert "Scheduled Task still registered" in out
+
+
+def test_uninstall_removes_legacy_task_and_artifacts_when_canonical_missing(monkeypatch, tmp_path, capsys):
+    calls = []
+    hermes_home = tmp_path / "hermes-home"
+    gateway_service_dir = hermes_home / "gateway-service"
+    startup_dir = tmp_path / "Startup"
+    gateway_service_dir.mkdir(parents=True)
+    startup_dir.mkdir()
+    legacy_script = gateway_service_dir / "Hermes_Gateway_alice.cmd"
+    legacy_startup = startup_dir / "Hermes_Gateway_alice.cmd"
+    legacy_script.write_text("task", encoding="utf-8")
+    legacy_startup.write_text("startup", encoding="utf-8")
+
+    monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
+    monkeypatch.setattr("hermes_cli.gateway._profile_suffix", lambda: "alice")
+    monkeypatch.setattr("hermes_cli.config.get_hermes_home", lambda: str(hermes_home))
+    monkeypatch.setattr(gateway_windows, "_startup_dir", lambda: startup_dir)
+    monkeypatch.setattr(gateway_windows, "_is_running_as_admin", lambda: True)
+
+    def fake_schtasks(args):
+        calls.append(tuple(args))
+        if args == ["/Query", "/TN", "Doppel_Gateway_alice"]:
+            return (1, "", "ERROR: The system cannot find the file specified.")
+        if args == ["/Query", "/TN", "Hermes_Gateway_alice"]:
+            return (0, "", "")
+        if args == ["/Delete", "/F", "/TN", "Hermes_Gateway_alice"]:
+            return (0, "", "")
+        raise AssertionError(f"unexpected schtasks args: {args}")
+
+    monkeypatch.setattr(gateway_windows, "_exec_schtasks", fake_schtasks)
+
+    gateway_windows.uninstall()
+
+    assert calls == [
+        ("/Query", "/TN", "Doppel_Gateway_alice"),
+        ("/Query", "/TN", "Hermes_Gateway_alice"),
+        ("/Delete", "/F", "/TN", "Hermes_Gateway_alice"),
+        ("/Query", "/TN", "Doppel_Gateway_alice"),
+        ("/Query", "/TN", "Hermes_Gateway_alice"),
+    ]
+    assert not legacy_script.exists()
+    assert not legacy_startup.exists()
+    out = capsys.readouterr().out
+    assert "Removed Scheduled Task 'Hermes_Gateway_alice'" in out
+    assert "Removed Windows login item" in out
+    assert "Removed Task script" in out
 
 
 # ---------------------------------------------------------------------------

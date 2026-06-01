@@ -41,11 +41,16 @@ jobs:
         continue-on-error: true
         run: nix flake check --print-build-logs
 
-      - name: Build package
+      - name: Verify package aliases and build package outputs
         id: build
         if: runner.os == 'Linux'
         continue-on-error: true
-        run: nix build --print-build-logs
+        run: |
+          set -euo pipefail
+          test "$(nix eval --raw .#packages.x86_64-linux.default.pname)" = "doppel-agent"
+          test "$(nix eval --raw .#packages.x86_64-linux.doppel-agent.pname)" = "doppel-agent"
+          test "$(nix eval --raw .#packages.x86_64-linux.hermes-agent.pname)" = "doppel-agent"
+          nix build --print-build-logs .#default .#doppel-agent .#hermes-agent
 
       # When the real Nix build fails, run a targeted diagnostic to see if
       # the failure is specifically a stale npm lockfile hash in one of the
@@ -112,6 +117,12 @@ jobs:
           fi
           exit 1
 
-      - name: Evaluate flake (macOS)
+      - name: Evaluate flake and package aliases (macOS)
         if: runner.os == 'macOS'
-        run: nix flake show --json > /dev/null
+        run: |
+          set -euo pipefail
+          nix flake show --json > /dev/null
+          test "$(nix eval --raw .#packages.aarch64-darwin.default.pname)" = "doppel-agent"
+          test "$(nix eval --raw .#packages.aarch64-darwin.doppel-agent.pname)" = "doppel-agent"
+          test "$(nix eval --raw .#packages.aarch64-darwin.hermes-agent.pname)" = "doppel-agent"
+          nix eval .#checks.aarch64-darwin.package-alias-contracts.drvPath > /dev/null

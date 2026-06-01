@@ -1,7 +1,7 @@
 """Bitwarden Secrets Manager (`bws` CLI) integration.
 
-Hermes pulls API keys from Bitwarden Secrets Manager at process startup
-so they don't have to live in plaintext in ``~/.hermes/.env``.
+Doppel pulls API keys from Bitwarden Secrets Manager at process startup
+so they don't have to live in plaintext in ``~/.doppel/.env``.
 
 Design summary
 --------------
@@ -10,15 +10,15 @@ Design summary
   first use.  Hermes pins one version (``_BWS_VERSION``) and downloads
   the matching asset from the official GitHub Releases page, verifying
   the SHA-256 against the release's published checksum file.
-* The access token is stored in ``~/.hermes/.env`` as
+* The access token is stored in ``~/.doppel/.env`` as
   ``BWS_ACCESS_TOKEN`` (or whatever name the user picked in
   ``secrets.bitwarden.access_token_env``).  This is the one
   bootstrap secret — every other provider key can live in Bitwarden.
 * Pulling secrets is a single ``bws secret list <project_id>
   --output json`` call.  We cache the result in-process for
-  ``cache_ttl_seconds`` so back-to-back ``hermes`` invocations don't
+  ``cache_ttl_seconds`` so back-to-back ``doppel`` invocations don't
   hammer the API.
-* Failures NEVER block Hermes startup.  Missing binary, no network,
+* Failures NEVER block Doppel startup.  Missing binary, no network,
   expired token, etc. all emit a one-line warning and continue with
   whatever credentials ``.env`` already had.
 
@@ -79,7 +79,7 @@ _CACHE: Dict[_CacheKey, "_CachedFetch"] = {}
 #
 # Layout: one JSON object per cache key, written atomically with mode 0600 in
 # <hermes_home>/cache/bws_cache.json. The file holds only the secret VALUES,
-# never the access token. It's plaintext-equivalent to ~/.hermes/.env (which
+# never the access token. It's plaintext-equivalent to ~/.doppel/.env (which
 # we already accept) but kept out of the .env file so users editing it won't
 # accidentally commit BSM-sourced secrets.
 _DISK_CACHE_BASENAME = "bws_cache.json"
@@ -89,7 +89,8 @@ def _disk_cache_path(home_path: Optional[Path] = None) -> Path:
     """Return the disk cache path under hermes_home/cache/.
 
     `home_path` is what `load_hermes_dotenv()` already resolved; falling back
-    to `$HERMES_HOME` / `~/.hermes` keeps direct callers working too.
+    to `$DOPPEL_HOME` / `~/.doppel` keeps direct callers working too, with
+    `$HERMES_HOME` still accepted as a legacy compatibility alias.
     """
     if home_path is None:
         home_path = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
@@ -291,7 +292,7 @@ def install_bws(*, force: bool = False) -> Path:
 
     Returns the path to the installed executable.  Raises on any
     failure (network, checksum, extraction) — callers in the auto-install
-    path catch these; the user-facing ``hermes secrets bitwarden setup``
+    path catch these; the user-facing ``doppel secrets bitwarden setup``
     surface lets them propagate so the wizard can show a clear error.
     """
     bin_dir = _hermes_bin_dir()
@@ -430,7 +431,8 @@ def fetch_bitwarden_secrets(
     ``<hermes_home>/cache/bws_cache.json`` (for back-to-back CLI invocations).
     Both share the same TTL.  Pass ``home_path`` so disk cache lookups find
     the right directory in tests / non-standard installs; otherwise we fall
-    back to ``$HERMES_HOME`` / ``~/.hermes``.
+    back to ``$DOPPEL_HOME`` / ``~/.doppel`` with ``$HERMES_HOME`` as a
+    legacy fallback.
 
     Raises :class:`RuntimeError` for fatal conditions (missing binary,
     auth failure, unparseable output).  Callers in the env_loader path
@@ -461,7 +463,7 @@ def fetch_bitwarden_secrets(
             "bws binary not available — auto-install failed and `bws` is "
             "not on PATH.  Install manually from "
             "https://github.com/bitwarden/sdk-sm/releases or re-run "
-            "`hermes secrets bitwarden setup`."
+            "`doppel secrets bitwarden setup`."
         )
 
     secrets, warnings = _run_bws_list(bws, access_token, project_id, server_url)
@@ -589,14 +591,14 @@ def apply_bitwarden_secrets(
     if not access_token:
         result.error = (
             f"secrets.bitwarden.enabled is true but {access_token_env} is "
-            "not set.  Run `hermes secrets bitwarden setup`."
+            "not set.  Run `doppel secrets bitwarden setup`."
         )
         return result
 
     if not project_id:
         result.error = (
             "secrets.bitwarden.project_id is empty.  "
-            "Run `hermes secrets bitwarden setup`."
+            "Run `doppel secrets bitwarden setup`."
         )
         return result
 
@@ -605,7 +607,7 @@ def apply_bitwarden_secrets(
     if binary is None:
         result.error = (
             "bws binary not available and auto-install is disabled.  "
-            "Run `hermes secrets bitwarden setup` to install."
+            "Run `doppel secrets bitwarden setup` to install."
         )
         return result
 

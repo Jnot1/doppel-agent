@@ -418,6 +418,8 @@ class TestRenderLoginHtmlNext:
         html_out = render_login_html()
         assert 'href="/auth/login?provider=stub"' in html_out
         assert "next=" not in html_out
+        assert "<title>Sign in — Doppel Agent</title>" in html_out
+        assert "continue to the Doppel Agent dashboard" in html_out
 
     def test_next_threaded_url_encoded(self):
         from hermes_cli.dashboard_auth.login_page import render_login_html
@@ -440,6 +442,15 @@ class TestRenderLoginHtmlNext:
         html_out = render_login_html(next_path='/x"injected')
         assert '"injected' not in html_out
         assert "%22injected" in html_out
+
+    def test_no_provider_empty_state_is_doppel_first(self):
+        from hermes_cli.dashboard_auth.login_page import render_login_html
+
+        clear_providers()
+
+        html_out = render_login_html()
+        assert "<title>Sign-in unavailable — Doppel Agent</title>" in html_out
+        assert "<h1>Sign-in unavailable</h1>" in html_out
 
 
 # ---------------------------------------------------------------------------

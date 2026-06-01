@@ -14,7 +14,7 @@ Debug REST/GraphQL APIs: status codes, auth, schemas, repro.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/software-development/rest-graphql-debug` |
+| Source | Optional — install with `doppel skills install official/software-development/rest-graphql-debug` |
 | Path | `optional-skills/software-development/rest-graphql-debug` |
 | Version | `1.2.0` |
 | Author | eren-karakus0 |
@@ -25,7 +25,7 @@ Debug REST/GraphQL APIs: status codes, auth, schemas, repro.
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # API Testing & Debugging

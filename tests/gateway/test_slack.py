@@ -190,16 +190,16 @@ class TestAppMentionHandler:
         assert "assistant_thread_started" in registered_events
         assert "assistant_thread_context_changed" in registered_events
         # Slack slash commands are registered via a single regex matcher
-        # covering every COMMAND_REGISTRY entry (e.g. /hermes, /btw, /stop,
+        # covering every COMMAND_REGISTRY entry (e.g. /doppel, /btw, /stop,
         # /model, ...) so users get native-slash parity with Discord and
-        # Telegram. Verify the regex matches the key expected slashes.
+        # Telegram, while the legacy /hermes catch-all still routes.
         assert len(registered_commands) == 1, (
             f"expected 1 combined slash matcher, got {registered_commands!r}"
         )
         slash_matcher = registered_commands[0]
         import re as _re
         assert isinstance(slash_matcher, _re.Pattern)
-        for expected in ("/hermes", "/btw", "/stop", "/model", "/help"):
+        for expected in ("/doppel", "/hermes", "/btw", "/stop", "/model", "/help"):
             assert slash_matcher.match(expected), (
                 f"Slack slash regex does not match {expected}"
             )
@@ -2367,6 +2367,30 @@ class TestSlashCommands:
         await adapter._handle_slash_command(command)
         msg = adapter.handle_message.call_args[0][0]
         assert msg.text == "/model anthropic/claude-sonnet-4"
+
+    @pytest.mark.asyncio
+    async def test_preferred_doppel_prefix_routes_subcommand(self, adapter):
+        command = {
+            "command": "/doppel",
+            "text": "btw run the tests",
+            "user_id": "U1",
+            "channel_id": "C1",
+        }
+        await adapter._handle_slash_command(command)
+        msg = adapter.handle_message.call_args[0][0]
+        assert msg.text == "/btw run the tests"
+
+    @pytest.mark.asyncio
+    async def test_preferred_doppel_prefix_preserves_freeform_text(self, adapter):
+        command = {
+            "command": "/doppel",
+            "text": "what's the weather today?",
+            "user_id": "U1",
+            "channel_id": "C1",
+        }
+        await adapter._handle_slash_command(command)
+        msg = adapter.handle_message.call_args[0][0]
+        assert msg.text == "what's the weather today?"
 
     @pytest.mark.asyncio
     async def test_legacy_hermes_prefix_still_works(self, adapter):

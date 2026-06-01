@@ -66,7 +66,7 @@ class MemoryProvider(ABC):
 
         kwargs always include:
           - hermes_home (str): The active HERMES_HOME directory path. Use this
-            for profile-scoped storage instead of hardcoding ``~/.hermes``.
+            for profile-scoped storage instead of hardcoding ``~/.doppel``.
           - platform (str): "cli", "telegram", "discord", "cron", etc.
 
         kwargs may also include:
@@ -239,7 +239,7 @@ class MemoryProvider(ABC):
     def get_config_schema(self) -> List[Dict[str, Any]]:
         """Return config fields this provider needs for setup.
 
-        Used by 'hermes memory setup' to walk the user through configuration.
+        Used by 'doppel memory setup' to walk the user through configuration.
         Each field is a dict with:
           key:         config key name (e.g. 'api_key', 'mode')
           description: human-readable description
@@ -257,7 +257,7 @@ class MemoryProvider(ABC):
     def save_config(self, values: Dict[str, Any], hermes_home: str) -> None:
         """Write non-secret config to the provider's native location.
 
-        Called by 'hermes memory setup' after collecting user inputs.
+        Called by 'doppel memory setup' after collecting user inputs.
         ``values`` contains only non-secret fields (secrets go to .env).
         ``hermes_home`` is the active HERMES_HOME directory path.
 

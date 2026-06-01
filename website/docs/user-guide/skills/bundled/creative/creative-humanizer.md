@@ -17,7 +17,7 @@ Humanize text: strip AI-isms and add real voice.
 | Source | Bundled (installed by default) |
 | Path | `skills/creative/humanizer` |
 | Version | `2.5.1` |
-| Author | Siqi Chen (@blader, https://github.com/blader/humanizer), ported by Hermes Agent |
+| Author | Siqi Chen (@blader, https://github.com/blader/humanizer), ported by Doppel Agent |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `writing`, `editing`, `humanize`, `anti-ai-slop`, `voice`, `prose`, `text` |
@@ -26,7 +26,7 @@ Humanize text: strip AI-isms and add real voice.
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # Humanizer: Remove AI Writing Patterns

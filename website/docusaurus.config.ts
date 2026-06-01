@@ -2,16 +2,22 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
+const LIVE_DOCS_ORIGIN = 'https://hermes-agent.nousresearch.com';
+const DOCS_BASE_URL = '/docs/';
+const FORK_REPO_URL = 'https://github.com/Jnot1/doppel-agent';
+const FORK_DISCUSSIONS_URL = `${FORK_REPO_URL}/discussions`;
+const HOME_URL = `${LIVE_DOCS_ORIGIN}${DOCS_BASE_URL}`;
+
 const config: Config = {
-  title: 'Hermes Agent',
-  tagline: 'The self-improving AI agent',
+  title: 'Doppel Agent',
+  tagline: 'Your Everyday Personal AI Assistant',
   favicon: 'img/favicon.ico',
 
-  url: 'https://hermes-agent.nousresearch.com',
-  baseUrl: '/docs/',
+  url: LIVE_DOCS_ORIGIN,
+  baseUrl: DOCS_BASE_URL,
 
-  organizationName: 'NousResearch',
-  projectName: 'hermes-agent',
+  organizationName: 'Jnot1',
+  projectName: 'doppel-agent',
 
   onBrokenLinks: 'warn',
 
@@ -66,6 +72,36 @@ const config: Config = {
     ],
   ],
 
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects: [
+          {
+            from: '/guides/use-soul-with-hermes',
+            to: '/guides/use-soul-with-doppel-agent',
+          },
+          {
+            from: ['/guides/use-voice-mode-with-hermes', '/guides/use-voice-mode-with-doppel'],
+            to: '/guides/use-voice-mode-with-doppel-agent',
+          },
+          {
+            from: ['/guides/use-mcp-with-hermes', '/guides/use-mcp-with-doppel'],
+            to: '/guides/use-mcp-with-doppel-agent',
+          },
+          {
+            from: '/guides/run-hermes-with-nous-portal',
+            to: '/guides/run-doppel-agent-with-nous-portal',
+          },
+          {
+            from: '/guides/build-a-hermes-plugin',
+            to: '/guides/build-a-doppel-plugin',
+          },
+        ],
+      },
+    ],
+  ],
+
   presets: [
     [
       'classic',
@@ -73,7 +109,7 @@ const config: Config = {
         docs: {
           routeBasePath: '/',  // Docs at the root of /docs/
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/NousResearch/hermes-agent/edit/main/website/',
+          editUrl: `${FORK_REPO_URL}/edit/main/website/`,
         },
         blog: false,
         theme: {
@@ -96,9 +132,9 @@ const config: Config = {
       },
     },
     navbar: {
-      title: 'Hermes Agent',
+      title: 'Doppel Agent',
       logo: {
-        alt: 'Hermes Agent',
+        alt: 'Doppel Agent',
         src: 'img/logo.png',
       },
       items: [
@@ -118,12 +154,12 @@ const config: Config = {
           position: 'right',
         },
         {
-          href: 'https://hermes-agent.nousresearch.com',
+          href: HOME_URL,
           label: 'Home',
           position: 'right',
         },
         {
-          href: 'https://github.com/NousResearch/hermes-agent',
+          href: FORK_REPO_URL,
           label: 'GitHub',
           position: 'right',
         },
@@ -150,19 +186,19 @@ const config: Config = {
           title: 'Community',
           items: [
             { label: 'Discord', href: 'https://discord.gg/NousResearch' },
-            { label: 'GitHub Discussions', href: 'https://github.com/NousResearch/hermes-agent/discussions' },
+            { label: 'GitHub Discussions', href: FORK_DISCUSSIONS_URL },
             { label: 'Skills Hub', href: 'https://agentskills.io' },
           ],
         },
         {
           title: 'More',
           items: [
-            { label: 'GitHub', href: 'https://github.com/NousResearch/hermes-agent' },
+            { label: 'GitHub', href: FORK_REPO_URL },
             { label: 'Nous Research', href: 'https://nousresearch.com' },
           ],
         },
       ],
-      copyright: `Built by <a href="https://nousresearch.com">Nous Research</a> · MIT License · ${new Date().getFullYear()}`,
+      copyright: `Maintained by Doppelme · Modified fork of <a href="https://nousresearch.com">Hermes Agent by Nous Research</a> · MIT License · ${new Date().getFullYear()}`,
     },
     prism: {
       theme: prismThemes.github,

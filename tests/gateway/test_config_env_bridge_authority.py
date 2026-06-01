@@ -41,6 +41,7 @@ def _run_gateway_import(hermes_home: Path, initial_env: dict[str, str]) -> dict[
             sys.exit(2)
 
         for k in (
+            "DOPPEL_TIMEZONE",
             "HERMES_MAX_ITERATIONS",
             "HERMES_AGENT_TIMEOUT",
             "HERMES_AGENT_TIMEOUT_WARNING",
@@ -155,10 +156,11 @@ def test_config_display_busy_text_mode_wins_over_stale_env(hermes_home: Path) ->
 
 def test_config_timezone_wins_over_stale_env(hermes_home: Path) -> None:
     _write_config(hermes_home, timezone="America/Los_Angeles")
-    _write_env(hermes_home, {"HERMES_TIMEZONE": "UTC"})
+    _write_env(hermes_home, {"DOPPEL_TIMEZONE": "UTC"})
 
     env = _run_gateway_import(hermes_home, initial_env={})
 
+    assert env.get("DOPPEL_TIMEZONE") == "America/Los_Angeles"
     assert env.get("HERMES_TIMEZONE") == "America/Los_Angeles"
 
 

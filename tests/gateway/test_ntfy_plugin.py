@@ -15,6 +15,7 @@ the ``platform_registry``.
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -908,6 +909,43 @@ def test_register_calls_register_platform():
     # ntfy has no user-identifying PII (only topic names)
     assert kwargs["pii_safe"] is True
     assert "ntfy" in kwargs["platform_hint"].lower()
+
+
+def test_customer_facing_ntfy_copy_is_doppel_first():
+    repo_root = Path(__file__).resolve().parents[2]
+    adapter = (repo_root / "plugins/platforms/ntfy/adapter.py").read_text(encoding="utf-8")
+    manifest = (repo_root / "plugins/platforms/ntfy/plugin.yaml").read_text(encoding="utf-8")
+
+    for expected in (
+        '"""ntfy platform adapter (Doppel plugin).',
+        "already\na Doppel dependency.",
+        "This adapter ships as a Doppel platform plugin under",
+        'topic: "doppel-in"',
+        'publish_topic: "doppel-out"',
+        '_ECHO_TAG = "doppel-agent"',
+        "ntfy push-notification gateway adapter for Doppel Agent.",
+        "only httpx (already a Doppel dependency).",
+        "Topic name to subscribe to (e.g. doppel-in)",
+        "pip install httpx   # already a Doppel dependency",
+        "show up in `doppel gateway status` without",
+    ):
+        assert expected in adapter or expected in manifest
+
+    for unexpected in (
+        '"""ntfy platform adapter (Hermes plugin).',
+        "already\na Hermes dependency.",
+        "This adapter ships as a Hermes platform plugin under",
+        'topic: "hermes-in"',
+        'publish_topic: "hermes-out"',
+        '_ECHO_TAG = "hermes-agent"',
+        "ntfy push-notification gateway adapter for Hermes Agent.",
+        "only httpx (already a Hermes dependency).",
+        "Topic name to subscribe to (e.g. hermes-in)",
+        "pip install httpx   # already a Hermes dependency",
+        "show up in `hermes gateway status` without",
+    ):
+        assert unexpected not in adapter
+        assert unexpected not in manifest
 
 
 def test_adapter_factory_returns_ntfy_adapter():

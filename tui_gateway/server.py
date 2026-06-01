@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from hermes_constants import get_hermes_home
+from hermes_constants import get_hermes_home, sync_customer_facing_env_aliases
 from hermes_cli.env_loader import load_hermes_dotenv
 from utils import is_truthy_value
 from tui_gateway.transport import (
@@ -32,6 +32,7 @@ _hermes_home = get_hermes_home()
 load_hermes_dotenv(
     hermes_home=_hermes_home, project_env=Path(__file__).parent.parent / ".env"
 )
+sync_customer_facing_env_aliases()
 
 
 # ── Panic logger ─────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ load_hermes_dotenv(
 # JSON-RPC pipe (TUI side parses it, doesn't log raw), the root logger
 # only catches handled warnings, and the subprocess exits before stderr
 # flushes through the stderr->gateway.stderr event pump. This hook
-# appends every unhandled exception to ~/.hermes/logs/tui_gateway_crash.log
+# appends every unhandled exception to ~/.doppel/logs/tui_gateway_crash.log
 # AND re-emits a one-line summary to stderr so the TUI can surface it in
 # Activity — exactly what was missing when the voice-mode turns started
 # exiting the gateway mid-TTS.
@@ -778,6 +779,7 @@ def resolve_skin() -> dict:
 
 
 def _resolve_model() -> str:
+    sync_customer_facing_env_aliases()
     env = (
         os.environ.get("HERMES_MODEL", "")
         or os.environ.get("HERMES_INFERENCE_MODEL", "")
@@ -793,6 +795,7 @@ def _resolve_model() -> str:
 
 
 def _resolve_startup_runtime() -> tuple[str, str | None]:
+    sync_customer_facing_env_aliases()
     model = _resolve_model()
     explicit_provider = os.environ.get("HERMES_TUI_PROVIDER", "").strip()
     if explicit_provider:
@@ -1176,6 +1179,7 @@ def _apply_model_switch(sid: str, session: dict, raw_input: str) -> dict:
         _restart_slash_worker(session)
         _emit("session.info", sid, _session_info(agent))
 
+    os.environ["DOPPEL_MODEL"] = result.new_model
     os.environ["HERMES_MODEL"] = result.new_model
     os.environ["HERMES_INFERENCE_MODEL"] = result.new_model
     # Keep the process-level provider env vars in sync with the user's
@@ -4743,7 +4747,7 @@ def _(rid, params: dict) -> dict:
 
 @method("reload.env")
 def _(rid, params: dict) -> dict:
-    """Re-read ``~/.hermes/.env`` into the gateway process via
+    """Re-read ``~/.doppel/.env`` into the gateway process via
     ``hermes_cli.config.reload_env``, matching classic CLI's ``/reload``
     handler.  Newly added API keys take effect on the next agent call
     without restarting the TUI.
@@ -4902,16 +4906,16 @@ def _(rid, params: dict) -> dict:
 def _cli_exec_blocked(argv: list[str]) -> str | None:
     """Return user hint if this argv must not run headless in the gateway process."""
     if not argv:
-        return "bare `hermes` is interactive — use `/hermes chat -q …` or run `hermes` in another terminal"
+        return "bare `doppel` is interactive — use `/doppel chat -q …` or run `doppel` in another terminal"
     a0 = argv[0].lower()
     if a0 == "setup":
-        return "`hermes setup` needs a full terminal — run it outside the TUI"
+        return "`doppel setup` needs a full terminal — run it outside the TUI"
     if a0 == "gateway":
-        return "`hermes gateway` is long-running — run it in another terminal"
+        return "`doppel gateway` is long-running — run it in another terminal"
     if a0 == "sessions" and len(argv) > 1 and argv[1].lower() == "browse":
-        return "`hermes sessions browse` is interactive — use /resume here, or run browse in another terminal"
+        return "`doppel sessions browse` is interactive — use /resume here, or run browse in another terminal"
     if a0 == "config" and len(argv) > 1 and argv[1].lower() == "edit":
-        return "`hermes config edit` needs $EDITOR in a real terminal"
+        return "`doppel config edit` needs $EDITOR in a real terminal"
     return None
 
 
@@ -5760,12 +5764,12 @@ def _(rid, params: dict) -> dict:
                 rid,
                 4003,
                 f"{pconfig.name} uses {pconfig.auth_type} auth — "
-                f"run `hermes model` to configure",
+                f"run `doppel model` to configure",
             )
         if not pconfig.api_key_env_vars:
             return _err(rid, 4004, f"no env var defined for {pconfig.name}")
 
-        # Save the key to ~/.hermes/.env
+        # Save the key to ~/.doppel/.env
         env_var = pconfig.api_key_env_vars[0]
         save_env_value(env_var, api_key)
         # Also set in current process so the refreshed inventory sees it.

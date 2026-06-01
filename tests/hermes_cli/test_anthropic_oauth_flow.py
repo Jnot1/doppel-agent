@@ -53,3 +53,22 @@ def test_run_anthropic_oauth_flow_manual_token_still_persists(tmp_path, monkeypa
     assert env_vars["ANTHROPIC_TOKEN"] == "sk-ant-oat01-manual-token"
     output = capsys.readouterr().out
     assert "Setup-token saved" in output
+
+
+def test_run_anthropic_oauth_flow_missing_claude_cli_shows_doppel_rerun_hint(monkeypatch, capsys):
+    def _missing_cli():
+        raise FileNotFoundError()
+
+    monkeypatch.setattr("agent.anthropic_adapter.run_oauth_setup_token", _missing_cli)
+    monkeypatch.setattr(
+        "hermes_cli.secret_prompt.masked_secret_prompt",
+        lambda _prompt="": "",
+    )
+
+    from hermes_cli.main import _run_anthropic_oauth_flow
+
+    assert _run_anthropic_oauth_flow(save_env_value) is False
+
+    output = capsys.readouterr().out
+    assert "claude setup-token" in output
+    assert "Re-run:               doppel model" in output

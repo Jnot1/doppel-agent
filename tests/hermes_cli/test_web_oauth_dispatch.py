@@ -303,3 +303,94 @@ def test_unknown_pkce_provider_rejected_cleanly():
     # 4xx — what we MUST NOT see is a 200 with claude.ai in the body.
     assert resp.status_code >= 400, resp.text
     assert "claude.ai" not in resp.text.lower()
+
+
+def test_oauth_provider_catalog_prefers_doppel_cli_commands():
+    resp = client.get("/api/providers/oauth", headers=HEADERS)
+
+    assert resp.status_code == 200, resp.text
+    providers = {row["id"]: row for row in resp.json()["providers"]}
+
+    assert providers["anthropic"]["cli_command"] == "doppel auth add anthropic"
+    assert providers["nous"]["cli_command"] == "doppel auth add nous"
+    assert providers["openai-codex"]["cli_command"] == "doppel auth add openai-codex"
+    assert providers["qwen-oauth"]["cli_command"] == "doppel auth add qwen-oauth"
+    assert providers["minimax-oauth"]["cli_command"] == "doppel auth add minimax-oauth"
+    assert providers["claude-code"]["cli_command"] == "claude setup-token"
+
+
+def test_external_oauth_provider_error_mentions_doppel_cli_command():
+    resp = client.post("/api/providers/oauth/qwen-oauth/start", headers=HEADERS)
+
+    assert resp.status_code == 400, resp.text
+    detail = resp.json()["detail"]
+    assert "qwen-oauth uses an external CLI" in detail
+    assert "`doppel auth add qwen-oauth`" in detail
+    assert "hermes auth add qwen-oauth" not in detail
+
+
+def test_anthropic_status_reports_doppel_pkce_source_label():
+    from hermes_cli import web_server as ws
+
+    fake_creds = {
+        "accessToken": "access-token",
+        "refreshToken": "refresh-token",
+        "expiresAt": "2026-06-01T00:00:00+00:00",
+    }
+    with patch(
+        "agent.anthropic_adapter.read_hermes_oauth_credentials",
+        return_value=fake_creds,
+    ), patch(
+        "agent.anthropic_adapter.read_claude_code_credentials",
+        return_value=None,
+    ), patch(
+        "agent.anthropic_adapter._HERMES_OAUTH_FILE",
+        "/tmp/.anthropic_oauth.json",
+    ):
+        status = ws._anthropic_oauth_status()
+
+    assert status["source"] == "hermes_pkce"
+    assert status["source_label"] == "Doppel PKCE (/tmp/.anthropic_oauth.json)"
+
+
+def test_plugins_hub_auth_command_prefers_doppel_cli(monkeypatch, tmp_path):
+    from hermes_cli import plugins_cmd
+    from hermes_cli import web_server as ws
+    import tools.registry as registry_mod
+
+    plugin_dir = tmp_path / "plugins" / "sample-auth-plugin"
+    plugin_dir.mkdir(parents=True)
+
+    monkeypatch.setattr(
+        plugins_cmd,
+        "_discover_all_plugins",
+        lambda: [("sample-auth-plugin", "1.0.0", "desc", "user", str(plugin_dir))],
+    )
+    monkeypatch.setattr(plugins_cmd, "_get_disabled_set", lambda: set())
+    monkeypatch.setattr(plugins_cmd, "_get_enabled_set", lambda: set())
+    monkeypatch.setattr(
+        plugins_cmd,
+        "_read_manifest",
+        lambda _path: {"provides_tools": ["tool-needing-auth"]},
+    )
+    monkeypatch.setattr(plugins_cmd, "_discover_memory_providers", lambda: [])
+    monkeypatch.setattr(plugins_cmd, "_discover_context_engines", lambda: [])
+    monkeypatch.setattr(plugins_cmd, "_get_current_memory_provider", lambda: "")
+    monkeypatch.setattr(plugins_cmd, "_get_current_context_engine", lambda: "")
+    monkeypatch.setattr(ws, "_get_dashboard_plugins", lambda force_rescan=False: [])
+    monkeypatch.setattr(ws, "load_config", lambda: {})
+    monkeypatch.setattr(ws, "get_hermes_home", lambda: tmp_path)
+
+    fake_entry = type("FakeEntry", (), {"check_fn": staticmethod(lambda: False)})()
+    fake_registry = type(
+        "FakeRegistry",
+        (),
+        {"get_entry": staticmethod(lambda _tool_name: fake_entry)},
+    )()
+    monkeypatch.setattr(registry_mod, "registry", fake_registry)
+
+    hub = ws._merged_plugins_hub()
+    row = next(item for item in hub["plugins"] if item["name"] == "sample-auth-plugin")
+
+    assert row["auth_required"] is True
+    assert row["auth_command"] == "doppel auth sample-auth-plugin"

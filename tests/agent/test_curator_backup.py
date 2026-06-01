@@ -40,6 +40,34 @@ def _write_skill(skills_dir: Path, name: str, body: str = "body") -> Path:
     return d
 
 
+def test_curator_backup_customer_facing_copy_prefers_doppel_paths_and_commands(backup_env):
+    cb = backup_env["cb"]
+    text = Path(cb.__file__).read_text(encoding="utf-8")
+
+    expected = [
+        "``~/.doppel/skills/``",
+        "``~/.doppel/skills/.curator_backups/<utc-iso>/``",
+        "``~/.doppel/cron/jobs.json``",
+        "``~/.doppel/skills/`` from a snapshot.",
+        "``~/.doppel/skills/``.",
+        "No ~/.doppel/skills/ directory — nothing to back up",
+        "`doppel curator rollback --list`",
+    ]
+    forbidden = [
+        "``~/.hermes/skills/``",
+        "``~/.hermes/skills/.curator_backups/<utc-iso>/``",
+        "``~/.hermes/cron/jobs.json``",
+        "``~/.hermes/skills/`` from a snapshot.",
+        "No ~/.hermes/skills/ directory — nothing to back up",
+        "`hermes curator rollback --list`",
+    ]
+
+    for needle in expected:
+        assert needle in text
+    for needle in forbidden:
+        assert needle not in text
+
+
 # ---------------------------------------------------------------------------
 # snapshot_skills
 # ---------------------------------------------------------------------------

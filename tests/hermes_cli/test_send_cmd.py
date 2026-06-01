@@ -326,6 +326,28 @@ def test_register_send_subparser_is_reusable():
     assert args.message == "hi"
 
 
+def test_send_help_is_doppel_first():
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="doppel")
+    subparsers = parser.add_subparsers(dest="command")
+    send_parser = send_cmd.register_send_subparser(subparsers)
+
+    help_text = send_parser.format_help()
+    assert "messaging platform Doppel is already configured for" in help_text
+    assert "~/.doppel/.env + ~/.doppel/config.yaml" in help_text
+    assert "doppel send --to telegram" in help_text
+    assert "doppel send --list telegram" in help_text
+
+    for stale in (
+        "messaging platform Hermes is already configured for",
+        "~/.hermes/.env + ~/.hermes/config.yaml",
+        "hermes send --to telegram",
+        "hermes send --list telegram",
+    ):
+        assert stale not in help_text
+
+
 # ---------------------------------------------------------------------------
 # Env loader
 # ---------------------------------------------------------------------------

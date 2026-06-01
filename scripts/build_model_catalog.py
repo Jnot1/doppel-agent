@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build the Hermes Model Catalog — a centralized JSON manifest of curated models.
+"""Build the Doppel Agent model catalog manifest.
 
 This script reads the in-repo hardcoded curated lists (``OPENROUTER_MODELS``,
 ``_PROVIDER_MODELS["nous"]``) and writes them to a JSON manifest that the
-Hermes CLI fetches at runtime. Publishing the catalog through the docs site
-lets maintainers update model lists without shipping a Hermes release.
+Doppel CLI fetches at runtime. Publishing the catalog through the docs site
+lets maintainers update model lists without shipping a new package release.
 
 The runtime fetcher falls back to the same in-repo hardcoded lists if the
 manifest is unreachable, so this script is a convenience for keeping the
@@ -15,9 +15,6 @@ Usage::
     python scripts/build_model_catalog.py
 
 Output: ``website/static/api/model-catalog.json``
-
-Live URL (after ``deploy-site.yml`` runs on merge to main):
-``https://hermes-agent.nousresearch.com/docs/api/model-catalog.json``
 """
 
 from __future__ import annotations
@@ -34,6 +31,7 @@ sys.path.insert(0, REPO_ROOT)
 os.environ.setdefault("HERMES_HOME", os.path.join(os.path.expanduser("~"), ".hermes"))
 
 from hermes_cli.models import OPENROUTER_MODELS, _PROVIDER_MODELS  # noqa: E402
+from hermes_constants import get_model_catalog_docs_url  # noqa: E402
 
 OUTPUT_PATH = os.path.join(REPO_ROOT, "website", "static", "api", "model-catalog.json")
 CATALOG_VERSION = 1
@@ -44,8 +42,8 @@ def build_catalog() -> dict:
         "version": CATALOG_VERSION,
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "metadata": {
-            "source": "hermes-agent repo",
-            "docs": "https://hermes-agent.nousresearch.com/docs/reference/model-catalog",
+            "source": "doppel-agent repo",
+            "docs": get_model_catalog_docs_url(),
         },
         "providers": {
             "openrouter": {

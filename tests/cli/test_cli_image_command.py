@@ -52,6 +52,17 @@ class TestImageCommand:
         rendered = " ".join(str(arg) for call in mock_print.call_args_list for arg in call.args)
         assert "Not a supported image file" in rendered
 
+    def test_handle_image_command_termux_hint_is_doppel_first(self, tmp_path, monkeypatch):
+        img = _make_image(tmp_path / "termux.png")
+        cli_obj = _make_cli()
+
+        monkeypatch.setattr("cli._is_termux_environment", lambda: True)
+        with patch("cli._cprint") as mock_print:
+            cli_obj._handle_image_command(f"/image {img}")
+
+        rendered = " ".join(str(arg) for call in mock_print.call_args_list for arg in call.args)
+        assert "doppel chat -q --image" in rendered
+
 
 class TestCollectQueryImages:
     def test_collect_query_images_accepts_explicit_image_arg(self, tmp_path):

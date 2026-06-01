@@ -140,6 +140,7 @@ def test_spotify_interactive_setup_persists_client_id(
     capsys,
 ) -> None:
     """The wizard writes HERMES_SPOTIFY_CLIENT_ID to .env and returns the value."""
+    monkeypatch.setenv("DOPPEL_HOME", str(tmp_path))
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     monkeypatch.setattr("builtins.input", lambda prompt="": "wizard-client-123")
     # Prevent actually opening the browser during tests.
@@ -168,6 +169,7 @@ def test_spotify_interactive_setup_empty_aborts(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Empty input aborts cleanly instead of persisting an empty client_id."""
+    monkeypatch.setenv("DOPPEL_HOME", str(tmp_path))
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     monkeypatch.setattr("builtins.input", lambda prompt="": "")
     monkeypatch.setattr(auth_mod, "webbrowser", SimpleNamespace(open=lambda *_a, **_k: False))

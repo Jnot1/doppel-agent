@@ -32,10 +32,20 @@ def _clean_env(monkeypatch):
     those writes aren't tracked by monkeypatch and won't be undone by it.
     We add explicit cleanup on yield to prevent cross-test pollution.
     """
-    for var in ("HERMES_IGNORE_USER_CONFIG", "HERMES_IGNORE_RULES"):
+    for var in (
+        "DOPPEL_IGNORE_USER_CONFIG",
+        "DOPPEL_IGNORE_RULES",
+        "HERMES_IGNORE_USER_CONFIG",
+        "HERMES_IGNORE_RULES",
+    ):
         monkeypatch.delenv(var, raising=False)
     yield
-    for var in ("HERMES_IGNORE_USER_CONFIG", "HERMES_IGNORE_RULES"):
+    for var in (
+        "DOPPEL_IGNORE_USER_CONFIG",
+        "DOPPEL_IGNORE_RULES",
+        "HERMES_IGNORE_USER_CONFIG",
+        "HERMES_IGNORE_RULES",
+    ):
         os.environ.pop(var, None)
 
 
@@ -95,6 +105,16 @@ class TestIgnoreUserConfigEnvGate:
         # user's value
         assert cfg["model"].get("default", "") != "anthropic/claude-sonnet-4.6"
 
+    def test_user_config_skipped_when_preferred_alias_set(self, tmp_path, monkeypatch):
+        self._write_user_config(tmp_path, "anthropic/claude-sonnet-4.6")
+        monkeypatch.setenv("DOPPEL_IGNORE_USER_CONFIG", "1")
+
+        load_cli_config = self._reload_cli(monkeypatch, tmp_path)
+        cfg = load_cli_config()
+
+        assert cfg["agent"].get("system_prompt", "") != "from user config"
+        assert cfg["model"].get("default", "") != "anthropic/claude-sonnet-4.6"
+
     def test_flag_ignored_when_set_to_other_value(self, tmp_path, monkeypatch):
         """Only the literal value "1" activates the bypass, matching the yolo pattern."""
         self._write_user_config(tmp_path, "anthropic/claude-sonnet-4.6")
@@ -129,6 +149,18 @@ class TestIgnoreRulesEnvGate:
         obj = object.__new__(cli.HermesCLI)
         # Replicate the exact logic from cli.py HermesCLI.__init__:
         ignore_rules = False  # constructor default
+        obj.ignore_rules = ignore_rules or os.environ.get("HERMES_IGNORE_RULES") == "1"
+
+        assert obj.ignore_rules is True
+
+    def test_preferred_alias_enables_ignore_rules(self, monkeypatch):
+        monkeypatch.setenv("DOPPEL_IGNORE_RULES", "1")
+
+        import cli
+        importlib.reload(cli)
+
+        obj = object.__new__(cli.HermesCLI)
+        ignore_rules = False
         obj.ignore_rules = ignore_rules or os.environ.get("HERMES_IGNORE_RULES") == "1"
 
         assert obj.ignore_rules is True

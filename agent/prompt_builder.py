@@ -72,11 +72,26 @@ def _find_git_root(start: Path) -> Optional[Path]:
     return None
 
 
-_HERMES_MD_NAMES = (".hermes.md", "HERMES.md")
+_PROJECT_CONTEXT_MD_NAMES = (
+    ".doppel.md",
+    "DOPPEL.md",
+    ".hermes.md",
+    "HERMES.md",
+)
+
+_PROJECT_CONTEXT_MD_DISPLAY_ALIASES = {
+    ".hermes.md": ".doppel.md",
+    "HERMES.md": "DOPPEL.md",
+}
 
 
-def _find_hermes_md(cwd: Path) -> Optional[Path]:
-    """Discover the nearest ``.hermes.md`` or ``HERMES.md``.
+def _display_project_context_filename(filename: str) -> str:
+    """Normalize legacy project-context filenames for customer-facing display."""
+    return _PROJECT_CONTEXT_MD_DISPLAY_ALIASES.get(filename, filename)
+
+
+def _find_project_context_md(cwd: Path) -> Optional[Path]:
+    """Discover the nearest project-context markdown file.
 
     Search order: *cwd* first, then each parent directory up to (and
     including) the git repository root.  Returns the first match, or
@@ -86,7 +101,7 @@ def _find_hermes_md(cwd: Path) -> Optional[Path]:
     current = cwd.resolve()
 
     for directory in [current, *current.parents]:
-        for name in _HERMES_MD_NAMES:
+        for name in _PROJECT_CONTEXT_MD_NAMES:
             candidate = directory / name
             if candidate.is_file():
                 return candidate
@@ -118,7 +133,7 @@ def _strip_yaml_frontmatter(content: str) -> str:
 # =========================================================================
 
 DEFAULT_AGENT_IDENTITY = (
-    "You are Hermes Agent, an intelligent AI assistant created by Nous Research. "
+    "You are Doppel Agent, an intelligent AI assistant created by Nous Research. "
     "You are helpful, knowledgeable, and direct. You assist users with a wide "
     "range of tasks including answering questions, writing and editing code, "
     "analyzing information, creative work, and executing actions via your tools. "
@@ -128,7 +143,7 @@ DEFAULT_AGENT_IDENTITY = (
 )
 
 HERMES_AGENT_HELP_GUIDANCE = (
-    "If the user asks about configuring, setting up, or using Hermes Agent "
+    "If the user asks about configuring, setting up, or using Doppel Agent "
     "itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') "
     "before answering. Docs: https://hermes-agent.nousresearch.com/docs"
 )
@@ -174,7 +189,7 @@ SKILLS_GUIDANCE = (
 KANBAN_GUIDANCE = (
     "# Kanban task execution protocol\n"
     "You have been assigned ONE task from "
-    "the shared board at `~/.hermes/kanban.db`. Your task id is in "
+    "the shared board at `~/.doppel/kanban.db`. Your task id is in "
     "`$HERMES_KANBAN_TASK`; your workspace is `$HERMES_KANBAN_WORKSPACE`. "
     "The `kanban_*` tools in your schema are your primary coordination surface — "
     "they write directly to the shared SQLite DB and work regardless of terminal "
@@ -232,7 +247,7 @@ KANBAN_GUIDANCE = (
     "\n"
     "## Do NOT\n"
     "\n"
-    "- Do not shell out to `hermes kanban <verb>` for board operations. Use "
+    "- Do not shell out to `doppel kanban <verb>` for board operations. Use "
     "the `kanban_*` tools — they work across all terminal backends.\n"
     "- Do not complete a task you didn't actually finish. Block it.\n"
     "- Do not call `clarify` to ask questions. You are running headless — "
@@ -827,8 +842,8 @@ def build_environment_hints() -> str:
                 f"Terminal backend: {backend}. Your `terminal`, `read_file`, "
                 f"`write_file`, `patch`, and `search_files` tools all operate "
                 f"inside this {backend} environment — NOT on the machine "
-                f"where Hermes itself is running. The host OS, home, and cwd "
-                f"of the Hermes process are irrelevant; only the following "
+                f"where Doppel Agent itself is running. The host OS, home, and cwd "
+                f"of the Doppel Agent process are irrelevant; only the following "
                 f"backend state matters:\n{probe}"
             )
         else:
@@ -1050,7 +1065,7 @@ def build_skills_system_prompt(
     Falls back to a full filesystem scan when both layers miss.
 
     External skill directories (``skills.external_dirs`` in config.yaml) are
-    scanned alongside the local ``~/.hermes/skills/`` directory.  External dirs
+    scanned alongside the local ``~/.doppel/skills/`` directory.  External dirs
     are read-only — they appear in the index but new skills are always created
     in the local dir.  Local skills take precedence when names collide.
     """
@@ -1244,10 +1259,10 @@ def build_skills_system_prompt(
             "for tasks like code review, planning, and testing — load them even for tasks you "
             "already know how to do, because the skill defines how it should be done here.\n"
             "Whenever the user asks you to configure, set up, install, enable, disable, modify, "
-            "or troubleshoot Hermes Agent itself — its CLI, config, models, providers, tools, "
-            "skills, voice, gateway, plugins, or any feature — load the `hermes-agent` skill "
-            "first. It has the actual commands (e.g. `hermes config set …`, `hermes tools`, "
-            "`hermes setup`) so you don't have to guess or invent workarounds.\n"
+            "or troubleshoot Doppel Agent itself — its CLI, config, models, providers, tools, "
+            "skills, voice, gateway, plugins, or any feature — load the bundled `hermes-agent` skill "
+            "first. It has the actual commands (e.g. `doppel config set …`, `doppel tools`, "
+            "`doppel setup`) so you don't have to guess or invent workarounds.\n"
             "If a skill has issues, fix it with skill_manage(action='patch').\n"
             "After difficult/iterative tasks, offer to save as a skill. "
             "If a skill you loaded was missing steps, had wrong commands, or needed "
@@ -1330,7 +1345,7 @@ def build_nous_subscription_prompt(valid_tool_names: "set[str] | None" = None) -
             "When a Nous-managed feature is active, do not ask the user for Firecrawl, FAL, OpenAI TTS, or Browser-Use API keys.",
             "If the user is not subscribed and asks for a capability that Nous subscription would unlock or simplify, suggest Nous subscription as one option alongside direct setup or local alternatives.",
             "Do not mention subscription unless the user asks about it or it directly solves the current missing capability.",
-            "Useful commands: hermes setup, hermes setup tools, hermes setup terminal, hermes status.",
+            "Useful commands: doppel setup, doppel setup tools, doppel setup terminal, doppel status.",
         ]
     )
     return "\n".join(lines)
@@ -1380,26 +1395,29 @@ def load_soul_md() -> Optional[str]:
         return None
 
 
-def _load_hermes_md(cwd_path: Path) -> str:
-    """.hermes.md / HERMES.md — walk to git root."""
-    hermes_md_path = _find_hermes_md(cwd_path)
-    if not hermes_md_path:
+def _load_project_context_md(cwd_path: Path) -> str:
+    """.doppel.md / DOPPEL.md / legacy .hermes.md / HERMES.md — walk to git root."""
+    project_context_md_path = _find_project_context_md(cwd_path)
+    if not project_context_md_path:
         return ""
     try:
-        content = hermes_md_path.read_text(encoding="utf-8").strip()
+        content = project_context_md_path.read_text(encoding="utf-8").strip()
         if not content:
             return ""
         content = _strip_yaml_frontmatter(content)
-        rel = hermes_md_path.name
+        rel = _display_project_context_filename(project_context_md_path.name)
         try:
-            rel = str(hermes_md_path.relative_to(cwd_path))
+            rel = str(project_context_md_path.relative_to(cwd_path))
         except ValueError:
             pass
+        rel_parts = rel.split("/")
+        rel_parts[-1] = _display_project_context_filename(rel_parts[-1])
+        rel = "/".join(rel_parts)
         content = _scan_context_content(content, rel)
         result = f"## {rel}\n\n{content}"
-        return _truncate_content(result, ".hermes.md")
+        return _truncate_content(result, ".doppel.md")
     except Exception as e:
-        logger.debug("Could not read %s: %s", hermes_md_path, e)
+        logger.debug("Could not read %s: %s", project_context_md_path, e)
         return ""
 
 
@@ -1469,7 +1487,7 @@ def build_context_files_prompt(cwd: Optional[str] = None, skip_soul: bool = Fals
     """Discover and load context files for the system prompt.
 
     Priority (first found wins — only ONE project context type is loaded):
-      1. .hermes.md / HERMES.md  (walk to git root)
+      1. .doppel.md / DOPPEL.md / legacy .hermes.md / HERMES.md  (walk to git root)
       2. AGENTS.md / agents.md   (cwd only)
       3. CLAUDE.md / claude.md   (cwd only)
       4. .cursorrules / .cursor/rules/*.mdc  (cwd only)
@@ -1488,7 +1506,7 @@ def build_context_files_prompt(cwd: Optional[str] = None, skip_soul: bool = Fals
 
     # Priority-based project context: first match wins
     project_context = (
-        _load_hermes_md(cwd_path)
+        _load_project_context_md(cwd_path)
         or _load_agents_md(cwd_path)
         or _load_claude_md(cwd_path)
         or _load_cursorrules(cwd_path)

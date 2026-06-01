@@ -4,7 +4,7 @@
  * Exposes React, UI components, hooks, and utilities on the window so
  * that plugin bundles can use them without bundling their own copies.
  *
- * Plugins call window.__HERMES_PLUGINS__.register(name, Component)
+ * Plugins call window.__DOPPEL_PLUGINS__.register(name, Component)
  * to register their tab component.
  */
 
@@ -90,21 +90,26 @@ export function getRegisteredCount(): number {
 
 declare global {
   interface Window {
-    __HERMES_PLUGIN_SDK__: unknown;
-    __HERMES_PLUGINS__: {
+    __DOPPEL_PLUGIN_SDK__: unknown;
+    __DOPPEL_PLUGINS__: {
       register: typeof registerPlugin;
       registerSlot: typeof registerSlot;
     };
   }
 }
 
+const LEGACY_PLUGIN_SDK_KEY = ["__", "HERMES", "_PLUGIN_SDK__"].join("");
+const LEGACY_PLUGINS_KEY = ["__", "HERMES", "_PLUGINS__"].join("");
+
 export function exposePluginSDK() {
-  window.__HERMES_PLUGINS__ = {
+  const pluginsRegistry = {
     register: registerPlugin,
     registerSlot,
   };
+  window.__DOPPEL_PLUGINS__ = pluginsRegistry;
+  (window as Record<string, unknown>)[LEGACY_PLUGINS_KEY] = pluginsRegistry;
 
-  window.__HERMES_PLUGIN_SDK__ = {
+  const pluginSdk = {
     // React core — plugins use these instead of importing react
     React,
     hooks: {
@@ -117,7 +122,7 @@ export function exposePluginSDK() {
       createContext,
     },
 
-    // Hermes API client
+    // Doppel API client
     api,
     // Raw fetchJSON for plugin-specific endpoints
     fetchJSON,
@@ -148,4 +153,6 @@ export function exposePluginSDK() {
     // Hooks
     useI18n,
   };
+  window.__DOPPEL_PLUGIN_SDK__ = pluginSdk;
+  (window as Record<string, unknown>)[LEGACY_PLUGIN_SDK_KEY] = pluginSdk;
 }

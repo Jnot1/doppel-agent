@@ -1,15 +1,16 @@
 """Remote model catalog fetcher.
 
-The Hermes docs site hosts a JSON manifest of curated models for providers
-we want to update without shipping a release (currently OpenRouter and
-Nous Portal). This module fetches, validates, and caches that manifest,
-falling back to the in-repo hardcoded lists when the network is unavailable.
+The hosted Doppel Agent docs catalog publishes a JSON manifest of curated
+models for providers we want to update without shipping a release (currently
+OpenRouter and Nous Portal). This module fetches, validates, and caches that
+manifest, falling back to the in-repo hardcoded lists when the network is
+unavailable.
 
 Pipeline
 --------
 1. ``get_catalog()`` — returns a parsed manifest dict.
    - Checks in-process cache (invalidated by TTL).
-   - Reads disk cache at ``~/.hermes/cache/model_catalog.json``.
+   - Reads disk cache at ``~/.doppel/cache/model_catalog.json``.
    - Fetches the master URL if disk cache is stale or missing.
    - On any fetch failure, keeps using the stale cache (or empty dict).
 
@@ -53,6 +54,7 @@ from pathlib import Path
 from typing import Any
 
 from hermes_cli import __version__ as _HERMES_VERSION
+from hermes_constants import get_model_catalog_fallback_urls, get_model_catalog_url
 from utils import atomic_replace
 
 logger = logging.getLogger(__name__)
@@ -61,9 +63,7 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_CATALOG_URL = (
-    "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json"
-)
+DEFAULT_CATALOG_URL = get_model_catalog_url()
 # Fallback fetch chain. The Docusaurus site is served through Vercel, which
 # occasionally returns HTTP 403 + x-vercel-mitigated: challenge for non-
 # browser clients (urllib, curl). When that happens the disk cache goes
@@ -71,7 +71,7 @@ DEFAULT_CATALOG_URL = (
 # is the same manifest published from the same repo and is not bot-gated,
 # so we fall through to it whenever the primary URL fails.
 DEFAULT_CATALOG_FALLBACK_URLS: tuple[str, ...] = (
-    "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/api/model-catalog.json",
+    *get_model_catalog_fallback_urls(),
 )
 DEFAULT_TTL_HOURS = 24
 DEFAULT_FETCH_TIMEOUT = 8.0
@@ -357,7 +357,7 @@ def get_curated_nous_models() -> list[str] | None:
 
 
 def reset_cache() -> None:
-    """Clear the in-process cache. Used by tests and ``hermes model --refresh``."""
+    """Clear the in-process cache. Used by tests and ``doppel model --refresh``."""
     global _catalog_cache, _catalog_cache_source_mtime
     _catalog_cache = None
     _catalog_cache_source_mtime = 0.0

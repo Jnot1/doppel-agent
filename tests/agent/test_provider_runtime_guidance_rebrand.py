@@ -1,0 +1,213 @@
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _read(rel_path: str) -> str:
+    return (ROOT / rel_path).read_text(encoding="utf-8")
+
+
+def test_auxiliary_client_runtime_guidance_prefers_doppel():
+    text = _read("agent/auxiliary_client.py")
+
+    assert '"X-Title": "Hermes Agent"' not in text
+    assert '"X-Title": "Doppel Agent"' in text
+    assert '"User-Agent": "codex_cli_rs/0.0.0 (Hermes Agent)"' not in text
+    assert '"User-Agent": "codex_cli_rs/0.0.0 (Doppel Agent)"' in text
+
+    assert "Run `hermes setup` or `hermes model` and enter a valid http(s) base URL." not in text
+    assert "Run `doppel setup` or `doppel model` and enter a valid http(s) base URL." in text
+    assert "Run: hermes model to reconfigure" not in text
+    assert "Run: doppel model to reconfigure" in text
+    assert "but no Codex OAuth token found (run: hermes model)" not in text
+    assert "but no Codex OAuth token found (run: doppel model)" in text
+    assert "run: hermes model -> xAI Grok OAuth — SuperGrok / Premium+" not in text
+    assert "run: doppel model -> xAI Grok OAuth — SuperGrok / Premium+" in text
+    assert "switch to a different provider with `hermes model`." not in text
+    assert "switch to a different provider with `doppel model`." in text
+    assert "Run: hermes setup" not in text
+    assert "Run: doppel setup" in text
+    assert "(run: hermes auth)." not in text
+    assert "(run: doppel auth)." in text
+    assert "(run: hermes auth add nous)." not in text
+    assert "(run: doppel auth add nous)." in text
+    assert "but Nous Portal not configured (run: hermes auth)" not in text
+    assert "but Nous Portal not configured (run: doppel auth)" in text
+    assert "even though ``hermes auth" not in text
+    assert "even though ``doppel auth" in text
+    assert "switches providers via `hermes model`" not in text
+    assert "switches providers via `doppel model`" in text
+    assert "OPENAI_BASE_URL from ~/.hermes/.env" not in text
+    assert "OPENAI_BASE_URL from ~/.doppel/.env" in text
+
+
+def test_agent_init_and_backend_helper_guidance_prefers_doppel():
+    agent_init = _read("agent/agent_init.py")
+    backend_helpers = _read("tools/tool_backend_helpers.py")
+
+    assert "by Hermes Agent.  Choose a model with at least " not in agent_init
+    assert "by Doppel Agent.  Choose a model with at least " in agent_init
+    assert "switch to a different provider with `hermes model`." not in agent_init
+    assert "switch to a different provider with `doppel model`." in agent_init
+    assert "No LLM provider configured. Run `hermes model`" not in agent_init
+    assert "No LLM provider configured. Run `doppel model`" in agent_init
+    assert "run `hermes setup` for first-time " not in agent_init
+    assert "run `doppel setup` for first-time " in agent_init
+
+    assert "Run `hermes model` to refresh your " not in backend_helpers
+    assert "Run `doppel model` to refresh your " in backend_helpers
+    assert "Nous Portal login and billing status." in backend_helpers
+
+
+def test_compression_and_acp_runtime_guidance_prefers_doppel():
+    conversation_compression = _read("agent/conversation_compression.py")
+    copilot_acp_client = _read("agent/copilot_acp_client.py")
+    codex_app_server = _read("agent/transports/codex_app_server.py")
+    codex_app_server_session = _read("agent/transports/codex_app_server_session.py")
+
+    assert "Run `hermes setup` or set OPENROUTER_API_KEY." not in conversation_compression
+    assert "Run `doppel setup` or set OPENROUTER_API_KEY." in conversation_compression
+
+    assert '"title": "Hermes Agent"' not in copilot_acp_client
+    assert '"title": "Doppel Agent"' in copilot_acp_client
+
+    assert 'client_title: str = "Hermes Agent"' not in codex_app_server
+    assert 'client_title: str = "Doppel Agent"' in codex_app_server
+    assert 'client_title="Hermes Agent"' not in codex_app_server_session
+    assert 'client_title="Doppel Agent"' in codex_app_server_session
+
+
+def test_xai_and_tts_runtime_guidance_prefers_doppel():
+    x_search = _read("tools/x_search_tool.py")
+    transcription = _read("tools/transcription_tools.py")
+    tts = _read("tools/tts_tool.py")
+
+    assert "Run `hermes auth add xai-oauth`" not in x_search
+    assert "Run `doppel auth add xai-oauth`" in x_search
+
+    assert "Configure xAI OAuth in `hermes model` or set XAI_API_KEY" not in transcription
+    assert "Configure xAI OAuth in `doppel model` or set XAI_API_KEY" in transcription
+
+    assert "Configure xAI OAuth in `hermes model` or set XAI_API_KEY." not in tts
+    assert "Configure xAI OAuth in `doppel model` or set XAI_API_KEY." in tts
+    assert "Run hermes setup and choose NeuTTS" not in tts
+    assert "Run doppel setup and choose NeuTTS" in tts
+    assert "Run 'hermes setup tts' and choose KittenTTS" not in tts
+    assert "Run 'doppel setup tts' and choose KittenTTS" in tts
+    assert "Run 'hermes tools' and select Piper under TTS" not in tts
+    assert "Run 'doppel tools' and select Piper under TTS" in tts
+
+
+def test_conversation_loop_and_gemini_runtime_guidance_prefers_doppel():
+    conversation_loop = _read("agent/conversation_loop.py")
+    gemini_native = _read("agent/gemini_native_adapter.py")
+
+    assert "Ollama runtime context too small for Hermes tool use" not in conversation_loop
+    assert "Ollama runtime context too small for Doppel tool use" in conversation_loop
+    assert "context, but Hermes needs at least" not in conversation_loop
+    assert "context, but Doppel needs at least" in conversation_loop
+    assert "tokens. In Hermes config, set `model.ollama_num_ctx: 65536`" not in conversation_loop
+    assert "tokens. In Doppel config, set `model.ollama_num_ctx: 65536`" in conversation_loop
+    assert "❌ Ollama runtime context is too small for Hermes tool use" not in conversation_loop
+    assert "❌ Ollama runtime context is too small for Doppel tool use" in conversation_loop
+    assert "request at ~8K tokens. Hermes' system prompt + tool schemas baseline" not in conversation_loop
+    assert "request at ~8K tokens. Doppel's system prompt + tool schemas baseline" in conversation_loop
+    assert "Use the `copilot` provider with a Copilot subscription token (`hermes" not in conversation_loop
+    assert "Use the `copilot` provider with a Copilot subscription token (`doppel" in conversation_loop
+    assert "      setup` → GitHub Copilot), or pick any other provider." in conversation_loop
+
+    assert "Re-authenticate: hermes auth add nous" not in conversation_loop
+    assert "Re-authenticate: doppel auth add nous" in conversation_loop
+    assert "Run `hermes doctor` for credential-chain diagnostics" not in conversation_loop
+    assert "Run `doppel doctor` for credential-chain diagnostics" in conversation_loop
+    assert "Then run `hermes auth` to re-authenticate." not in conversation_loop
+    assert "Then run `doppel auth` to re-authenticate." in conversation_loop
+    assert "from `hermes model`." not in conversation_loop
+    assert "from `doppel model`." in conversation_loop
+    assert "Re-authenticate: hermes auth add nous --type oauth" not in conversation_loop
+    assert "Re-authenticate: doppel auth add nous --type oauth" in conversation_loop
+    assert "• Is the key valid? Run: hermes setup" not in conversation_loop
+    assert "• Is the key valid? Run: doppel setup" in conversation_loop
+    assert "hermes fallback add   (interactive picker — same as `hermes model`)" not in conversation_loop
+    assert "doppel fallback add   (interactive picker — same as `doppel model`)" in conversation_loop
+    assert 'Legacy cleanup: hermes config set ANTHROPIC_TOKEN \\"\\"' not in conversation_loop
+    assert 'Legacy cleanup: doppel config set ANTHROPIC_TOKEN \\"\\"' in conversation_loop
+    assert 'Clear stale keys: hermes config set ANTHROPIC_API_KEY \\"\\"' not in conversation_loop
+    assert 'Clear stale keys: doppel config set ANTHROPIC_API_KEY \\"\\"' in conversation_loop
+    assert "(not a Hermes/gateway failure)." not in conversation_loop
+    assert "(not a Doppel/gateway failure)." in conversation_loop
+    assert "adding a fallback provider with `hermes fallback add`." not in conversation_loop
+    assert "adding a fallback provider with `doppel fallback add`." in conversation_loop
+
+    assert "~/.hermes/.env" not in gemini_native
+    assert "~/.doppel/.env" in gemini_native
+    assert "run `hermes setup`" not in gemini_native
+    assert "run `doppel setup`" in gemini_native
+
+
+def test_google_oauth_runtime_guidance_prefers_doppel():
+    google_oauth = _read("agent/google_oauth.py")
+
+    assert "Run `hermes auth add google-gemini-cli` first." not in google_oauth
+    assert "Run `doppel auth add google-gemini-cli` first." in google_oauth
+
+
+def test_credential_sources_prompt_builder_and_mcp_transport_guidance_prefers_doppel():
+    credential_sources = _read("agent/credential_sources.py")
+    prompt_builder = _read("agent/prompt_builder.py")
+    hermes_tools_mcp = _read("agent/transports/hermes_tools_mcp_server.py")
+
+    assert "until you run `hermes auth add {provider}`." not in credential_sources
+    assert "until you run `doppel auth add {provider}`." in credential_sources
+    assert "Run `hermes auth add anthropic` to re-enable if needed." not in credential_sources
+    assert "Run `doppel auth add anthropic` to re-enable if needed." in credential_sources
+    assert "Run `hermes auth add openai-codex` to re-enable if needed." not in credential_sources
+    assert "Run `doppel auth add openai-codex` to re-enable if needed." in credential_sources
+    assert "Run `hermes auth add qwen-oauth` to re-enable if needed." not in credential_sources
+    assert "Run `doppel auth add qwen-oauth` to re-enable if needed." in credential_sources
+    assert "Run `hermes auth add copilot` to re-enable if needed." not in credential_sources
+    assert "Run `doppel auth add copilot` to re-enable if needed." in credential_sources
+    assert "(not in ~/.hermes/.env)." not in credential_sources
+    assert "(not in ~/.doppel/.env)." in credential_sources
+    assert "visible to Hermes." not in credential_sources
+    assert "visible to Doppel." in credential_sources
+    assert "Run `hermes model` → xAI Grok OAuth (SuperGrok / Premium+) to re-authenticate if needed." not in credential_sources
+    assert "Run `doppel model` → xAI Grok OAuth (SuperGrok / Premium+) to re-authenticate if needed." in credential_sources
+
+    assert "If the user asks about configuring, setting up, or using Hermes Agent " not in prompt_builder
+    assert "If the user asks about configuring, setting up, or using Doppel Agent " in prompt_builder
+    assert "load the `hermes-agent` skill with skill_view(name='hermes-agent')" in prompt_builder
+    assert "Docs: https://hermes-agent.nousresearch.com/docs" in prompt_builder
+
+    assert "Hermes Agent's tool surface, exposed for use inside a Codex " not in hermes_tools_mcp
+    assert "Doppel Agent's tool surface, exposed for use inside a Codex " in hermes_tools_mcp
+
+
+def test_bitwarden_onboarding_and_auxiliary_guidance_prefers_doppel():
+    bitwarden = _read("agent/secret_sources/bitwarden.py")
+    onboarding = _read("agent/onboarding.py")
+    auxiliary_client = _read("agent/auxiliary_client.py")
+
+    assert "plaintext in ``~/.hermes/.env``" not in bitwarden
+    assert "plaintext in ``~/.doppel/.env``" in bitwarden
+    assert "The access token is stored in ``~/.hermes/.env`` as" not in bitwarden
+    assert "The access token is stored in ``~/.doppel/.env`` as" in bitwarden
+    assert "back-to-back ``hermes`` invocations" not in bitwarden
+    assert "back-to-back ``doppel`` invocations" in bitwarden
+    assert "`hermes secrets bitwarden setup`." not in bitwarden
+    assert "`doppel secrets bitwarden setup`." in bitwarden
+    assert "not set.  Run `hermes secrets bitwarden setup`." not in bitwarden
+    assert "not set.  Run `doppel secrets bitwarden setup`." in bitwarden
+    assert "Run `hermes secrets bitwarden setup` to install." not in bitwarden
+    assert "Run `doppel secrets bitwarden setup` to install." in bitwarden
+
+    assert "To port your config, memory, and skills over to Hermes, run " not in onboarding
+    assert "To port your config, memory, and skills over to Doppel, run " in onboarding
+    assert "`hermes claw migrate`." not in onboarding
+    assert "`doppel claw migrate`." in onboarding
+    assert "run `hermes claw cleanup`" not in onboarding
+    assert "run `doppel claw cleanup`" in onboarding
+
+    assert "runtime resolution failed (run: hermes doctor for " not in auxiliary_client
+    assert "runtime resolution failed (run: doppel doctor for " in auxiliary_client

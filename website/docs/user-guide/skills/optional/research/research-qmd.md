@@ -14,10 +14,10 @@ Search personal knowledge bases, notes, docs, and meeting transcripts locally us
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/research/qmd` |
+| Source | Optional — install with `doppel skills install official/research/qmd` |
 | Path | `optional-skills/research/qmd` |
 | Version | `1.0.0` |
-| Author | Hermes Agent + Teknium |
+| Author | Doppel Agent + Teknium |
 | License | MIT |
 | Platforms | macos, linux |
 | Tags | `Search`, `Knowledge-Base`, `RAG`, `Notes`, `MCP`, `Local-AI` |
@@ -26,7 +26,7 @@ Search personal knowledge bases, notes, docs, and meeting transcripts locally us
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # QMD — Query Markup Documents

@@ -1,16 +1,16 @@
-# nix/nixosModules.nix — NixOS module for hermes-agent
+# nix/nixosModules.nix — NixOS module for Doppel Agent
 #
 # Two modes:
 #   container.enable = false (default) → native systemd service
 #   container.enable = true            → OCI container (persistent writable layer)
 #
-# Container mode: hermes runs from /nix/store bind-mounted read-only into a
+# Container mode: Doppel runs from /nix/store bind-mounted read-only into a
 # plain Ubuntu container. The writable layer (apt/pip/npm installs) persists
 # across restarts and agent updates. Only image/volume/options changes trigger
 # container recreation. Environment variables are written to $HERMES_HOME/.env
-# and read by hermes at startup — no container recreation needed for env changes.
+# and read by Doppel at startup — no container recreation needed for env changes.
 #
-# Tool resolution: the hermes wrapper uses --suffix PATH for nix store tools,
+# Tool resolution: the legacy hermes wrapper uses --suffix PATH for nix store tools,
 # so apt/uv-installed versions take priority. The container entrypoint provisions
 # extensible tools on first boot: nodejs/npm via apt, uv via curl, and a Python
 # 3.11 venv (bootstrapped entirely by uv) at ~/.venv with pip seeded. Agents get
@@ -37,7 +37,7 @@
     # Deep-merge config type (from 0xrsydn/nix-hermes-agent)
     deepConfigType = lib.types.mkOptionType {
       name = "hermes-config-attrs";
-      description = "Hermes YAML config (attrset), merged deeply via lib.recursiveUpdate.";
+      description = "Doppel Agent YAML config (attrset), merged deeply via lib.recursiveUpdate.";
       check = builtins.isAttrs;
       merge = _loc: defs: lib.foldl' lib.recursiveUpdate { } (map (d: d.value) defs);
     };
@@ -66,9 +66,11 @@
       )
     );
 
-    containerName = "hermes-agent";
+    containerName = cfg.container.name;
     containerDataDir = "/data";     # stateDir mount point inside container
-    containerHomeDir = "/home/hermes";
+    containerHomeDir = "/home/${cfg.user}";
+    containerProvisionMarker = "/var/lib/${cfg.user}-tools-provisioned";
+    containerSudoersFile = "/etc/sudoers.d/${cfg.user}";
 
     # ── Container mode helpers ──────────────────────────────────────────
     containerBin = if cfg.container.backend == "docker"
@@ -76,8 +78,8 @@
       else "${pkgs.podman}/bin/podman";
 
     # Runs as root inside the container on every start. Provisions the
-    # hermes user + sudo on first boot (writable layer persists), then
-    # drops privileges. Supports arbitrary base images (Debian, Alpine, etc).
+    # configured runtime user + sudo on first boot (writable layer persists),
+    # then drops privileges. Supports arbitrary base images (Debian, Alpine, etc).
     containerEntrypoint = pkgs.writeShellScript "hermes-container-entrypoint" ''
       set -eu
 
@@ -91,7 +93,7 @@
       if [ -n "$EXISTING_GROUP" ]; then
         GROUP_NAME="$EXISTING_GROUP"
       else
-        GROUP_NAME="hermes"
+        GROUP_NAME="${cfg.group}"
         if command -v groupadd >/dev/null 2>&1; then
           groupadd -g "$HERMES_GID" "$GROUP_NAME"
         elif command -v addgroup >/dev/null 2>&1; then
@@ -105,8 +107,8 @@
         TARGET_USER=$(echo "$PASSWD_ENTRY" | cut -d: -f1)
         TARGET_HOME=$(echo "$PASSWD_ENTRY" | cut -d: -f6)
       else
-        TARGET_USER="hermes"
-        TARGET_HOME="/home/hermes"
+        TARGET_USER="${cfg.user}"
+        TARGET_HOME="${containerHomeDir}"
         if command -v useradd >/dev/null 2>&1; then
           useradd -u "$HERMES_UID" -g "$HERMES_GID" -m -d "$TARGET_HOME" -s /bin/bash "$TARGET_USER"
         elif command -v adduser >/dev/null 2>&1; then
@@ -131,7 +133,7 @@
       # nodejs/npm: writable node so npm i -g works (nix store copies are read-only)
       #   Node 22 via NodeSource — Ubuntu 24.04 ships Node 18 which is EOL.
       # curl: needed for uv installer + NodeSource setup
-      if [ ! -f /var/lib/hermes-tools-provisioned ] && command -v apt-get >/dev/null 2>&1; then
+      if [ ! -f ${containerProvisionMarker} ] && command -v apt-get >/dev/null 2>&1; then
         echo "First boot: provisioning agent tools..."
         apt-get update -qq
         apt-get install -y -qq sudo curl ca-certificates gnupg
@@ -142,13 +144,14 @@
           > /etc/apt/sources.list.d/nodesource.list
         apt-get update -qq
         apt-get install -y -qq nodejs
-        touch /var/lib/hermes-tools-provisioned
+        mkdir -p "$(dirname ${containerProvisionMarker})"
+        touch ${containerProvisionMarker}
       fi
 
-      if command -v sudo >/dev/null 2>&1 && [ ! -f /etc/sudoers.d/hermes ]; then
+      if command -v sudo >/dev/null 2>&1 && [ ! -f ${containerSudoersFile} ]; then
         mkdir -p /etc/sudoers.d
-        echo "$TARGET_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/hermes
-        chmod 0440 /etc/sudoers.d/hermes
+        echo "$TARGET_USER ALL=(ALL) NOPASSWD:ALL" > ${containerSudoersFile}
+        chmod 0440 ${containerSudoersFile}
       fi
 
       # uv (Python manager) — not in Ubuntu repos, retry-safe outside the sentinel
@@ -186,15 +189,20 @@
     # Package and entrypoint use stable symlinks (current-package, current-entrypoint)
     # so they can update without recreation. Env vars go through $HERMES_HOME/.env.
     containerIdentity = builtins.hashString "sha256" (builtins.toJSON {
-      schema = 4; # bump when identity inputs change (4: Node 18→22 via NodeSource)
+      schema = 5; # bump when identity inputs change (5: runtime identity fields)
       image = cfg.container.image;
+      name = containerName;
+      user = cfg.user;
+      group = cfg.group;
+      home = containerHomeDir;
+      workDir = containerWorkDir;
       extraVolumes = cfg.container.extraVolumes;
       extraOptions = cfg.container.extraOptions;
     });
 
     identityFile = "${cfg.stateDir}/.container-identity";
 
-    # Default: /var/lib/hermes/workspace → /data/workspace.
+    # Default legacy layout: /var/lib/hermes/workspace → /data/workspace.
     # Custom paths outside stateDir pass through unchanged (user must add extraVolumes).
     containerWorkDir =
       if lib.hasPrefix "${cfg.stateDir}/" cfg.workingDirectory
@@ -202,27 +210,31 @@
       else cfg.workingDirectory;
 
   in {
+    imports = [
+      (lib.mkAliasOptionModule [ "services" "doppel-agent" ] [ "services" "hermes-agent" ])
+    ];
+
     options.services.hermes-agent = with lib; {
-      enable = mkEnableOption "Hermes Agent gateway service";
+      enable = mkEnableOption "Doppel Agent gateway service (compat namespace: services.hermes-agent)";
 
       # ── Package ──────────────────────────────────────────────────────────
       package = mkOption {
         type = types.package;
         default = hermes-agent;
-        description = "The hermes-agent package to use.";
+        description = "The Doppel Agent package to use. This option path remains under services.hermes-agent for compatibility.";
       };
 
       # ── Service identity ─────────────────────────────────────────────────
       user = mkOption {
         type = types.str;
         default = "hermes";
-        description = "System user running the gateway.";
+        description = "System user running the gateway. Keep the legacy default for upgrades, or set this to doppel for fresh Doppel-first deployments.";
       };
 
       group = mkOption {
         type = types.str;
         default = "hermes";
-        description = "System group running the gateway.";
+        description = "System group running the gateway. Keep the legacy default for upgrades, or set this to doppel for fresh Doppel-first deployments.";
       };
 
       createUser = mkOption {
@@ -235,7 +247,7 @@
       stateDir = mkOption {
         type = types.str;
         default = "/var/lib/hermes";
-        description = "State directory. Contains .hermes/ subdir (HERMES_HOME).";
+        description = "State directory. Contains the compatibility .hermes/ subdir (HERMES_HOME). Keep the legacy default for upgrades, or set a Doppel-first parent such as /var/lib/doppel for fresh deployments.";
       };
 
       workingDirectory = mkOption {
@@ -259,7 +271,7 @@
         type = deepConfigType;
         default = { };
         description = ''
-          Declarative Hermes config (attrset). Deep-merged across module
+          Declarative Doppel Agent config (attrset). Deep-merged across module
           definitions and rendered as config.yaml.
         '';
         example = literalExpression ''
@@ -279,7 +291,7 @@
         description = ''
           Paths to environment files containing secrets (API keys, tokens).
           Contents are merged into $HERMES_HOME/.env at activation time.
-          Hermes reads this file on every startup via load_hermes_dotenv().
+          Doppel reads this file on every startup via load_hermes_dotenv().
         '';
       };
 
@@ -455,7 +467,7 @@
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        description = "Extra command-line arguments for `hermes gateway`.";
+        description = "Extra command-line arguments for `doppel gateway`.";
       };
 
       extraPackages = mkOption {
@@ -465,7 +477,7 @@
           Extra packages available to the agent — terminal commands, skills,
           cron jobs, and the service process all see them.
 
-          Implemented via the hermes user's per-user profile
+          Implemented via the configured service user's per-user profile
           (`/etc/profiles/per-user/${cfg.user}/bin`), which NixOS includes
           in PATH for login shells.  The packages are also added to the
           systemd service PATH for direct process access.
@@ -476,9 +488,9 @@
         type = types.listOf types.package;
         default = [ ];
         description = ''
-          Directory-based plugin packages to symlink into the hermes plugins
+          Directory-based plugin packages to symlink into the Doppel plugins
           directory. Each package should contain a plugin.yaml and __init__.py
-          at its root. Hermes discovers these automatically on startup.
+          at its root. Doppel discovers these automatically on startup.
         '';
         example = literalExpression ''
           [
@@ -500,7 +512,7 @@
           Python packages to add to PYTHONPATH for entry-point plugin discovery.
           These are pip-packaged plugins that register via the
           hermes_agent.plugins entry-point group. Each package must be built
-          with the same Python interpreter as hermes (python312).
+          with the same Python interpreter as Doppel Agent (python312).
         '';
         example = literalExpression ''
           [
@@ -549,9 +561,10 @@
         type = types.bool;
         default = false;
         description = ''
-          Add the hermes CLI to environment.systemPackages and export
-          HERMES_HOME system-wide (via environment.variables) so interactive
-          shells share state with the gateway service.
+          Add the preferred doppel CLI to environment.systemPackages, keep the
+          legacy hermes alias available, and export HERMES_HOME system-wide
+          (via environment.variables) so interactive shells share state with
+          the gateway service.
         '';
       };
 
@@ -584,12 +597,23 @@
           description = "OCI container image. The container pulls this at runtime via Docker/Podman.";
         };
 
+        name = mkOption {
+          type = types.str;
+          default = "hermes-agent";
+          description = ''
+            OCI container name. Keeps the legacy hermes-agent default for
+            upgrade safety; set this to "doppel-agent" for fresh
+            Doppel-first container deployments.
+          '';
+        };
+
         hostUsers = mkOption {
           type = types.listOf types.str;
           default = [ ];
           description = ''
-            Interactive users who get a ~/.hermes symlink to the service
-            stateDir. These users are automatically added to the hermes group.
+            Interactive users who get the compatibility ~/.hermes symlink to
+            the service stateDir. These users are automatically added to the
+            configured service group.
           '';
           example = [ "sidbin" ];
         };
@@ -643,7 +667,7 @@
       })
 
       # ── Host CLI ──────────────────────────────────────────────────────
-      # Add the hermes CLI to system PATH and export HERMES_HOME system-wide
+      # Add the preferred doppel CLI to system PATH and export HERMES_HOME system-wide
       # so interactive shells share state (sessions, skills, cron) with the
       # gateway service instead of creating a separate ~/.hermes/.
       (lib.mkIf cfg.addToSystemPackages {
@@ -680,7 +704,7 @@
 
       # ── Warnings ──────────────────────────────────────────────────────
       # ── Per-user profile for extraPackages ───────────────────────────
-      # Wire extraPackages into the hermes user's per-user profile so the
+      # Wire extraPackages into the configured service user's per-user profile so the
       # login-shell snapshot (which rebuilds PATH from NixOS profiles) sees
       # them.  The systemd service PATH also includes them for direct access.
       (lib.mkIf (cfg.extraPackages != []) {
@@ -694,9 +718,9 @@
         warnings = [
           ''
             services.hermes-agent: container.enable is true and container.hostUsers
-            is set, but addToSystemPackages is false. Without a host-installed hermes
-            binary, container routing will not work for interactive users.
-            Set addToSystemPackages = true or ensure hermes is on PATH.
+            is set, but addToSystemPackages is false. Without a host-installed doppel
+            binary (or the legacy hermes alias), container routing will not work for
+            interactive users. Set addToSystemPackages = true or ensure doppel is on PATH.
           ''
         ];
       })
@@ -780,7 +804,7 @@
               in ''
                 if [ -L "${symlinkPath}" ] && [ "$(readlink "${symlinkPath}")" = "${cfg.stateDir}/.hermes" ]; then
                   rm -f "${symlinkPath}"
-                  echo "hermes-agent: removed symlink ${symlinkPath}"
+                  echo "doppel-agent: removed compatibility symlink ${symlinkPath}"
                 fi
               '') cfg.container.hostUsers)}
           ''}
@@ -800,7 +824,7 @@
                   # Real directory — back it up, then create symlink.
                   # (ln -sfn cannot atomically replace a directory.)
                   _backup="${symlinkPath}.bak.$(date +%s)"
-                  echo "hermes-agent: backing up existing ${symlinkPath} to $_backup"
+                  echo "doppel-agent: backing up existing ${symlinkPath} to $_backup"
                   mv "${symlinkPath}" "$_backup"
                 fi
                 # For everything else (existing symlink, doesn't exist, etc.)
@@ -821,7 +845,7 @@
           ''}
 
           # Seed .env from Nix-declared environment + environmentFiles.
-          # Hermes reads $HERMES_HOME/.env at startup via load_hermes_dotenv(),
+          # Doppel reads $HERMES_HOME/.env at startup via load_hermes_dotenv(),
           # so this is the single source of truth for both native and container mode.
           ${lib.optionalString (cfg.environment != {} || cfg.environmentFiles != []) ''
             ENV_FILE="${cfg.stateDir}/.hermes/.env"
@@ -865,7 +889,8 @@
       # ══════════════════════════════════════════════════════════════════
       (lib.mkIf (!cfg.container.enable) {
         systemd.services.hermes-agent = {
-          description = "Hermes Agent Gateway";
+          description = "Doppel Agent Gateway";
+          aliases = [ "doppel-agent.service" ];
           wantedBy = [ "multi-user.target" ];
           after = [ "network-online.target" ];
           wants = [ "network-online.target" ];
@@ -926,7 +951,8 @@
         virtualisation.docker.enable = lib.mkDefault (cfg.container.backend == "docker");
 
         systemd.services.hermes-agent = {
-          description = "Hermes Agent Gateway (container)";
+          description = "Doppel Agent Gateway (container)";
+          aliases = [ "doppel-agent.service" ];
           wantedBy = [ "multi-user.target" ];
           after = [ "network-online.target" ]
             ++ lib.optional (cfg.container.backend == "docker") "docker.service";

@@ -37,6 +37,13 @@ def _make_runner():
     return runner
 
 
+def test_gateway_runtime_service_reinstall_hint_is_doppel_first():
+    runtime = Path("gateway/run.py").read_text(encoding="utf-8")
+
+    assert "doppel gateway service install --replace" in runtime
+    assert "hermes gateway service install --replace" not in runtime
+
+
 # ---------------------------------------------------------------------------
 # _handle_update_command
 # ---------------------------------------------------------------------------
@@ -117,7 +124,7 @@ class TestHandleUpdateCommand:
             result = await runner._handle_update_command(event)
 
         assert "Could not locate" in result
-        assert "hermes update" in result
+        assert "doppel update" in result
 
     @pytest.mark.asyncio
     async def test_fallback_to_sys_executable(self, tmp_path):
@@ -144,7 +151,7 @@ class TestHandleUpdateCommand:
              patch("subprocess.Popen", mock_popen):
             result = await runner._handle_update_command(event)
 
-        assert "Starting Hermes update" in result
+        assert "Starting Doppel update" in result
         call_args = mock_popen.call_args[0][0]
         # The update_cmd uses sys.executable -m hermes_cli.main
         joined = " ".join(call_args) if isinstance(call_args, list) else call_args
@@ -268,7 +275,7 @@ class TestHandleUpdateCommand:
         assert call_args[0] == "/usr/bin/setsid"
         assert call_args[1] == "bash"
         assert ".update_exit_code" in call_args[-1]
-        assert "Starting Hermes update" in result
+        assert "Starting Doppel update" in result
 
     @pytest.mark.asyncio
     async def test_fallback_when_no_setsid(self, tmp_path):
@@ -308,7 +315,7 @@ class TestHandleUpdateCommand:
         # start_new_session=True should be in kwargs
         call_kwargs = mock_popen.call_args[1]
         assert call_kwargs.get("start_new_session") is True
-        assert "Starting Hermes update" in result
+        assert "Starting Doppel update" in result
 
     @pytest.mark.asyncio
     async def test_popen_failure_cleans_up(self, tmp_path):

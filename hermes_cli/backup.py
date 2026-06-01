@@ -1,11 +1,11 @@
 """
-Backup and import commands for hermes CLI.
+Backup and import commands for the Doppel CLI.
 
-`hermes backup` creates a zip archive of the entire ~/.hermes/ directory
-(excluding the hermes-agent repo and transient files).
+`doppel backup` creates a zip archive of the active Doppel home directory
+(excluding the managed checkout and transient files).
 
-`hermes import` restores from a backup zip, overlaying onto the current
-HERMES_HOME root.
+`doppel import` restores from a backup zip, overlaying onto the current
+home root.
 """
 
 import json
@@ -21,7 +21,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from hermes_constants import get_default_hermes_root, get_hermes_home, display_hermes_home
+from hermes_constants import (
+    display_hermes_home,
+    find_managed_checkout_dir,
+    get_cli_prog_name,
+    get_default_hermes_root,
+    get_hermes_home,
+    get_managed_checkout_names,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 # Directory names to skip entirely (matched against each path component)
 _EXCLUDED_DIRS = {
-    "hermes-agent",     # the codebase repo — re-clone instead
+    *get_managed_checkout_names(),  # managed checkout(s) — re-clone instead
     "__pycache__",      # bytecode caches — regenerated on import
     ".git",             # nested git dirs (profiles shouldn't have these, but safety)
     "node_modules",     # js deps if website/ somehow leaks in
@@ -142,11 +149,11 @@ def _format_size(nbytes: int) -> str:
 
 
 def run_backup(args) -> None:
-    """Create a zip backup of the Hermes home directory."""
+    """Create a zip backup of the active Doppel home directory."""
     hermes_root = get_default_hermes_root()
 
     if not hermes_root.is_dir():
-        print(f"Error: Hermes home directory not found at {hermes_root}")
+        print(f"Error: Doppel home directory not found at {hermes_root}")
         sys.exit(1)
 
     # Determine output path
@@ -155,10 +162,10 @@ def run_backup(args) -> None:
         # If user gave a directory, put the zip inside it
         if out_path.is_dir():
             stamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
-            out_path = out_path / f"hermes-backup-{stamp}.zip"
+            out_path = out_path / f"doppel-backup-{stamp}.zip"
     else:
         stamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
-        out_path = Path.home() / f"hermes-backup-{stamp}.zip"
+        out_path = Path.home() / f"doppel-backup-{stamp}.zip"
 
     # Ensure the suffix is .zip
     if out_path.suffix.lower() != ".zip":
@@ -255,7 +262,7 @@ def run_backup(args) -> None:
         if len(errors) > 10:
             print(f"  ... and {len(errors) - 10} more")
 
-    print(f"\nRestore with: hermes import {out_path.name}")
+    print(f"\nRestore with: {get_cli_prog_name()} import {out_path.name}")
 
 
 # ---------------------------------------------------------------------------
@@ -263,7 +270,7 @@ def run_backup(args) -> None:
 # ---------------------------------------------------------------------------
 
 def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
-    """Check that a zip looks like a Hermes backup.
+    """Check that a zip looks like a Doppel backup.
 
     Returns (ok, reason).
     """
@@ -271,7 +278,7 @@ def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
     if not names:
         return False, "zip archive is empty"
 
-    # Look for telltale files that a hermes home would have
+    # Look for telltale files that a doppel home would have
     markers = {"config.yaml", ".env", "state.db"}
     found = set()
     for n in names:
@@ -282,7 +289,7 @@ def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
 
     if not found:
         return False, (
-            "zip does not appear to be a Hermes backup "
+            "zip does not appear to be a Doppel backup "
             "(no config.yaml, .env, or state databases found)"
         )
 
@@ -292,7 +299,8 @@ def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
 def _detect_prefix(zf: zipfile.ZipFile) -> str:
     """Detect if the zip has a common directory prefix wrapping all entries.
 
-    Some tools zip as `.hermes/config.yaml` instead of `config.yaml`.
+    Some tools zip as `.doppel/config.yaml` or `.hermes/config.yaml` instead
+    of `config.yaml`.
     Returns the prefix to strip (empty string if none).
     """
     names = [n for n in zf.namelist() if not n.endswith("/")]
@@ -306,15 +314,15 @@ def _detect_prefix(zf: zipfile.ZipFile) -> str:
     first_parts = {p[0] for p in parts_list if len(p) > 1}
     if len(first_parts) == 1:
         prefix = first_parts.pop()
-        # Only strip if it looks like a hermes dir name
-        if prefix in {".hermes", "hermes"}:
+        # Only strip if it looks like a known native home dir name
+        if prefix in {".doppel", "doppel", ".hermes", "hermes"}:
             return prefix + "/"
 
     return ""
 
 
 def run_import(args) -> None:
-    """Restore a Hermes backup from a zip file."""
+    """Restore a Doppel backup from a zip file."""
     zip_path = Path(args.zipfile).expanduser().resolve()
 
     if not zip_path.is_file():
@@ -350,7 +358,7 @@ def run_import(args) -> None:
 
         if (has_config or has_env) and not args.force:
             print()
-            print("Warning: Target directory already has Hermes configuration.")
+            print("Warning: Target directory already has Doppel configuration.")
             print("Importing will overwrite existing files with backup contents.")
             print()
             try:
@@ -455,21 +463,22 @@ def run_import(args) -> None:
                 # hermes_cli.profiles might not be available (fresh install)
                 if any(profiles_dir.iterdir()):
                     print(f"\n  Profiles detected but aliases could not be created.")
-                    print(f"  Run: hermes profile list  (after installing hermes)")
+                    cli = get_cli_prog_name()
+                    print(f"  Run: {cli} profile list  (after installing {cli})")
 
         # Guidance
         print()
-        if not (hermes_root / "hermes-agent").is_dir():
-            print("Note: The hermes-agent codebase was not included in the backup.")
-            print("  If this is a fresh install, run: hermes update")
+        if find_managed_checkout_dir(hermes_root) is None:
+            print("Note: The managed agent codebase was not included in the backup.")
+            print(f"  If this is a fresh install, run: {get_cli_prog_name()} update")
 
         if restored_profiles:
             gw_profiles = [n for n, _ in restored_profiles]
             print("\nTo re-enable gateway services for profiles:")
             for pname in gw_profiles:
-                print(f"  hermes -p {pname} gateway install")
+                print(f"  {get_cli_prog_name()} -p {pname} gateway install")
 
-        print("Done. Your Hermes configuration has been restored.")
+        print("Done. Your Doppel configuration has been restored.")
 
 
 # ---------------------------------------------------------------------------
@@ -726,7 +735,7 @@ def restore_cron_jobs_if_emptied(
     Args:
         snapshot_id: The pre-update quick-snapshot id (from
             :func:`create_quick_snapshot`).
-        hermes_home: Override for the Hermes home directory (tests).
+        hermes_home: Override for the Doppel home directory (tests).
 
     Returns:
         ``None`` when no action was taken (the common, healthy path). On a

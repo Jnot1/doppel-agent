@@ -11,6 +11,7 @@ import yaml
 
 from hermes_cli.plugins import (
     ENTRY_POINTS_GROUP,
+    LEGACY_ENTRY_POINTS_GROUP,
     VALID_HOOKS,
     PluginContext,
     PluginManager,
@@ -78,6 +79,16 @@ def _make_plugin_dir(base: Path, name: str, *, register_body: str = "pass",
     return plugin_dir
 
 
+class _FakeEntryPoints:
+    """Tiny SelectableGroups stand-in for entry-point discovery tests."""
+
+    def __init__(self, groups: dict[str, list]):
+        self._groups = groups
+
+    def select(self, *, group: str):
+        return list(self._groups.get(group, []))
+
+
 # ── TestPluginDiscovery ────────────────────────────────────────────────────
 
 
@@ -103,6 +114,21 @@ class TestPluginDiscovery:
         monkeypatch.chdir(project_dir)
         monkeypatch.setenv("HERMES_ENABLE_PROJECT_PLUGINS", "true")
         plugins_dir = project_dir / ".hermes" / "plugins"
+        _make_plugin_dir(plugins_dir, "proj_plugin")
+
+        mgr = PluginManager()
+        mgr.discover_and_load()
+
+        assert "proj_plugin" in mgr._plugins
+        assert mgr._plugins["proj_plugin"].enabled
+
+    def test_discover_project_plugins_via_doppel_alias(self, tmp_path, monkeypatch):
+        """Plugins in ./.doppel/plugins/ are discovered via the preferred env alias."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+        monkeypatch.chdir(project_dir)
+        monkeypatch.setenv("DOPPEL_ENABLE_PROJECT_PLUGINS", "true")
+        plugins_dir = project_dir / ".doppel" / "plugins"
         _make_plugin_dir(plugins_dir, "proj_plugin")
 
         mgr = PluginManager()
@@ -171,15 +197,99 @@ class TestPluginDiscovery:
         fake_ep.load.return_value = fake_module
 
         def fake_entry_points():
-            result = MagicMock()
-            result.select = MagicMock(return_value=[fake_ep])
-            return result
+            return _FakeEntryPoints({ENTRY_POINTS_GROUP: [fake_ep]})
 
         with patch("importlib.metadata.entry_points", fake_entry_points):
             mgr = PluginManager()
             mgr.discover_and_load()
 
         assert "ep_plugin" in mgr._plugins
+
+    def test_legacy_entry_points_scanned(self, tmp_path, monkeypatch):
+        """Legacy hermes_agent.plugins entry points still discover cleanly."""
+        hermes_home = tmp_path / "hermes_test"
+        hermes_home.mkdir(parents=True, exist_ok=True)
+        (hermes_home / "config.yaml").write_text(
+            yaml.safe_dump({"plugins": {"enabled": ["legacy_ep_plugin"]}})
+        )
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+
+        legacy_module = types.ModuleType("legacy_ep_plugin")
+        legacy_module.register = lambda ctx: None  # type: ignore[attr-defined]
+
+        fake_ep = MagicMock()
+        fake_ep.name = "legacy_ep_plugin"
+        fake_ep.value = "legacy_ep_plugin:register"
+        fake_ep.group = LEGACY_ENTRY_POINTS_GROUP
+        fake_ep.load.return_value = legacy_module
+
+        def fake_entry_points():
+            return _FakeEntryPoints({LEGACY_ENTRY_POINTS_GROUP: [fake_ep]})
+
+        with patch("importlib.metadata.entry_points", fake_entry_points):
+            mgr = PluginManager()
+            mgr.discover_and_load()
+
+        assert "legacy_ep_plugin" in mgr._plugins
+        assert mgr._plugins["legacy_ep_plugin"].enabled
+
+    def test_preferred_entry_point_group_wins_on_name_collision(self, tmp_path, monkeypatch):
+        """Preferred Doppel entry points override legacy Hermes ones by name."""
+        hermes_home = tmp_path / "hermes_test"
+        hermes_home.mkdir(parents=True, exist_ok=True)
+        (hermes_home / "config.yaml").write_text(
+            yaml.safe_dump({"plugins": {"enabled": ["shared_plugin"]}})
+        )
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+
+        preferred_module = types.ModuleType("preferred_ep_plugin")
+        preferred_module.register = lambda ctx: None  # type: ignore[attr-defined]
+        legacy_module = types.ModuleType("legacy_ep_plugin")
+        legacy_module.register = lambda ctx: None  # type: ignore[attr-defined]
+
+        preferred_ep = MagicMock()
+        preferred_ep.name = "shared_plugin"
+        preferred_ep.value = "preferred_ep_plugin:register"
+        preferred_ep.group = ENTRY_POINTS_GROUP
+        preferred_ep.load.return_value = preferred_module
+
+        legacy_ep = MagicMock()
+        legacy_ep.name = "shared_plugin"
+        legacy_ep.value = "legacy_ep_plugin:register"
+        legacy_ep.group = LEGACY_ENTRY_POINTS_GROUP
+        legacy_ep.load.return_value = legacy_module
+
+        def fake_entry_points():
+            return _FakeEntryPoints(
+                {
+                    LEGACY_ENTRY_POINTS_GROUP: [legacy_ep],
+                    ENTRY_POINTS_GROUP: [preferred_ep],
+                }
+            )
+
+        with patch("importlib.metadata.entry_points", fake_entry_points):
+            mgr = PluginManager()
+            mgr.discover_and_load()
+
+        assert "shared_plugin" in mgr._plugins
+        assert mgr._plugins["shared_plugin"].module is preferred_module
+        preferred_ep.load.assert_called_once()
+        legacy_ep.load.assert_not_called()
+
+    def test_not_enabled_hint_is_doppel_first(self, tmp_path, monkeypatch):
+        """Opt-in error hints should point users at the Doppel command."""
+        plugins_dir = tmp_path / "hermes_test" / "plugins"
+        _make_plugin_dir(plugins_dir, "needs_enable", auto_enable=False)
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_test"))
+
+        mgr = PluginManager()
+        mgr.discover_and_load()
+
+        assert "needs_enable" in mgr._plugins
+        assert (
+            mgr._plugins["needs_enable"].error
+            == "not enabled in config (run `doppel plugins enable needs_enable` to activate)"
+        )
 
 
 # ── TestPluginLoading ──────────────────────────────────────────────────────

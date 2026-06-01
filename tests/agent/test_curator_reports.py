@@ -194,6 +194,47 @@ def test_report_md_is_human_readable(curator_env):
     assert "Consolidated foo-like skills into foo-umbrella." in md
 
 
+def test_curator_customer_facing_copy_prefers_doppel_paths_and_commands(curator_env):
+    curator = curator_env["curator"]
+    text = Path(curator.__file__).read_text(encoding="utf-8")
+
+    expected = [
+        "~/.doppel/skills/.\\n",
+        "You are running as Doppel's background skill CURATOR.",
+        "into ~/.doppel/skills/.archive/) is the maximum destructive action. ",
+        "~/.doppel/skills/<umbrella>/references/ && mv ... <umbrella>/",
+        "The original directory was moved to `~/.doppel/skills/.archive/` for ",
+        "safety and can be restored via `doppel curator restore <name>` if the ",
+        "Directories live under `~/.doppel/skills/.archive/`. ",
+        "Restore any via `doppel curator restore <name>`.",
+        "- Restore an archived skill: `doppel curator restore <name>`",
+        "- All archives live under `~/.doppel/skills/.archive/` and are recoverable by `mv`",
+        "Lives under the profile-aware logs dir (``~/.doppel/logs/curator/``)",
+        "authored skill data in ``~/.doppel/skills/``.",
+        "(``doppel model`` →",
+    ]
+    forbidden = [
+        "~/.hermes/skills/.\\n",
+        "You are running as Hermes' background skill CURATOR.",
+        "into ~/.hermes/skills/.archive/) is the maximum destructive action. ",
+        "~/.hermes/skills/<umbrella>/references/ && mv ... <umbrella>/",
+        "The original directory was moved to `~/.hermes/skills/.archive/` for ",
+        "safety and can be restored via `hermes curator restore <name>` if the ",
+        "Directories live under `~/.hermes/skills/.archive/`. ",
+        "Restore any via `hermes curator restore <name>`.",
+        "- Restore an archived skill: `hermes curator restore <name>`",
+        "- All archives live under `~/.hermes/skills/.archive/` and are recoverable by `mv`",
+        "Lives under the profile-aware logs dir (``~/.hermes/logs/curator/``)",
+        "authored skill data in ``~/.hermes/skills/``.",
+        "(``hermes model`` →",
+    ]
+
+    for needle in expected:
+        assert needle in text
+    for needle in forbidden:
+        assert needle not in text
+
+
 def test_same_second_reruns_get_unique_dirs(curator_env):
     """If the curator somehow runs twice in the same second, the second
     report still gets its own directory rather than overwriting the first."""

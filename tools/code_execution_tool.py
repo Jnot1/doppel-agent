@@ -2,7 +2,7 @@
 """
 Code Execution Tool -- Programmatic Tool Calling (PTC)
 
-Lets the LLM write a Python script that calls Hermes tools via RPC,
+Lets the LLM write a Python script that calls Doppel Agent tools via RPC,
 collapsing multi-step tool chains into a single inference turn.
 
 Architecture (two transports):
@@ -24,8 +24,9 @@ Architecture (two transports):
 In both cases, only the script's stdout is returned to the LLM; intermediate
 tool results never enter the context window.
 
-Platform: Linux / macOS only (Unix domain sockets for local). Disabled on Windows.
-Remote execution additionally requires Python 3 in the terminal backend.
+Platform: local execution uses UDS on Linux/macOS and loopback TCP on Windows.
+Remote execution additionally requires Python 3 in the terminal backend and
+uses file-based RPC.
 """
 
 import base64
@@ -46,6 +47,7 @@ import uuid
 _IS_WINDOWS = platform.system() == "Windows"
 from typing import Any, Dict, List, Optional
 
+from hermes_constants import get_customer_facing_env_value
 from tools.thread_context import propagate_context_to_thread
 
 # Availability gate.  On Windows we fall back to loopback TCP for the
@@ -198,7 +200,7 @@ def _scrub_child_env(source_env, is_passthrough=None, is_windows=None):
 
 
 def check_sandbox_requirements() -> bool:
-    """Code execution sandbox requires a POSIX OS for Unix domain sockets."""
+    """Code execution is available wherever Hermes runs; local transport varies by OS."""
     if not SANDBOX_AVAILABLE:
         return False
     return True
@@ -951,7 +953,11 @@ def _execute_remote(
             f"HERMES_RPC_DIR={shlex.quote(f'{sandbox_dir}/rpc')} "
             f"PYTHONDONTWRITEBYTECODE=1"
         )
-        tz = os.getenv("HERMES_TIMEZONE", "").strip()
+        tz = get_customer_facing_env_value(
+            "DOPPEL_TIMEZONE",
+            "HERMES_TIMEZONE",
+            default="",
+        ).strip()
         if tz:
             env_prefix += f" TZ={tz}"
 
@@ -1253,12 +1259,17 @@ def execute_code(
             _pp_parts.append(_existing_pp)
         child_env["PYTHONPATH"] = os.pathsep.join(_pp_parts)
         # Inject user's configured timezone so datetime.now() in sandboxed
-        # code reflects the correct wall-clock time.  Only TZ is set —
-        # HERMES_TIMEZONE is an internal Hermes setting and must not leak
-        # into child processes.
-        _tz_name = os.getenv("HERMES_TIMEZONE", "").strip()
+        # code reflects the correct wall-clock time. Only TZ is set — the
+        # internal Doppel/Hermes timezone env vars must not leak into child
+        # processes.
+        _tz_name = get_customer_facing_env_value(
+            "DOPPEL_TIMEZONE",
+            "HERMES_TIMEZONE",
+            default="",
+        ).strip()
         if _tz_name:
             child_env["TZ"] = _tz_name
+        child_env.pop("DOPPEL_TIMEZONE", None)
         child_env.pop("HERMES_TIMEZONE", None)
 
         # Per-profile HOME isolation: redirect system tool configs into

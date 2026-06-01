@@ -1,7 +1,7 @@
 ---
 sidebar_position: 8
 title: "MCP 配置参考"
-description: "Hermes Agent MCP 配置键、过滤语义及工具策略参考"
+description: "Doppel Agent MCP 配置键、过滤语义及工具策略参考"
 ---
 
 # MCP 配置参考
@@ -10,7 +10,7 @@ description: "Hermes Agent MCP 配置键、过滤语义及工具策略参考"
 
 概念说明请参阅：
 - [MCP（Model Context Protocol）](/user-guide/features/mcp)
-- [在 Hermes 中使用 MCP](/guides/use-mcp-with-hermes)
+- [在 Doppel Agent 中使用 MCP](/guides/use-mcp-with-doppel-agent)
 
 ## 根配置结构
 
@@ -24,6 +24,11 @@ mcp_servers:
     # OR
     url: "..."          # HTTP servers
     headers: {}
+
+    # 可选 HTTP/SSE TLS 设置：
+    ssl_verify: true                # bool 或 CA bundle (PEM) 路径
+    client_cert: "/path/to/cert.pem"  # mTLS 客户端证书（见下文）
+    # client_key: "/path/to/key.pem"  # 若密钥单独存放，则可选填写
 
     enabled: true
     timeout: 120
@@ -45,6 +50,9 @@ mcp_servers:
 | `env` | mapping | stdio | 传递给子进程的环境变量 |
 | `url` | string | HTTP | 远程 MCP 端点 |
 | `headers` | mapping | HTTP | 远程服务器请求的请求头 |
+| `ssl_verify` | bool 或 string | HTTP | TLS 校验。`true`（默认）使用系统 CA，`false` 禁用校验（不安全），或填入自定义 CA bundle（PEM）路径 |
+| `client_cert` | string 或 list | HTTP | mTLS 客户端证书。字符串 = 同时包含证书与密钥的 PEM 文件路径。列表 `[cert, key]` = 分离的证书和密钥文件。列表 `[cert, key, password]` = 加密密钥 |
+| `client_key` | string | HTTP | 当 `client_cert` 为字符串且密钥单独存放时，填写客户端私钥路径 |
 | `enabled` | bool | 两者 | 为 false 时完全跳过该服务器 |
 | `timeout` | number | 两者 | 工具调用超时时间 |
 | `connect_timeout` | number | 两者 | 初始连接超时时间 |
@@ -98,7 +106,7 @@ tools:
 
 ## 工具策略
 
-Hermes 可为每个 MCP 服务器注册以下工具包装器：
+Doppel Agent 可为每个 MCP 服务器注册以下工具包装器：
 
 Resources（资源）：
 - `list_resources`
@@ -124,7 +132,7 @@ tools:
 
 ### 能力感知注册
 
-即使设置了 `resources: true` 或 `prompts: true`，Hermes 也只在 MCP 会话实际暴露对应能力时才注册相应工具。
+即使设置了 `resources: true` 或 `prompts: true`，Doppel Agent 也只在 MCP 会话实际暴露对应能力时才注册相应工具。
 
 因此以下情况属于正常现象：
 - 你启用了 prompts
@@ -148,7 +156,7 @@ mcp_servers:
 
 ## 空结果行为
 
-若过滤后服务器原生工具全部被移除，且没有工具被注册，Hermes 不会为该服务器创建空的 MCP 运行时工具集。
+若过滤后服务器原生工具全部被移除，且没有工具被注册，Doppel Agent 不会为该服务器创建空的 MCP 运行时工具集。
 
 ## 配置示例
 
@@ -190,6 +198,40 @@ mcp_servers:
       resources: true
       prompts: false
 ```
+
+## TLS 客户端证书（mTLS）
+
+对于要求客户端证书的 HTTP/SSE 服务器，设置 `client_cert`（必要时再加 `client_key`）：
+
+```yaml
+mcp_servers:
+  # 单个 PEM 文件同时包含证书和密钥
+  internal_api:
+    url: "https://mcp.internal.example.com/mcp"
+    client_cert: "~/secrets/mcp-client.pem"
+
+  # 证书和密钥分离
+  partner_api:
+    url: "https://mcp.partner.example.com/mcp"
+    client_cert: "~/secrets/client.crt"
+    client_key: "~/secrets/client.key"
+
+  # 使用带口令的加密密钥（3 元素列表形式）
+  bank_api:
+    url: "https://mcp.bank.example.com/mcp"
+    client_cert: ["~/secrets/client.crt", "~/secrets/client.key", "my-passphrase"]
+
+  # 自定义 CA bundle（私有 CA / 自签名服务器）
+  lab_api:
+    url: "https://mcp.lab.local/mcp"
+    ssl_verify: "~/secrets/lab-ca.pem"
+    client_cert: "~/secrets/lab-client.pem"
+```
+
+注意：
+- 路径支持 `~` 展开。若文件缺失，会在连接阶段快速失败，并显示按服务器范围划分的错误消息。
+- `ssl_verify: false` 会完全禁用服务端证书校验。不要在真实服务上这样做。
+- 同时适用于 Streamable HTTP 和 SSE 传输。
 
 ## 重新加载配置
 
@@ -242,8 +284,8 @@ mcp_servers:
 ```
 
 行为：
-- Hermes 使用 MCP SDK 的 OAuth 2.1 PKCE 流程（元数据发现、动态客户端注册、token 交换及刷新）
+- Doppel Agent 使用 MCP SDK 的 OAuth 2.1 PKCE 流程（元数据发现、动态客户端注册、token 交换及刷新）
 - 首次连接时，浏览器窗口将打开以完成授权
-- Token 持久化至 `~/.hermes/mcp-tokens/<server>.json`，跨会话复用
+- Token 持久化到你的 agent home 下（fresh install 默认路径为 `~/.doppel/mcp-tokens/<server>.json`，旧版 `~/.hermes/` 安装仍然可用），并在不同会话之间复用
 - Token 刷新自动进行；仅在刷新失败时才需重新授权
 - 仅适用于 HTTP/StreamableHTTP 传输（基于 `url` 的服务器）

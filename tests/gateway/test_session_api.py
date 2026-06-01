@@ -8,6 +8,15 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from gateway.config import PlatformConfig
 from gateway.platforms.api_server import APIServerAdapter
+from hermes_constants import (
+    API_SERVER_SESSION_CHAT_COMPLETION_OBJECT,
+    API_SERVER_SESSION_DELETED_OBJECT,
+    API_SERVER_SESSION_ID_HEADER,
+    API_SERVER_SESSION_KEY_HEADER,
+    API_SERVER_SESSION_OBJECT,
+    LEGACY_API_SERVER_SESSION_ID_HEADER,
+    LEGACY_API_SERVER_SESSION_KEY_HEADER,
+)
 from hermes_state import SessionDB
 
 
@@ -83,7 +92,7 @@ async def test_session_crud_and_message_history(adapter, session_db):
         assert create_resp.status == 201
         created = await create_resp.json()
         session_id = created["session"]["id"]
-        assert created["object"] == "hermes.session"
+        assert created["object"] == API_SERVER_SESSION_OBJECT
         assert created["session"]["title"] == "Mobile chat"
 
         session_db.append_message(session_id, "user", "hello from phone")
@@ -117,7 +126,7 @@ async def test_session_crud_and_message_history(adapter, session_db):
         delete_resp = await cli.delete(f"/api/sessions/{session_id}")
         assert delete_resp.status == 200
         deleted = await delete_resp.json()
-        assert deleted == {"object": "hermes.session.deleted", "id": session_id, "deleted": True}
+        assert deleted == {"object": API_SERVER_SESSION_DELETED_OBJECT, "id": session_id, "deleted": True}
         assert session_db.get_session(session_id) is None
 
 
@@ -135,7 +144,7 @@ async def test_session_fork_uses_current_sessiondb_branch_primitives(adapter, se
         payload = await resp.json()
 
     fork = payload["session"]
-    assert payload["object"] == "hermes.session"
+    assert payload["object"] == API_SERVER_SESSION_OBJECT
     assert fork["id"] != source_id
     assert fork["parent_session_id"] == source_id
     assert fork["title"] == "Alternative"
@@ -157,14 +166,14 @@ async def test_session_chat_loads_history_and_preserves_session_headers(auth_ada
             resp = await cli.post(
                 f"/api/sessions/{session_id}/chat",
                 json={"message": "next", "system_message": "stay focused"},
-                headers={"Authorization": "Bearer sk-test", "X-Hermes-Session-Key": "client-42"},
+                headers={"Authorization": "Bearer sk-test", API_SERVER_SESSION_KEY_HEADER: "client-42"},
             )
             assert resp.status == 200
             payload = await resp.json()
 
-    assert resp.headers["X-Hermes-Session-Id"] == session_id
-    assert resp.headers["X-Hermes-Session-Key"] == "client-42"
-    assert payload["object"] == "hermes.session.chat.completion"
+    assert resp.headers[API_SERVER_SESSION_ID_HEADER] == session_id
+    assert resp.headers[API_SERVER_SESSION_KEY_HEADER] == "client-42"
+    assert payload["object"] == API_SERVER_SESSION_CHAT_COMPLETION_OBJECT
     assert payload["session_id"] == session_id
     assert payload["message"]["role"] == "assistant"
     assert payload["message"]["content"] == "fresh answer"
@@ -177,6 +186,32 @@ async def test_session_chat_loads_history_and_preserves_session_headers(auth_ada
         {"role": "user", "content": "earlier"},
         {"role": "assistant", "content": "prior answer"},
     ]
+
+
+@pytest.mark.asyncio
+async def test_session_chat_legacy_headers_are_accepted_but_echo_new_names(auth_adapter, session_db):
+    session_id = session_db.create_session("legacy-session", "api_server")
+    mock_run = AsyncMock(return_value=({"final_response": "ok", "session_id": session_id}, {"total_tokens": 3}))
+    app = _create_session_app(auth_adapter)
+    with patch.object(auth_adapter, "_run_agent", mock_run):
+        async with TestClient(TestServer(app)) as cli:
+            resp = await cli.post(
+                f"/api/sessions/{session_id}/chat",
+                json={"message": "next"},
+                headers={
+                    "Authorization": "Bearer sk-test",
+                    LEGACY_API_SERVER_SESSION_ID_HEADER: session_id,
+                    LEGACY_API_SERVER_SESSION_KEY_HEADER: "legacy-client-42",
+                },
+            )
+            assert resp.status == 200
+            payload = await resp.json()
+
+    assert payload["object"] == API_SERVER_SESSION_CHAT_COMPLETION_OBJECT
+    assert resp.headers[API_SERVER_SESSION_ID_HEADER] == session_id
+    assert resp.headers[API_SERVER_SESSION_KEY_HEADER] == "legacy-client-42"
+    assert LEGACY_API_SERVER_SESSION_ID_HEADER not in resp.headers
+    assert LEGACY_API_SERVER_SESSION_KEY_HEADER not in resp.headers
 
 
 @pytest.mark.asyncio
@@ -361,8 +396,8 @@ async def test_session_header_rejected_without_api_key(adapter, session_db):
         resp = await cli.post(
             f"/api/sessions/{session_id}/chat",
             json={"message": "hello"},
-            headers={"X-Hermes-Session-Key": "client-42"},
+            headers={API_SERVER_SESSION_KEY_HEADER: "client-42"},
         )
         assert resp.status == 403
         data = await resp.json()
-        assert "X-Hermes-Session-Key requires API key" in data["error"]["message"]
+        assert f"{API_SERVER_SESSION_KEY_HEADER} requires API key" in data["error"]["message"]

@@ -17,7 +17,7 @@ Write implementation plans: bite-sized tasks, paths, code.
 | Source | Bundled (installed by default) |
 | Path | `skills/software-development/writing-plans` |
 | Version | `1.1.0` |
-| Author | Hermes Agent (adapted from obra/superpowers) |
+| Author | Doppel Agent (adapted from obra/superpowers) |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `planning`, `design`, `implementation`, `workflow`, `documentation` |
@@ -26,7 +26,7 @@ Write implementation plans: bite-sized tasks, paths, code.
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that the agent loads when this skill is triggered. This is the instruction set active while the skill is in use.
 :::
 
 # Writing Implementation Plans

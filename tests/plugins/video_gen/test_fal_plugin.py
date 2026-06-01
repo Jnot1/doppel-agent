@@ -102,6 +102,8 @@ def test_fal_generate_requires_fal_key(monkeypatch):
     monkeypatch.setattr(fal_plugin, "_resolve_managed_fal_video_gateway", lambda: None)
     result = FALVideoGenProvider().generate("a happy dog")
     assert result["success"] is False
+    assert "doppel tools" in result["error"]
+    assert "doppel setup" in result["error"]
     assert result["error_type"] == "auth_required"
 
 

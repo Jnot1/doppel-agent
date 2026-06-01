@@ -788,7 +788,7 @@ def format_auth_error(error: Exception) -> str:
         return str(error)
 
     if error.relogin_required:
-        return f"{error} Run `hermes model` to re-authenticate."
+        return f"{error} Run `doppel model` to re-authenticate."
 
     if error.code == "subscription_required":
         if error.provider == "nous":
@@ -1794,7 +1794,7 @@ def _assert_nous_inference_jwt_usable(
         return
     raise AuthError(
         "Nous Portal access token is not a usable inference JWT "
-        f"({reason}). Re-authenticate with: hermes auth add nous",
+        f"({reason}). Re-authenticate with: doppel auth add nous",
         provider="nous",
         code=reason,
         relogin_required=True,
@@ -2724,7 +2724,7 @@ def _refresh_spotify_oauth_state(
     refresh_token = str(state.get("refresh_token", "") or "").strip()
     if not refresh_token:
         raise AuthError(
-            "Spotify refresh token missing. Run `hermes auth spotify` again.",
+            "Spotify refresh token missing. Run `doppel auth spotify` again.",
             provider="spotify",
             code="spotify_refresh_token_missing",
             relogin_required=True,
@@ -2753,7 +2753,7 @@ def _refresh_spotify_oauth_state(
     if response.status_code >= 400:
         detail = response.text.strip()
         raise AuthError(
-            "Spotify token refresh failed. Run `hermes auth spotify` again."
+            "Spotify token refresh failed. Run `doppel auth spotify` again."
             + (f" Response: {detail}" if detail else ""),
             provider="spotify",
             code="spotify_refresh_failed",
@@ -2791,7 +2791,7 @@ def resolve_spotify_runtime_credentials(
         state = _load_provider_state(auth_store, "spotify")
         if not state:
             raise AuthError(
-                "Spotify is not authenticated. Run `hermes auth spotify` first.",
+                "Spotify is not authenticated. Run `doppel auth spotify` first.",
                 provider="spotify",
                 code="spotify_auth_missing",
                 relogin_required=True,
@@ -2808,7 +2808,7 @@ def resolve_spotify_runtime_credentials(
     access_token = str(state.get("access_token", "") or "").strip()
     if not access_token:
         raise AuthError(
-            "Spotify access token missing. Run `hermes auth spotify` again.",
+            "Spotify access token missing. Run `doppel auth spotify` again.",
             provider="spotify",
             code="spotify_access_token_missing",
             relogin_required=True,
@@ -3273,7 +3273,7 @@ def _read_codex_tokens(*, _lock: bool = True) -> Dict[str, Any]:
     state = _load_provider_state(auth_store, "openai-codex")
     if not state:
         raise AuthError(
-            "No Codex credentials stored. Run `hermes auth` to authenticate.",
+            "No Codex credentials stored. Run `doppel auth` to authenticate.",
             provider="openai-codex",
             code="codex_auth_missing",
             relogin_required=True,
@@ -3281,7 +3281,7 @@ def _read_codex_tokens(*, _lock: bool = True) -> Dict[str, Any]:
     tokens = state.get("tokens")
     if not isinstance(tokens, dict):
         raise AuthError(
-            "Codex auth state is missing tokens. Run `hermes auth` to re-authenticate.",
+            "Codex auth state is missing tokens. Run `doppel auth` to re-authenticate.",
             provider="openai-codex",
             code="codex_auth_invalid_shape",
             relogin_required=True,
@@ -3290,14 +3290,14 @@ def _read_codex_tokens(*, _lock: bool = True) -> Dict[str, Any]:
     refresh_token = tokens.get("refresh_token")
     if not isinstance(access_token, str) or not access_token.strip():
         raise AuthError(
-            "Codex auth is missing access_token. Run `hermes auth` to re-authenticate.",
+            "Codex auth is missing access_token. Run `doppel auth` to re-authenticate.",
             provider="openai-codex",
             code="codex_auth_missing_access_token",
             relogin_required=True,
         )
     if not isinstance(refresh_token, str) or not refresh_token.strip():
         raise AuthError(
-            "Codex auth is missing refresh_token. Run `hermes auth` to re-authenticate.",
+            "Codex auth is missing refresh_token. Run `doppel auth` to re-authenticate.",
             provider="openai-codex",
             code="codex_auth_missing_refresh_token",
             relogin_required=True,
@@ -3404,7 +3404,7 @@ def refresh_codex_oauth_pure(
     del access_token  # Access token is only used by callers to decide whether to refresh.
     if not isinstance(refresh_token, str) or not refresh_token.strip():
         raise AuthError(
-            "Codex auth is missing refresh_token. Run `hermes auth` to re-authenticate.",
+            "Codex auth is missing refresh_token. Run `doppel auth` to re-authenticate.",
             provider="openai-codex",
             code="codex_auth_missing_refresh_token",
             relogin_required=True,
@@ -3477,7 +3477,7 @@ def refresh_codex_oauth_pure(
                 "Codex refresh token was already consumed by another client "
                 "(e.g. Codex CLI or VS Code extension). "
                 "Run `codex` in your terminal to generate fresh tokens, "
-                "then run `hermes auth` to re-authenticate."
+                "then run `doppel auth` to re-authenticate."
             )
             relogin_required = True
         # A 401/403 from the token endpoint always means the refresh token
@@ -3703,7 +3703,7 @@ def _read_xai_oauth_tokens(*, _lock: bool = True) -> Dict[str, Any]:
     state = _load_provider_state(auth_store, "xai-oauth")
     if not state:
         raise AuthError(
-            "No xAI OAuth credentials stored. Select xAI Grok OAuth (SuperGrok / Premium+) in `hermes model`.",
+            "No xAI OAuth credentials stored. Select xAI Grok OAuth (SuperGrok / Premium+) in `doppel model`.",
             provider="xai-oauth",
             code="xai_auth_missing",
             relogin_required=True,
@@ -3711,7 +3711,7 @@ def _read_xai_oauth_tokens(*, _lock: bool = True) -> Dict[str, Any]:
     tokens = state.get("tokens")
     if not isinstance(tokens, dict):
         raise AuthError(
-            "xAI OAuth state is missing tokens. Re-authenticate with `hermes model`.",
+            "xAI OAuth state is missing tokens. Re-authenticate with `doppel model`.",
             provider="xai-oauth",
             code="xai_auth_invalid_shape",
             relogin_required=True,
@@ -3720,14 +3720,14 @@ def _read_xai_oauth_tokens(*, _lock: bool = True) -> Dict[str, Any]:
     refresh_token = str(tokens.get("refresh_token", "") or "").strip()
     if not access_token:
         raise AuthError(
-            "xAI OAuth state is missing access_token. Re-authenticate with `hermes model`.",
+            "xAI OAuth state is missing access_token. Re-authenticate with `doppel model`.",
             provider="xai-oauth",
             code="xai_auth_missing_access_token",
             relogin_required=True,
         )
     if not refresh_token:
         raise AuthError(
-            "xAI OAuth state is missing refresh_token. Re-authenticate with `hermes model`.",
+            "xAI OAuth state is missing refresh_token. Re-authenticate with `doppel model`.",
             provider="xai-oauth",
             code="xai_auth_missing_refresh_token",
             relogin_required=True,
@@ -3815,7 +3815,7 @@ def _xai_validate_oauth_endpoint(url: str, *, field: str) -> str:
             f"xAI OIDC discovery {field} host {host!r} is not on the xAI origin "
             f"(expected x.ai or a *.x.ai subdomain). Refusing to use a cached "
             f"endpoint that may have been substituted by a MITM during initial "
-            f"discovery; re-authenticate with `hermes model` to re-fetch.",
+            f"discovery; re-authenticate with `doppel model` to re-fetch.",
             provider="xai-oauth",
             code="xai_discovery_invalid",
         )
@@ -3937,7 +3937,7 @@ def refresh_xai_oauth_pure(
     del access_token
     if not isinstance(refresh_token, str) or not refresh_token.strip():
         raise AuthError(
-            "xAI OAuth is missing refresh_token. Re-authenticate with `hermes model`.",
+            "xAI OAuth is missing refresh_token. Re-authenticate with `doppel model`.",
             provider="xai-oauth",
             code="xai_auth_missing_refresh_token",
             relogin_required=True,
@@ -4753,13 +4753,13 @@ def _refresh_access_token(
         description = (
             "Nous Portal detected refresh-token reuse and revoked this session.\n"
             "This usually means an external process (monitoring script, "
-            "custom self-heal hook, or another Hermes install sharing "
-            "~/.hermes/auth.json) called POST /api/oauth/token with Hermes's "
+            "custom self-heal hook, or another Doppel install sharing "
+            "~/.doppel/auth.json) called POST /api/oauth/token with Doppel's "
             "refresh token without persisting the rotated token back.\n"
-            "Nous refresh tokens are single-use — only Hermes may call the "
-            "refresh endpoint. For health checks, use `hermes auth status` "
+            "Nous refresh tokens are single-use — only Doppel may call the "
+            "refresh endpoint. For health checks, use `doppel auth status` "
             "instead.\n"
-            "Re-authenticate with: hermes auth add nous"
+            "Re-authenticate with: doppel auth add nous"
         )
         relogin = True
 
@@ -4998,7 +4998,7 @@ def refresh_nous_oauth_pure(
                     raise AuthError(
                         "Nous Portal access token is not a usable inference JWT "
                         f"({current_invoke_jwt_status}) and no refresh token is available. "
-                        "Re-authenticate with: hermes auth add nous",
+                        "Re-authenticate with: doppel auth add nous",
                         provider="nous",
                         code=current_invoke_jwt_status,
                         relogin_required=True,
@@ -5256,7 +5256,7 @@ def resolve_nous_runtime_credentials(
                             raise AuthError(
                                 "Nous Portal access token is not a usable inference JWT "
                                 f"({reason}) and no refresh token is available. "
-                                "Re-authenticate with: hermes auth add nous",
+                                "Re-authenticate with: doppel auth add nous",
                                 provider="nous",
                                 code=reason,
                                 relogin_required=True,
@@ -7048,7 +7048,7 @@ def _minimax_oauth_login(
     if _is_remote_session():
         open_browser = False
 
-    print(f"Starting Hermes login via MiniMax ({region}) OAuth...")
+    print(f"Starting Doppel login via MiniMax ({region}) OAuth...")
     print(f"Portal: {portal_base_url}")
 
     with httpx.Client(timeout=httpx.Timeout(timeout_seconds),
@@ -7231,7 +7231,7 @@ def build_minimax_oauth_token_provider() -> Callable[[], str]:
         state = get_provider_auth_state("minimax-oauth")
         if not state or not state.get("access_token"):
             raise AuthError(
-                "Not logged into MiniMax OAuth. Run `hermes model` and select "
+                "Not logged into MiniMax OAuth. Run `doppel model` and select "
                 "MiniMax (OAuth).",
                 provider="minimax-oauth", code="not_logged_in", relogin_required=True,
             )
@@ -7271,7 +7271,7 @@ def resolve_minimax_oauth_runtime_credentials(
     state = get_provider_auth_state("minimax-oauth")
     if not state or not state.get("access_token"):
         raise AuthError(
-            "Not logged into MiniMax OAuth. Run `hermes model` and select "
+            "Not logged into MiniMax OAuth. Run `doppel model` and select "
             "MiniMax (OAuth).",
             provider="minimax-oauth", code="not_logged_in", relogin_required=True,
         )
@@ -7356,7 +7356,7 @@ def _nous_device_code_login(
     if _is_remote_session():
         open_browser = False
 
-    print(f"Starting Hermes login via {pconfig.name}...")
+    print(f"Starting Doppel login via {pconfig.name}...")
     print(f"Portal: {portal_base_url}")
     if insecure:
         print("TLS verification: disabled (--insecure)")
@@ -7448,7 +7448,7 @@ def _nous_device_code_login(
             print(message)
             print(f"  Subscribe here: {portal_url}/billing")
             print()
-            print("After subscribing, run `hermes model` again to finish setup.")
+            print("After subscribing, run `doppel model` again to finish setup.")
             raise SystemExit(1)
         raise
 
@@ -7635,7 +7635,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
                 _save_auth_store(auth_store)
             print()
             print("No provider change. Nous credentials saved for future use.")
-            print("  Run `hermes model` again to switch to Nous Portal.")
+            print("  Run `doppel model` again to switch to Nous Portal.")
             return
 
         config_path = _update_config_for_provider(
@@ -7677,9 +7677,9 @@ def logout_command(args) -> None:
             _reset_config_provider()
         print(f"Logged out of {provider_name}.")
         if should_reset_config and os.getenv("OPENROUTER_API_KEY"):
-            print("Hermes will use OpenRouter for inference.")
+            print("Doppel will use OpenRouter for inference.")
         elif should_reset_config:
-            print("Run `hermes model` or configure an API key to use Hermes.")
+            print("Run `doppel model` or configure an API key to use Doppel.")
         else:
             print("Model provider configuration was unchanged.")
     else:

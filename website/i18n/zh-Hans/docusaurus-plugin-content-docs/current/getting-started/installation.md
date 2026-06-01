@@ -30,7 +30,7 @@ curl -fsSL https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/ins
 iex (irm https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1)
 ```
 
-安装程序处理**一切**：`uv`、Python 3.11、Node.js 22、`ripgrep`、`ffmpeg`，**以及一个便携式 Git Bash**（PortableGit——一个自包含的 Git-for-Windows 发行版，附带 `bash.exe` 和 Doppel 用于 shell 命令的完整 POSIX 工具链；在 32 位 Windows 上安装程序会回退到 MinGit，后者缺少 bash，终端工具和 agent 浏览器功能将被禁用）。它将仓库克隆到 `%LOCALAPPDATA%\doppel\doppel-agent`，创建虚拟环境，并将 `doppel` 添加到**用户 PATH**。旧安装若位于 `%LOCALAPPDATA%\doppel\hermes-agent`，仍会被检测并向前迁移。安装完成后请重启终端（或打开新的 PowerShell 窗口）以使 PATH 生效。
+安装程序处理**一切**：`uv`、Python 3.11、Node.js 22、`ripgrep`、`ffmpeg`，**以及一个便携式 Git Bash**（PortableGit——一个自包含的 Git-for-Windows 发行版，附带 `bash.exe` 和 Doppel 用于 shell 命令的完整 POSIX 工具链；在 32 位 Windows 上安装程序会回退到 MinGit，后者缺少 bash，终端工具和 agent 浏览器功能将被禁用）。它将仓库克隆到 `%LOCALAPPDATA%\doppel\doppel-agent`，创建虚拟环境，并将 `doppel` 添加到**用户 PATH**。仍在使用品牌迁移前 checkout 布局的旧安装也会被检测并向前迁移。安装完成后请重启终端（或打开新的 PowerShell 窗口）以使 PATH 生效。
 
 **Git 的处理方式：**
 1. 如果 `git` 已在你的 PATH 中，安装程序将使用现有安装。
@@ -38,9 +38,9 @@ iex (irm https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/insta
 
 **为什么不使用 winget？** 早期设计通过 `winget install Git.Git` 自动安装 Git，但当系统 Git 安装处于部分损坏状态时，winget 会严重失败（而这恰恰是用户最需要安装程序正常工作的时候）。便携式 Git 方案绕过了 winget、Windows 安装程序注册表以及任何现有系统 Git。如果 Doppel 的 Git 安装本身出现问题，执行 `Remove-Item %LOCALAPPDATA%\doppel\git` 并重新运行安装程序即可——对系统无影响，无需卸载操作。
 
-安装程序还会设置 `DOPPEL_HOME`，并保留 legacy 兼容性，因此旧的 `hermes` 命令和 `HERMES_HOME` 行为在这一阶段仍然可用。
+安装程序还会设置 `DOPPEL_HOME`，并在这一阶段保留旧安装所需的兼容别名。
 
-如果你偏好 WSL2，上方的 Linux 安装程序可在其中运行；原生安装和 WSL 安装可以共存而不冲突（原生数据位于 `%LOCALAPPDATA%\doppel`，WSL 数据位于 `~/.doppel`，并保留 legacy `~/.hermes` 兼容）。
+如果你偏好 WSL2，上方的 Linux 安装程序可在其中运行；原生安装和 WSL 安装可以共存而不冲突（原生数据位于 `%LOCALAPPDATA%\doppel`，WSL 数据位于 `~/.doppel`，并保留旧版 home 目录兼容）。
 
 **桌面安装程序（替代方案）：** 也提供一个轻量 GUI 安装程序——下载 Doppel Desktop，运行 `.exe`，首次启动时它会在后台调用 `install.ps1` 来配置 Python（通过 `uv`）、Node、PortableGit 及其余依赖。桌面应用和 PowerShell 安装的 CLI 共享相同的安装目录和数据目录，可以单独或同时使用。详见 [Windows（原生）指南](../user-guide/windows-native#desktop-installer-alternative)。
 
@@ -71,7 +71,7 @@ curl -fsSL https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/ins
 - **MCP 服务器** — 原生（stdio 和 HTTP 传输均支持）
 - **Dashboard `/chat` 终端面板** — **仅限 WSL2**（使用 POSIX PTY（伪终端），原生 Windows 无等效实现）。Dashboard 的其余部分（会话、任务、指标）可原生运行——仅嵌入式 PTY 终端标签页受限。
 
-如果遇到编码相关的 bug 并希望回退到旧版 cp1252 stdio 路径（用于问题定位），请在环境中设置 `HERMES_DISABLE_WINDOWS_UTF8=1`。
+如果遇到编码相关的 bug 并希望回退到旧版 cp1252 stdio 路径（用于问题定位），请在环境中设置 `DOPPEL_DISABLE_WINDOWS_UTF8=1`。
 :::
 
 ### 安装程序做了什么
@@ -86,9 +86,9 @@ curl -fsSL https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/ins
 |---|---|---|---|
 | pip install | Python site-packages | `~/.local/bin/doppel`（console_scripts） | `~/.doppel/` |
 | 用户级（git 安装程序） | `~/.doppel/doppel-agent/` | `~/.local/bin/doppel`（符号链接） | `~/.doppel/` |
-| Root 模式（`sudo curl … \| sudo bash`） | `/usr/local/lib/doppel-agent/` | `/usr/local/bin/doppel` | `/root/.doppel/`（或 `$DOPPEL_HOME`，legacy `$HERMES_HOME`） |
+| Root 模式（`sudo curl … \| sudo bash`） | `/usr/local/lib/doppel-agent/` | `/usr/local/bin/doppel` | `/root/.doppel/`（或你配置的 Doppel home 目录） |
 
-Root 模式的 **FHS 布局**（`/usr/local/lib/…`、`/usr/local/bin/doppel`）与其他系统级开发工具在 Linux 上的安装位置一致。适用于共享机器部署场景，一次系统安装可服务所有用户。每个用户的个人配置（认证、技能、会话）仍位于各自的 `~/.doppel/` 或显式指定的 `DOPPEL_HOME` 下（`HERMES_HOME` 仍作为 legacy 别名保留）。
+Root 模式的 **FHS 布局**（`/usr/local/lib/…`、`/usr/local/bin/doppel`）与其他系统级开发工具在 Linux 上的安装位置一致。适用于共享机器部署场景，一次系统安装可服务所有用户。每个用户的个人配置（认证、技能、会话）仍位于各自的 `~/.doppel/` 或显式指定的 `DOPPEL_HOME` 下，品牌迁移前的旧 checkout 目录也会在迁移完成前继续被识别。
 
 ### 安装后
 
@@ -180,7 +180,7 @@ doppel setup --portal
    sudo ln -s /home/doppel/.doppel/doppel-agent/venv/bin/doppel /usr/local/bin/doppel
    ```
 
-4. **验证：** `doppel doctor` 现在应能正常运行。如果出现 `ModuleNotFoundError: No module named 'dotenv'`，说明你在用系统 Python 调用仓库源码中的 `doppel` 文件（`~/.doppel/doppel-agent/doppel`），而非 venv 启动器（`~/.doppel/doppel-agent/venv/bin/doppel`）——请修正步骤 3。较旧的安装仍可能把同样的文件保留在 `~/.doppel/hermes-agent/` 下。
+4. **验证：** `doppel doctor` 现在应能正常运行。如果出现 `ModuleNotFoundError: No module named 'dotenv'`，说明你正在用系统 Python 调用 checkout 中的旧兼容启动器，而不是 venv 启动器（`~/.doppel/doppel-agent/venv/bin/doppel`）——请修正步骤 3。较旧安装在完全迁移前仍可能保留该兼容文件。
 
 同样的方式适用于 Arch（安装程序使用 pacman，具有相同的 sudo 检测逻辑）、Fedora/RHEL 和 openSUSE——这些发行版完全不支持 `--with-deps`，因此管理员始终需要单独安装系统库。安装程序会打印相应的 `dnf`/`zypper` 命令。
 
@@ -198,4 +198,4 @@ doppel setup --portal
 
 ## 安装方式自动检测
 
-Doppel 会自动检测安装方式（`pip`、git 安装程序、Homebrew 或 NixOS），`doppel update` 会打印对应路径的更新命令。无需设置任何环境变量——检测基于安装目录结构（Python site-packages、`~/.doppel/doppel-agent/`、`~/.hermes/` legacy、Homebrew 前缀或 Nix store 路径）。`doppel doctor` 也会在其环境摘要中显示检测到的安装方式。
+Doppel 会自动检测安装方式（`pip`、git 安装程序、Homebrew 或 NixOS），`doppel update` 会打印对应路径的更新命令。无需设置任何环境变量——检测基于安装目录结构（Python site-packages、`~/.doppel/doppel-agent/`、Homebrew 前缀或 Nix store 路径）。品牌迁移前的旧 checkout 布局在过渡期内仍会被识别。`doppel doctor` 也会在其环境摘要中显示检测到的安装方式。

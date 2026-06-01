@@ -65,7 +65,7 @@ doppel update --check --branch experimental   # 仅预览是否落后
 
 ### 完整更新前备份：`--backup`
 
-对于高价值 profile（生产环境 gateway、团队共享安装），可选择在拉取前对 `HERMES_HOME`（配置、认证、会话、技能、配对数据）进行完整备份：
+对于高价值 profile（生产环境 gateway、团队共享安装），可选择在拉取前对当前配置的 Doppel home 目录（配置、认证、会话、技能、配对数据）进行完整备份：
 
 ```bash
 doppel update --backup
@@ -226,7 +226,7 @@ nix flake update doppel-agent
 nix profile upgrade doppel-agent
 ```
 
-首选 flake 包别名和 derivation 契约现已使用 `doppel-agent`。如果某个旧安装最初是通过 `#hermes-agent` 添加的，仍可继续使用该兼容别名升级；packaged 安装仍然默认使用 `doppel` 入口点，并保留 `hermes` 作为兼容别名。NixOS 服务/模块命名空间仍保持 `services.hermes-agent`。
+首选 flake 包别名和 derivation 契约现已使用 `doppel-agent`。旧安装如果最初使用的是品牌迁移前的兼容别名，仍可继续沿用该兼容路径升级；packaged 安装仍默认使用 `doppel` 入口点，并保留旧的兼容命令别名。NixOS 服务/模块命名空间当前仍保持品牌迁移前的旧契约。
 
 Nix 安装是不可变的 — 回滚由 Nix 的 generation 系统处理：
 
@@ -245,13 +245,13 @@ brew install doppel-agent
 brew upgrade doppel-agent
 ```
 
-仍在使用旧公式名的 Homebrew 旧安装，应继续通过以下命令升级：
+仍在使用旧公式名的 Homebrew 旧安装，应继续使用 `doppel update` 报告的公式名进行升级；如果它告诉你当前安装仍然绑定在旧兼容公式上，在迁移完成前就继续使用该名称。
 
 ```bash
-brew upgrade hermes-agent
+brew upgrade <legacy-formula-name>
 ```
 
-`doppel update` 现在会显示为该安装写入的确切 Homebrew 公式名，因此受 Homebrew 管理的安装会明确提示你应使用 `doppel-agent` 还是 `hermes-agent`。
+`doppel update` 现在会显示为该安装写入的确切 Homebrew 公式名，因此受 Homebrew 管理的安装会明确提示你应使用当前的 Doppel 公式，还是仍处于过渡中的旧兼容公式。
 
 ---
 
@@ -268,14 +268,16 @@ doppel uninstall
 ### pip 安装方式
 
 ```bash
-pip uninstall hermes-agent
+pip uninstall doppel-agent
 rm -rf ~/.doppel            # 可选 — 如计划重新安装则保留
 ```
+
+如果你的环境仍报告品牌迁移前的旧包名，则卸载它报告出来的那个旧兼容包名即可。
 
 ### 手动卸载
 
 ```bash
-rm -f ~/.local/bin/doppel ~/.local/bin/hermes
+rm -f ~/.local/bin/doppel
 rm -rf /path/to/doppel-agent
 rm -rf ~/.doppel            # 可选 — 如计划重新安装则保留
 ```

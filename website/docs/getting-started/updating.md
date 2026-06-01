@@ -65,7 +65,7 @@ Want to know if an update is available before pulling? Run `doppel update --chec
 
 ### Full pre-update backup: `--backup`
 
-For high-value profiles (production gateways, shared team installs) you can opt into a full pre-pull backup of `HERMES_HOME` (config, auth, sessions, skills, pairing):
+For high-value profiles (production gateways, shared team installs) you can opt into a full pre-pull backup of your configured Doppel home directory (config, auth, sessions, skills, pairing):
 
 ```bash
 doppel update --backup
@@ -226,7 +226,7 @@ nix flake update doppel-agent
 nix profile upgrade doppel-agent
 ```
 
-The preferred flake package alias and derivation contract now use `doppel-agent`. Legacy installs that were originally added as `#hermes-agent` can keep using that alias as a compatibility path, while packaged installs still prefer the `doppel` CLI entrypoints and keep `hermes` as a compatibility alias. The NixOS service/module namespace remains `services.hermes-agent`.
+The preferred flake package alias and derivation contract now use `doppel-agent`. Legacy installs can keep using the older compatibility alias if that is how the package was originally added, while packaged installs still prefer the `doppel` CLI entrypoints and preserve the older compatibility command alias. The NixOS service/module namespace still uses the older pre-rebrand contract today.
 
 Nix installations are immutable — rollback is handled by Nix's generation system:
 
@@ -245,13 +245,13 @@ brew install doppel-agent
 brew upgrade doppel-agent
 ```
 
-Legacy Homebrew installs that still use the old formula name should continue to upgrade with:
+Legacy Homebrew installs that still use the old formula name should continue to upgrade with the formula name reported by `doppel update`. If the updater tells you the install is still stamped with the legacy formula, keep using that name until the install is migrated.
 
 ```bash
-brew upgrade hermes-agent
+brew upgrade <legacy-formula-name>
 ```
 
-`doppel update` now surfaces the exact Homebrew formula name that stamped the install, so a managed Homebrew install can tell you whether it expects `doppel-agent` or `hermes-agent`.
+`doppel update` now surfaces the exact Homebrew formula name that stamped the install, so a managed Homebrew install can tell you whether it expects the current Doppel formula or a legacy compatibility formula.
 
 ---
 
@@ -268,14 +268,16 @@ The uninstaller gives you the option to keep your configuration files (`~/.doppe
 ### pip installs
 
 ```bash
-pip uninstall hermes-agent
+pip uninstall doppel-agent
 rm -rf ~/.doppel            # Optional — keep if you plan to reinstall
 ```
+
+If your environment still reports a legacy package name from a pre-rebrand install, uninstall that reported package name instead.
 
 ### Manual Uninstall
 
 ```bash
-rm -f ~/.local/bin/doppel ~/.local/bin/hermes
+rm -f ~/.local/bin/doppel
 rm -rf /path/to/doppel-agent
 rm -rf ~/.doppel            # Optional — keep if you plan to reinstall
 ```

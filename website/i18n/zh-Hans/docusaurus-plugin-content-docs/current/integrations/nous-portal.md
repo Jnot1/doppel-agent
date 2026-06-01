@@ -62,7 +62,7 @@ Portal 代理了来自整个生态系统的精选 agentic 模型目录——统�
 
 ### 凭证不落入 dotfiles
 
-由于所有请求都通过一个经 OAuth 认证的 Portal 会话路由，你不会积累一个包含十几个长期 API 密钥的 `.env` 文件。磁盘上唯一的凭证是在全新安装中的 `~/.doppel/auth.json`（legacy 安装仍可能使用 `~/.hermes/auth.json`）里的 refresh token（刷新令牌），Doppel 会在每次请求时从中生成短期 JWT——详见下方[令牌处理](#token-handling)。
+由于所有请求都通过一个经 OAuth 认证的 Portal 会话路由，你不会积累一个包含十几个长期 API 密钥的 `.env` 文件。磁盘上唯一的凭证是 `~/.doppel/auth.json` 里的 refresh token（刷新令牌），Doppel 会在每次请求时从中生成短期 JWT——详见下方[令牌处理](#token-handling)。
 
 ### 跨平台一致性
 
@@ -94,8 +94,8 @@ doppel setup --portal
 一次性完成全部配置：
 
 1. 打开浏览器跳转至 portal.nousresearch.com 进行 OAuth 登录
-2. 在全新安装中将 refresh token 存储至 `~/.doppel/auth.json`（legacy 安装仍可能使用 `~/.hermes/auth.json`）
-3. 在全新安装的 `~/.doppel/config.yaml` 中将 Nous 设为推理提供商（legacy 安装仍可能使用 `~/.hermes/config.yaml`）
+2. 将 refresh token 存储至 `~/.doppel/auth.json`
+3. 在 `~/.doppel/config.yaml` 中将 Nous 设为推理提供商
 4. 开启 Tool Gateway（网页、图像、TTS、浏览器路由）
 5. 返回终端，即可运行 `doppel chat`
 
@@ -195,7 +195,7 @@ Tool Gateway 是按工具单独选择启用的，而非全部或全不。完整�
 
 ## 配置参考
 
-运行 `doppel setup --portal` 后，全新安装中的 `~/.doppel/config.yaml`（legacy 安装仍可能使用 `~/.hermes/config.yaml`）将如下所示：
+运行 `doppel setup --portal` 后，`~/.doppel/config.yaml` 将如下所示：
 
 ```yaml
 model:
@@ -220,7 +220,7 @@ browser:
   backend: nous
 ```
 
-OAuth refresh token 单独存储在全新安装中的 `~/.doppel/auth.json`（legacy 安装仍可能使用 `~/.hermes/auth.json`，且不在 `config.yaml` 中——凭证与配置有意分开存放）。
+OAuth refresh token 单独存储在 `~/.doppel/auth.json` 中，且不在 `config.yaml` 中——凭证与配置有意分开存放。
 
 ## 令牌处理
 
@@ -252,7 +252,7 @@ Portal 通过 OpenRouter 代理，因此 OpenRouter 支持的所有模型通常�
 /model anthropic/claude-opus-4.6
 ```
 
-如果某个模型确实缺失，请[提交 issue](https://github.com/NousResearch/hermes-agent/issues)——我们将 Portal 目录同步至 Doppel，这类缺口通常意味着可以更新的路由配置。
+如果某个模型确实缺失，请[提交 issue](https://github.com/Jnot1/doppel-agent/issues)——我们将 Portal 目录同步至 Doppel，这类缺口通常意味着可以更新的路由配置。
 
 ### 账单未出现在我的 Portal 账号中
 

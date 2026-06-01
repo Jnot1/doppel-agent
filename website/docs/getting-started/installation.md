@@ -30,7 +30,7 @@ Open PowerShell and run:
 iex (irm https://raw.githubusercontent.com/Jnot1/doppel-agent/main/scripts/install.ps1)
 ```
 
-The installer handles **everything**: `uv`, Python 3.11, Node.js 22, `ripgrep`, `ffmpeg`, **and a portable Git Bash** (PortableGit — a self-contained Git-for-Windows distribution that ships `bash.exe` and the full POSIX toolchain Doppel uses for shell commands; on 32-bit Windows the installer falls back to MinGit, which lacks bash and disables terminal-tool / agent-browser features). It keeps user data under `%LOCALAPPDATA%\doppel`, clones the repo checkout under `%LOCALAPPDATA%\doppel\doppel-agent`, creates a virtualenv, and adds `doppel` to your **User PATH**. Older installs under `%LOCALAPPDATA%\doppel\hermes-agent` are still detected and migrated forward. Restart your terminal (or open a new PowerShell window) after the install so PATH picks up.
+The installer handles **everything**: `uv`, Python 3.11, Node.js 22, `ripgrep`, `ffmpeg`, **and a portable Git Bash** (PortableGit — a self-contained Git-for-Windows distribution that ships `bash.exe` and the full POSIX toolchain Doppel uses for shell commands; on 32-bit Windows the installer falls back to MinGit, which lacks bash and disables terminal-tool / agent-browser features). It keeps user data under `%LOCALAPPDATA%\doppel`, clones the repo checkout under `%LOCALAPPDATA%\doppel\doppel-agent`, creates a virtualenv, and adds `doppel` to your **User PATH**. Older installs that still use the pre-rebrand checkout layout are detected and migrated forward. Restart your terminal (or open a new PowerShell window) after the install so PATH picks up.
 
 **How Git is handled:**
 1. If `git` is already on your PATH, the installer uses your existing install.
@@ -38,7 +38,7 @@ The installer handles **everything**: `uv`, Python 3.11, Node.js 22, `ripgrep`, 
 
 **Why not use winget?** Earlier designs auto-installed Git via `winget install Git.Git`, but winget fails badly when a system Git install is in a partial or broken state (exactly when users need the installer to just work). The portable Git approach sidesteps winget, the Windows installer registry, and any existing system Git entirely. If the Doppel Git install itself ever breaks, `Remove-Item %LOCALAPPDATA%\doppel\git` and re-run the installer — no system impact, no uninstall drama.
 
-The installer also sets `DOPPEL_HOME` and preserves legacy compatibility so the legacy `hermes` command and `HERMES_HOME` still work in this phase.
+The installer also sets `DOPPEL_HOME` and preserves the legacy compatibility aliases from older installs during this transition.
 
 If you prefer WSL2, the Linux installer above works inside it; both native and WSL installs can coexist without conflict (native data lives under `%LOCALAPPDATA%\doppel`, WSL data lives under `~/.doppel`).
 
@@ -71,7 +71,7 @@ Native Windows is in **early beta**. Everything except the browser-based dashboa
 - **MCP servers** — native (stdio and HTTP transports both supported)
 - **Dashboard `/chat` terminal pane** — **WSL2 only** (uses a POSIX PTY; native Windows has no equivalent).  The rest of the dashboard (sessions, jobs, metrics) works natively — only the embedded PTY terminal tab is gated.
 
-Set `HERMES_DISABLE_WINDOWS_UTF8=1` in your environment if you hit an encoding-related bug and want to fall back to the legacy cp1252 stdio path (useful for bisecting).
+Set `DOPPEL_DISABLE_WINDOWS_UTF8=1` in your environment if you hit an encoding-related bug and want to fall back to the legacy cp1252 stdio path (useful for bisecting).
 :::
 
 ### What the Installer Does
@@ -86,9 +86,9 @@ Where the installer puts things depends on whether you're installing as a normal
 |---|---|---|---|
 | pip install | Python site-packages | `~/.local/bin/doppel` (console_scripts) | `~/.doppel/` |
 | Per-user (git installer) | `~/.doppel/doppel-agent/` | `~/.local/bin/doppel` (symlink) | `~/.doppel/` |
-| Root-mode (`sudo curl … \| sudo bash`) | `/usr/local/lib/doppel-agent/` | `/usr/local/bin/doppel` | `/root/.doppel/` (or `$DOPPEL_HOME`, legacy `$HERMES_HOME`) |
+| Root-mode (`sudo curl … \| sudo bash`) | `/usr/local/lib/doppel-agent/` | `/usr/local/bin/doppel` | `/root/.doppel/` (or your configured Doppel home directory) |
 
-The root-mode **FHS layout** (`/usr/local/lib/…`, `/usr/local/bin/doppel`) matches where other system-wide developer tools land on Linux. It's useful for shared-machine deployments where one system install should serve every user. Per-user config (auth, skills, sessions) still lives under each user's `~/.doppel/` or explicit `DOPPEL_HOME` (with `HERMES_HOME` kept as a legacy alias). Older installs may still reuse a legacy `hermes-agent` checkout directory in place until migrated.
+The root-mode **FHS layout** (`/usr/local/lib/…`, `/usr/local/bin/doppel`) matches where other system-wide developer tools land on Linux. It's useful for shared-machine deployments where one system install should serve every user. Per-user config (auth, skills, sessions) still lives under each user's `~/.doppel/` or explicit `DOPPEL_HOME`, and older pre-rebrand checkout directories are still recognized until migrated.
 
 ### After Installation
 
@@ -180,7 +180,7 @@ Running Doppel as a dedicated unprivileged user (e.g. a `doppel` systemd service
    sudo ln -s /home/doppel/.doppel/doppel-agent/venv/bin/doppel /usr/local/bin/doppel
    ```
 
-4. **Verify:** `doppel doctor` should now run cleanly. If you get `ModuleNotFoundError: No module named 'dotenv'`, you're invoking the repo source `hermes` file (`~/.doppel/doppel-agent/hermes`) with system Python instead of the venv launcher (`~/.doppel/doppel-agent/venv/bin/doppel`) — fix step 3. Older installs may still have the same files under `~/.doppel/hermes-agent/`.
+4. **Verify:** `doppel doctor` should now run cleanly. If you get `ModuleNotFoundError: No module named 'dotenv'`, you're invoking the repo's legacy compatibility launcher with system Python instead of the venv launcher (`~/.doppel/doppel-agent/venv/bin/doppel`) — fix step 3. Older installs may still keep that compatibility file in the checkout until fully migrated.
 
 The same pattern works on Arch (the installer uses pacman with the same sudo-detection logic), Fedora/RHEL, and openSUSE — those distros don't support `--with-deps` at all, so an administrator always installs the system libraries separately. The relevant `dnf`/`zypper` commands are printed by the installer.
 
@@ -198,4 +198,4 @@ For more diagnostics, run `doppel doctor` — it will tell you exactly what's mi
 
 ## Install method auto-detection
 
-Doppel auto-detects whether it was installed via `pip`, the git installer, Homebrew, or NixOS, and `doppel update` prints the matching update command for that path. There's no env var to set — the detection is based on the install layout (Python site-packages, `~/.doppel/doppel-agent/`, Homebrew prefix, or Nix store path). Legacy `~/.doppel/hermes-agent/` checkouts are still recognized during the transition. `doppel doctor` also surfaces the detected method under its environment summary.
+Doppel auto-detects whether it was installed via `pip`, the git installer, Homebrew, or NixOS, and `doppel update` prints the matching update command for that path. There's no env var to set — the detection is based on the install layout (Python site-packages, `~/.doppel/doppel-agent/`, Homebrew prefix, or Nix store path). Legacy pre-rebrand checkout layouts are still recognized during the transition. `doppel doctor` also surfaces the detected method under its environment summary.

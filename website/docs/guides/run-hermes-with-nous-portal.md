@@ -32,8 +32,8 @@ doppel setup --portal
 This single command does five things:
 
 1. Opens your browser to portal.nousresearch.com for OAuth login
-2. Stores the refresh token at `~/.doppel/auth.json` on fresh installs; legacy installs may still use `~/.hermes/auth.json`
-3. Sets `model.provider: nous` in `~/.doppel/config.yaml` on fresh installs; legacy installs may still use `~/.hermes/config.yaml`
+2. Stores the refresh token at `~/.doppel/auth.json`
+3. Sets `model.provider: nous` in `~/.doppel/config.yaml`
 4. Picks a default agentic model (`anthropic/claude-sonnet-4.6` or similar)
 5. Turns on the Tool Gateway for web search, image generation, TTS, and browser automation
 
@@ -173,7 +173,7 @@ The cron job runs unattended, calls the model + web search + summarization all t
 
 If you use [Doppel profiles](/user-guide/profiles) (e.g. a separate config per project), the Portal refresh token is automatically shared across all profiles via a shared token store. Sign in once on any profile, and the rest pick it up automatically.
 
-For team setups where multiple humans share a machine, each human has their own Portal account -> each home directory holds its own `~/.doppel/auth.json` on fresh installs (legacy installs may still use `~/.hermes/auth.json`) -> no token sharing across users. This is the right boundary.
+For team setups where multiple humans share a machine, each human has their own Portal account -> each home directory holds its own `~/.doppel/auth.json` -> no token sharing across users. This is the right boundary.
 
 ## Troubleshooting
 
@@ -234,7 +234,7 @@ The Portal catalog mirrors OpenRouter's model list (300+). If a model is missing
 /model openai/o1-2025-12-17
 ```
 
-If a model is genuinely unavailable, [open an issue](https://github.com/NousResearch/hermes-agent/issues) — most gaps are routing config we can update.
+If a model is genuinely unavailable, [open an issue](https://github.com/Jnot1/doppel-agent/issues) — most gaps are routing config we can update.
 
 ### Billing not appearing on my Portal account
 

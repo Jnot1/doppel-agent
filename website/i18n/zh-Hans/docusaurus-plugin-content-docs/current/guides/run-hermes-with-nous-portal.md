@@ -32,8 +32,8 @@ doppel setup --portal
 这条命令会完成五件事：
 
 1. 打开浏览器跳转至 portal.nousresearch.com 进行 OAuth 登录
-2. 在新安装环境中将 refresh token 存储至 `~/.doppel/auth.json`；legacy 安装仍可能使用 `~/.hermes/auth.json`
-3. 在新安装环境的 `~/.doppel/config.yaml` 中设置 `model.provider: nous`；legacy 安装仍可能使用 `~/.hermes/config.yaml`
+2. 将 refresh token 存储至 `~/.doppel/auth.json`
+3. 在 `~/.doppel/config.yaml` 中设置 `model.provider: nous`
 4. 选择一个默认的 agentic 模型（`anthropic/claude-sonnet-4.6` 或类似模型）
 5. 为网页搜索、图像生成、TTS 和浏览器自动化开启 Tool Gateway
 
@@ -173,7 +173,7 @@ doppel cron create "every day at 9am" \
 
 如果你使用 [Doppel profiles](/user-guide/profiles)（例如每个项目单独一套配置），Portal refresh token 会通过共享 token 存储自动在所有 profiles 之间共享。在任意 profile 上登录一次，其余 profiles 会自动获取。
 
-对于多人共用一台机器的团队场景，每个人有自己的 Portal 账号 -> 新安装时各自的 home 目录保存各自的 `~/.doppel/auth.json`（legacy 安装仍可能使用 `~/.hermes/auth.json`）-> 用户之间不共享 token。这是正确的边界划分。
+对于多人共用一台机器的团队场景，每个人有自己的 Portal 账号 -> 各自的 home 目录保存各自的 `~/.doppel/auth.json` -> 用户之间不共享 token。这是正确的边界划分。
 
 ## 故障排查
 
@@ -234,7 +234,7 @@ Portal 目录镜像了 OpenRouter 的模型列表（300+ 个）。如果某个�
 /model openai/o1-2025-12-17
 ```
 
-如果某个模型确实不可用，请[提交 issue](https://github.com/NousResearch/hermes-agent/issues)——大多数缺失是我们可以更新的路由配置问题。
+如果某个模型确实不可用，请[提交 issue](https://github.com/Jnot1/doppel-agent/issues)——大多数缺失是我们可以更新的路由配置问题。
 
 ### 账单未出现在我的 Portal 账号中
 

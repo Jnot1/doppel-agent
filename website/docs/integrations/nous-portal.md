@@ -66,7 +66,7 @@ Your Portal account also covers [chat.nousresearch.com](https://chat.nousresearc
 
 ### No credentials in your dotfiles
 
-Because everything routes through one OAuth-authenticated Portal session, you don't accumulate a `.env` file with a dozen long-lived API keys. The refresh token at `~/.doppel/auth.json` on fresh installs (legacy installs may still use `~/.hermes/auth.json`) is the only credential on disk, and Doppel mints short-lived JWTs from it per request — see [Token handling](#token-handling) below.
+Because everything routes through one OAuth-authenticated Portal session, you don't accumulate a `.env` file with a dozen long-lived API keys. The refresh token at `~/.doppel/auth.json` is the only credential on disk, and Doppel mints short-lived JWTs from it per request — see [Token handling](#token-handling) below.
 
 ### Cross-platform parity
 
@@ -98,8 +98,8 @@ doppel setup --portal
 This runs the full setup in one shot:
 
 1. Opens your browser to portal.nousresearch.com for OAuth login
-2. Stores the refresh token at `~/.doppel/auth.json` on fresh installs (legacy installs may still use `~/.hermes/auth.json`)
-3. Sets Nous as your inference provider in `~/.doppel/config.yaml` on fresh installs (legacy installs may still use `~/.hermes/config.yaml`)
+2. Stores the refresh token at `~/.doppel/auth.json`
+3. Sets Nous as your inference provider in `~/.doppel/config.yaml`
 4. Turns on the Tool Gateway (web, image, TTS, browser routing)
 5. Returns you to your terminal ready to `doppel chat`
 
@@ -199,7 +199,7 @@ Manage your plan, view usage, or upgrade/cancel at any time:
 
 ## Configuration reference
 
-After `doppel setup --portal`, `~/.doppel/config.yaml` on fresh installs (legacy installs may still use `~/.hermes/config.yaml`) will look like:
+After `doppel setup --portal`, `~/.doppel/config.yaml` will look like:
 
 ```yaml
 model:
@@ -224,7 +224,7 @@ browser:
   backend: nous
 ```
 
-The OAuth refresh token is stored separately at `~/.doppel/auth.json` on fresh installs (legacy installs may still use `~/.hermes/auth.json`) (not in `config.yaml` — credentials and configuration are kept separate by design).
+The OAuth refresh token is stored separately at `~/.doppel/auth.json` (not in `config.yaml` — credentials and configuration are kept separate by design).
 
 ## Token handling
 
@@ -256,7 +256,7 @@ The Portal proxies through OpenRouter, so any model that OpenRouter supports is 
 /model anthropic/claude-opus-4.6
 ```
 
-If a model is genuinely missing, [open an issue](https://github.com/NousResearch/hermes-agent/issues) — we surface the Portal's catalog to Doppel and gaps usually mean a routing config we can update.
+If a model is genuinely missing, [open an issue](https://github.com/Jnot1/doppel-agent/issues) — we surface the Portal's catalog to Doppel and gaps usually mean a routing config we can update.
 
 ### Bills not appearing on my Portal account
 

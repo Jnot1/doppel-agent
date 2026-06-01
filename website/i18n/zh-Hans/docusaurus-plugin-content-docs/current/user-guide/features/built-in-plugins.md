@@ -7,7 +7,7 @@ description: "随 Doppel Agent 附带并通过生命周期 hook 自动运行的�
 
 # 内置插件
 
-Doppel Agent 随仓库附带了一小组插件。它们位于 `<repo>/plugins/<name>/`，与用户安装在 `~/.hermes/plugins/` 中的插件一同自动加载。它们使用与第三方插件相同的插件接口——hook、工具、斜杠命令——只是在仓库内维护。
+Doppel Agent 随仓库附带了一小组插件。它们位于 `<repo>/plugins/<name>/`，与用户安装在 `~/.doppel/plugins/` 中的插件一同自动加载。它们使用与第三方插件相同的插件接口——hook、工具、斜杠命令——只是在仓库内维护。
 
 请参阅 [插件](/user-guide/features/plugins) 页面了解通用插件系统，以及 [构建 Doppel 插件](/guides/build-a-doppel-plugin) 了解如何编写自己的插件。
 
@@ -16,9 +16,9 @@ Doppel Agent 随仓库附带了一小组插件。它们位于 `<repo>/plugins/<n
 `PluginManager` 按顺序扫描四个来源：
 
 1. **内置（Bundled）** — `<repo>/plugins/<name>/`（本页所记录的内容）
-2. **用户（User）** — `~/.hermes/plugins/<name>/`
-3. **项目（Project）** — `./.hermes/plugins/<name>/`（需要 `HERMES_ENABLE_PROJECT_PLUGINS=1`）
-4. **Pip 入口点（Entry points）** — `hermes_agent.plugins`
+2. **用户（User）** — `~/.doppel/plugins/<name>/`
+3. **项目（Project）** — `./.doppel/plugins/<name>/`（需要 `DOPPEL_ENABLE_PROJECT_PLUGINS=1`）
+4. **Pip 入口点（Entry points）** — `doppel_agent.plugins`
 
 名称冲突时，后面的来源优先——名为 `disk-cleanup` 的用户插件会替换内置版本。
 
@@ -32,7 +32,7 @@ Doppel Agent 随仓库附带了一小组插件。它们位于 `<repo>/plugins/<n
 doppel plugins enable disk-cleanup
 ```
 
-或通过 `~/.hermes/config.yaml`：
+或通过 `~/.doppel/config.yaml`：
 
 ```yaml
 plugins:
@@ -62,7 +62,7 @@ doppel plugins disable disk-cleanup
 | `image_gen/openai` | 图像后端 | OpenAI `gpt-image-2` 图像生成后端（FAL 的替代方案） |
 | `image_gen/openai-codex` | 图像后端 | 通过 Codex OAuth 使用 OpenAI 图像生成 |
 | `image_gen/xai` | 图像后端 | xAI `grok-2-image` 后端 |
-| `hermes-achievements` | 仪表盘标签页 | Steam 风格的可收集徽章，根据你真实的 Doppel 会话历史生成 |
+| `doppel-achievements` | 仪表盘标签页 | Steam 风格的可收集徽章，根据你真实的 Doppel 会话历史生成 |
 | `kanban/dashboard` | 仪表盘标签页 | 多智能体调度器的看板（Kanban）UI——任务、评论、扇出、切换看板。参见 [Kanban 多智能体](./kanban.md)。 |
 
 内存提供者（`plugins/memory/*`）和上下文引擎（`plugins/context_engine/*`）在 [内存提供者](./memory-providers.md) 中单独列出——它们分别通过 `doppel memory` 和 `doppel plugins` 管理。以下是两个长期运行的基于 hook 的插件的详细说明。
@@ -75,7 +75,7 @@ doppel plugins disable disk-cleanup
 
 | Hook | 行为 |
 |---|---|
-| `post_tool_call` | 当 `write_file` / `terminal` / `patch` 在 `HERMES_HOME` 或 `/tmp/hermes-*` 内创建匹配 `test_*`、`tmp_*` 或 `*.test.*` 的文件时，静默追踪为 `test` / `temp` / `cron-output`。 |
+| `post_tool_call` | 当 `write_file` / `terminal` / `patch` 在 `$DOPPEL_HOME` 或插件专用的临时工作目录内创建匹配 `test_*`、`tmp_*` 或 `*.test.*` 的文件时，静默追踪为 `test` / `temp` / `cron-output`。 |
 | `on_session_end` | 如果本轮中有任何测试文件被自动追踪，则执行安全的 `quick` 清理并记录一行摘要。否则保持静默。 |
 
 **删除规则：**
@@ -85,7 +85,7 @@ doppel plugins disable disk-cleanup
 | `test` | 每次会话结束 | 从不 |
 | `temp` | 追踪后超过 7 天 | 从不 |
 | `cron-output` | 追踪后超过 14 天 | 从不 |
-| HERMES_HOME 下的空目录 | 始终 | 从不 |
+| `$DOPPEL_HOME` 下的空目录 | 始终 | 从不 |
 | `research` | 超过 30 天，且超出最新 10 个 | 始终（仅 deep 模式） |
 | `chrome-profile` | 追踪后超过 14 天 | 始终（仅 deep 模式） |
 | 超过 500 MB 的文件 | 从不自动删除 | 始终（仅 deep 模式） |
@@ -101,7 +101,7 @@ doppel plugins disable disk-cleanup
 /disk-cleanup forget <path>              # 停止追踪（不删除）
 ```
 
-**状态** — 所有内容存储在 `$HERMES_HOME/disk-cleanup/`：
+**状态** — 所有内容存储在 `$DOPPEL_HOME/disk-cleanup/`：
 
 | 文件 | 内容 |
 |---|---|
@@ -109,7 +109,7 @@ doppel plugins disable disk-cleanup
 | `tracked.json.bak` | 上述文件的原子写入备份 |
 | `cleanup.log` | 每次追踪 / 跳过 / 拒绝 / 删除操作的仅追加审计日志 |
 
-**安全性** — 清理操作仅涉及 `HERMES_HOME` 或 `/tmp/hermes-*` 下的路径。Windows 挂载点（`/mnt/c/...`）会被拒绝。已知的顶级状态目录（`logs/`、`memories/`、`sessions/`、`cron/`、`cache/`、`skills/`、`plugins/`、`disk-cleanup/` 本身）即使为空也不会被删除——全新安装不会在第一次会话结束时被清空。
+**安全性** — 清理操作仅涉及 `$DOPPEL_HOME` 或插件专用的临时工作目录下的路径。Windows 挂载点（`/mnt/c/...`）会被拒绝。已知的顶级状态目录（`logs/`、`memories/`、`sessions/`、`cron/`、`cache/`、`skills/`、`plugins/`、`disk-cleanup/` 本身）即使为空也不会被删除——全新安装不会在第一次会话结束时被清空。
 
 **启用：** `doppel plugins enable disk-cleanup`（或在 `doppel plugins` 中勾选复选框）。
 
@@ -164,7 +164,7 @@ doppel chat -q "hello"             # 在 Langfuse UI 中检查是否有 "Doppel 
 | `DOPPEL_LANGFUSE_MAX_CHARS` | `12000` | 消息内容 / 工具参数 / 工具结果的单字段截断长度 |
 | `DOPPEL_LANGFUSE_DEBUG` | `false` | 向 `agent.log` 输出详细插件日志 |
 
-Doppel 前缀、旧版 Hermes 前缀以及标准 SDK 环境变量（`LANGFUSE_PUBLIC_KEY`、`LANGFUSE_SECRET_KEY`、`LANGFUSE_BASE_URL`）都被接受——设置多个值时优先使用 Doppel 前缀。
+Doppel 前缀以及标准 SDK 环境变量（`LANGFUSE_PUBLIC_KEY`、`LANGFUSE_SECRET_KEY`、`LANGFUSE_BASE_URL`）都被接受——设置多个值时优先使用 Doppel 前缀。
 
 **性能：** Langfuse 客户端在第一次 hook 调用后被缓存。如果凭据或 SDK 缺失，该决定也会被缓存——后续 hook 会快速返回，不再重新检查环境变量或重新加载配置。
 
@@ -179,7 +179,7 @@ Doppel 前缀、旧版 Hermes 前缀以及标准 SDK 环境变量（`LANGFUSE_PU
 - 使用浏览器自动化加入 Meet URL 的无头虚拟参与者
 - 通过配置的 STT 提供者对会议音频进行实时转录
 - agent 调用的 `meet_summarize` / `meet_speak` / `meet_followup` 工具集，用于对所听内容采取行动
-- 会后产物（转录、带发言人归属的笔记、行动项）保存在 `~/.hermes/cache/google_meet/<meeting_id>/`
+- 会后产物（转录、带发言人归属的笔记、行动项）保存在 `~/.doppel/workspace/meetings/<meeting_id>/`
 
 **设置：**
 
@@ -198,7 +198,7 @@ agent 会启动会议加入流程，在通话进行时将转录内容流式传�
 
 **适用场景：** 需要机器人转录并为异步参与者总结的定期站会；需要结构化笔记的访谈式会议；任何原本需要 Fireflies / Otter / Grain 的场景。如果你不希望有 AI 在旁监听——请勿启用。
 
-**禁用：** `doppel plugins disable google_meet`。已缓存的转录和录音保留在 `~/.hermes/cache/google_meet/`，直到你手动删除。
+**禁用：** `doppel plugins disable google_meet`。已缓存的转录和录音保留在 `~/.doppel/workspace/meetings/`，直到你手动删除。
 
 ### doppel-achievements
 
@@ -255,7 +255,7 @@ agent 会启动会议加入流程，在通话进行时将转录内容流式传�
 
 内置插件的编写方式与其他 Doppel 插件完全相同——参见 [构建 Doppel 插件](/guides/build-a-doppel-plugin)。唯一的区别是：
 
-- 目录位于 `<repo>/plugins/<name>/`，而非 `~/.hermes/plugins/<name>/`
+- 目录位于 `<repo>/plugins/<name>/`，而非 `~/.doppel/plugins/<name>/`
 - 在 `doppel plugins list` 中，manifest 来源显示为 `bundled`
 - 同名用户插件会覆盖内置版本
 

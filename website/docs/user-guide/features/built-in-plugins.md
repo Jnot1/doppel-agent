@@ -7,7 +7,7 @@ description: "Plugins shipped with Doppel Agent that run automatically via lifec
 
 # Built-in Plugins
 
-Doppel Agent ships a small set of plugins bundled with the repository. They live under `<repo>/plugins/<name>/` and load automatically alongside user-installed plugins in `~/.hermes/plugins/`. They use the same plugin surface as third-party plugins — hooks, tools, slash commands — just maintained in-tree.
+Doppel Agent ships a small set of plugins bundled with the repository. They live under `<repo>/plugins/<name>/` and load automatically alongside user-installed plugins in `~/.doppel/plugins/`. They use the same plugin surface as third-party plugins — hooks, tools, slash commands — just maintained in-tree.
 
 See the [Plugins](/user-guide/features/plugins) page for the general plugin system, and [Build a Doppel Plugin](/guides/build-a-doppel-plugin) to write your own.
 
@@ -16,9 +16,9 @@ See the [Plugins](/user-guide/features/plugins) page for the general plugin syst
 The `PluginManager` scans four sources, in order:
 
 1. **Bundled** — `<repo>/plugins/<name>/` (what this page documents)
-2. **User** — `~/.hermes/plugins/<name>/`
-3. **Project** — `./.hermes/plugins/<name>/` (requires `HERMES_ENABLE_PROJECT_PLUGINS=1`)
-4. **Pip entry points** — `hermes_agent.plugins`
+2. **User** — `~/.doppel/plugins/<name>/`
+3. **Project** — `./.doppel/plugins/<name>/` (requires `DOPPEL_ENABLE_PROJECT_PLUGINS=1`)
+4. **Pip entry points** — `doppel_agent.plugins`
 
 On name collision, later sources win — a user plugin named `disk-cleanup` would replace the bundled one.
 
@@ -32,7 +32,7 @@ Bundled plugins ship disabled. Discovery finds them (they appear in `doppel plug
 doppel plugins enable disk-cleanup
 ```
 
-Or via `~/.hermes/config.yaml`:
+Or via `~/.doppel/config.yaml`:
 
 ```yaml
 plugins:
@@ -63,7 +63,7 @@ The repo ships these bundled plugins under `plugins/`. All are opt-in — enable
 | `image_gen/openai` | image backend | OpenAI `gpt-image-2` image generation backend (alternative to FAL) |
 | `image_gen/openai-codex` | image backend | OpenAI image generation via Codex OAuth |
 | `image_gen/xai` | image backend | xAI `grok-2-image` backend |
-| `hermes-achievements` | dashboard tab | Steam-style collectible badges generated from your real Doppel session history |
+| `doppel-achievements` | dashboard tab | Steam-style collectible badges generated from your real Doppel session history |
 | `kanban/dashboard` | dashboard tab | Kanban board UI for the multi-agent dispatcher — tasks, comments, fan-out, board switching. See [Kanban Multi-Agent](./kanban.md). |
 
 Memory providers (`plugins/memory/*`) and context engines (`plugins/context_engine/*`) are listed separately on [Memory Providers](./memory-providers.md) — they're managed through `doppel memory` and `doppel plugins` respectively. The full per-plugin detail for the two long-running hooks-based plugins follows.
@@ -76,7 +76,7 @@ Auto-tracks and removes ephemeral files created during sessions — test scripts
 
 | Hook | Behaviour |
 |---|---|
-| `post_tool_call` | When `write_file` / `terminal` / `patch` creates a file matching `test_*`, `tmp_*`, or `*.test.*` inside `HERMES_HOME` or `/tmp/hermes-*`, track it silently as `test` / `temp` / `cron-output`. |
+| `post_tool_call` | When `write_file` / `terminal` / `patch` creates a file matching `test_*`, `tmp_*`, or `*.test.*` inside `$DOPPEL_HOME` or the plugin's dedicated temp work directories, track it silently as `test` / `temp` / `cron-output`. |
 | `on_session_end` | If any test files were auto-tracked during the turn, run the safe `quick` cleanup and log a one-line summary. Stays silent otherwise. |
 
 **Deletion rules:**
@@ -86,7 +86,7 @@ Auto-tracks and removes ephemeral files created during sessions — test scripts
 | `test` | every session end | Never |
 | `temp` | >7 days since tracked | Never |
 | `cron-output` | >14 days since tracked | Never |
-| empty dirs under HERMES_HOME | always | Never |
+| empty dirs under `$DOPPEL_HOME` | always | Never |
 | `research` | >30 days, beyond 10 newest | Always (deep only) |
 | `chrome-profile` | >14 days since tracked | Always (deep only) |
 | files >500 MB | never auto | Always (deep only) |
@@ -102,7 +102,7 @@ Auto-tracks and removes ephemeral files created during sessions — test scripts
 /disk-cleanup forget <path>              # stop tracking (does not delete)
 ```
 
-**State** — everything lives at `$HERMES_HOME/disk-cleanup/`:
+**State** — everything lives at `$DOPPEL_HOME/disk-cleanup/`:
 
 | File | Contents |
 |---|---|
@@ -110,7 +110,7 @@ Auto-tracks and removes ephemeral files created during sessions — test scripts
 | `tracked.json.bak` | Atomic-write backup of the above |
 | `cleanup.log` | Append-only audit trail of every track / skip / reject / delete |
 
-**Safety** — cleanup only ever touches paths under `HERMES_HOME` or `/tmp/hermes-*`. Windows mounts (`/mnt/c/...`) are rejected. Well-known top-level state dirs (`logs/`, `memories/`, `sessions/`, `cron/`, `cache/`, `skills/`, `plugins/`, `disk-cleanup/` itself) are never removed even when empty — a fresh install does not get gutted on first session end.
+**Safety** — cleanup only ever touches paths under `$DOPPEL_HOME` or the plugin's dedicated temp work directories. Windows mounts (`/mnt/c/...`) are rejected. Well-known top-level state dirs (`logs/`, `memories/`, `sessions/`, `cron/`, `cache/`, `skills/`, `plugins/`, `disk-cleanup/` itself) are never removed even when empty — a fresh install does not get gutted on first session end.
 
 **Enabling:** `doppel plugins enable disk-cleanup` (or check the box in `doppel plugins`).
 
@@ -187,7 +187,7 @@ doppel chat -q "hello"             # check the Langfuse UI for a "Doppel turn" t
 | `DOPPEL_LANGFUSE_MAX_CHARS` | `12000` | Per-field truncation for message content / tool args / tool results |
 | `DOPPEL_LANGFUSE_DEBUG` | `false` | Verbose plugin logging to `agent.log` |
 
-Doppel-prefixed, legacy Hermes-prefixed, and standard SDK env vars (`LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`) are all accepted — Doppel-prefixed wins when more than one value is set.
+Doppel-prefixed and standard SDK env vars (`LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`) are all accepted — Doppel-prefixed wins when more than one value is set.
 
 **Performance:** the Langfuse client is cached after the first hook call. If credentials or SDK are missing, that decision is also cached — subsequent hooks fast-return without re-checking env vars or reloading config.
 
@@ -202,7 +202,7 @@ Lets the agent **join, transcribe, and participate in Google Meet calls** — ta
 - A headless virtual participant that joins a Meet URL using browser automation
 - Live transcription of the meeting audio via the configured STT provider
 - A `meet_summarize` / `meet_speak` / `meet_followup` toolset the agent invokes to act on what it heard
-- Post-meeting artifacts (transcript, speaker-attributed notes, action items) saved under `~/.hermes/cache/google_meet/<meeting_id>/`
+- Post-meeting artifacts (transcript, speaker-attributed notes, action items) saved under `~/.doppel/workspace/meetings/<meeting_id>/`
 
 **Setup:**
 
@@ -221,7 +221,7 @@ The agent kicks off the meeting join, streams the transcription back into its co
 
 **When to use it:** recurring standups where you want a bot to transcribe + summarize for async attendees; deposition-style interviews where you want structured notes; any case where you'd otherwise need Fireflies / Otter / Grain. When you'd rather not have an AI listening in — don't enable it.
 
-**Disabling:** `doppel plugins disable google_meet`. Any cached transcripts and recordings stay in `~/.hermes/cache/google_meet/` until you remove them.
+**Disabling:** `doppel plugins disable google_meet`. Any cached transcripts and recordings stay in `~/.doppel/workspace/meetings/` until you remove them.
 
 ### doppel-achievements
 
@@ -278,7 +278,7 @@ Adds a **Steam-style achievements tab to the dashboard** — 60+ collectible, ti
 
 Bundled plugins are written exactly like any other Doppel plugin — see [Build a Doppel Plugin](/guides/build-a-doppel-plugin). The only differences are:
 
-- Directory lives at `<repo>/plugins/<name>/` instead of `~/.hermes/plugins/<name>/`
+- Directory lives at `<repo>/plugins/<name>/` instead of `~/.doppel/plugins/<name>/`
 - Manifest source is reported as `bundled` in `doppel plugins list`
 - User plugins with the same name override the bundled version
 

@@ -1573,10 +1573,28 @@ def test_built_in_and_integration_plugin_docs_prefer_doppel_surfaces():
     assert "doppel plugins enable observability/langfuse" in en_builtin
     assert "doppel chat -q \"hello\"" in en_builtin
     assert "doppel dashboard" in en_builtin
+    assert "~/.doppel/plugins/<name>/" in en_builtin
+    assert "./.doppel/plugins/<name>/" in en_builtin
+    assert "DOPPEL_ENABLE_PROJECT_PLUGINS=1" in en_builtin
+    assert "doppel_agent.plugins" in en_builtin
+    assert "~/.doppel/config.yaml" in en_builtin
+    assert "`doppel-achievements`" in en_builtin
+    assert "$DOPPEL_HOME/disk-cleanup/" in en_builtin
+    assert "~/.doppel/workspace/meetings/<meeting_id>/" in en_builtin
     assert "Build a Hermes Plugin" not in en_builtin
     assert "hermes plugins enable disk-cleanup" not in en_builtin
     assert "hermes plugins disable observability/langfuse" not in en_builtin
     assert "hermes dashboard" not in en_builtin
+    assert "~/.hermes/plugins/<name>/" not in en_builtin
+    assert "./.hermes/plugins/<name>/" not in en_builtin
+    assert "HERMES_ENABLE_PROJECT_PLUGINS=1" not in en_builtin
+    assert "hermes_agent.plugins" not in en_builtin
+    assert "~/.hermes/config.yaml" not in en_builtin
+    assert "`hermes-achievements`" not in en_builtin
+    assert "$HERMES_HOME/disk-cleanup/" not in en_builtin
+    assert "/tmp/hermes-*" not in en_builtin
+    assert "legacy Hermes-prefixed" not in en_builtin
+    assert "~/.hermes/cache/google_meet/" not in en_builtin
 
     assert "Extend Doppel Agent with custom tools" in en_integrations
     assert "creating Doppel plugins" in en_integrations
@@ -1588,9 +1606,27 @@ def test_built_in_and_integration_plugin_docs_prefer_doppel_surfaces():
     assert "doppel plugins enable disk-cleanup" in zh_builtin
     assert "doppel plugins disable observability/langfuse" in zh_builtin
     assert "doppel dashboard" in zh_builtin
+    assert "~/.doppel/plugins/<name>/" in zh_builtin
+    assert "./.doppel/plugins/<name>/" in zh_builtin
+    assert "DOPPEL_ENABLE_PROJECT_PLUGINS=1" in zh_builtin
+    assert "doppel_agent.plugins" in zh_builtin
+    assert "~/.doppel/config.yaml" in zh_builtin
+    assert "`doppel-achievements`" in zh_builtin
+    assert "$DOPPEL_HOME/disk-cleanup/" in zh_builtin
+    assert "~/.doppel/workspace/meetings/<meeting_id>/" in zh_builtin
     assert "构建 Hermes 插件" not in zh_builtin
     assert "hermes plugins enable google_meet" not in zh_builtin
     assert "hermes dashboard" not in zh_builtin
+    assert "~/.hermes/plugins/<name>/" not in zh_builtin
+    assert "./.hermes/plugins/<name>/" not in zh_builtin
+    assert "HERMES_ENABLE_PROJECT_PLUGINS=1" not in zh_builtin
+    assert "hermes_agent.plugins" not in zh_builtin
+    assert "~/.hermes/config.yaml" not in zh_builtin
+    assert "`hermes-achievements`" not in zh_builtin
+    assert "$HERMES_HOME/disk-cleanup/" not in zh_builtin
+    assert "/tmp/hermes-*" not in zh_builtin
+    assert "旧版 Hermes 前缀" not in zh_builtin
+    assert "~/.hermes/cache/google_meet/" not in zh_builtin
 
     assert "扩展 Doppel Agent" in zh_integrations
     assert "Doppel 插件的分步指南" in zh_integrations

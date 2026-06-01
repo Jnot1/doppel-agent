@@ -1319,7 +1319,7 @@ def _resolve_xai_oauth_for_aux() -> Optional[Tuple[str, str]]:
     Prefer the credential pool, matching the main runtime/provider status
     path.  Some xAI OAuth logins live only as pool entries; falling straight
     to the singleton auth-store resolver would make auxiliary tasks such as
-    compression report "no provider configured" even though ``hermes auth
+    compression report "no provider configured" even though ``doppel auth
     status`` shows xAI OAuth as logged in.
 
     Falls back to ``hermes_cli.auth``'s singleton runtime resolver for older
@@ -3042,8 +3042,8 @@ def _resolve_auto(main_runtime: Optional[Dict[str, Any]] = None) -> Tuple[Option
 
     # ── Warn once if OPENAI_BASE_URL is set but config.yaml uses a named
     #    provider (not 'custom').  This catches the common "env poisoning"
-    #    scenario where a user switches providers via `hermes model` but the
-    #    old OPENAI_BASE_URL lingers in ~/.hermes/.env. ──
+    #    scenario where a user switches providers via `doppel model` but the
+    #    old OPENAI_BASE_URL lingers in ~/.doppel/.env. ──
     if not _stale_base_url_warned:
         _env_base = os.getenv("OPENAI_BASE_URL", "").strip()
         _cfg_provider = runtime_provider or _read_main_provider()
@@ -3054,7 +3054,7 @@ def _resolve_auto(main_runtime: Optional[Dict[str, Any]] = None) -> Tuple[Option
                 "OPENAI_BASE_URL is set (%s) but model.provider is '%s'. "
                 "Auxiliary clients may route to the wrong endpoint. "
                 "Run: doppel model to reconfigure, or remove "
-                "OPENAI_BASE_URL from ~/.hermes/.env",
+                "OPENAI_BASE_URL from ~/.doppel/.env",
                 _env_base, _cfg_provider,
             )
             _stale_base_url_warned = True

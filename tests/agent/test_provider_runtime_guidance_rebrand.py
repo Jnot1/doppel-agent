@@ -34,6 +34,12 @@ def test_auxiliary_client_runtime_guidance_prefers_doppel():
     assert "(run: doppel auth add nous)." in text
     assert "but Nous Portal not configured (run: hermes auth)" not in text
     assert "but Nous Portal not configured (run: doppel auth)" in text
+    assert "even though ``hermes auth" not in text
+    assert "even though ``doppel auth" in text
+    assert "switches providers via `hermes model`" not in text
+    assert "switches providers via `doppel model`" in text
+    assert "OPENAI_BASE_URL from ~/.hermes/.env" not in text
+    assert "OPENAI_BASE_URL from ~/.doppel/.env" in text
 
 
 def test_agent_init_and_backend_helper_guidance_prefers_doppel():
@@ -162,6 +168,12 @@ def test_credential_sources_prompt_builder_and_mcp_transport_guidance_prefers_do
     assert "Run `doppel auth add qwen-oauth` to re-enable if needed." in credential_sources
     assert "Run `hermes auth add copilot` to re-enable if needed." not in credential_sources
     assert "Run `doppel auth add copilot` to re-enable if needed." in credential_sources
+    assert "(not in ~/.hermes/.env)." not in credential_sources
+    assert "(not in ~/.doppel/.env)." in credential_sources
+    assert "visible to Hermes." not in credential_sources
+    assert "visible to Doppel." in credential_sources
+    assert "Run `hermes model` → xAI Grok OAuth (SuperGrok / Premium+) to re-authenticate if needed." not in credential_sources
+    assert "Run `doppel model` → xAI Grok OAuth (SuperGrok / Premium+) to re-authenticate if needed." in credential_sources
 
     assert "If the user asks about configuring, setting up, or using Hermes Agent " not in prompt_builder
     assert "If the user asks about configuring, setting up, or using Doppel Agent " in prompt_builder

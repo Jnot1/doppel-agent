@@ -1,4 +1,4 @@
-"""``hermes portal`` — small CLI surface for Nous Portal users.
+"""``doppel portal`` — small CLI surface for Nous Portal users.
 
 Subcommands:
   status   Show Portal auth state + which Tool Gateway tools are routed.
@@ -6,7 +6,7 @@ Subcommands:
   tools    List Tool Gateway tools and which are active in the current config.
 
 This command is intentionally minimal — it does not duplicate functionality
-already in ``hermes auth`` or ``hermes tools``. It's a discovery + status
+already in ``doppel auth`` or ``doppel tools``. It's a discovery + status
 surface for the Portal subscription itself.
 """
 from __future__ import annotations
@@ -164,7 +164,7 @@ def _cmd_tools(args) -> int:
 
 
 def portal_command(args) -> int:
-    """Top-level dispatch for `hermes portal <subcommand>`."""
+    """Top-level dispatch for `doppel portal <subcommand>`."""
     sub = getattr(args, "portal_command", None)
     if sub in {None, ""}:
         # Default to status — matches gh / kubectl conventions where the
@@ -177,12 +177,12 @@ def portal_command(args) -> int:
     if sub == "tools":
         return _cmd_tools(args)
     print(f"Unknown portal subcommand: {sub}", file=sys.stderr)
-    print("Run `hermes portal -h` for usage.", file=sys.stderr)
+    print("Run `doppel portal -h` for usage.", file=sys.stderr)
     return 1
 
 
 def add_parser(subparsers) -> None:
-    """Register `hermes portal` on the given argparse subparsers object."""
+    """Register `doppel portal` on the given argparse subparsers object."""
     portal_parser = subparsers.add_parser(
         "portal",
         help="Nous Portal status, subscription, and Tool Gateway routing",

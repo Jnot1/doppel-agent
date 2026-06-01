@@ -223,16 +223,16 @@ The agent kicks off the meeting join, streams the transcription back into its co
 
 **Disabling:** `doppel plugins disable google_meet`. Any cached transcripts and recordings stay in `~/.hermes/cache/google_meet/` until you remove them.
 
-### hermes-achievements
+### doppel-achievements
 
 Adds a **Steam-style achievements tab to the dashboard** — 60+ collectible, tiered badges generated from your real Doppel session history. Tool-chain feats, debugging patterns, vibe-coding streaks, skill/memory usage, model/provider variety, lifestyle quirks (weekend and night sessions). Originally authored by [@PCinkusz](https://github.com/PCinkusz) as an external plugin; brought in-tree so it stays in lockstep with Doppel feature changes.
 
 **How it works:**
 
-- Scans your entire `~/.hermes/state.db` session history on the dashboard backend
+- Scans your entire `~/.doppel/state.db` session history on the dashboard backend
 - Per-session stats are cached by `(started_at, last_active)` fingerprint, so only new or changed sessions re-analyze on subsequent scans
 - First-ever scan runs in a background thread — the dashboard never blocks waiting for it, even on databases with thousands of sessions
-- Unlock state is persisted to `$HERMES_HOME/plugins/hermes-achievements/state.json`
+- Unlock state is persisted to `$DOPPEL_HOME/plugins/doppel-achievements/state.json`
 
 **Tier progression:** Copper → Silver → Gold → Diamond → Olympian. Each card exposes a "What counts" section listing the exact metric being tracked.
 
@@ -244,7 +244,7 @@ Adds a **Steam-style achievements tab to the dashboard** — 60+ collectible, ti
 | Discovered | Known achievement, progress visible, not yet earned |
 | Secret | Hidden until Doppel Agent detects the first related signal in your history |
 
-**API** — routes mount under `/api/plugins/hermes-achievements/`:
+**API** — routes mount under `/api/plugins/doppel-achievements/`:
 
 | Endpoint | Purpose |
 |---|---|
@@ -255,7 +255,7 @@ Adds a **Steam-style achievements tab to the dashboard** — 60+ collectible, ti
 | `POST /rescan` | Manual synchronous rescan (blocks; use when the user clicks the rescan button) |
 | `POST /reset-state` | Clear unlock history and cached snapshot |
 
-**State files** — live under `$HERMES_HOME/plugins/hermes-achievements/`:
+**State files** — live under `$DOPPEL_HOME/plugins/doppel-achievements/`:
 
 | File | Contents |
 |---|---|
@@ -270,9 +270,9 @@ Adds a **Steam-style achievements tab to the dashboard** — 60+ collectible, ti
 - Warm rescan reuses per-session stats for every session whose `started_at` + `last_active` fingerprint matches the checkpoint — completes in seconds even on large histories.
 - The in-memory snapshot TTL is 120s; stale requests serve the old snapshot immediately and kick a background refresh. You never wait on a spinner just because TTL expired.
 
-**Enabling:** Nothing to enable — `hermes-achievements` is a dashboard-only plugin (no lifecycle hooks, no model-visible tools). It auto-registers as a tab in `doppel dashboard` on first launch. The `plugins.enabled` config only gates lifecycle/tool plugins; dashboard plugins are discovered purely via their `dashboard/manifest.json`.
+**Enabling:** Nothing to enable — `doppel-achievements` is a dashboard-only plugin (no lifecycle hooks, no model-visible tools). It auto-registers as a tab in `doppel dashboard` on first launch. The `plugins.enabled` config only gates lifecycle/tool plugins; dashboard plugins are discovered purely via their `dashboard/manifest.json`.
 
-**Opting out:** Delete or rename `plugins/hermes-achievements/dashboard/manifest.json`, or override it with a user plugin of the same name in `~/.hermes/plugins/hermes-achievements/` that ships no dashboard. The plugin's state files under `$HERMES_HOME/plugins/hermes-achievements/` survive — reinstalling preserves your unlock history.
+**Opting out:** Delete or rename the bundled achievements dashboard manifest in your repo checkout, or override it with a user plugin of the same name in `~/.doppel/plugins/doppel-achievements/` that ships no dashboard. The plugin's state files under `$DOPPEL_HOME/plugins/doppel-achievements/` survive — reinstalling preserves your unlock history.
 
 ## Adding a bundled plugin
 

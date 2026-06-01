@@ -200,16 +200,16 @@ agent 会启动会议加入流程，在通话进行时将转录内容流式传�
 
 **禁用：** `doppel plugins disable google_meet`。已缓存的转录和录音保留在 `~/.hermes/cache/google_meet/`，直到你手动删除。
 
-### hermes-achievements
+### doppel-achievements
 
 在仪表盘中添加一个 **Steam 风格的成就标签页**——60 多个可收集的分级徽章，根据你真实的 Doppel 会话历史生成。工具链成就、调试模式、vibe-coding 连击、技能/内存使用、模型/提供者多样性、生活方式特征（周末和夜间会话）。最初由 [@PCinkusz](https://github.com/PCinkusz) 作为外部插件编写；已并入仓库，以便与 Doppel 功能变更保持同步。
 
 **工作原理：**
 
-- 在仪表盘后端扫描你的整个 `~/.hermes/state.db` 会话历史
+- 在仪表盘后端扫描你的整个 `~/.doppel/state.db` 会话历史
 - 每个会话的统计数据按 `(started_at, last_active)` 指纹缓存，因此后续扫描只重新分析新增或变更的会话
 - 首次扫描在后台线程中运行——即使数据库有数千个会话，仪表盘也不会阻塞等待
-- 解锁状态持久化到 `$HERMES_HOME/plugins/hermes-achievements/state.json`
+- 解锁状态持久化到 `$DOPPEL_HOME/plugins/doppel-achievements/state.json`
 
 **等级进阶：** 铜 → 银 → 金 → 钻石 → 奥林匹斯。每张卡片都有"计算方式"部分，列出所追踪的确切指标。
 
@@ -221,7 +221,7 @@ agent 会启动会议加入流程，在通话进行时将转录内容流式传�
 | 已发现 | 已知成就，进度可见，尚未获得 |
 | 隐藏 | 在 Doppel Agent 检测到你历史中的第一个相关信号之前保持隐藏 |
 
-**API** — 路由挂载在 `/api/plugins/hermes-achievements/` 下：
+**API** — 路由挂载在 `/api/plugins/doppel-achievements/` 下：
 
 | 端点 | 用途 |
 |---|---|
@@ -232,7 +232,7 @@ agent 会启动会议加入流程，在通话进行时将转录内容流式传�
 | `POST /rescan` | 手动同步重新扫描（阻塞；在用户点击重新扫描按钮时使用） |
 | `POST /reset-state` | 清除解锁历史和缓存快照 |
 
-**状态文件** — 位于 `$HERMES_HOME/plugins/hermes-achievements/`：
+**状态文件** — 位于 `$DOPPEL_HOME/plugins/doppel-achievements/`：
 
 | 文件 | 内容 |
 |---|---|
@@ -247,9 +247,9 @@ agent 会启动会议加入流程，在通话进行时将转录内容流式传�
 - 热重扫描对每个 `started_at` + `last_active` 指纹与检查点匹配的会话复用每会话统计——即使在大型历史记录上也能在几秒内完成。
 - 内存快照 TTL 为 120 秒；过期请求立即提供旧快照并触发后台刷新。不会因为 TTL 过期就让你等待加载动画。
 
-**启用：** 无需启用——`hermes-achievements` 是一个仅限仪表盘的插件（无生命周期 hook，无模型可见工具）。它在 `doppel dashboard` 首次启动时自动注册为标签页。`plugins.enabled` 配置仅控制生命周期/工具插件；仪表盘插件完全通过其 `dashboard/manifest.json` 发现。
+**启用：** 无需启用——`doppel-achievements` 是一个仅限仪表盘的插件（无生命周期 hook，无模型可见工具）。它在 `doppel dashboard` 首次启动时自动注册为标签页。`plugins.enabled` 配置仅控制生命周期/工具插件；仪表盘插件完全通过其 `dashboard/manifest.json` 发现。
 
-**退出：** 删除或重命名 `plugins/hermes-achievements/dashboard/manifest.json`，或在 `~/.hermes/plugins/hermes-achievements/` 中用同名用户插件覆盖它（该插件不包含仪表盘）。`$HERMES_HOME/plugins/hermes-achievements/` 下的插件状态文件会保留——重新安装后你的解锁历史依然存在。
+**退出：** 删除或重命名你仓库检出中的内置成就仪表盘 manifest，或在 `~/.doppel/plugins/doppel-achievements/` 中用同名用户插件覆盖它（该插件不包含仪表盘）。`$DOPPEL_HOME/plugins/doppel-achievements/` 下的插件状态文件会保留——重新安装后你的解锁历史依然存在。
 
 ## 添加内置插件
 

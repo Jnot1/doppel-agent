@@ -1,4 +1,4 @@
-"""Helpers for loading Hermes .env files consistently across entrypoints."""
+"""Helpers for loading Doppel .env files consistently across entrypoints."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ _WARNED_KEYS: set[str] = set()
 
 # Map of env-var name → source label ("bitwarden", etc.) for credentials
 # that were injected by an external secret source during load_hermes_dotenv().
-# Used by setup / `hermes model` flows to label detected credentials so
+# Used by setup / `doppel model` flows to label detected credentials so
 # users understand WHERE a key came from when their .env doesn't contain it
 # directly (otherwise the "credentials detected ✓" line looks identical to
 # the .env case and they don't know Bitwarden is wired up).
@@ -169,7 +169,7 @@ def _sanitize_env_file_if_needed(path: Path) -> None:
     copy-pasting API keys from terminals or rich-text editors.
 
     We delegate to ``hermes_cli.config._sanitize_env_lines`` which
-    already knows all valid Hermes env-var names and can split
+    already knows all valid Doppel env-var names and can split
     concatenated lines correctly.
     """
     if not path.exists():
@@ -214,10 +214,10 @@ def load_hermes_dotenv(
     hermes_home: str | os.PathLike | None = None,
     project_env: str | os.PathLike | None = None,
 ) -> list[Path]:
-    """Load Hermes environment files with user config taking precedence.
+    """Load Doppel environment files with user config taking precedence.
 
     Behavior:
-    - `~/.hermes/.env` overrides stale shell-exported values when present.
+    - `~/.doppel/.env` overrides stale shell-exported values when present.
     - project `.env` acts as a dev fallback and only fills missing values when
       the user env exists.
     - if no user env exists, the project `.env` also overrides stale shell vars.
@@ -251,7 +251,7 @@ def _apply_external_secret_sources(home_path: Path) -> None:
     """Pull secrets from external sources (currently Bitwarden) into env.
 
     Runs AFTER dotenv loads so .env values are visible (we use them to
-    locate the access token) but BEFORE the rest of Hermes reads
+    locate the access token) but BEFORE the rest of Doppel reads
     ``os.environ`` for credentials.  Any failure here is logged and
     swallowed — external secret sources must never block startup.
 
@@ -261,7 +261,7 @@ def _apply_external_secret_sources(home_path: Path) -> None:
     run_agent.py, trajectory_compressor.py, ...), so without this guard
     the Bitwarden status line would print 3-5x per CLI startup.  Use
     ``reset_secret_source_cache()`` if you need to force a re-pull
-    (tests, future ``hermes secrets bitwarden sync`` from a long-running
+    (tests, future ``doppel secrets bitwarden sync`` from a long-running
     process).
     """
     home_key = str(Path(home_path).resolve())
@@ -299,7 +299,7 @@ def _apply_external_secret_sources(home_path: Path) -> None:
         # and might have the same copy-paste corruption as a manually
         # edited .env (see #6843).
         _sanitize_loaded_credentials()
-        # Remember where these came from so the setup / `hermes model`
+        # Remember where these came from so the setup / `doppel model`
         # flows can label detected credentials with "(from Bitwarden)" —
         # otherwise users see "credentials ✓" with no hint that the value
         # came from BSM rather than .env.

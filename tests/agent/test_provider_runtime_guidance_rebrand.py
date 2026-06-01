@@ -11,6 +11,11 @@ def _read(rel_path: str) -> str:
 def test_auxiliary_client_runtime_guidance_prefers_doppel():
     text = _read("agent/auxiliary_client.py")
 
+    assert '"X-Title": "Hermes Agent"' not in text
+    assert '"X-Title": "Doppel Agent"' in text
+    assert '"User-Agent": "codex_cli_rs/0.0.0 (Hermes Agent)"' not in text
+    assert '"User-Agent": "codex_cli_rs/0.0.0 (Doppel Agent)"' in text
+
     assert "Run `hermes setup` or `hermes model` and enter a valid http(s) base URL." not in text
     assert "Run `doppel setup` or `doppel model` and enter a valid http(s) base URL." in text
     assert "Run: hermes model to reconfigure" not in text

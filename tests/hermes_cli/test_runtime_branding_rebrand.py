@@ -20,6 +20,18 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
     cron_jobs = Path(
         "/Users/macshelton/Documents/DoppelFork-repair2/cron/jobs.py"
     ).read_text(encoding="utf-8")
+    gateway_status = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/gateway/status.py"
+    ).read_text(encoding="utf-8")
+    cron_scheduler = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/cron/scheduler.py"
+    ).read_text(encoding="utf-8")
+    gateway_pairing = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/gateway/pairing.py"
+    ).read_text(encoding="utf-8")
+    channel_directory = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/gateway/channel_directory.py"
+    ).read_text(encoding="utf-8")
 
     skin_required = [
         "Skins are defined as YAML files in ~/.doppel/skins/ or as built-in presets.",
@@ -95,6 +107,36 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
         "Output is saved to ~/.hermes/cron/output/{job_id}/{timestamp}.md",
         "~/.hermes/scripts/; ``.sh`` / ``.bash`` files run via bash,",
     ]
+    gateway_status_required = [
+        "``~/.doppel`` but can be overridden via the environment variable.",
+        '"""Return True when the live PID still looks like the Doppel gateway."""',
+        "# ``doppel gateway stop`` on Windows would be misclassified as an",
+    ]
+    gateway_status_forbidden = [
+        "``~/.hermes`` but can be overridden via the environment variable.",
+        '"""Return True when the live PID still looks like the Hermes gateway."""',
+        "# ``hermes gateway stop`` on Windows would be misclassified as an",
+    ]
+    cron_scheduler_required = [
+        "Uses a file-based lock (~/.doppel/cron/.tick.lock) so only one tick",
+        "# Without this, standalone invocations (e.g. after `doppel update` reloads",
+    ]
+    cron_scheduler_forbidden = [
+        "Uses a file-based lock (~/.hermes/cron/.tick.lock) so only one tick",
+        "# Without this, standalone invocations (e.g. after `hermes update` reloads",
+    ]
+    gateway_pairing_required = [
+        "Storage: ~/.doppel/pairing/",
+    ]
+    gateway_pairing_forbidden = [
+        "Storage: ~/.hermes/pairing/",
+    ]
+    channel_directory_required = [
+        "~/.doppel/channel_directory.json.  The send_message tool reads this file for",
+    ]
+    channel_directory_forbidden = [
+        "~/.hermes/channel_directory.json.  The send_message tool reads this file for",
+    ]
 
     for text in skin_required:
         assert text in skin_engine, text
@@ -120,3 +162,19 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
         assert text in cron_jobs, text
     for text in cron_forbidden:
         assert text not in cron_jobs, text
+    for text in gateway_status_required:
+        assert text in gateway_status, text
+    for text in gateway_status_forbidden:
+        assert text not in gateway_status, text
+    for text in cron_scheduler_required:
+        assert text in cron_scheduler, text
+    for text in cron_scheduler_forbidden:
+        assert text not in cron_scheduler, text
+    for text in gateway_pairing_required:
+        assert text in gateway_pairing, text
+    for text in gateway_pairing_forbidden:
+        assert text not in gateway_pairing, text
+    for text in channel_directory_required:
+        assert text in channel_directory, text
+    for text in channel_directory_forbidden:
+        assert text not in channel_directory, text

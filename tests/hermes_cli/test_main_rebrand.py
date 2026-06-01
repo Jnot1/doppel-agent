@@ -73,3 +73,65 @@ def test_main_customer_facing_copy_prefers_doppel() -> None:
         assert text in main_py, text
     for text in forbidden:
         assert text not in main_py, text
+
+
+def test_main_update_and_dashboard_copy_prefers_doppel() -> None:
+    main_py = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/hermes_cli/main.py"
+    ).read_text(encoding="utf-8")
+
+    required = [
+        '"""Return PIDs of ``doppel dashboard`` processes other than ourselves.',
+        "``doppel dashboard`` is a long-lived server process commonly started and",
+        "forgotten.  When ``doppel update`` replaces files on disk, the running",
+        '"""Print a short heads-up about the skill curator after `doppel update`.',
+        "rename. ``doppel update`` is a high-attention surface — surface the",
+        "Subsequent ``doppel update`` invocations skip the block until a newer",
+        '"""Kill running ``doppel dashboard`` processes.',
+        "Called at the end of ``doppel update`` (default ``reason``) and also",
+        "from ``doppel dashboard --stop`` (which overrides ``reason``).  The",
+        '"""Update Doppel Agent by downloading a ZIP archive.',
+        "streamed output to ``~/.doppel/logs/update.log`` so nothing is lost.",
+        '"""Stream wrapper used during ``doppel update`` to survive terminal loss.',
+        "(``~/.doppel/logs/update.log``) that users can inspect after the",
+        "this makes ``doppel update`` safe to",
+        "Users commonly run ``doppel update`` in an SSH session or a terminal",
+        "``~/.doppel/logs/update.log`` and to silently absorb",
+        "In gateway mode (``doppel update --gateway``) the update is already",
+        '"""Implement ``doppel update --check``: fetch and report without installing.',
+        "same long-form ``docker pull`` guidance ``doppel update``",
+        '# Doppel Agent — ensure /usr/local/bin is on PATH ',
+        "The ``--backup`` flag on ``doppel update``",
+        "Render path using display_hermes_home so the user sees ~/.doppel/...",
+        '"""Update Doppel Agent to the latest version.',
+    ]
+    forbidden = [
+        '"""Return PIDs of ``hermes dashboard`` processes other than ourselves.',
+        "``hermes dashboard`` is a long-lived server process commonly started and",
+        "forgotten.  When ``hermes update`` replaces files on disk, the running",
+        '"""Print a short heads-up about the skill curator after `hermes update`.',
+        "rename. ``hermes update`` is a high-attention surface — surface the",
+        "Subsequent ``hermes update`` invocations skip the block until a newer",
+        '"""Kill running ``hermes dashboard`` processes.',
+        "Called at the end of ``hermes update`` (default ``reason``) and also",
+        "from ``hermes dashboard --stop`` (which overrides ``reason``).  The",
+        '"""Update Hermes Agent by downloading a ZIP archive.',
+        "streamed output to ``~/.hermes/logs/update.log`` so nothing is lost.",
+        '"""Stream wrapper used during ``hermes update`` to survive terminal loss.',
+        "(``~/.hermes/logs/update.log``) that users can inspect after the",
+        "this makes ``hermes update`` safe to",
+        "Users commonly run ``hermes update`` in an SSH session or a terminal",
+        "``~/.hermes/logs/update.log`` and to silently absorb",
+        "In gateway mode (``hermes update --gateway``) the update is already",
+        '"""Implement ``hermes update --check``: fetch and report without installing.',
+        "same long-form ``docker pull`` guidance ``hermes update``",
+        '# Hermes Agent — ensure /usr/local/bin is on PATH ',
+        "The ``--backup`` flag on ``hermes update``",
+        "Render path using display_hermes_home so the user sees ~/.hermes/...",
+        '"""Update Hermes Agent to the latest version.',
+    ]
+
+    for text in required:
+        assert text in main_py, text
+    for text in forbidden:
+        assert text not in main_py, text

@@ -47,6 +47,17 @@ def test_agent_init_and_backend_helper_guidance_prefers_doppel():
     assert "Nous Portal login and billing status." in backend_helpers
 
 
+def test_compression_and_acp_runtime_guidance_prefers_doppel():
+    conversation_compression = _read("agent/conversation_compression.py")
+    copilot_acp_client = _read("agent/copilot_acp_client.py")
+
+    assert "Run `hermes setup` or set OPENROUTER_API_KEY." not in conversation_compression
+    assert "Run `doppel setup` or set OPENROUTER_API_KEY." in conversation_compression
+
+    assert '"title": "Hermes Agent"' not in copilot_acp_client
+    assert '"title": "Doppel Agent"' in copilot_acp_client
+
+
 def test_xai_and_tts_runtime_guidance_prefers_doppel():
     x_search = _read("tools/x_search_tool.py")
     transcription = _read("tools/transcription_tools.py")

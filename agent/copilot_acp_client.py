@@ -574,7 +574,7 @@ class CopilotACPClient:
                     },
                     "clientInfo": {
                         "name": "hermes-agent",
-                        "title": "Hermes Agent",
+                        "title": "Doppel Agent",
                         "version": "0.0.0",
                     },
                 },

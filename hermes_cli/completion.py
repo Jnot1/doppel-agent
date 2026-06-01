@@ -72,7 +72,7 @@ def generate_bash(parser: argparse.ArgumentParser) -> str:
                 f"                    return\n"
                 f"                    ;;\n"
                 f"                {profile_actions.replace(' ', '|')})\n"
-                f"                    COMPREPLY=($(compgen -W \"$(_hermes_profiles)\" -- \"$cur\"))\n"
+                f"                    COMPREPLY=($(compgen -W \"$(_doppel_profiles)\" -- \"$cur\"))\n"
                 f"                    return\n"
                 f"                    ;;\n"
                 f"            esac\n"
@@ -101,7 +101,7 @@ def generate_bash(parser: argparse.ArgumentParser) -> str:
 # Add to ~/.bashrc:
 #   eval "$(doppel completion bash)"
 
-_hermes_profiles() {{
+_doppel_profiles() {{
     local profiles_dir=""
     local profiles="default"
     if [ -n "${{DOPPEL_HOME:-}}" ]; then
@@ -119,7 +119,7 @@ _hermes_profiles() {{
     echo "$profiles"
 }}
 
-_hermes_completion() {{
+_doppel_completion() {{
     local cur prev
     COMPREPLY=()
     cur="${{COMP_WORDS[COMP_CWORD]}}"
@@ -127,7 +127,7 @@ _hermes_completion() {{
 
     # Complete profile names after -p / --profile
     if [[ "$prev" == "-p" || "$prev" == "--profile" ]]; then
-        COMPREPLY=($(compgen -W "$(_hermes_profiles)" -- "$cur"))
+        COMPREPLY=($(compgen -W "$(_doppel_profiles)" -- "$cur"))
         return
     fi
 
@@ -142,8 +142,8 @@ _hermes_completion() {{
     fi
 }}
 
-complete -F _hermes_completion doppel
-complete -F _hermes_completion hermes
+complete -F _doppel_completion doppel
+complete -F _doppel_completion hermes
 """
 
 
@@ -177,7 +177,7 @@ def generate_zsh(parser: argparse.ArgumentParser) -> str:
                 f"                profile)\n"
                 f"                    case ${{line[2]}} in\n"
                 f"                        use|delete|show|alias|rename|export)\n"
-                f"                            _hermes_profiles\n"
+                f"                            _doppel_profiles\n"
                 f"                            ;;\n"
                 f"                        *)\n"
                 f"                            local -a profile_cmds\n"
@@ -212,7 +212,7 @@ def generate_zsh(parser: argparse.ArgumentParser) -> str:
 # Add to ~/.zshrc:
 #   eval "$(doppel completion zsh)"
 
-_hermes_profiles() {{
+_doppel_profiles() {{
     local -a profiles
     profiles=(default)
     local profiles_dir=""
@@ -231,14 +231,14 @@ _hermes_profiles() {{
     _describe 'profile' profiles
 }}
 
-_hermes() {{
+_doppel() {{
     local context state line
     typeset -A opt_args
 
     _arguments -C \\
         '(-)'{{-h,--help}}'[Show help and exit]' \\
         '(-)'{{-V,--version}}'[Show version and exit]' \\
-        '(-)'{{-p,--profile}}'[Profile name]:profile:_hermes_profiles' \\
+        '(-)'{{-p,--profile}}'[Profile name]:profile:_doppel_profiles' \\
         '1:command:->commands' \\
         '*::arg:->args'
 
@@ -258,7 +258,7 @@ _hermes() {{
     esac
 }}
 
-compdef _hermes doppel hermes
+compdef _doppel doppel hermes
 """
 
 
@@ -277,7 +277,7 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
         "#   doppel completion fish | source",
         "",
         "# Helper: list available profiles",
-        "function __hermes_profiles",
+        "function __doppel_profiles",
         "    echo default",
         "    set -l profiles_dir ''",
         "    if test -n \"$DOPPEL_HOME\"",
@@ -300,9 +300,9 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
         "",
         "# Complete profile names after -p / --profile",
         "complete -c doppel -f -s p -l profile"
-        " -d 'Profile name' -xa '(__hermes_profiles)'",
+        " -d 'Profile name' -xa '(__doppel_profiles)'",
         "complete -c hermes -f -s p -l profile"
-        " -d 'Profile name' -xa '(__hermes_profiles)'",
+        " -d 'Profile name' -xa '(__doppel_profiles)'",
         "",
         "# Top-level subcommands",
     ]
@@ -351,13 +351,13 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
                     f"complete -c doppel -f "
                     f"-n '__fish_seen_subcommand_from {action}; "
                     f"and __fish_seen_subcommand_from profile' "
-                    f"-a '(__hermes_profiles)' -d 'Profile name'"
+                    f"-a '(__doppel_profiles)' -d 'Profile name'"
                 )
                 lines.append(
                     f"complete -c hermes -f "
                     f"-n '__fish_seen_subcommand_from {action}; "
                     f"and __fish_seen_subcommand_from profile' "
-                    f"-a '(__hermes_profiles)' -d 'Profile name'"
+                    f"-a '(__doppel_profiles)' -d 'Profile name'"
                 )
 
     lines.append("")

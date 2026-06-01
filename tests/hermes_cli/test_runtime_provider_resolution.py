@@ -1911,7 +1911,8 @@ class TestAzureFoundryResolution:
 
         msg = str(exc_info.value)
         assert "doppel model" in msg
-        assert "~/.hermes/.env" in msg
+        assert "~/.doppel/.env" in msg
+        assert "~/.hermes/.env" not in msg
 
     # -- Model-family api_mode inference -------------------------------------
     # Azure rejects /chat/completions on GPT-5.x / codex / o-series with

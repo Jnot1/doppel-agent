@@ -98,6 +98,8 @@ class TestEnvLoaderSanitization:
         assert "GOOGLE_API_KEY" in captured.err
         assert "U+200B" in captured.err
         assert "re-copy" in captured.err.lower()
+        assert "`doppel setup`" in captured.err
+        assert "`hermes setup`" not in captured.err
 
     def test_warning_fires_only_once_per_key(self, monkeypatch, capsys):
         """Repeated loads (user env + project env) must not double-warn."""

@@ -2,7 +2,7 @@
 
 Runs as a standalone subprocess spawned by ``process_manager.py``. Reads config
 from env vars, writes status + transcript to files under
-``$HERMES_HOME/workspace/meetings/<meeting-id>/``. The main hermes process
+``$DOPPEL_HOME/workspace/meetings/<meeting-id>/``. The main Doppel process
 reads those files via the ``meet_*`` tools — no IPC beyond filesystem.
 
 The scraping strategy mirrors OpenUtter (sumansid/openutter): we don't parse
@@ -17,9 +17,9 @@ English-biased but it is:
 
 Run standalone for debugging::
 
-    HERMES_MEET_URL=https://meet.google.com/abc-defg-hij \\
-    HERMES_MEET_OUT_DIR=/tmp/meet-debug \\
-    HERMES_MEET_HEADED=1 \\
+    DOPPEL_MEET_URL=https://meet.google.com/abc-defg-hij \\
+    DOPPEL_MEET_OUT_DIR=/tmp/meet-debug \\
+    DOPPEL_MEET_HEADED=1 \\
     python -m plugins.google_meet.meet_bot
 
 No meet.google.com URL → exits non-zero. Any URL that doesn't start with
@@ -49,9 +49,42 @@ MEET_URL_RE = re.compile(
 )
 
 
-# Filenames the bot reads/writes in ``HERMES_MEET_OUT_DIR``.
+# Filenames the bot reads/writes in ``DOPPEL_MEET_OUT_DIR``.
 SAY_QUEUE_FILENAME = "say_queue.jsonl"
 SAY_PCM_FILENAME = "speaker.pcm"
+
+
+def _get_env_with_legacy(primary: str, legacy: str, default: str = "") -> str:
+    """Read a preferred Doppel env var while preserving a Hermes fallback."""
+    if primary in os.environ:
+        return os.environ[primary]
+    if legacy in os.environ:
+        return os.environ[legacy]
+    return default
+
+
+def _get_meet_env(name: str, default: str = "") -> str:
+    return _get_env_with_legacy(f"DOPPEL_MEET_{name}", f"HERMES_MEET_{name}", default)
+
+
+def _read_runtime_config() -> dict[str, str | bool | None]:
+    """Load meet bot runtime config with Doppel-first env aliases."""
+    return {
+        "url": _get_meet_env("URL").strip(),
+        "out_dir": _get_meet_env("OUT_DIR").strip(),
+        "headed": _get_meet_env("HEADED").lower() in {"1", "true", "yes"},
+        "auth_state": _get_meet_env("AUTH_STATE").strip(),
+        "guest_name": _get_meet_env("GUEST_NAME", "Doppel Agent"),
+        "duration_raw": _get_meet_env("DURATION"),
+        "mode": _get_meet_env("MODE", "transcribe").strip().lower(),
+        "realtime_model": _get_meet_env("REALTIME_MODEL", "gpt-realtime"),
+        "realtime_voice": _get_meet_env("REALTIME_VOICE", "alloy"),
+        "realtime_instructions": _get_meet_env("REALTIME_INSTRUCTIONS", ""),
+        "realtime_api_key": (
+            _get_meet_env("REALTIME_KEY") or os.environ.get("OPENAI_API_KEY", "")
+        ),
+        "lobby_timeout": _get_meet_env("LOBBY_TIMEOUT", "300"),
+    }
 
 
 def _is_safe_meet_url(url: str) -> bool:
@@ -179,13 +212,13 @@ class _BotState:
 
 # JavaScript injected into the Meet tab to observe captions. Captures
 # {speaker, text} tuples via a MutationObserver on the caption container,
-# and exposes ``window.__hermesMeetDrain()`` to pull new entries. This
+# and exposes ``window.__doppelMeetDrain()`` to pull new entries. This
 # mirrors the OpenUtter caption scraping approach.
 _CAPTION_OBSERVER_JS = r"""
 (() => {
-  if (window.__hermesMeetInstalled) return;
-  window.__hermesMeetInstalled = true;
-  window.__hermesMeetQueue = [];
+  if (window.__doppelMeetInstalled) return;
+  window.__doppelMeetInstalled = true;
+  window.__doppelMeetQueue = [];
 
   const captionSelector = '[role="region"][aria-label*="aption" i], ' +
                           'div[jsname="YSxPC"], ' +  // legacy
@@ -193,7 +226,7 @@ _CAPTION_OBSERVER_JS = r"""
 
   function pushEntry(speaker, text) {
     if (!text || !text.trim()) return;
-    window.__hermesMeetQueue.push({
+    window.__doppelMeetQueue.push({
       ts: Date.now(),
       speaker: (speaker || '').trim(),
       text: text.trim(),
@@ -235,9 +268,9 @@ _CAPTION_OBSERVER_JS = r"""
     const iv = setInterval(() => { if (attach()) clearInterval(iv); }, 1500);
   }
 
-  window.__hermesMeetDrain = () => {
-    const out = window.__hermesMeetQueue.slice();
-    window.__hermesMeetQueue = [];
+  window.__doppelMeetDrain = () => {
+    const out = window.__doppelMeetQueue.slice();
+    window.__doppelMeetQueue = [];
     return out;
   };
 })();
@@ -346,7 +379,7 @@ def _start_realtime_speaker(
     if platform_tag == "linux":
         import subprocess as _sp
 
-        sink = (bridge_info or {}).get("write_target") or "hermes_meet_sink"
+        sink = (bridge_info or {}).get("write_target") or "doppel_meet_sink"
         try:
             proc = _sp.Popen(
                 [
@@ -445,27 +478,29 @@ def _mac_audio_device_index(device_name: str) -> str:
 
 
 def run_bot() -> int:  # noqa: C901 — orchestration, explicit branches
-    url = os.environ.get("HERMES_MEET_URL", "").strip()
-    out_dir_env = os.environ.get("HERMES_MEET_OUT_DIR", "").strip()
-    headed = os.environ.get("HERMES_MEET_HEADED", "").lower() in {"1", "true", "yes"}
-    auth_state = os.environ.get("HERMES_MEET_AUTH_STATE", "").strip()
-    guest_name = os.environ.get("HERMES_MEET_GUEST_NAME", "Hermes Agent")
-    duration_s = _parse_duration(os.environ.get("HERMES_MEET_DURATION", ""))
-    # v2: optional realtime mode. Enabled when HERMES_MEET_MODE=realtime.
-    mode = os.environ.get("HERMES_MEET_MODE", "transcribe").strip().lower()
-    realtime_model = os.environ.get("HERMES_MEET_REALTIME_MODEL", "gpt-realtime")
-    realtime_voice = os.environ.get("HERMES_MEET_REALTIME_VOICE", "alloy")
-    realtime_instructions = os.environ.get("HERMES_MEET_REALTIME_INSTRUCTIONS", "")
-    realtime_api_key = os.environ.get("HERMES_MEET_REALTIME_KEY") or os.environ.get("OPENAI_API_KEY", "")
+    config = _read_runtime_config()
+    url = str(config["url"])
+    out_dir_env = str(config["out_dir"])
+    headed = bool(config["headed"])
+    auth_state = str(config["auth_state"])
+    guest_name = str(config["guest_name"])
+    duration_s = _parse_duration(str(config["duration_raw"]))
+    # v2: optional realtime mode. Enabled when DOPPEL_MEET_MODE=realtime.
+    mode = str(config["mode"])
+    realtime_model = str(config["realtime_model"])
+    realtime_voice = str(config["realtime_voice"])
+    realtime_instructions = str(config["realtime_instructions"])
+    realtime_api_key = str(config["realtime_api_key"])
+    lobby_timeout_s = str(config["lobby_timeout"])
 
     if not url or not _is_safe_meet_url(url):
         sys.stderr.write(
-            "google_meet bot: refusing to launch — HERMES_MEET_URL must be a "
+            "google_meet bot: refusing to launch — DOPPEL_MEET_URL must be a "
             "meet.google.com URL. got: %r\n" % url
         )
         return 2
     if not out_dir_env:
-        sys.stderr.write("google_meet bot: HERMES_MEET_OUT_DIR is required\n")
+        sys.stderr.write("google_meet bot: DOPPEL_MEET_OUT_DIR is required\n")
         return 2
 
     out_dir = Path(out_dir_env)
@@ -497,7 +532,7 @@ def run_bot() -> int:  # noqa: C901 — orchestration, explicit branches
     }
     if rt["enabled"]:
         if not realtime_api_key:
-            state.set(error="realtime mode requested but no API key in HERMES_MEET_REALTIME_KEY/OPENAI_API_KEY — falling back to transcribe")
+            state.set(error="realtime mode requested but no API key in DOPPEL_MEET_REALTIME_KEY/OPENAI_API_KEY — falling back to transcribe")
             rt["enabled"] = False
         else:
             try:
@@ -615,9 +650,7 @@ def run_bot() -> int:  # noqa: C901 — orchestration, explicit branches
             #     the bot is generating audio
             #   * periodically flushing realtime counters into status.json
             deadline = (time.time() + duration_s) if duration_s else None
-            lobby_deadline = time.time() + float(
-                os.environ.get("HERMES_MEET_LOBBY_TIMEOUT", "300")
-            )
+            lobby_deadline = time.time() + float(lobby_timeout_s)
             last_admission_check = 0.0
             while not stop_flag["stop"]:
                 now = time.time()
@@ -652,7 +685,7 @@ def run_bot() -> int:  # noqa: C901 — orchestration, explicit branches
                         break
 
                 try:
-                    queued = page.evaluate("window.__hermesMeetDrain && window.__hermesMeetDrain()")
+                    queued = page.evaluate("window.__doppelMeetDrain && window.__doppelMeetDrain()")
                     if isinstance(queued, list):
                         for entry in queued:
                             if not isinstance(entry, dict):
@@ -756,7 +789,7 @@ def _detect_admission(page) -> bool:
     (() => {
       const leave = document.querySelector('button[aria-label*="eave call" i]');
       if (leave) return true;
-      if (window.__hermesMeetInstalled) {
+      if (window.__doppelMeetInstalled) {
         const caps = document.querySelector(
           '[role="region"][aria-label*="aption" i], ' +
           'div[jsname="YSxPC"], div[jsname="tgaKEf"]'

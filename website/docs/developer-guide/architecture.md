@@ -229,7 +229,7 @@ Long-running process with 20 platform adapters, unified session routing, user au
 
 ### Plugin System
 
-Three discovery sources: `~/.hermes/plugins/` (user), `.hermes/plugins/` (project), and pip entry points. Plugins register tools, hooks, and CLI commands through a context API. Two specialized plugin types exist: memory providers (`plugins/memory/`) and context engines (`plugins/context_engine/`). Both are single-select — only one of each can be active at a time, configured via `doppel plugins` or `config.yaml`.
+Three discovery sources: `~/.doppel/plugins/` (user), `.doppel/plugins/` (project), and pip entry points. Plugins register tools, hooks, and CLI commands through a context API. Two specialized plugin types exist: memory providers (`plugins/memory/`) and context engines (`plugins/context_engine/`). Both are single-select — only one of each can be active at a time, configured via `doppel plugins` or `config.yaml`.
 
 → [Build a Doppel Plugin](/guides/build-a-doppel-plugin), [Memory Provider Plugin](./memory-provider-plugin.md)
 

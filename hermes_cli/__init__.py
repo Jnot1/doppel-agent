@@ -1,14 +1,14 @@
 """
-Hermes CLI - Unified command-line interface for Hermes Agent.
+Doppel CLI - Unified command-line interface for Doppel Agent.
 
 Provides subcommands for:
-- hermes chat          - Interactive chat (same as ./hermes)
-- hermes gateway       - Run gateway in foreground
-- hermes gateway start - Start gateway service
-- hermes gateway stop  - Stop gateway service
-- hermes setup         - Interactive setup wizard
-- hermes status        - Show status of all components
-- hermes cron          - Manage cron jobs
+- doppel chat          - Interactive chat (same as ./doppel)
+- doppel gateway       - Run gateway in foreground
+- doppel gateway start - Start gateway service
+- doppel gateway stop  - Stop gateway service
+- doppel setup         - Interactive setup wizard
+- doppel status        - Show status of all components
+- doppel cron          - Manage cron jobs
 """
 
 import os

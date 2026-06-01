@@ -8,7 +8,7 @@ Modular wizard with independently-runnable sections:
   4. Messaging Platforms — connect Telegram, Discord, etc.
   5. Tools — configure TTS, web search, image generation, etc.
 
-Config files are stored in ~/.hermes/ for easy access.
+Config files are stored in ~/.doppel/ for easy access.
 """
 
 import importlib.util
@@ -144,7 +144,7 @@ from hermes_cli.config import (
     get_env_value,
     ensure_hermes_home,
 )
-# display_hermes_home imported lazily at call sites (stale-module safety during hermes update)
+# display_hermes_home imported lazily at call sites (stale-module safety during doppel update)
 
 from hermes_cli.colors import Colors, color
 
@@ -453,7 +453,7 @@ def _print_setup_summary(config: dict, hermes_home):
         else:
             tool_status.append(("Image Generation", False, "FAL_KEY or OPENAI_API_KEY"))
 
-    # Video generation — opt-in via `hermes tools` → Video Generation.
+    # Video generation — opt-in via `doppel tools` → Video Generation.
     # Only show the row when a plugin reports available so we don't badger
     # users who don't care about video gen with a "missing" status line.
     if subscription_features.video_gen.managed_by_nous:
@@ -528,7 +528,7 @@ def _print_setup_summary(config: dict, hermes_home):
     if get_env_value("HASS_TOKEN"):
         tool_status.append(("Smart Home (Home Assistant)", True, None))
 
-    # Spotify (OAuth via hermes auth spotify — check auth.json, not env vars)
+    # Spotify (OAuth via doppel auth spotify — check auth.json, not env vars)
     try:
         from hermes_cli.auth import get_provider_auth_state
         _spotify_state = get_provider_auth_state("spotify") or {}
@@ -683,7 +683,7 @@ def _prompt_container_resources(config: dict):
 
 
 # Tool categories and provider config are now in tools_config.py (shared
-# between `hermes tools` and `hermes setup tools`).
+# between `doppel tools` and `doppel setup tools`).
 
 
 # =============================================================================
@@ -695,10 +695,10 @@ def _prompt_container_resources(config: dict):
 def setup_model_provider(config: dict, *, quick: bool = False):
     """Configure the inference provider and default model.
 
-    Delegates to ``cmd_model()`` (the same flow used by ``hermes model``)
+    Delegates to ``cmd_model()`` (the same flow used by ``doppel model``)
     for provider selection, credential prompting, and model picking.
     This ensures a single code path for all provider setup — any new
-    provider added to ``hermes model`` is automatically available here.
+    provider added to ``doppel model`` is automatically available here.
 
     When *quick* is True, skips credential rotation, vision, and TTS
     configuration — used by the streamlined first-time quick setup.
@@ -710,7 +710,7 @@ def setup_model_provider(config: dict, *, quick: bool = False):
     print_info(f"   Guide: {get_docs_page_url('integrations_providers')}")
     print()
 
-    # Delegate to the shared hermes model flow — handles provider picker,
+    # Delegate to the shared doppel model flow — handles provider picker,
     # credential prompting, model selection, and config persistence.
     from hermes_cli.main import select_provider_and_model
     try:
@@ -998,7 +998,7 @@ def _xai_oauth_logged_in_for_setup() -> bool:
     """True iff xAI Grok OAuth credentials are already stored locally.
 
     Lets TTS / STT setup skip the API-key prompt for users who logged in
-    through ``hermes model`` -> xAI Grok OAuth (SuperGrok / Premium+).
+    through ``doppel model`` -> xAI Grok OAuth (SuperGrok / Premium+).
     """
     try:
         from hermes_cli.auth import get_xai_oauth_auth_status
@@ -1103,7 +1103,7 @@ def _setup_tts_provider(config: dict):
         print_info("OpenAI TTS will use the managed Nous gateway and bill to your subscription.")
         if get_env_value("VOICE_TOOLS_OPENAI_KEY") or get_env_value("OPENAI_API_KEY"):
             print_warning(
-                "Direct OpenAI credentials are still configured and may take precedence until removed from ~/.hermes/.env."
+                "Direct OpenAI credentials are still configured and may take precedence until removed from ~/.doppel/.env."
             )
 
     if selected == "neutts":
@@ -1155,7 +1155,7 @@ def _setup_tts_provider(config: dict):
 
     elif selected == "xai":
         # Resolution order: existing OAuth tokens (free for SuperGrok subscribers
-        # via the Hermes auth store) > existing XAI_API_KEY > prompt the user.
+        # via the Doppel auth store) > existing XAI_API_KEY > prompt the user.
         # When neither is configured, offer both options instead of forcing the
         # API-key path — xAI TTS works fine with OAuth bearer tokens too.
         oauth_logged_in = _xai_oauth_logged_in_for_setup()
@@ -2490,7 +2490,7 @@ def setup_gateway(config: dict):
 def setup_tools(config: dict, first_install: bool = False):
     """Configure tools — delegates to the unified tools_command() in tools_config.py.
 
-    Both `hermes setup tools` and `hermes tools` use the same flow:
+    Both `doppel setup tools` and `doppel tools` use the same flow:
     platform selection → toolset toggles → provider/API key configuration.
 
     Args:
@@ -2920,7 +2920,7 @@ def _run_portal_one_shot(config: dict) -> None:
     Wired into ``doppel setup --portal``. Does NOT prompt for anything
     besides what the underlying OAuth + Tool Gateway prompts already need.
     Designed to be shareable as a single command (``doppel setup --portal``)
-    that gets a brand-new user from zero to a fully working Hermes session
+    that gets a brand-new user from zero to a fully working Doppel session
     with web/image/tts/browser tools all routed via their Portal sub.
     """
     from types import SimpleNamespace
@@ -2964,7 +2964,7 @@ def _run_portal_one_shot(config: dict) -> None:
         print_success("  Already logged into Nous Portal.")
     else:
         # Hand off to the shared auth wiring so the device-code flow is
-        # identical to `hermes auth add nous --type oauth`. SimpleNamespace
+        # identical to `doppel auth add nous --type oauth`. SimpleNamespace
         # mirrors the argparse Namespace contract that auth_add_command expects.
         ns = SimpleNamespace(
             provider="nous",
@@ -3000,7 +3000,7 @@ def _run_portal_one_shot(config: dict) -> None:
     # Set provider → nous so the model picker, status surfaces, and
     # managed-tool gating all light up. Leave model.model empty so the
     # runtime picks Nous's default model; the user can change it later
-    # with `hermes model`.
+    # with `doppel model`.
     model_cfg = config.get("model")
     if not isinstance(model_cfg, dict):
         model_cfg = {}
@@ -3011,7 +3011,7 @@ def _run_portal_one_shot(config: dict) -> None:
     print_success("  Nous set as your inference provider.")
 
     # Offer the Tool Gateway opt-in (single Y/n) — same flow that fires
-    # from `hermes model` after picking Nous.
+    # from `doppel model` after picking Nous.
     print()
     try:
         prompt_enable_tool_gateway(config)
@@ -3255,7 +3255,7 @@ def _run_first_time_quick_setup(config: dict, hermes_home, is_existing: bool):
     """Streamlined first-time setup: provider, model, terminal & messaging.
 
     Applies sensible defaults for TTS (Edge), agent settings, and tools —
-    the user can customize later via ``hermes setup <section>``.
+    the user can customize later via ``doppel setup <section>``.
     """
     # Step 1: Model & Provider (essential — skips rotation/vision/TTS)
     setup_model_provider(config, quick=True)

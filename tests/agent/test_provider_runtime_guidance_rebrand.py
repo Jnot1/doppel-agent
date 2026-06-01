@@ -66,6 +66,20 @@ def test_conversation_loop_and_gemini_runtime_guidance_prefers_doppel():
     conversation_loop = _read("agent/conversation_loop.py")
     gemini_native = _read("agent/gemini_native_adapter.py")
 
+    assert "Ollama runtime context too small for Hermes tool use" not in conversation_loop
+    assert "Ollama runtime context too small for Doppel tool use" in conversation_loop
+    assert "context, but Hermes needs at least" not in conversation_loop
+    assert "context, but Doppel needs at least" in conversation_loop
+    assert "tokens. In Hermes config, set `model.ollama_num_ctx: 65536`" not in conversation_loop
+    assert "tokens. In Doppel config, set `model.ollama_num_ctx: 65536`" in conversation_loop
+    assert "❌ Ollama runtime context is too small for Hermes tool use" not in conversation_loop
+    assert "❌ Ollama runtime context is too small for Doppel tool use" in conversation_loop
+    assert "request at ~8K tokens. Hermes' system prompt + tool schemas baseline" not in conversation_loop
+    assert "request at ~8K tokens. Doppel's system prompt + tool schemas baseline" in conversation_loop
+    assert "Use the `copilot` provider with a Copilot subscription token (`hermes" not in conversation_loop
+    assert "Use the `copilot` provider with a Copilot subscription token (`doppel" in conversation_loop
+    assert "      setup` → GitHub Copilot), or pick any other provider." in conversation_loop
+
     assert "Re-authenticate: hermes auth add nous" not in conversation_loop
     assert "Re-authenticate: doppel auth add nous" in conversation_loop
     assert "Run `hermes doctor` for credential-chain diagnostics" not in conversation_loop

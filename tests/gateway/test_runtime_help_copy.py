@@ -45,3 +45,17 @@ def test_platform_runtime_matrix_and_telegram_copy_is_doppel_first():
 
     assert 'app = FastAPI(title="Doppel Agent", version=__version__)' in web_server
     assert 'app = FastAPI(title="Hermes Agent", version=__version__)' not in web_server
+
+
+def test_platform_runtime_whatsapp_copy_is_doppel_first():
+    whatsapp = Path("gateway/platforms/whatsapp.py").read_text(encoding="utf-8")
+
+    assert "install Node.js and re-run `doppel gateway`." in whatsapp
+    assert "Run `doppel whatsapp` to pair, or remove WHATSAPP_ENABLED from " in whatsapp
+    assert "WhatsApp enabled but not paired — run `doppel whatsapp` to pair." in whatsapp
+    assert "If session expired, re-pair: doppel whatsapp" in whatsapp
+
+    assert "install Node.js and re-run `hermes gateway`." not in whatsapp
+    assert "Run `hermes whatsapp` to pair, or remove WHATSAPP_ENABLED from " not in whatsapp
+    assert "WhatsApp enabled but not paired — run `hermes whatsapp` to pair." not in whatsapp
+    assert "If session expired, re-pair: hermes whatsapp" not in whatsapp

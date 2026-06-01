@@ -151,22 +151,22 @@ pip install langfuse
 doppel plugins enable observability/langfuse
 ```
 
-Or check the box in the interactive `doppel plugins` UI. Then put the credentials in `~/.hermes/.env`:
+Or check the box in the interactive `doppel plugins` UI. Then put the credentials in `~/.doppel/.env`:
 
 ```bash
-HERMES_LANGFUSE_PUBLIC_KEY=pk-lf-...
-HERMES_LANGFUSE_SECRET_KEY=sk-lf-...
-HERMES_LANGFUSE_BASE_URL=https://cloud.langfuse.com   # or your self-hosted URL
+DOPPEL_LANGFUSE_PUBLIC_KEY=pk-lf-...
+DOPPEL_LANGFUSE_SECRET_KEY=sk-lf-...
+DOPPEL_LANGFUSE_BASE_URL=https://cloud.langfuse.com   # or your self-hosted URL
 ```
 
 **How it works:**
 
 | Hook | Behaviour |
 |---|---|
-| `pre_api_request` / `pre_llm_call` | Open (or reuse) a per-turn root span "Hermes turn". Start a `generation` child observation for this API call with serialized recent messages as input. |
+| `pre_api_request` / `pre_llm_call` | Open (or reuse) a per-turn root span "Doppel turn". Start a `generation` child observation for this API call with serialized recent messages as input. |
 | `post_api_request` / `post_llm_call` | Close the generation, attach `usage_details`, `cost_details`, `finish_reason`, assistant output + tool calls. If no tool calls and non-empty content, close the turn. |
 | `pre_tool_call` | Start a `tool` child observation with sanitized `args`. |
-| `post_tool_call` | Close the tool observation with sanitized `result`. `read_file` payloads get summarized (head + tail + omitted-line count) so a huge file read stays under `HERMES_LANGFUSE_MAX_CHARS`. |
+| `post_tool_call` | Close the tool observation with sanitized `result`. `read_file` payloads get summarized (head + tail + omitted-line count) so a huge file read stays under `DOPPEL_LANGFUSE_MAX_CHARS`. |
 
 Session grouping keys off the Doppel session ID (or task ID for sub-agents) via `langfuse.propagate_attributes`, so everything in a single `doppel chat` session lives under one Langfuse session.
 
@@ -174,20 +174,20 @@ Session grouping keys off the Doppel session ID (or task ID for sub-agents) via 
 
 ```bash
 doppel plugins list                # observability/langfuse should show "enabled"
-doppel chat -q "hello"             # check the Langfuse UI for a "Hermes turn" trace
+doppel chat -q "hello"             # check the Langfuse UI for a "Doppel turn" trace
 ```
 
 **Optional tuning** (in `.env`):
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `HERMES_LANGFUSE_ENV` | — | Environment tag on traces (`production`, `staging`, …) |
-| `HERMES_LANGFUSE_RELEASE` | — | Release/version tag |
-| `HERMES_LANGFUSE_SAMPLE_RATE` | `1.0` | Sampling rate passed to the SDK (0.0–1.0) |
-| `HERMES_LANGFUSE_MAX_CHARS` | `12000` | Per-field truncation for message content / tool args / tool results |
-| `HERMES_LANGFUSE_DEBUG` | `false` | Verbose plugin logging to `agent.log` |
+| `DOPPEL_LANGFUSE_ENV` | — | Environment tag on traces (`production`, `staging`, …) |
+| `DOPPEL_LANGFUSE_RELEASE` | — | Release/version tag |
+| `DOPPEL_LANGFUSE_SAMPLE_RATE` | `1.0` | Sampling rate passed to the SDK (0.0–1.0) |
+| `DOPPEL_LANGFUSE_MAX_CHARS` | `12000` | Per-field truncation for message content / tool args / tool results |
+| `DOPPEL_LANGFUSE_DEBUG` | `false` | Verbose plugin logging to `agent.log` |
 
-Hermes-prefixed and standard SDK env vars (`LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`) are both accepted — Hermes-prefixed wins when both are set.
+Doppel-prefixed, legacy Hermes-prefixed, and standard SDK env vars (`LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`) are all accepted — Doppel-prefixed wins when more than one value is set.
 
 **Performance:** the Langfuse client is cached after the first hook call. If credentials or SDK are missing, that decision is also cached — subsequent hooks fast-return without re-checking env vars or reloading config.
 

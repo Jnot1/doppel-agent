@@ -128,22 +128,22 @@ pip install langfuse
 doppel plugins enable observability/langfuse
 ```
 
-或在交互式 `doppel plugins` UI 中勾选复选框。然后将凭据写入 `~/.hermes/.env`：
+或在交互式 `doppel plugins` UI 中勾选复选框。然后将凭据写入 `~/.doppel/.env`：
 
 ```bash
-HERMES_LANGFUSE_PUBLIC_KEY=pk-lf-...
-HERMES_LANGFUSE_SECRET_KEY=sk-lf-...
-HERMES_LANGFUSE_BASE_URL=https://cloud.langfuse.com   # 或你的自托管 URL
+DOPPEL_LANGFUSE_PUBLIC_KEY=pk-lf-...
+DOPPEL_LANGFUSE_SECRET_KEY=sk-lf-...
+DOPPEL_LANGFUSE_BASE_URL=https://cloud.langfuse.com   # 或你的自托管 URL
 ```
 
 **工作原理：**
 
 | Hook | 行为 |
 |---|---|
-| `pre_api_request` / `pre_llm_call` | 打开（或复用）每轮的根 span "Hermes turn"。为本次 API 调用启动一个 `generation` 子 observation，将最近的消息序列化为输入。 |
+| `pre_api_request` / `pre_llm_call` | 打开（或复用）每轮的根 span "Doppel turn"。为本次 API 调用启动一个 `generation` 子 observation，将最近的消息序列化为输入。 |
 | `post_api_request` / `post_llm_call` | 关闭 generation，附加 `usage_details`、`cost_details`、`finish_reason`、助手输出和工具调用。如果没有工具调用且内容非空，则关闭本轮。 |
 | `pre_tool_call` | 启动一个带有经过清理的 `args` 的 `tool` 子 observation。 |
-| `post_tool_call` | 关闭 tool observation，附加经过清理的 `result`。`read_file` 的内容会被摘要化（头部 + 尾部 + 省略行数），以使大文件读取保持在 `HERMES_LANGFUSE_MAX_CHARS` 以内。 |
+| `post_tool_call` | 关闭 tool observation，附加经过清理的 `result`。`read_file` 的内容会被摘要化（头部 + 尾部 + 省略行数），以使大文件读取保持在 `DOPPEL_LANGFUSE_MAX_CHARS` 以内。 |
 
 会话分组基于 Doppel 会话 ID（或子 agent 的任务 ID），通过 `langfuse.propagate_attributes` 实现，因此单次 `doppel chat` 会话中的所有内容都归属于同一个 Langfuse session。
 
@@ -151,20 +151,20 @@ HERMES_LANGFUSE_BASE_URL=https://cloud.langfuse.com   # 或你的自托管 URL
 
 ```bash
 doppel plugins list                # observability/langfuse 应显示 "enabled"
-doppel chat -q "hello"             # 在 Langfuse UI 中检查是否有 "Hermes turn" trace
+doppel chat -q "hello"             # 在 Langfuse UI 中检查是否有 "Doppel turn" trace
 ```
 
 **可选调优**（在 `.env` 中）：
 
 | 变量 | 默认值 | 用途 |
 |---|---|---|
-| `HERMES_LANGFUSE_ENV` | — | trace 上的环境标签（`production`、`staging` 等） |
-| `HERMES_LANGFUSE_RELEASE` | — | 发布/版本标签 |
-| `HERMES_LANGFUSE_SAMPLE_RATE` | `1.0` | 传递给 SDK 的采样率（0.0–1.0） |
-| `HERMES_LANGFUSE_MAX_CHARS` | `12000` | 消息内容 / 工具参数 / 工具结果的单字段截断长度 |
-| `HERMES_LANGFUSE_DEBUG` | `false` | 向 `agent.log` 输出详细插件日志 |
+| `DOPPEL_LANGFUSE_ENV` | — | trace 上的环境标签（`production`、`staging` 等） |
+| `DOPPEL_LANGFUSE_RELEASE` | — | 发布/版本标签 |
+| `DOPPEL_LANGFUSE_SAMPLE_RATE` | `1.0` | 传递给 SDK 的采样率（0.0–1.0） |
+| `DOPPEL_LANGFUSE_MAX_CHARS` | `12000` | 消息内容 / 工具参数 / 工具结果的单字段截断长度 |
+| `DOPPEL_LANGFUSE_DEBUG` | `false` | 向 `agent.log` 输出详细插件日志 |
 
-Hermes 前缀的环境变量和标准 SDK 环境变量（`LANGFUSE_PUBLIC_KEY`、`LANGFUSE_SECRET_KEY`、`LANGFUSE_BASE_URL`）均被接受——两者同时设置时，Hermes 前缀的优先。
+Doppel 前缀、旧版 Hermes 前缀以及标准 SDK 环境变量（`LANGFUSE_PUBLIC_KEY`、`LANGFUSE_SECRET_KEY`、`LANGFUSE_BASE_URL`）都被接受——设置多个值时优先使用 Doppel 前缀。
 
 **性能：** Langfuse 客户端在第一次 hook 调用后被缓存。如果凭据或 SDK 缺失，该决定也会被缓存——后续 hook 会快速返回，不再重新检查环境变量或重新加载配置。
 

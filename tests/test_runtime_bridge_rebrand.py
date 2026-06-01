@@ -14,11 +14,35 @@ def test_runtime_bridge_and_dashboard_surfaces_prefer_doppel() -> None:
     gateway_base = _read("gateway/platforms/base.py")
     acp_entry = _read("acp_adapter/entry.py")
 
-    assert "Hermes Agent messaging bridge." not in mcp_serve
-    assert "Doppel Agent messaging bridge." in mcp_serve
+    assert "Hermes MCP Server — expose messaging conversations as MCP tools." not in mcp_serve
+    assert "Doppel MCP Server — expose messaging conversations as MCP tools." in mcp_serve
+    assert "Plus: channels_list (Hermes-specific extra)" not in mcp_serve
+    assert "Plus: channels_list (Doppel-specific extra)" in mcp_serve
+    assert "    hermes mcp serve" not in mcp_serve
+    assert "    doppel mcp serve" in mcp_serve
+    assert '"hermes": {' not in mcp_serve
+    assert '"doppel": {' in mcp_serve
+    assert '"command": "hermes"' not in mcp_serve
+    assert '"command": "doppel"' in mcp_serve
+    assert "This is the Hermes equivalent of OpenClaw's WebSocket gateway bridge." not in mcp_serve
+    assert "This is the Doppel equivalent of OpenClaw's WebSocket gateway bridge." in mcp_serve
+    assert "Create and return the Hermes MCP server with all tools registered." not in mcp_serve
+    assert "Create and return the Doppel MCP server with all tools registered." in mcp_serve
+    assert "Start the Hermes MCP server on stdio." not in mcp_serve
+    assert "Start the Doppel MCP server on stdio." in mcp_serve
+    assert 'os.environ.get("HERMES_HOME", Path.home() / ".hermes")' not in mcp_serve
+    assert 'Path.home() / ".doppel"' in mcp_serve
 
     assert "Open this page through `hermes dashboard`, not directly." not in chat_page
     assert "Open this page through `doppel dashboard`, not directly." in chat_page
+    assert "ChatPage — embeds `hermes --tui` inside the dashboard." not in chat_page
+    assert "ChatPage — embeds `doppel --tui` inside the dashboard." in chat_page
+    assert "even when the inner Hermes TUI has enabled xterm mouse-events" not in chat_page
+    assert "even when the inner Doppel TUI has enabled xterm mouse-events" in chat_page
+    assert "`hermes --tui`." not in chat_page
+    assert "`doppel --tui`." in chat_page
+    assert "forwarding them into Hermes." not in chat_page
+    assert "forwarding them into Doppel." in chat_page
 
     assert "add the key to ~/.hermes/.env manually." not in gateway_base
     assert "add the key to ~/.doppel/.env manually." in gateway_base

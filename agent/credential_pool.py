@@ -785,8 +785,8 @@ class CredentialPool:
         Using ``_save_provider_state`` (which sets ``active_provider``)
         here would mean every Nous/Codex/xAI refresh in a multi-provider
         setup silently flips the ``active_provider`` flag — the next
-        ``hermes`` invocation that defaults to the active provider
-        (e.g. setup wizard, ``hermes auth status``) would land on
+        ``doppel`` invocation that defaults to the active provider
+        (e.g. setup wizard, ``doppel auth status``) would land on
         whatever provider happened to refresh last, not whatever the
         user actually chose.
         """
@@ -1046,7 +1046,7 @@ class CredentialPool:
                         self._current_id = None
                     self._persist()
                     return None
-            # For openai-codex: same race as xAI/nous — another Hermes process
+            # For openai-codex: same race as xAI/nous — another Doppel Agent process
             # may have consumed the refresh token between our proactive sync
             # and the HTTP call.  Re-check auth.json and adopt the fresh tokens
             # if they have rotated since.
@@ -1733,7 +1733,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
             active_sources.add("device_code")
             # Prefer a user-supplied label embedded in the singleton state
             # (set by persist_nous_credentials(label=...) when the user ran
-            # `hermes auth add nous --label <name>`).  Fall back to the
+            # `doppel auth add nous --label <name>`).  Fall back to the
             # auto-derived token fingerprint for logins that didn't supply one.
             custom_label = str(state.get("label") or "").strip()
             seeded_label = custom_label or label_from_token(
@@ -1874,7 +1874,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
             logger.debug("MiniMax OAuth token seed failed: %s", exc)
 
     elif provider == "openai-codex":
-        # Respect user suppression — `hermes auth remove openai-codex` marks
+        # Respect user suppression — `doppel auth remove openai-codex` marks
         # the device_code source as suppressed so it won't be re-seeded from
         # the Doppel auth store.  Without this gate the removal is instantly
         # undone on the next load_pool() call.
@@ -1883,7 +1883,7 @@ def _seed_from_singletons(provider: str, entries: List[PooledCredential]) -> Tup
 
         state = _load_provider_state(auth_store, "openai-codex")
         tokens = state.get("tokens") if isinstance(state, dict) else None
-        # Hermes owns its own Codex auth state — we do NOT auto-import from
+        # Doppel Agent owns its own Codex auth state — we do NOT auto-import from
         # ~/.codex/auth.json at pool-load time.  OAuth refresh tokens are
         # single-use, so sharing them with Codex CLI / VS Code causes
         # refresh_token_reused race failures.  Users who want to adopt

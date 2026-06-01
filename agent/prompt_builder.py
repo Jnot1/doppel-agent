@@ -842,8 +842,8 @@ def build_environment_hints() -> str:
                 f"Terminal backend: {backend}. Your `terminal`, `read_file`, "
                 f"`write_file`, `patch`, and `search_files` tools all operate "
                 f"inside this {backend} environment — NOT on the machine "
-                f"where Hermes itself is running. The host OS, home, and cwd "
-                f"of the Hermes process are irrelevant; only the following "
+                f"where Doppel Agent itself is running. The host OS, home, and cwd "
+                f"of the Doppel Agent process are irrelevant; only the following "
                 f"backend state matters:\n{probe}"
             )
         else:

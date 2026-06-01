@@ -400,7 +400,7 @@ def run_conversation(
         pass
 
     # Tag all log records on this thread with the session ID so
-    # ``hermes logs --session <id>`` can filter a single conversation.
+    # ``doppel logs --session <id>`` can filter a single conversation.
     set_session_context(agent.session_id)
 
     # Bind the skill write-origin ContextVar for this thread so tool
@@ -692,7 +692,7 @@ def run_conversation(
     # Context is ALWAYS injected into the user message, never the
     # system prompt.  This preserves the prompt cache prefix — the
     # system prompt stays identical across turns so cached tokens
-    # are reused.  The system prompt is Hermes's territory; plugins
+    # are reused.  The system prompt is Doppel Agent's territory; plugins
     # contribute context alongside the user's input.
     #
     # All injected context is ephemeral (not persisted to session DB).
@@ -2783,7 +2783,7 @@ def run_conversation(
 
                 # Actionable hint for GitHub Models (Azure) 413 errors.
                 # The free tier enforces a hard 8K token cap per request,
-                # which Hermes' system prompt + tool schemas alone exceed.
+                # which Doppel Agent's system prompt + tool schemas alone exceed.
                 # Compression can't help — the floor is the system prompt
                 # itself, not the conversation — so surface a clear "not
                 # compatible" message instead of looping into three futile

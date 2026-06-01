@@ -135,3 +135,41 @@ def test_main_update_and_dashboard_copy_prefers_doppel() -> None:
         assert text in main_py, text
     for text in forbidden:
         assert text not in main_py, text
+
+
+def test_main_parser_and_help_examples_prefer_doppel() -> None:
+    main_py = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/hermes_cli/main.py"
+    ).read_text(encoding="utf-8")
+
+    required = [
+        '"""Dispatch `doppel security <subcmd>`."""',
+        "When a user types ``doppel -c Pokemon Agent Dev`` without quoting the",
+        "# so that in ``doppel -m gpt5 chat``, ``gpt5`` is correctly skipped as a",
+        "``doppel -m gpt5 --provider openai chat \"msg\"`` by skipping the",
+        "# subcommand — ``doppel --help``, ``doppel version``, ``doppel logs``,",
+        "# doppel tools list [--platform cli]",
+        "# doppel tools disable <name...> [--platform cli]",
+        "# doppel tools enable <name...> [--platform cli]",
+        "# flag is omitted, causing `doppel mcp add ...` to fall through to",
+        '"""Launch Doppel Agent as an ACP server."""',
+        "# e.g. ``doppel -c Pokemon Agent Dev`` → ``doppel -c 'Pokemon Agent Dev'``",
+    ]
+    forbidden = [
+        '"""Dispatch `hermes security <subcmd>`."""',
+        "When a user types ``hermes -c Pokemon Agent Dev`` without quoting the",
+        "# so that in ``hermes -m gpt5 chat``, ``gpt5`` is correctly skipped as a",
+        "``hermes -m gpt5 --provider openai chat \"msg\"`` by skipping the",
+        "# subcommand — ``hermes --help``, ``hermes version``, ``hermes logs``,",
+        "# hermes tools list [--platform cli]",
+        "# hermes tools disable <name...> [--platform cli]",
+        "# hermes tools enable <name...> [--platform cli]",
+        "# flag is omitted, causing `hermes mcp add ...` to fall through to",
+        '"""Launch Hermes Agent as an ACP server."""',
+        "# e.g. ``hermes -c Pokemon Agent Dev`` → ``hermes -c 'Pokemon Agent Dev'``",
+    ]
+
+    for text in required:
+        assert text in main_py, text
+    for text in forbidden:
+        assert text not in main_py, text

@@ -6329,7 +6329,7 @@ def cmd_doctor(args):
 
 
 def cmd_security(args):
-    """Dispatch `hermes security <subcmd>`."""
+    """Dispatch `doppel security <subcmd>`."""
     sub = getattr(args, "security_command", None)
     if sub in ("audit", None):
         from hermes_cli.security_audit import cmd_security_audit
@@ -10362,7 +10362,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 def _coalesce_session_name_args(argv: list) -> list:
     """Join unquoted multi-word session names after -c/--continue and -r/--resume.
 
-    When a user types ``hermes -c Pokemon Agent Dev`` without quoting the
+    When a user types ``doppel -c Pokemon Agent Dev`` without quoting the
     session name, argparse sees three separate tokens.  This function merges
     them into a single argument so argparse receives
     ``['-c', 'Pokemon Agent Dev']`` instead.
@@ -11253,7 +11253,7 @@ _BUILTIN_SUBCOMMANDS = frozenset(
 
 
 # Top-level flags that take a value. Needed by ``_first_positional_argv``
-# so that in ``hermes -m gpt5 chat``, ``gpt5`` is correctly skipped as a
+# so that in ``doppel -m gpt5 chat``, ``gpt5`` is correctly skipped as a
 # flag value rather than misclassified as a subcommand. Kept in sync with
 # the top-level flags declared in ``hermes_cli/_parser.py``.
 #
@@ -11282,7 +11282,7 @@ def _first_positional_argv() -> str | None:
 
     Used by ``main()`` to decide whether plugin discovery has to run at
     argparse-setup time. Handles common invocations like
-    ``hermes -m gpt5 --provider openai chat "msg"`` by skipping the
+    ``doppel -m gpt5 --provider openai chat "msg"`` by skipping the
     values attached to known top-level flags.
 
     Does NOT fully simulate argparse — unknown ``--foo=bar`` / ``--foo
@@ -13244,7 +13244,7 @@ Examples:
     # own argparse tree.  No hardcoded plugin commands in main.py.
     #
     # Skipped when the invocation is already targeting a known built-in
-    # subcommand — ``hermes --help``, ``hermes version``, ``hermes logs``,
+    # subcommand — ``doppel --help``, ``doppel version``, ``doppel logs``,
     # etc.  This avoids eagerly importing every bundled plugin module
     # (google.cloud.pubsub_v1, aiohttp, grpc, PIL …) which costs
     # 500-650ms on typical installs.
@@ -13431,7 +13431,7 @@ Examples:
     )
     tools_sub = tools_parser.add_subparsers(dest="tools_action")
 
-    # hermes tools list [--platform cli]
+    # doppel tools list [--platform cli]
     tools_list_p = tools_sub.add_parser(
         "list",
         help="Show all tools and their enabled/disabled status",
@@ -13442,7 +13442,7 @@ Examples:
         help="Platform to show (default: cli)",
     )
 
-    # hermes tools disable <name...> [--platform cli]
+    # doppel tools disable <name...> [--platform cli]
     tools_disable_p = tools_sub.add_parser(
         "disable",
         help="Disable toolsets or MCP tools",
@@ -13459,7 +13459,7 @@ Examples:
         help="Platform to apply to (default: cli)",
     )
 
-    # hermes tools enable <name...> [--platform cli]
+    # doppel tools enable <name...> [--platform cli]
     tools_enable_p = tools_sub.add_parser(
         "enable",
         help="Enable toolsets or MCP tools",
@@ -13595,7 +13595,7 @@ Examples:
     # subparser's args.command attribute, which the dispatcher reads to
     # route to cmd_mcp.  Without an explicit dest, argparse derives
     # dest="command" from the flag name and sets it to None when the
-    # flag is omitted, causing `hermes mcp add ...` to fall through to
+    # flag is omitted, causing `doppel mcp add ...` to fall through to
     # interactive chat.
     mcp_add_p.add_argument(
         "--command", dest="mcp_command", help="Stdio command (e.g. npx)"
@@ -14173,7 +14173,7 @@ Examples:
     )
 
     def cmd_acp(args):
-        """Launch Hermes Agent as an ACP server."""
+        """Launch Doppel Agent as an ACP server."""
         try:
             from acp_adapter.entry import main as acp_main
 
@@ -14552,7 +14552,7 @@ Examples:
     # =========================================================================
     # Pre-process argv so unquoted multi-word session names after -c / -r
     # are merged into a single token before argparse sees them.
-    # e.g. ``hermes -c Pokemon Agent Dev`` → ``hermes -c 'Pokemon Agent Dev'``
+    # e.g. ``doppel -c Pokemon Agent Dev`` → ``doppel -c 'Pokemon Agent Dev'``
     # ── Container-aware routing ────────────────────────────────────────
     # When NixOS container mode is active, route ALL subcommands into
     # the managed container.  This MUST run before parse_args() so that

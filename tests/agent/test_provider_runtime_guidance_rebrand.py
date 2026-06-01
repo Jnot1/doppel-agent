@@ -60,3 +60,36 @@ def test_xai_and_tts_runtime_guidance_prefers_doppel():
     assert "Run 'doppel setup tts' and choose KittenTTS" in tts
     assert "Run 'hermes tools' and select Piper under TTS" not in tts
     assert "Run 'doppel tools' and select Piper under TTS" in tts
+
+
+def test_conversation_loop_and_gemini_runtime_guidance_prefers_doppel():
+    conversation_loop = _read("agent/conversation_loop.py")
+    gemini_native = _read("agent/gemini_native_adapter.py")
+
+    assert "Re-authenticate: hermes auth add nous" not in conversation_loop
+    assert "Re-authenticate: doppel auth add nous" in conversation_loop
+    assert "Run `hermes doctor` for credential-chain diagnostics" not in conversation_loop
+    assert "Run `doppel doctor` for credential-chain diagnostics" in conversation_loop
+    assert "Then run `hermes auth` to re-authenticate." not in conversation_loop
+    assert "Then run `doppel auth` to re-authenticate." in conversation_loop
+    assert "from `hermes model`." not in conversation_loop
+    assert "from `doppel model`." in conversation_loop
+    assert "Re-authenticate: hermes auth add nous --type oauth" not in conversation_loop
+    assert "Re-authenticate: doppel auth add nous --type oauth" in conversation_loop
+    assert "• Is the key valid? Run: hermes setup" not in conversation_loop
+    assert "• Is the key valid? Run: doppel setup" in conversation_loop
+    assert "hermes fallback add   (interactive picker — same as `hermes model`)" not in conversation_loop
+    assert "doppel fallback add   (interactive picker — same as `doppel model`)" in conversation_loop
+    assert 'Legacy cleanup: hermes config set ANTHROPIC_TOKEN \\"\\"' not in conversation_loop
+    assert 'Legacy cleanup: doppel config set ANTHROPIC_TOKEN \\"\\"' in conversation_loop
+    assert 'Clear stale keys: hermes config set ANTHROPIC_API_KEY \\"\\"' not in conversation_loop
+    assert 'Clear stale keys: doppel config set ANTHROPIC_API_KEY \\"\\"' in conversation_loop
+    assert "(not a Hermes/gateway failure)." not in conversation_loop
+    assert "(not a Doppel/gateway failure)." in conversation_loop
+    assert "adding a fallback provider with `hermes fallback add`." not in conversation_loop
+    assert "adding a fallback provider with `doppel fallback add`." in conversation_loop
+
+    assert "~/.hermes/.env" not in gemini_native
+    assert "~/.doppel/.env" in gemini_native
+    assert "run `hermes setup`" not in gemini_native
+    assert "run `doppel setup`" in gemini_native

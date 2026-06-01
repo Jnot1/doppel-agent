@@ -154,6 +154,9 @@ EN_HOOKS_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "features" / "hoo
 EN_USE_SOUL_DOC = REPO_ROOT / "website" / "docs" / "guides" / "use-soul-with-hermes.md"
 EN_LOCAL_OLLAMA_GUIDE = REPO_ROOT / "website" / "docs" / "guides" / "local-ollama-setup.md"
 EN_CONFIGURATION_DOC = REPO_ROOT / "website" / "docs" / "user-guide" / "configuration.md"
+EN_CONFIGURING_MODELS_DOC = (
+    REPO_ROOT / "website" / "docs" / "user-guide" / "configuring-models.md"
+)
 EN_MICROSOFT_GRAPH_APP_REG_DOC = (
     REPO_ROOT
     / "website"
@@ -651,6 +654,16 @@ ZH_CONFIGURATION_DOC = (
     / "user-guide"
     / "configuration.md"
 )
+ZH_CONFIGURING_MODELS_DOC = (
+    REPO_ROOT
+    / "website"
+    / "i18n"
+    / "zh-Hans"
+    / "docusaurus-plugin-content-docs"
+    / "current"
+    / "user-guide"
+    / "configuring-models.md"
+)
 ZH_MICROSOFT_GRAPH_APP_REG_DOC = (
     REPO_ROOT
     / "website"
@@ -1072,6 +1085,35 @@ def test_configuration_top_cluster_prefer_doppel_customer_facing_and_keep_runtim
     assert "~/.doppel/.env" in zh_cluster
     assert "~/.doppel/" in en_cluster
     assert "~/.doppel/" in zh_cluster
+
+
+def test_configuring_models_docs_prefer_doppel_customer_facing_surfaces():
+    en = EN_CONFIGURING_MODELS_DOC.read_text(encoding="utf-8")
+    zh = ZH_CONFIGURING_MODELS_DOC.read_text(encoding="utf-8")
+
+    for text in (en, zh):
+        assert "doppel setup --portal" in text
+        assert "doppel portal status" in text
+        assert "doppel setup" in text
+        assert "doppel model" in text
+        assert "doppel skills search" in text
+        assert "doppel chat" in text
+        assert "doppel gateway restart" in text
+        assert "doppel config set" in text
+        assert "~/.doppel/config.yaml" in text
+        assert 'Authorization: Bearer $TOKEN' in text
+
+        assert "hermes setup --portal" not in text
+        assert "hermes portal status" not in text
+        assert "hermes setup" not in text
+        assert "hermes model" not in text
+        assert "hermes skills search" not in text
+        assert "hermes chat" not in text
+        assert "hermes gateway restart" not in text
+        assert "hermes config set" not in text
+        assert "~/.hermes/config.yaml" not in text
+        assert "X-Hermes-Session-Token" not in text
+        assert "__HERMES_SESSION_TOKEN__" not in text
 
 
 def test_configuration_terminal_backend_cluster_prefer_doppel_and_preserve_runtime_terms():

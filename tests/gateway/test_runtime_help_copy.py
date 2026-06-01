@@ -105,3 +105,29 @@ def test_gateway_runtime_paths_update_and_stop_help_are_doppel_first():
         assert needle in runtime
     for needle in forbidden:
         assert needle not in runtime
+
+
+def test_gateway_runtime_remaining_operator_guidance_is_doppel_first():
+    runtime = Path("gateway/run.py").read_text(encoding="utf-8")
+
+    expected = [
+        "`doppel setup` run) silently shadow the user's current config.",
+        "(e.g. user ran `doppel auth add openai-codex` without `doppel model`),",
+        "``doppel setup``, their unit file may still encode the old",
+        "This prevents unwanted auto-resets after `doppel update`,",
+        "`doppel gateway restart`, or `/restart`.",
+        "never runs when ``doppel gateway stop`` signals the gateway. The",
+    ]
+    forbidden = [
+        "`hermes setup` run) silently shadow the user's current config.",
+        "(e.g. user ran `hermes auth add openai-codex` without `hermes model`),",
+        "``hermes setup``, their unit file may still encode the old",
+        "This prevents unwanted auto-resets after `hermes update`,",
+        "`hermes gateway restart`, or `/restart`.",
+        "never runs when ``hermes gateway stop`` signals the gateway. The",
+    ]
+
+    for needle in expected:
+        assert needle in runtime
+    for needle in forbidden:
+        assert needle not in runtime

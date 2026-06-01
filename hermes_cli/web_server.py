@@ -656,7 +656,7 @@ async def get_status():
         pass
 
     # Dashboard auth gate (Phase 7): surface whether the gate is engaged
-    # and which providers are registered so ``hermes status`` and the
+    # and which providers are registered so ``doppel status`` and the
     # SPA's StatusPage can show "OAuth gate ON via Nous Research" or
     # "loopback only — no auth gate" with no extra round trips.
     auth_required = bool(getattr(app.state, "auth_required", False))
@@ -1616,7 +1616,7 @@ async def disconnect_oauth_provider(provider_id: str, request: Request):
                    f"Available: {', '.join(sorted(valid_ids))}",
         )
 
-    # Anthropic and claude-code clear the same Hermes-managed PKCE file
+    # Anthropic and claude-code clear the same Doppel-managed PKCE file
     # AND forget the Claude Code import. We don't touch ~/.claude/* directly
     # — that's owned by the Claude Code CLI; users can re-auth there if they
     # want to undo a disconnect.

@@ -168,6 +168,7 @@ class TestGenerate:
         result = KreaImageGenProvider().generate(prompt="test")
         assert result["success"] is False
         assert "KREA_API_KEY" in result["error"]
+        assert "doppel tools" in result["error"]
         assert result["error_type"] == "auth_required"
 
     def test_empty_prompt(self):
@@ -230,7 +231,7 @@ class TestGenerate:
         assert post_url.endswith("/generate/image/krea/krea-2/large")
 
     def test_aspect_ratio_mapping(self):
-        """Hermes 'square' must map to Krea '1:1' in the wire payload."""
+        """Doppel 'square' must map to Krea '1:1' in the wire payload."""
         from plugins.image_gen.krea import KreaImageGenProvider
 
         submit = _submit_response()

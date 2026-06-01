@@ -119,6 +119,7 @@ class TestGenerate:
         provider = XAIImageGenProvider()
         result = provider.generate(prompt="test")
         assert result["success"] is False
+        assert "doppel model" in result["error"]
         assert "XAI_API_KEY" in result["error"]
 
     def test_successful_generation(self):

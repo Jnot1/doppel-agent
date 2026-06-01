@@ -66,6 +66,8 @@ class TestMetadata:
         schema = provider.get_setup_schema()
         assert schema["env_vars"] == []
         assert schema["badge"] == "free"
+        assert "doppel auth codex" in schema["post_setup_hint"]
+        assert "doppel setup" in schema["post_setup_hint"]
 
 
 # ── Availability ────────────────────────────────────────────────────────────
@@ -98,6 +100,7 @@ class TestGenerate:
         monkeypatch.setattr(codex_plugin, "_read_codex_access_token", lambda: None)
         result = provider.generate("a cat")
         assert result["success"] is False
+        assert "doppel auth codex" in result["error"]
         assert result["error_type"] == "auth_required"
 
     def test_returns_invalid_argument_for_empty_prompt(self, provider, monkeypatch):

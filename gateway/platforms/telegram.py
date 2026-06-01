@@ -2553,7 +2553,7 @@ class TelegramAdapter(BasePlatformAdapter):
     ) -> SendResult:
         """Send an inline-keyboard update prompt (Yes / No buttons).
 
-        Used by the gateway ``/update`` watcher when ``hermes update --gateway``
+        Used by the gateway ``/update`` watcher when ``doppel update --gateway``
         needs user input (stash restore, config migration).
         """
         if not self._bot:
@@ -2871,7 +2871,7 @@ class TelegramAdapter(BasePlatformAdapter):
         a single ``mpg:<gid>`` button; tapping it drills into a member
         sub-keyboard. Single providers (and groups with only one authenticated
         member) render as direct ``mp:<slug>`` buttons. Grouping mirrors the
-        CLI ``hermes model`` picker via the shared ``group_providers`` fold,
+        CLI ``doppel model`` picker via the shared ``group_providers`` fold,
         so all surfaces stay consistent.
         """
         try:
@@ -3521,7 +3521,7 @@ class TelegramAdapter(BasePlatformAdapter):
             logger.error("Failed to write update response from callback: %s", exc)
 
     # Maps `gt:<verb>` -> (script-name, extra-args, success-label, is_state).
-    # Scripts live in ~/.hermes/scripts/gmail-triage/. `arg` from the callback
+    # Scripts live in ~/.doppel/scripts/gmail-triage/. `arg` from the callback
     # data is always passed as the first positional arg.
     # is_state=True means the verb is a sticky sender-rule change (mute, trust,
     # vip) that should leave the keyboard tappable for follow-on actions.
@@ -4741,7 +4741,7 @@ class TelegramAdapter(BasePlatformAdapter):
     def _explicit_bot_mentions_exclude_self(self, message: Message) -> bool:
         """Return True when explicit bot handles target other bots, not this one.
 
-        Telegram groups can contain several Hermes bot profiles. A message like
+        Telegram groups can contain several Doppel bot profiles. A message like
         ``@bot3 hi @bot4`` must not wake ``@bot1`` through reply/wake-word
         fallbacks. Treat explicit bot-handle mentions as an exclusive routing
         hint: if at least one @...bot username is present and none matches this

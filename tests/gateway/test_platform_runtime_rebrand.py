@@ -12,10 +12,12 @@ def test_platform_runtime_surfaces_prefer_doppel() -> None:
     dingtalk = _read("gateway/platforms/dingtalk.py")
     slack = _read("gateway/platforms/slack.py")
     feishu = _read("gateway/platforms/feishu.py")
+    feishu_comment_rules = _read("gateway/platforms/feishu_comment_rules.py")
     email = _read("gateway/platforms/email.py")
     weixin = _read("gateway/platforms/weixin.py")
     wecom = _read("gateway/platforms/wecom.py")
     sms = _read("gateway/platforms/sms.py")
+    telegram = _read("gateway/platforms/telegram.py")
 
     assert '"title": "Hermes"' not in dingtalk
     assert '"title": "Doppel"' in dingtalk
@@ -40,6 +42,11 @@ def test_platform_runtime_surfaces_prefer_doppel() -> None:
     assert "`hermes gateway setup`" not in feishu
     assert "`doppel gateway setup`" in feishu
 
+    assert "Config: ~/.hermes/feishu_comment_rules.json" not in feishu_comment_rules
+    assert "Config: ~/.doppel/feishu_comment_rules.json" in feishu_comment_rules
+    assert "Pairing store: ~/.hermes/feishu_comment_pairing.json." not in feishu_comment_rules
+    assert "Pairing store: ~/.doppel/feishu_comment_pairing.json." in feishu_comment_rules
+
     assert "Email platform adapter for the Hermes gateway." not in email
     assert "Email platform adapter for the Doppel gateway." in email
     assert "Allows users to interact with Hermes by sending emails." not in email
@@ -61,3 +68,12 @@ def test_platform_runtime_surfaces_prefer_doppel() -> None:
     assert "Twilio SMS <-> Doppel gateway adapter." in sms
     assert "own Hermes session" not in sms
     assert "own Doppel session" in sms
+
+    assert "when ``hermes update --gateway``" not in telegram
+    assert "when ``doppel update --gateway``" in telegram
+    assert "CLI ``hermes model`` picker" not in telegram
+    assert "CLI ``doppel model`` picker" in telegram
+    assert "Scripts live in ~/.hermes/scripts/gmail-triage/." not in telegram
+    assert "Scripts live in ~/.doppel/scripts/gmail-triage/." in telegram
+    assert "Telegram groups can contain several Hermes bot profiles." not in telegram
+    assert "Telegram groups can contain several Doppel bot profiles." in telegram

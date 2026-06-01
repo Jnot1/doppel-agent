@@ -127,7 +127,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--setup-browser",
         action="store_true",
-        help="Install agent-browser + Playwright Chromium into ~/.hermes/node/ "
+        help="Install agent-browser + Playwright Chromium into ~/.doppel/node/ "
              "for browser tool support. Idempotent.",
     )
     parser.add_argument(
@@ -185,7 +185,7 @@ def _run_setup_browser(assume_yes: bool = False) -> int:
     """Bootstrap agent-browser + Chromium.
 
     Routes through dep_ensure -> install.{sh,ps1} --ensure, sharing code
-    with ``hermes postinstall`` and the runtime lazy installer.
+    with ``doppel postinstall`` and the runtime lazy installer.
 
     Returns 0 on success, 1 on failure.
     """

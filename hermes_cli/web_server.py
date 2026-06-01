@@ -1,5 +1,5 @@
 """
-Hermes Agent — Web UI server.
+Doppel Agent — Web UI server.
 
 Provides a FastAPI backend serving the Vite/React frontend and REST API
 endpoints for managing configuration, environment variables, and sessions.
@@ -60,7 +60,7 @@ try:
     from pydantic import BaseModel
 except ImportError:
     # First try lazy-installing the dashboard extras. Only the user actually
-    # running `hermes dashboard` needs fastapi+uvicorn; lazy install keeps
+    # running `doppel dashboard` needs fastapi+uvicorn; lazy install keeps
     # them out of every other install path. After install, re-import.
     try:
         from tools.lazy_deps import ensure as _lazy_ensure
@@ -89,7 +89,7 @@ app = FastAPI(title="Doppel Agent", version=__version__)
 _SESSION_TOKEN = secrets.token_urlsafe(32)
 _SESSION_HEADER_NAME = "X-Hermes-Session-Token"
 
-# In-browser Chat tab (/chat, /api/pty, …).  Off unless ``hermes dashboard --tui``
+# In-browser Chat tab (/chat, /api/pty, …).  Off unless ``doppel dashboard --tui``
 # or HERMES_DASHBOARD_TUI=1.  Set from :func:`start_server`.
 _DASHBOARD_EMBEDDED_CHAT_ENABLED = False
 
@@ -695,7 +695,7 @@ async def get_status():
 # Both commands are spawned as detached subprocesses so the HTTP request
 # returns immediately.  stdin is closed (``DEVNULL``) so any stray ``input()``
 # calls fail fast with EOF rather than hanging forever.  stdout/stderr are
-# streamed to a per-action log file under ``~/.hermes/logs/<action>.log`` so
+# streamed to a per-action log file under ``~/.doppel/logs/<action>.log`` so
 # the dashboard can tail them back to the user.
 # ---------------------------------------------------------------------------
 
@@ -713,7 +713,7 @@ _ACTION_PROCS: Dict[str, subprocess.Popen] = {}
 
 
 def _spawn_hermes_action(subcommand: List[str], name: str) -> subprocess.Popen:
-    """Spawn ``hermes <subcommand>`` detached and record the Popen handle.
+    """Spawn ``doppel <subcommand>`` detached and record the Popen handle.
 
     Uses the running interpreter's ``hermes_cli.main`` module so the action
     inherits the same venv/PYTHONPATH the web server is using.
@@ -764,7 +764,7 @@ def _tail_lines(path: Path, n: int) -> List[str]:
 
 @app.post("/api/gateway/restart")
 async def restart_gateway():
-    """Kick off a ``hermes gateway restart`` in the background."""
+    """Kick off a ``doppel gateway restart`` in the background."""
     try:
         proc = _spawn_hermes_action(["gateway", "restart"], "gateway-restart")
     except Exception as exc:
@@ -779,11 +779,11 @@ async def restart_gateway():
 
 @app.post("/api/hermes/update")
 async def update_hermes():
-    """Kick off ``hermes update`` in the background."""
+    """Kick off ``doppel update`` in the background."""
     try:
         proc = _spawn_hermes_action(["update"], "hermes-update")
     except Exception as exc:
-        _log.exception("Failed to spawn hermes update")
+        _log.exception("Failed to spawn doppel update")
         raise HTTPException(status_code=500, detail=f"Failed to start update: {exc}")
     return {
         "ok": True,
@@ -1101,7 +1101,7 @@ def get_auxiliary_models():
 async def set_model_assignment(body: ModelAssignment):
     """Assign a model to the main slot or an auxiliary task slot.
 
-    Writes to ``~/.hermes/config.yaml`` — applies to **new** sessions only.
+    Writes to ``~/.doppel/config.yaml`` — applies to **new** sessions only.
     The currently running chat PTY (if any) is not affected; use the
     ``/model`` slash command inside a chat to hot-swap that specific session.
     """
@@ -1334,7 +1334,7 @@ async def reveal_env_var(body: EnvVarReveal, request: Request):
 # connected, plus a disconnect button. The actual login flow (PKCE for
 # Anthropic, device-code for Nous/Codex) still runs in the CLI for now;
 # Phase 2 will add in-browser flows. For unconnected providers we return
-# the canonical ``hermes auth add <provider>`` command so the dashboard
+# the canonical ``doppel auth add <provider>`` command so the dashboard
 # can surface a one-click copy.
 
 
@@ -1366,8 +1366,8 @@ def _truncate_token(value: Optional[str], visible: int = 6) -> str:
 def _anthropic_oauth_status() -> Dict[str, Any]:
     """Combined status across the three Anthropic credential sources we read.
 
-    Hermes resolves Anthropic creds in this order at runtime:
-    1. ``~/.hermes/.anthropic_oauth.json`` — Hermes-managed PKCE flow
+    Doppel resolves Anthropic creds in this order at runtime:
+    1. ``~/.doppel/.anthropic_oauth.json`` — Doppel-managed PKCE flow
     2. ``~/.claude/.credentials.json`` — Claude Code CLI credentials (auto)
     3. ``ANTHROPIC_TOKEN`` / ``ANTHROPIC_API_KEY`` env vars
     The dashboard reports the highest-priority source that's actually present.
@@ -1432,8 +1432,8 @@ def _claude_code_only_status() -> Dict[str, Any]:
     """Surface Claude Code CLI credentials as their own provider entry.
 
     Independent of the Anthropic entry above so users can see whether their
-    Claude Code subscription tokens are actively flowing into Hermes even
-    when they also have a separate Hermes-managed PKCE login.
+    Claude Code subscription tokens are actively flowing into Doppel even
+    when they also have a separate Doppel-managed PKCE login.
     """
     try:
         from agent.anthropic_adapter import read_claude_code_credentials
@@ -1660,7 +1660,7 @@ async def disconnect_oauth_provider(provider_id: str, request: Request):
 #     2. UI opens auth_url in a new tab. User authorizes, copies code.
 #     3. POST /api/providers/oauth/anthropic/submit { session_id, code }
 #          → server exchanges (code + verifier) → tokens at console.anthropic.com
-#          → persists to ~/.hermes/.anthropic_oauth.json AND credential pool
+#          → persists to ~/.doppel/.anthropic_oauth.json AND credential pool
 #          → returns { ok: true, status: "approved" }
 #
 #   Device code (Nous, OpenAI Codex):
@@ -1729,10 +1729,10 @@ def _new_oauth_session(provider_id: str, flow: str) -> tuple[str, Dict[str, Any]
 
 
 def _save_anthropic_oauth_creds(access_token: str, refresh_token: str, expires_at_ms: int) -> None:
-    """Persist Anthropic PKCE creds to both Hermes file AND credential pool.
+    """Persist Anthropic PKCE creds to both Doppel file AND credential pool.
 
     Mirrors what auth_commands.add_command does so the dashboard flow leaves
-    the system in the same state as ``hermes auth add anthropic``.
+    the system in the same state as ``doppel auth add anthropic``.
     """
     from agent.anthropic_adapter import _HERMES_OAUTH_FILE
     payload = {
@@ -2137,7 +2137,7 @@ def _minimax_poller(session_id: str) -> None:
     auth_state dict that ``_minimax_oauth_login`` (the CLI flow) builds
     and persists via ``_minimax_save_auth_state`` — so the dashboard
     path leaves the system in the same state as
-    ``hermes auth add minimax-oauth``.
+    ``doppel auth add minimax-oauth``.
     """
     from hermes_cli.auth import (
         _minimax_poll_token,
@@ -2913,7 +2913,7 @@ def _resolve_profile_dir(name: str) -> Path:
 def _profile_setup_command(name: str) -> str:
     """Return the shell command used to configure a profile in the CLI."""
     _resolve_profile_dir(name)
-    return "hermes setup" if name == "default" else f"{name} setup"
+    return "doppel setup" if name == "default" else f"{name} setup"
 
 
 @app.get("/api/profiles")
@@ -3337,7 +3337,7 @@ async def get_models_analytics(days: int = 30):
 # ---------------------------------------------------------------------------
 # /api/pty — PTY-over-WebSocket bridge for the dashboard "Chat" tab.
 #
-# The endpoint spawns the same ``hermes --tui`` binary the CLI uses, behind
+# The endpoint spawns the same ``doppel --tui`` binary the CLI uses, behind
 # a POSIX pseudo-terminal, and forwards bytes + resize escapes across a
 # WebSocket.  The browser renders the ANSI through xterm.js (see
 # web/src/pages/ChatPage.tsx).
@@ -3503,7 +3503,7 @@ def _resolve_chat_argv(
 ) -> tuple[list[str], Optional[str], Optional[dict]]:
     """Resolve the argv + cwd + env for the chat PTY.
 
-    Default: whatever ``hermes --tui`` would run.  Tests monkeypatch this
+    Default: whatever ``doppel --tui`` would run.  Tests monkeypatch this
     function to inject a tiny fake command (``cat``, ``sh -c 'printf …'``)
     so nothing has to build Node or the TUI bundle.
 
@@ -4121,7 +4121,7 @@ def _normalise_theme_definition(data: Dict[str, Any]) -> Optional[Dict[str, Any]
     # tag on theme apply.  Clipped to _THEME_CUSTOM_CSS_MAX to keep the
     # payload bounded.  We intentionally do NOT parse/sanitise the CSS
     # here — the dashboard is localhost-only and themes are user-authored
-    # YAML in ~/.hermes/, same trust level as the config file itself.
+    # YAML in ~/.doppel/, same trust level as the config file itself.
     custom_css_val = data.get("customCSS")
     custom_css: Optional[str] = None
     if isinstance(custom_css_val, str) and custom_css_val.strip():
@@ -4176,7 +4176,7 @@ def _normalise_theme_definition(data: Dict[str, Any]) -> Optional[Dict[str, Any]
 
 
 def _discover_user_themes() -> list:
-    """Scan ~/.hermes/dashboard-themes/*.yaml for user-created themes.
+    """Scan ~/.doppel/dashboard-themes/*.yaml for user-created themes.
 
     Returns a list of fully-normalised theme definitions ready to ship
     to the frontend, so the client can apply them without a secondary
@@ -4203,7 +4203,7 @@ async def get_dashboard_themes():
 
     Built-in entries ship name/label/description only (the frontend owns
     their full definitions in `web/src/themes/presets.ts`).  User themes
-    from `~/.hermes/dashboard-themes/*.yaml` ship with their full
+    from `~/.doppel/dashboard-themes/*.yaml` ship with their full
     normalised definition under `definition`, so the client can apply
     them without a stub.
     """
@@ -4288,7 +4288,7 @@ def _discover_dashboard_plugins() -> list:
     """Scan plugins/*/dashboard/manifest.json for dashboard extensions.
 
     Checks three plugin sources (same as hermes_cli.plugins):
-    1. User plugins:    ~/.hermes/plugins/<name>/dashboard/manifest.json
+    1. User plugins:    ~/.doppel/plugins/<name>/dashboard/manifest.json
     2. Bundled plugins: <repo>/plugins/<name>/dashboard/manifest.json  (memory/, etc.)
     3. Project plugins: ./.hermes/plugins/  (only if HERMES_ENABLE_PROJECT_PLUGINS)
     """
@@ -4778,7 +4778,7 @@ def _mount_plugin_api_routes():
             _log.warning(
                 "Plugin %s: ignoring backend api=%s (project plugins may "
                 "not auto-import Python code; move the plugin to "
-                "~/.hermes/plugins/ if you trust it)",
+                "~/.doppel/plugins/ if you trust it)",
                 plugin["name"], api_file_name,
             )
             continue
@@ -4870,7 +4870,7 @@ def start_server(
         if not list_providers():
             # Surface the *specific* reason any bundled provider declined
             # to register (e.g. missing HERMES_DASHBOARD_OAUTH_CLIENT_ID).
-            # Each provider plugin that ships with Hermes Agent exposes a
+            # Each provider plugin that ships with Doppel Agent exposes a
             # module-level ``LAST_SKIP_REASON`` string for this purpose;
             # without it the operator would only see "no providers" which
             # is misleading when the provider IS installed but unconfigured.

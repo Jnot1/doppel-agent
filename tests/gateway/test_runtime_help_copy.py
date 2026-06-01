@@ -111,19 +111,25 @@ def test_gateway_runtime_remaining_operator_guidance_is_doppel_first():
     runtime = Path("gateway/run.py").read_text(encoding="utf-8")
 
     expected = [
+        "yet — happens during partial ``doppel update`` where git-reset landed",
         "`doppel setup` run) silently shadow the user's current config.",
         "(e.g. user ran `doppel auth add openai-codex` without `doppel model`),",
         "``doppel setup``, their unit file may still encode the old",
         "This prevents unwanted auto-resets after `doppel update`,",
         "`doppel gateway restart`, or `/restart`.",
+        "Spawns ``doppel update`` in a detached session (via ``setsid``) so it",
+        "survives the gateway restart that ``doppel update`` may trigger.",
         "never runs when ``doppel gateway stop`` signals the gateway. The",
     ]
     forbidden = [
+        "yet — happens during partial ``hermes update`` where git-reset landed",
         "`hermes setup` run) silently shadow the user's current config.",
         "(e.g. user ran `hermes auth add openai-codex` without `hermes model`),",
         "``hermes setup``, their unit file may still encode the old",
         "This prevents unwanted auto-resets after `hermes update`,",
         "`hermes gateway restart`, or `/restart`.",
+        "Spawns ``hermes update`` in a detached session (via ``setsid``) so it",
+        "survives the gateway restart that ``hermes update`` may trigger.",
         "never runs when ``hermes gateway stop`` signals the gateway. The",
     ]
 

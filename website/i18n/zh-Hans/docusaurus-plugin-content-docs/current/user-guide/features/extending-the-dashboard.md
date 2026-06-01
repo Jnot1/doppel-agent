@@ -14,7 +14,7 @@ Doppel Agent Web Dashboard（`doppel dashboard`）在设计上支持换肤和扩
 
 三者均为**运行时即插即用**：无需克隆仓库、无需 `npm run build`、无需修改 dashboard 源码。本页是三者的权威参考文档。
 
-下文示例默认使用全新安装推荐的 `~/.doppel` 主目录。旧安装仍可能将相同的 dashboard 主题、插件和日志保存在 `~/.hermes` 下。
+下文示例默认使用全新安装推荐的 `~/.doppel` 主目录。
 
 如果只是想使用 dashboard，请参阅 [Web Dashboard](./web-dashboard)。如果想为终端 CLI（而非 Web Dashboard）换肤，请参阅 [Skins & Themes](./skins) —— CLI 皮肤系统与 dashboard 主题无关。
 
@@ -258,7 +258,7 @@ customCSS: |
   }
 ```
 
-CSS 在主题应用时以单个带作用域的 `<style data-hermes-theme-css>` 标签注入，主题切换时清除。**每个主题上限为 32 KiB。**
+CSS 在主题应用时以单个带作用域的 `<style>` 标签注入，主题切换时清除。**每个主题上限为 32 KiB。**
 
 ### 内置主题
 
@@ -266,15 +266,15 @@ CSS 在主题应用时以单个带作用域的 `<style data-hermes-theme-css>` �
 
 | 主题 | 调色板 | 字体排版 | 布局 |
 |-------|---------|------------|--------|
-| **Hermes Teal**（`default`） | 深青色 + 奶油色 | 系统字体栈，15px | 0.5rem 圆角，comfortable |
-| **Hermes Teal (Large)**（`default-large`） | 同 default | 系统字体栈，18px，行高 1.65 | 0.5rem 圆角，spacious |
+| **Doppel Teal**（`default`） | 深青色 + 奶油色 | 系统字体栈，15px | 0.5rem 圆角，comfortable |
+| **Doppel Teal (Large)**（`default-large`） | 同 default | 系统字体栈，18px，行高 1.65 | 0.5rem 圆角，spacious |
 | **Midnight**（`midnight`） | 深蓝紫色 | Inter + JetBrains Mono，14px | 0.75rem 圆角，comfortable |
 | **Ember**（`ember`） | 暖深红 + 古铜色 | Spectral（衬线）+ IBM Plex Mono，15px | 0.25rem 圆角，comfortable |
 | **Mono**（`mono`） | 灰度 | IBM Plex Sans + IBM Plex Mono，13px | 0 圆角，compact |
 | **Cyberpunk**（`cyberpunk`） | 黑底霓虹绿 | Share Tech Mono 全局，14px | 0 圆角，compact |
 | **Rosé**（`rose`） | 粉色 + 象牙色 | Fraunces（衬线）+ DM Mono，16px | 1rem 圆角，spacious |
 
-引用 Google Fonts 的主题（除 Hermes Teal 外均如此）会按需加载样式表——首次切换时会向 `<head>` 注入一个 `<link>` 标签。
+引用 Google Fonts 的主题（除 Doppel Teal 外均如此）会按需加载样式表——首次切换时会向 `<head>` 注入一个 `<link>` 标签。
 
 ### 完整主题 YAML 参考
 
@@ -345,7 +345,7 @@ customCSS: |
 
 Dashboard 插件是一个包含 `manifest.json`、预构建 JS bundle，以及可选的 CSS 文件和带 FastAPI 路由的 Python 文件的目录。插件与其他 Doppel 插件一起存放在 `~/.doppel/plugins/<name>/`——dashboard 扩展是该插件目录内的 `dashboard/` 子文件夹，因此一个插件可以从单次安装中同时扩展 CLI/gateway 和 dashboard。
 
-插件不打包 React 或 UI 组件，而是使用暴露在 `window.__HERMES_PLUGIN_SDK__` 上的 **Plugin SDK**。这使插件 bundle 保持极小体积（通常只有几 KB），并避免版本冲突。
+插件不打包 React 或 UI 组件，而是使用暴露在 `window.__DOPPEL_PLUGIN_SDK__` 上的 **Plugin SDK**。这使插件 bundle 保持极小体积（通常只有几 KB），并避免版本冲突。
 
 ### 快速上手——你的第一个插件
 
@@ -379,7 +379,7 @@ mkdir -p ~/.doppel/plugins/my-plugin/dashboard/dist
 (function () {
   "use strict";
 
-  const SDK = window.__HERMES_PLUGIN_SDK__;
+  const SDK = window.__DOPPEL_PLUGIN_SDK__;
   const { React } = SDK;
   const { Card, CardHeader, CardTitle, CardContent } = SDK.components;
 
@@ -396,7 +396,7 @@ mkdir -p ~/.doppel/plugins/my-plugin/dashboard/dist
     );
   }
 
-  window.__HERMES_PLUGINS__.register("my-plugin", MyPage);
+  window.__DOPPEL_PLUGINS__.register("my-plugin", MyPage);
 })();
 ```
 
@@ -476,10 +476,10 @@ mkdir -p ~/.doppel/plugins/my-plugin/dashboard/dist
 
 ### Plugin SDK
 
-插件所需的一切均在 `window.__HERMES_PLUGIN_SDK__` 上。插件不应直接导入 React。
+插件所需的一切均在 `window.__DOPPEL_PLUGIN_SDK__` 上。插件不应直接导入 React。
 
 ```javascript
-const SDK = window.__HERMES_PLUGIN_SDK__;
+const SDK = window.__DOPPEL_PLUGIN_SDK__;
 
 // React + hooks
 SDK.React                    // the React instance
@@ -550,8 +550,8 @@ SDK.api.getSessions(10).then((resp) => console.log(resp.sessions.length));
 在插件 bundle 内部注册：
 
 ```javascript
-window.__HERMES_PLUGINS__.registerSlot("my-plugin", "sidebar", MySidebar);
-window.__HERMES_PLUGINS__.registerSlot("my-plugin", "header-left", MyCrest);
+window.__DOPPEL_PLUGINS__.registerSlot("my-plugin", "sidebar", MySidebar);
+window.__DOPPEL_PLUGINS__.registerSlot("my-plugin", "header-left", MyCrest);
 ```
 
 #### 插槽目录
@@ -595,7 +595,7 @@ function PinnedSessionsBanner() {
   );
 }
 
-window.__HERMES_PLUGINS__.registerSlot("my-plugin", "sessions:top", PinnedSessionsBanner);
+window.__DOPPEL_PLUGINS__.registerSlot("my-plugin", "sessions:top", PinnedSessionsBanner);
 ```
 
 如果插件只增强现有页面而不需要独立的侧边栏标签页，可将页面级插槽与 `tab.hidden: true` 结合使用。
@@ -657,7 +657,7 @@ Shell 只为上述插槽渲染 `<PluginSlot name="..." />`。注册表接受额�
 ```javascript
 // ~/.doppel/plugins/session-notes/dashboard/dist/index.js
 (function () {
-  const SDK = window.__HERMES_PLUGIN_SDK__;
+  const SDK = window.__DOPPEL_PLUGIN_SDK__;
   const { React } = SDK;
   const { Card, CardContent } = SDK.components;
 
@@ -669,10 +669,10 @@ Shell 只为上述插槽渲染 `<PluginSlot name="..." />`。注册表接受额�
   }
 
   // Placeholder for the hidden tab.
-  window.__HERMES_PLUGINS__.register("session-notes", function () { return null; });
+  window.__DOPPEL_PLUGINS__.register("session-notes", function () { return null; });
 
   // The real work.
-  window.__HERMES_PLUGINS__.registerSlot("session-notes", "sessions:top", Banner);
+  window.__DOPPEL_PLUGINS__.registerSlot("session-notes", "sessions:top", Banner);
 })();
 ```
 
@@ -683,7 +683,7 @@ Shell 只为上述插槽渲染 `<PluginSlot name="..." />`。注册表接受额�
 - 多个插件可以声明同一个页面级插槽。它们按注册顺序堆叠渲染。
 - 无插件注册时零开销：内置页面与之前完全相同地渲染。
 
-参考插件（[`hermes-example-plugins`](https://github.com/NousResearch/hermes-example-plugins/tree/main/example-dashboard) 中的 `example-dashboard`）提供了一个向 `sessions:top` 注入横幅的实时演示——安装它可端到端了解该模式。
+仓库内置的 `plugins/example-dashboard` 参考插件展示了期望的 manifest 与后端布局。当你想添加 `sessions:top` 横幅或独立标签页时，可将它作为安全起点。
 
 ### 仅插槽插件（`tab.hidden`）
 
@@ -733,29 +733,7 @@ async def do_action(body: dict):
 
 #### 访问 dashboard 内部 API
 
-后端路由在 dashboard 进程内运行，因此可以直接从 hermes-agent 代码库导入：
-
-```python
-from fastapi import APIRouter
-from hermes_state import SessionDB
-from hermes_cli.config import load_config
-
-router = APIRouter()
-
-@router.get("/session-count")
-async def session_count():
-    db = SessionDB()
-    try:
-        count = len(db.list_sessions(limit=9999))
-        return {"count": count}
-    finally:
-        db.close()
-
-@router.get("/config-snapshot")
-async def config_snapshot():
-    cfg = load_config()
-    return {"model": cfg.get("model", {})}
-```
+后端路由在 dashboard 进程内运行，因此当你需要会话或配置访问时，可以调用 dashboard 自身使用的同一套内部 runtime helper。应将这些 Python 导入视为已部署版本的实现细节，而非稳定的插件 API 表面。
 
 ### 插件自定义 CSS
 
@@ -793,7 +771,7 @@ Dashboard 扫描三个目录中的 `dashboard/manifest.json`：
 | 1（冲突时优先） | `~/.doppel/plugins/<name>/dashboard/` | `user` |
 | 2 | `<repo>/plugins/memory/<name>/dashboard/` | `bundled` |
 | 2 | `<repo>/plugins/<name>/dashboard/` | `bundled` |
-| 3 | `./.hermes/plugins/<name>/dashboard/` | `project`——仅在设置 `HERMES_ENABLE_PROJECT_PLUGINS` 时生效 |
+| 3 | 项目本地 dashboard 插件 | `project`——仅在启用旧版项目插件兼容模式时生效 |
 
 发现结果在每个 dashboard 进程中缓存。添加新插件后，可以：
 
@@ -806,10 +784,10 @@ curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
 
 #### 插件加载生命周期
 
-1. Dashboard 加载。`main.tsx` 在 `window.__HERMES_PLUGIN_SDK__` 上暴露 SDK，在 `window.__HERMES_PLUGINS__` 上暴露注册表。
+1. Dashboard 加载。`main.tsx` 在 `window.__DOPPEL_PLUGIN_SDK__` 上暴露 SDK，在 `window.__DOPPEL_PLUGINS__` 上暴露注册表。
 2. `App.tsx` 调用 `usePlugins()` → 获取 `GET /api/dashboard/plugins`。
 3. 对于每个 manifest：注入 CSS `<link>`（如已声明），然后通过 `<script>` 标签加载 JS bundle。
-4. 插件的 IIFE 运行并调用 `window.__HERMES_PLUGINS__.register(name, Component)`——以及可选的 `.registerSlot(name, slot, Component)` 用于每个插槽。
+4. 插件的 IIFE 运行并调用 `window.__DOPPEL_PLUGINS__.register(name, Component)`——以及可选的 `.registerSlot(name, slot, Component)` 用于每个插槽。
 5. Dashboard 将注册的组件与 manifest 对应，将标签页添加到导航（除非 `hidden`），并将组件挂载为路由。
 
 插件在脚本加载后最多有 **2 秒**时间调用 `register()`。超时后 dashboard 停止等待并完成初始渲染。如果插件之后才注册，它仍会出现——导航是响应式的。
@@ -820,7 +798,7 @@ curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
 
 ## 主题 + 插件组合演示
 
-[`strike-freedom-cockpit`](https://github.com/NousResearch/hermes-example-plugins/tree/main/strike-freedom-cockpit) 插件（伴随仓库 `hermes-example-plugins`）是一个完整的换肤演示。它将主题 YAML 与仅插槽插件配对，在不 fork dashboard 的情况下生成驾驶舱风格的 HUD。
+完整的 dashboard 换肤通常由一个主题 YAML 加一个仅插槽插件组成。这个模式可以在不 fork dashboard 的情况下构建驾驶舱风格的 HUD。
 
 **演示内容：**
 
@@ -831,22 +809,11 @@ curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
   - `footer-right` — 替换默认组织行的自定义标语。
 - 插件通过 CSS 变量读取主题提供的图片，因此切换主题可在不修改插件代码的情况下更换英雄图/徽标。
 
-**安装：**
+**实用起点：**
 
-```bash
-git clone https://github.com/NousResearch/hermes-example-plugins.git
+从本仓库内置的 `plugins/example-dashboard` 参考插件开始。将它的 manifest 与后端布局复制到 `~/.doppel/plugins/<name>/dashboard/` 下的自定义插件目录中，添加一个用于注册所需插槽的 `dist/index.js` bundle，并配套一个位于 `~/.doppel/dashboard-themes/` 的主题 YAML。
 
-# Theme
-cp hermes-example-plugins/strike-freedom-cockpit/theme/strike-freedom.yaml \
-   ~/.doppel/dashboard-themes/
-
-# Plugin
-cp -r hermes-example-plugins/strike-freedom-cockpit ~/.doppel/plugins/
-```
-
-打开 dashboard，从主题切换器中选择 **Strike Freedom**。驾驶舱侧边栏出现，徽标显示在顶栏，标语替换底栏。切换回 **Hermes Teal**，插件仍然安装但不可见（`sidebar` 插槽仅在 `cockpit` 布局变体下渲染）。
-
-阅读插件源码（伴随仓库中的 `strike-freedom-cockpit/dashboard/dist/index.js`），了解它如何读取 CSS 变量、防范不支持插槽的旧版 dashboard，以及如何从单个 bundle 注册三个插槽。
+当这两部分都就位后，打开 dashboard，切换到你的自定义主题，并确认插槽内容出现在预期位置。切换回 **Doppel Teal** 后插件仍保持安装；当激活主题不再使用 `layoutVariant: cockpit` 时，仅驾驶舱专属 UI 会停止渲染。
 
 ---
 
@@ -872,9 +839,9 @@ cp -r hermes-example-plugins/strike-freedom-cockpit ~/.doppel/plugins/
 
 | 全局变量 | 类型 | 提供方 |
 |--------|------|----------|
-| `window.__HERMES_PLUGIN_SDK__` | object | `registry.ts` — React、hooks、UI 组件、API 客户端、工具函数。 |
-| `window.__HERMES_PLUGINS__.register(name, Component)` | function | 注册插件的主组件。 |
-| `window.__HERMES_PLUGINS__.registerSlot(name, slot, Component)` | function | 注册到命名 shell 插槽。 |
+| `window.__DOPPEL_PLUGIN_SDK__` | object | `registry.ts` — React、hooks、UI 组件、API 客户端、工具函数。 |
+| `window.__DOPPEL_PLUGINS__.register(name, Component)` | function | 注册插件的主组件。 |
+| `window.__DOPPEL_PLUGINS__.registerSlot(name, slot, Component)` | function | 注册到命名 shell 插槽。 |
 
 ---
 
@@ -887,8 +854,8 @@ cp -r hermes-example-plugins/strike-freedom-cockpit ~/.doppel/plugins/
 1. 检查 manifest 是否在 `~/.doppel/plugins/<name>/dashboard/manifest.json`（注意 `dashboard/` 子目录）。
 2. 运行 `curl http://127.0.0.1:9119/api/dashboard/plugins/rescan` 强制重新发现。
 3. 打开浏览器开发工具 → Network——确认 `manifest.json`、`index.js` 和任何 CSS 均无 404 加载成功。
-4. 打开浏览器开发工具 → Console——查找 IIFE 执行期间的错误或 `window.__HERMES_PLUGINS__ is undefined`（表示 SDK 未初始化，通常是更早的 React 渲染崩溃导致）。
-5. 验证你的 bundle 以与 `manifest.json:name` **相同的名称**调用 `window.__HERMES_PLUGINS__.register(...)`。
+4. 打开浏览器开发工具 → Console——查找 IIFE 执行期间的错误或 `window.__DOPPEL_PLUGINS__ is undefined`（表示 SDK 未初始化，通常是更早的 React 渲染崩溃导致）。
+5. 验证你的 bundle 以与 `manifest.json:name` **相同的名称**调用 `window.__DOPPEL_PLUGINS__.register(...)`。
 
 **插槽注册的组件没有渲染。**
 `sidebar` 插槽仅在激活主题设置了 `layoutVariant: cockpit` 时渲染。其他插槽始终渲染。如果你注册到某个插槽但没有命中，在 `registerSlot` 内添加 `console.log` 以确认插件 bundle 是否已运行。

@@ -287,7 +287,7 @@ export const en: Translations = {
     refreshDashboard: "Rescan dashboard extensions",
     removeConfirm: "Remove this plugin from ~/.doppel/plugins/?",
     removeHint:
-      "Only user-installed plugins under ~/.doppel/plugins can be removed. Legacy ~/.hermes/plugins installs still work.",
+      "Only user-installed plugins under ~/.doppel/plugins can be removed.",
     rescanHeading: "SPA plugin registry",
     rescanHint: "Rescan after adding files on disk so the dashboard sidebar picks up new manifests.",
     runtimeHeading: "Gateway runtime (YAML plugins)",
@@ -310,7 +310,7 @@ export const en: Translations = {
     categories: "Categories",
     filters: "Filters",
     noSkills:
-      "No skills found. Skills are loaded from ~/.doppel/skills/ on fresh installs; legacy ~/.hermes/skills/ trees still work.",
+      "No skills found. Skills are loaded from ~/.doppel/skills/.",
     noSkillsMatch: "No skills match your search or filter.",
     skillCount: "{count} skill{s}",
     resultCount: "{count} result{s}",

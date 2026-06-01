@@ -181,7 +181,7 @@ def _remove_env_source(provider: str, removed) -> RemovalResult:
             "  Unset it there (shell profile, systemd EnvironmentFile, "
             "launchd plist, etc.) or it will keep being visible to Hermes.",
             f"  The pool entry is now suppressed — Hermes will ignore "
-            f"{env_var} until you run `hermes auth add {provider}`.",
+            f"{env_var} until you run `doppel auth add {provider}`.",
         ])
     else:
         result.hints.append(
@@ -200,7 +200,7 @@ def _remove_claude_code(provider: str, removed) -> RemovalResult:
     return RemovalResult(hints=[
         "Suppressed claude_code credential — it will not be re-seeded.",
         "Note: Claude Code credentials still live in ~/.claude/.credentials.json",
-        "Run `hermes auth add anthropic` to re-enable if needed.",
+        "Run `doppel auth add anthropic` to re-enable if needed.",
     ])
 
 
@@ -319,7 +319,7 @@ def _remove_codex_device_code(provider: str, removed) -> RemovalResult:
     result.hints.extend([
         "Suppressed openai-codex device_code source — it will not be re-seeded.",
         "Note: Codex CLI credentials still live in ~/.codex/auth.json",
-        "Run `hermes auth add openai-codex` to re-enable if needed.",
+        "Run `doppel auth add openai-codex` to re-enable if needed.",
     ])
     return result
 
@@ -333,7 +333,7 @@ def _remove_qwen_cli(provider: str, removed) -> RemovalResult:
     return RemovalResult(hints=[
         "Suppressed qwen-cli credential — it will not be re-seeded.",
         "Note: Qwen CLI credentials still live in ~/.qwen/oauth_creds.json",
-        "Run `hermes auth add qwen-oauth` to re-enable if needed.",
+        "Run `doppel auth add qwen-oauth` to re-enable if needed.",
     ])
 
 
@@ -362,7 +362,7 @@ def _remove_copilot_gh(provider: str, removed) -> RemovalResult:
     return RemovalResult(hints=[
         "Suppressed all copilot token sources (gh_cli + env vars) — they will not be re-seeded.",
         "Note: Your gh CLI / shell environment is unchanged.",
-        "Run `hermes auth add copilot` to re-enable if needed.",
+        "Run `doppel auth add copilot` to re-enable if needed.",
     ])
 
 

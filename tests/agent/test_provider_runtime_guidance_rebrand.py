@@ -145,3 +145,28 @@ def test_google_oauth_runtime_guidance_prefers_doppel():
 
     assert "Run `hermes auth add google-gemini-cli` first." not in google_oauth
     assert "Run `doppel auth add google-gemini-cli` first." in google_oauth
+
+
+def test_credential_sources_prompt_builder_and_mcp_transport_guidance_prefers_doppel():
+    credential_sources = _read("agent/credential_sources.py")
+    prompt_builder = _read("agent/prompt_builder.py")
+    hermes_tools_mcp = _read("agent/transports/hermes_tools_mcp_server.py")
+
+    assert "until you run `hermes auth add {provider}`." not in credential_sources
+    assert "until you run `doppel auth add {provider}`." in credential_sources
+    assert "Run `hermes auth add anthropic` to re-enable if needed." not in credential_sources
+    assert "Run `doppel auth add anthropic` to re-enable if needed." in credential_sources
+    assert "Run `hermes auth add openai-codex` to re-enable if needed." not in credential_sources
+    assert "Run `doppel auth add openai-codex` to re-enable if needed." in credential_sources
+    assert "Run `hermes auth add qwen-oauth` to re-enable if needed." not in credential_sources
+    assert "Run `doppel auth add qwen-oauth` to re-enable if needed." in credential_sources
+    assert "Run `hermes auth add copilot` to re-enable if needed." not in credential_sources
+    assert "Run `doppel auth add copilot` to re-enable if needed." in credential_sources
+
+    assert "If the user asks about configuring, setting up, or using Hermes Agent " not in prompt_builder
+    assert "If the user asks about configuring, setting up, or using Doppel Agent " in prompt_builder
+    assert "load the `hermes-agent` skill with skill_view(name='hermes-agent')" in prompt_builder
+    assert "Docs: https://hermes-agent.nousresearch.com/docs" in prompt_builder
+
+    assert "Hermes Agent's tool surface, exposed for use inside a Codex " not in hermes_tools_mcp
+    assert "Doppel Agent's tool surface, exposed for use inside a Codex " in hermes_tools_mcp

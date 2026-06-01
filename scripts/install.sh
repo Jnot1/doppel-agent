@@ -228,7 +228,7 @@ display_home_dir() {
     if [ "$HERMES_HOME" = "$DEFAULT_DOPPEL_HOME" ]; then
         echo "~/.doppel"
     elif [ "$HERMES_HOME" = "$LEGACY_HERMES_HOME_ROOT" ]; then
-        echo "~/.hermes"
+        echo "~/.doppel"
     else
         echo "$HERMES_HOME"
     fi

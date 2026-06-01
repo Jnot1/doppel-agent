@@ -28,3 +28,5 @@ def test_tui_gateway_customer_surfaces_prefer_doppel() -> None:
     assert "run `doppel model` to configure" in server
     assert "# Save the key to ~/.hermes/.env" not in server
     assert "# Save the key to ~/.doppel/.env" in server
+    assert "appends every unhandled exception to ~/.hermes/logs/tui_gateway_crash.log" not in server
+    assert "appends every unhandled exception to ~/.doppel/logs/tui_gateway_crash.log" in server

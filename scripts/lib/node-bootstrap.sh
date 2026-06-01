@@ -214,7 +214,7 @@ ensure_node() {
     if [ -x "$HERMES_HOME/node/bin/node" ]; then
         export PATH="$HERMES_HOME/node/bin:$PATH"
         if _nb_have_modern_node; then
-            _nb_ok "Node $(node --version) found (Hermes-managed)"
+            _nb_ok "Node $(node --version) found (Doppel-managed)"
             HERMES_NODE_AVAILABLE=true
             return 0
         fi

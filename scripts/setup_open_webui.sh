@@ -77,7 +77,7 @@ resolve_agent_command() {
   elif command -v hermes >/dev/null 2>&1; then
     AGENT_CMD="hermes"
   else
-    echo "Missing required command: doppel (legacy hermes also accepted)" >&2
+    echo "Missing required command: doppel" >&2
     exit 1
   fi
 }

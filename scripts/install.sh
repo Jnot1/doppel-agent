@@ -1450,7 +1450,7 @@ EOF
         chmod +x "$command_link_dir/$shim_name"
     done
     log_success "Installed doppel launcher → $command_link_display_dir/doppel"
-    log_info "Legacy alias kept at $command_link_display_dir/hermes"
+    log_info "Legacy compatibility alias kept alongside the Doppel launcher"
 
     if [ "$DISTRO" = "termux" ]; then
         export PATH="$command_link_dir:$PATH"

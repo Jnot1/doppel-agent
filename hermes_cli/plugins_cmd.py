@@ -1,6 +1,6 @@
-"""``hermes plugins`` CLI subcommand — install, update, remove, and list plugins.
+"""``doppel plugins`` CLI subcommand — install, update, remove, and list plugins.
 
-Plugins are installed from Git repositories into ``~/.hermes/plugins/``.
+Plugins are installed from Git repositories into ``~/.doppel/plugins/``.
 Supports full URLs and ``owner/repo`` shorthand (resolves to GitHub).
 
 After install, if the plugin ships an ``after-install.md`` file it is
@@ -96,7 +96,7 @@ def _sanitize_plugin_name(
     trailing slashes are stripped, and the resolved target must still live
     inside *plugins_dir*. Install paths leave this at the default ``False``
     because a freshly-cloned plugin always lands top-level under
-    ``~/.hermes/plugins/<name>/``.
+    ``~/.doppel/plugins/<name>/``.
     """
     if not name:
         raise ValueError("Plugin name must not be empty.")
@@ -214,7 +214,7 @@ def _copy_example_files(plugin_dir: Path, console) -> None:
 
 
 def _missing_requires_env_names(manifest: dict) -> list[str]:
-    """Return declared ``requires_env`` names that are unset in ``~/.hermes/.env``."""
+    """Return declared ``requires_env`` names that are unset in ``~/.doppel/.env``."""
     requires_env = manifest.get("requires_env") or []
     if not requires_env:
         return []
@@ -364,7 +364,7 @@ def _require_installed_plugin(name: str, plugins_dir: Path, console) -> Path:
 
 
 def _install_plugin_core(identifier: str, *, force: bool) -> tuple[Path, dict, str]:
-    """Clone Git plugin into ``~/.hermes/plugins``.
+    """Clone Git plugin into ``~/.doppel/plugins``.
 
     Returns ``(target_dir, installed_manifest, canonical_name)``.
     Raises ``PluginOperationError`` on failure.
@@ -428,14 +428,14 @@ def _install_plugin_core(identifier: str, *, force: bool) -> tuple[Path, dict, s
                 raise PluginOperationError(
                     f"Plugin '{plugin_name}' requires manifest_version {mv}, "
                     f"but this installer only supports up to {_SUPPORTED_MANIFEST_VERSION}. "
-                    f"Run {recommended_update_command()} to update Hermes.",
+                    f"Run {recommended_update_command()} to update Doppel.",
                 ) from None
 
         if target.exists():
             if not force:
                 raise PluginOperationError(
                     f"Plugin '{plugin_name}' already exists. Use force reinstall "
-                    f"or run `hermes plugins update {plugin_name}`.",
+                    f"or run `doppel plugins update {plugin_name}`.",
                 )
             shutil.rmtree(target)
 
@@ -498,7 +498,7 @@ def cmd_install(
     ).exists():
         console.print(
             f"[yellow]Warning:[/yellow] {installed_name} doesn't contain plugin.yaml "
-            f"or __init__.py. It may not be a valid Hermes plugin.",
+            f"or __init__.py. It may not be a valid Doppel plugin.",
         )
 
     _prompt_plugin_env_vars(installed_manifest, console)
@@ -531,11 +531,11 @@ def cmd_install(
     else:
         console.print(
             f"[dim]Plugin installed but not enabled. "
-            f"Run `hermes plugins enable {installed_name}` to activate.[/dim]",
+            f"Run `doppel plugins enable {installed_name}` to activate.[/dim]",
         )
 
     console.print("[dim]Restart the gateway for the plugin to take effect:[/dim]")
-    console.print("[dim]  hermes gateway restart[/dim]")
+    console.print("[dim]  doppel gateway restart[/dim]")
     console.print()
 
 
@@ -739,7 +739,7 @@ def _discover_all_plugins() -> list:
     one level deeper (depth capped at 2, same as the loader).
 
     The returned ``key`` is the path-derived registry key — the value the
-    user types into ``hermes plugins enable <key>``. For category-namespaced
+    user types into ``doppel plugins enable <key>``. For category-namespaced
     plugins that's ``<category>/<dirname>``; for flat plugins it's the
     manifest's ``name`` (or the directory name if the manifest omits it).
 
@@ -821,7 +821,7 @@ def _plugin_status(name: str, enabled: set, disabled: set) -> str:
 
 
 def _filter_plugin_entries(entries: list, args: Any, enabled: set, disabled: set) -> list:
-    """Apply ``hermes plugins list`` CLI filters."""
+    """Apply ``doppel plugins list`` CLI filters."""
     filtered = entries
     if getattr(args, "no_bundled", False) or getattr(args, "user", False):
         filtered = [entry for entry in filtered if entry[3] != "bundled"]
@@ -1610,7 +1610,7 @@ def dashboard_set_agent_plugin_enabled(name: str, *, enabled: bool) -> dict[str,
 
 
 def _user_installed_plugin_dir(name: str) -> Optional[Path]:
-    """Resolved path under ``~/.hermes/plugins/<name>`` if it exists."""
+    """Resolved path under ``~/.doppel/plugins/<name>`` if it exists."""
     plugins_dir = _plugins_dir()
     try:
         target = _sanitize_plugin_name(name, plugins_dir, allow_subdir=True)
@@ -1620,7 +1620,7 @@ def _user_installed_plugin_dir(name: str) -> Optional[Path]:
 
 
 def dashboard_update_user_plugin(name: str) -> dict[str, Any]:
-    """``git pull`` inside ``~/.hermes/plugins/<name>``."""
+    """``git pull`` inside ``~/.doppel/plugins/<name>``."""
     target = _user_installed_plugin_dir(name)
     if target is None:
         return {
@@ -1669,7 +1669,7 @@ def _git_pull_plugin_dir(target: Path) -> tuple[bool, str]:
 
 
 def dashboard_remove_user_plugin(name: str) -> dict[str, Any]:
-    """Delete a plugin tree under ``~/.hermes/plugins/`` only."""
+    """Delete a plugin tree under ``~/.doppel/plugins/`` only."""
     plugins_dir = _plugins_dir()
     for n, _ver, _d, src, _path in _discover_all_plugins():
         if n == name and src == "bundled":

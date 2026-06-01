@@ -59,3 +59,49 @@ def test_platform_runtime_whatsapp_copy_is_doppel_first():
     assert "Run `hermes whatsapp` to pair, or remove WHATSAPP_ENABLED from " not in whatsapp
     assert "WhatsApp enabled but not paired — run `hermes whatsapp` to pair." not in whatsapp
     assert "If session expired, re-pair: hermes whatsapp" not in whatsapp
+
+
+def test_gateway_runtime_paths_update_and_stop_help_are_doppel_first():
+    runtime = Path("gateway/run.py").read_text(encoding="utf-8")
+
+    expected = [
+        "Load environment variables from ~/.doppel/.env first.",
+        "Gateway processes are long-lived, so per-turn code reloads ~/.doppel/.env to",
+        '"""Load and parse ~/.doppel/config.yaml, returning {} on any error.',
+        "checkpoint repos under ~/.doppel/checkpoints/.",
+        "the prefill_messages_file key in ~/.doppel/config.yaml.",
+        "Relative paths are resolved from ~/.doppel/.",
+        "agent.system_prompt in ~/.doppel/config.yaml.",
+        "Set GATEWAY_ALLOW_ALL_USERS=true in ~/.doppel/.env to allow open access, ",
+        "Spawn `doppel update --gateway` detached so it survives gateway restart.",
+        "Windows: no bash/setsid chain.  Run `doppel update --gateway`",
+        '"""Watch ``doppel update --gateway``, streaming output + forwarding prompts.',
+        "Planned stop check: service managers and `doppel gateway stop`",
+        "on Windows, so `doppel gateway stop`'s SIGTERM",
+        "The fix is a marker-polling thread: `doppel gateway stop` writes the",
+        "- doppel update killing the gateway mid-work",
+        "`doppel gateway stop` and interactive Ctrl+C are handled above as",
+    ]
+    forbidden = [
+        "Load environment variables from ~/.hermes/.env first.",
+        "Gateway processes are long-lived, so per-turn code reloads ~/.hermes/.env to",
+        '"""Load and parse ~/.hermes/config.yaml, returning {} on any error.',
+        "checkpoint repos under ~/.hermes/checkpoints/.",
+        "the prefill_messages_file key in ~/.hermes/config.yaml.",
+        "Relative paths are resolved from ~/.hermes/.",
+        "agent.system_prompt in ~/.hermes/config.yaml.",
+        "Set GATEWAY_ALLOW_ALL_USERS=true in ~/.hermes/.env to allow open access, ",
+        "Spawn `hermes update --gateway` detached so it survives gateway restart.",
+        "Windows: no bash/setsid chain.  Run `hermes update --gateway`",
+        '"""Watch ``hermes update --gateway``, streaming output + forwarding prompts.',
+        "Planned stop check: service managers and `hermes gateway stop`",
+        "on Windows, so `hermes gateway stop`'s SIGTERM",
+        "The fix is a marker-polling thread: `hermes gateway stop` writes the",
+        "- hermes update killing the gateway mid-work",
+        "`hermes gateway stop` and interactive Ctrl+C are handled above as",
+    ]
+
+    for needle in expected:
+        assert needle in runtime
+    for needle in forbidden:
+        assert needle not in runtime

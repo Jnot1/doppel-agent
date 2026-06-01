@@ -270,7 +270,7 @@ def run_backup(args) -> None:
 # ---------------------------------------------------------------------------
 
 def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
-    """Check that a zip looks like a Hermes backup.
+    """Check that a zip looks like a Doppel backup.
 
     Returns (ok, reason).
     """
@@ -278,7 +278,7 @@ def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
     if not names:
         return False, "zip archive is empty"
 
-    # Look for telltale files that a hermes home would have
+    # Look for telltale files that a doppel home would have
     markers = {"config.yaml", ".env", "state.db"}
     found = set()
     for n in names:
@@ -289,7 +289,7 @@ def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
 
     if not found:
         return False, (
-            "zip does not appear to be a Hermes backup "
+            "zip does not appear to be a Doppel backup "
             "(no config.yaml, .env, or state databases found)"
         )
 
@@ -735,7 +735,7 @@ def restore_cron_jobs_if_emptied(
     Args:
         snapshot_id: The pre-update quick-snapshot id (from
             :func:`create_quick_snapshot`).
-        hermes_home: Override for the Hermes home directory (tests).
+        hermes_home: Override for the Doppel home directory (tests).
 
     Returns:
         ``None`` when no action was taken (the common, healthy path). On a

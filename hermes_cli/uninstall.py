@@ -54,7 +54,7 @@ def find_shell_configs() -> list:
 
 
 def remove_path_from_shell_configs():
-    """Remove installer-managed Doppel/Hermes PATH entries from shell configs."""
+    """Remove installer-managed Doppel PATH entries from shell configs."""
     configs = find_shell_configs()
     removed_from = []
     
@@ -108,7 +108,7 @@ def remove_path_from_shell_configs():
 
 
 def remove_wrapper_script():
-    """Remove managed Doppel/Hermes CLI wrapper scripts if they exist."""
+    """Remove managed Doppel CLI wrapper scripts if they exist."""
     wrapper_paths = [
         Path.home() / ".local" / "bin" / "doppel",
         Path.home() / ".local" / "bin" / "hermes",
@@ -157,9 +157,9 @@ def remove_node_symlinks(hermes_home: Path) -> list:
 
     and prepends ``~/.local/bin`` to PATH, so these shadow an existing Node
     manager such as nvm.  Symmetrically remove them on uninstall, but *only*
-    when the link still resolves into this Hermes home's ``node`` directory.
+    when the link still resolves into this Doppel home's ``node`` directory.
     A link the user has since repointed at nvm (or anything else outside
-    Hermes) is left untouched so we never break unrelated tooling.
+    Doppel) is left untouched so we never break unrelated tooling.
     """
     node_dir = (hermes_home / "node").resolve()
     removed = []
@@ -332,7 +332,7 @@ def uninstall_gateway_service():
 
 
 def _hermes_path_markers(hermes_home: Path) -> list[str]:
-    """Path-entry substrings that identify Doppel/Hermes-owned User PATH entries."""
+    """Path-entry substrings that identify Doppel-owned User PATH entries."""
     root = str(hermes_home).rstrip("\\/")
     # Match on prefix so sub-entries (git\cmd, git\bin, git\usr\bin, node, etc.)
     # all get swept. Also match both current and legacy checkout names.
@@ -346,7 +346,7 @@ def _hermes_path_markers(hermes_home: Path) -> list[str]:
 
 
 def remove_path_from_windows_registry(hermes_home: Path) -> list[str]:
-    """Strip Hermes-owned entries from User-scope PATH in the registry.
+    """Strip Doppel-owned entries from User-scope PATH in the registry.
 
     Returns the list of removed path entries.  Operates on HKCU\\Environment,
     same key the installer wrote to via ``[Environment]::SetEnvironmentVariable``.
@@ -385,7 +385,7 @@ def remove_path_from_windows_registry(hermes_home: Path) -> list[str]:
 
 
 def remove_hermes_env_vars_windows() -> list[str]:
-    """Delete Doppel/Hermes home vars and Git Bash path from User-scope env vars."""
+    """Delete Doppel home vars and Git Bash path from User-scope env vars."""
     try:
         import winreg
     except ImportError:
@@ -650,7 +650,7 @@ def run_uninstall(args):
             for entry in removed_path_entries:
                 log_success(f"Removed from User PATH: {entry}")
         else:
-            log_info("No Hermes-owned PATH entries in User environment")
+            log_info("No Doppel-owned PATH entries in User environment")
 
         log_info("Removing DOPPEL_HOME / HERMES_HOME / HERMES_GIT_BASH_PATH User env vars...")
         removed_env = remove_hermes_env_vars_windows()
@@ -658,7 +658,7 @@ def run_uninstall(args):
             for name in removed_env:
                 log_success(f"Removed User env var: {name}")
         else:
-            log_info("No Doppel/Hermes-set User env vars to remove")
+            log_info("No Doppel-set User env vars to remove")
     
     # 3. Remove wrapper script
     log_info("Removing CLI command wrapper...")
@@ -672,13 +672,13 @@ def run_uninstall(args):
     # 3b. Remove node/npm/npx symlinks the installer left in ~/.local/bin
     #     (only when they still point into this Hermes home's node dir, so we
     #     never clobber an existing nvm / user-managed Node).
-    log_info("Removing Hermes-managed node/npm/npx symlinks...")
+    log_info("Removing Doppel-managed node/npm/npx symlinks...")
     removed_node_links = remove_node_symlinks(hermes_home)
     if removed_node_links:
         for link in removed_node_links:
             log_success(f"Removed {link}")
     else:
-        log_info("No Hermes-managed node/npm/npx symlinks found")
+        log_info("No Doppel-managed node/npm/npx symlinks found")
     
     # 4. Remove installation directory (code)
     log_info("Removing installation directory...")
@@ -714,7 +714,7 @@ def run_uninstall(args):
         else:
             log_info("No Windows installer artifacts to remove")
     
-    # 5. Optionally remove ~/.hermes/ data directory (and named profiles)
+    # 5. Optionally remove ~/.doppel/ data directory (and named profiles)
     if full_uninstall:
         # 5a. Stop and remove each named profile's gateway service and
         #     alias wrapper. The profile HERMES_HOME dirs live under

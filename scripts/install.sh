@@ -1407,7 +1407,7 @@ setup_path() {
     else
         HERMES_BIN="$(command -v doppel 2>/dev/null || command -v hermes 2>/dev/null || echo "")"
         if [ -z "$HERMES_BIN" ]; then
-            log_warn "No Doppel/Hermes entry point found on PATH after install"
+            log_warn "No Doppel entry point found on PATH after install"
             return 0
         fi
     fi

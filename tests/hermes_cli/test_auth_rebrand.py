@@ -78,3 +78,41 @@ def test_auth_runtime_copy_prefers_doppel_customer_surfaces() -> None:
     assert "`hermes auth status spotify`" not in commands_text
     assert "when `doppel auth` is called bare." in commands_text
     assert "when `hermes auth` is called bare." not in commands_text
+
+
+def test_auth_cli_setup_and_provider_guidance_prefers_doppel() -> None:
+    auth_text = AUTH_PY.read_text(encoding="utf-8")
+
+    expected = [
+        "Check 'doppel model' for available providers, or run 'doppel doctor' to diagnose config issues.",
+        "Config issue detected — run 'doppel doctor' for full diagnostics:",
+        "No inference provider configured. Run 'doppel model' to choose a ",
+        "OPENAI_API_KEY, etc.) in ~/.doppel/.env.",
+        "Spotify client_id is required. Set a Spotify client ID in your agent-home .env or pass --client-id.",
+        "<code>doppel auth add xai-oauth</code> to retry.",
+        "pip install azure-identity  (or rely on Doppel's ",
+        "Run `doppel doctor` to verify token acquisition.",
+        "The 'doppel login' command has been removed.",
+        "Use 'doppel auth' to manage credentials,",
+        "'doppel model' to select a provider, or 'doppel setup' for full setup.",
+        "Saved Spotify client ID to ~/.doppel/.env",
+    ]
+    forbidden = [
+        "Check 'hermes model' for available providers, or run 'hermes doctor' to diagnose config issues.",
+        "Config issue detected — run 'hermes doctor' for full diagnostics:",
+        "No inference provider configured. Run 'hermes model' to choose a ",
+        "OPENAI_API_KEY, etc.) in ~/.hermes/.env.",
+        "Spotify client_id is required. Set HERMES_SPOTIFY_CLIENT_ID or pass --client-id.",
+        "<code>hermes auth add xai-oauth</code> to retry.",
+        "pip install azure-identity  (or rely on Hermes' ",
+        "Run `hermes doctor` to verify token acquisition.",
+        "The 'hermes login' command has been removed.",
+        "Use 'hermes auth' to manage credentials,",
+        "'hermes model' to select a provider, or 'hermes setup' for full setup.",
+        "Saved HERMES_SPOTIFY_CLIENT_ID to ~/.hermes/.env",
+    ]
+
+    for needle in expected:
+        assert needle in auth_text
+    for needle in forbidden:
+        assert needle not in auth_text

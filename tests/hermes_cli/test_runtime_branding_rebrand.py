@@ -32,6 +32,18 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
     channel_directory = Path(
         "/Users/macshelton/Documents/DoppelFork-repair2/gateway/channel_directory.py"
     ).read_text(encoding="utf-8")
+    gateway_config = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/gateway/config.py"
+    ).read_text(encoding="utf-8")
+    gateway_hooks = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/gateway/hooks.py"
+    ).read_text(encoding="utf-8")
+    runtime_footer = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/gateway/runtime_footer.py"
+    ).read_text(encoding="utf-8")
+    sticker_cache = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/gateway/sticker_cache.py"
+    ).read_text(encoding="utf-8")
 
     skin_required = [
         "Skins are defined as YAML files in ~/.doppel/skins/ or as built-in presets.",
@@ -137,6 +149,32 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
     channel_directory_forbidden = [
         "~/.hermes/channel_directory.json.  The send_message tool reads this file for",
     ]
+    gateway_config_required = [
+        "2. ~/.doppel/config.yaml (primary user-facing config)",
+        "3. ~/.doppel/gateway.json (legacy — provides defaults under config.yaml)",
+    ]
+    gateway_config_forbidden = [
+        "2. ~/.hermes/config.yaml (primary user-facing config)",
+        "3. ~/.hermes/gateway.json (legacy — provides defaults under config.yaml)",
+    ]
+    gateway_hooks_required = [
+        "Hooks are discovered from ~/.doppel/hooks/ directories, each containing:",
+    ]
+    gateway_hooks_forbidden = [
+        "Hooks are discovered from ~/.hermes/hooks/ directories, each containing:",
+    ]
+    runtime_footer_required = [
+        "Config (``~/.doppel/config.yaml``)::",
+    ]
+    runtime_footer_forbidden = [
+        "Config (``~/.hermes/config.yaml``)::",
+    ]
+    sticker_cache_required = [
+        "Cache location: ~/.doppel/sticker_cache.json",
+    ]
+    sticker_cache_forbidden = [
+        "Cache location: ~/.hermes/sticker_cache.json",
+    ]
 
     for text in skin_required:
         assert text in skin_engine, text
@@ -178,3 +216,19 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
         assert text in channel_directory, text
     for text in channel_directory_forbidden:
         assert text not in channel_directory, text
+    for text in gateway_config_required:
+        assert text in gateway_config, text
+    for text in gateway_config_forbidden:
+        assert text not in gateway_config, text
+    for text in gateway_hooks_required:
+        assert text in gateway_hooks, text
+    for text in gateway_hooks_forbidden:
+        assert text not in gateway_hooks, text
+    for text in runtime_footer_required:
+        assert text in runtime_footer, text
+    for text in runtime_footer_forbidden:
+        assert text not in runtime_footer, text
+    for text in sticker_cache_required:
+        assert text in sticker_cache, text
+    for text in sticker_cache_forbidden:
+        assert text not in sticker_cache, text

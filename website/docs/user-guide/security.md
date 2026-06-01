@@ -26,7 +26,7 @@ Before executing any command, Doppel checks it against a curated list of dangero
 
 ### Approval Modes
 
-The approval system supports three modes, configured via `approvals.mode` in your agent-home `config.yaml` (`~/.doppel/config.yaml` on fresh installs; legacy `~/.hermes/config.yaml` still works):
+The approval system supports three modes, configured via `approvals.mode` in your agent-home `config.yaml` (`~/.doppel/config.yaml`):
 
 ```yaml
 approvals:
@@ -114,7 +114,7 @@ If you hit the blocklist, the tool call returns an explanatory error to the agen
 
 When a dangerous command prompt appears, the user has a configurable amount of time to respond. If no response is given within the timeout, the command is **denied** by default (fail-closed).
 
-Configure the timeout in your agent-home `config.yaml` (`~/.doppel/config.yaml` on fresh installs; legacy `~/.hermes/config.yaml` still works):
+Configure the timeout in your agent-home `config.yaml` (`~/.doppel/config.yaml`):
 
 ```yaml
 approvals:
@@ -147,8 +147,8 @@ The following patterns trigger approval prompts (defined in `tools/approval.py`)
 | `python -e` / `perl -e` / `ruby -e` / `node -c` | Script execution via `-e`/`-c` flag |
 | `curl ... \| sh` / `wget ... \| sh` | Pipe remote content to shell |
 | `bash <(curl ...)` / `sh <(wget ...)` | Execute remote script via process substitution |
-| `tee` to `/etc/`, `~/.ssh/`, or your agent-home `.env` (`~/.doppel/.env` on fresh installs; legacy `~/.hermes/.env` still works) | Overwrite sensitive file via tee |
-| `>` / `>>` to `/etc/`, `~/.ssh/`, or your agent-home `.env` (`~/.doppel/.env` on fresh installs; legacy `~/.hermes/.env` still works) | Overwrite sensitive file via redirection |
+| `tee` to `/etc/`, `~/.ssh/`, or your agent-home `.env` (`~/.doppel/.env`) | Overwrite sensitive file via tee |
+| `>` / `>>` to `/etc/`, `~/.ssh/`, or your agent-home `.env` (`~/.doppel/.env`) | Overwrite sensitive file via redirection |
 | `xargs rm` | xargs with rm |
 | `find -exec rm` / `find -delete` | Find with destructive actions |
 | `cp`/`mv`/`install` to `/etc/` | Copy/move file into system config |
@@ -223,7 +223,7 @@ The `_is_user_authorized()` method checks in this order:
 
 ### Platform Allowlists
 
-Set allowed user IDs as comma-separated values in your agent-home `.env` file (`~/.doppel/.env` on fresh installs; legacy `~/.hermes/.env` still works):
+Set allowed user IDs as comma-separated values in your agent-home `.env` file (`~/.doppel/.env`):
 
 ```bash
 # Platform-specific allowlists
@@ -305,7 +305,7 @@ doppel pairing revoke telegram 123456789
 doppel pairing clear-pending
 ```
 
-**Storage:** Pairing data is stored in `~/.doppel/pairing/` on fresh installs (legacy `~/.hermes/pairing/` still works) with per-platform JSON files:
+**Storage:** Pairing data is stored in `~/.doppel/pairing/` with per-platform JSON files:
 - `{platform}-pending.json` — pending pairing requests
 - `{platform}-approved.json` — approved users
 - `_rate_limits.json` — rate limit and lockout tracking
@@ -334,7 +334,7 @@ _SECURITY_ARGS = [
 
 ### Resource Limits
 
-Container resources are configurable in your agent-home `config.yaml` (`~/.doppel/config.yaml` on fresh installs; legacy `~/.hermes/config.yaml` still works):
+Container resources are configurable in your agent-home `config.yaml` (`~/.doppel/config.yaml`):
 
 ```yaml
 terminal:
@@ -349,7 +349,7 @@ terminal:
 
 ### Filesystem Persistence
 
-- **Persistent mode** (`container_persistent: true`): Bind-mounts `/workspace` and `/root` from `~/.hermes/sandboxes/docker/<task_id>/`
+- **Persistent mode** (`container_persistent: true`): Bind-mounts `/workspace` and `/root` from the profile-scoped Docker sandbox directory under your agent home
 - **Ephemeral mode** (`container_persistent: false`): Uses tmpfs for workspace — everything is lost on cleanup
 
 :::tip
@@ -410,7 +410,7 @@ terminal:
 
 ### Credential File Passthrough (OAuth tokens, etc.) {#credential-file-passthrough}
 
-Some skills need **files** (not just env vars) in the sandbox — for example, Google Workspace stores OAuth tokens as `google_token.json` under the active profile's `HERMES_HOME`. Skills declare these in frontmatter:
+Some skills need **files** (not just env vars) in the sandbox — for example, Google Workspace stores OAuth tokens as `google_token.json` under the active profile's agent home. Skills declare these in frontmatter:
 
 ```yaml
 required_credential_files:
@@ -420,7 +420,7 @@ required_credential_files:
     description: Google OAuth2 client credentials
 ```
 
-When loaded, Doppel checks if these files exist in the active profile's `HERMES_HOME` and registers them for mounting:
+When loaded, Doppel checks if these files exist in the active profile's agent home and registers them for mounting:
 
 - **Docker**: Read-only bind mounts (`-v host:container:ro`)
 - **Modal**: Mounted at sandbox creation + synced before each command (handles mid-session OAuth setup)
@@ -435,7 +435,7 @@ terminal:
     - my_custom_oauth_token.json
 ```
 
-Paths are relative to `~/.hermes/`. Files are mounted to `/root/.hermes/` inside the container. This list is read by `tools/credential_files.py` (`terminal.credential_files`) — it lives under the `terminal:` block but is loaded by the credential-files module, not the core terminal backend, so it isn't part of the bundled `DEFAULT_CONFIG` snapshot.
+Paths are relative to the active agent-home root. Files are mounted under the container's agent-home directory. This list is read by `tools/credential_files.py` (`terminal.credential_files`) — it lives under the `terminal:` block but is loaded by the credential-files module, not the core terminal backend, so it isn't part of the bundled `DEFAULT_CONFIG` snapshot.
 
 ### What Each Sandbox Filters
 
@@ -583,12 +583,12 @@ Blocked files show a warning:
 1. **Set explicit allowlists** — never use `GATEWAY_ALLOW_ALL_USERS=true` in production
 2. **Use container backend** — set `terminal.backend: docker` in config.yaml
 3. **Restrict resource limits** — set appropriate CPU, memory, and disk limits
-4. **Store secrets securely** — keep API keys in your agent-home `.env` file (`~/.doppel/.env` on fresh installs; legacy `~/.hermes/.env` still works) with proper file permissions
+4. **Store secrets securely** — keep API keys in your agent-home `.env` file (`~/.doppel/.env`) with proper file permissions
 5. **Enable DM pairing** — use pairing codes instead of hardcoding user IDs when possible
 6. **Review command allowlist** — periodically audit `command_allowlist` in config.yaml
 7. **Set `terminal.cwd`** — don't let the agent operate from sensitive directories
 8. **Run as non-root** — never run the gateway as root
-9. **Monitor logs** — check `~/.doppel/logs/` on fresh installs (legacy `~/.hermes/logs/` still works) for unauthorized access attempts
+9. **Monitor logs** — check `~/.doppel/logs/` for unauthorized access attempts
 10. **Keep updated** — run `doppel update` regularly for security patches
 
 ### Securing API Keys

@@ -182,3 +182,32 @@ def test_credential_sources_prompt_builder_and_mcp_transport_guidance_prefers_do
 
     assert "Hermes Agent's tool surface, exposed for use inside a Codex " not in hermes_tools_mcp
     assert "Doppel Agent's tool surface, exposed for use inside a Codex " in hermes_tools_mcp
+
+
+def test_bitwarden_onboarding_and_auxiliary_guidance_prefers_doppel():
+    bitwarden = _read("agent/secret_sources/bitwarden.py")
+    onboarding = _read("agent/onboarding.py")
+    auxiliary_client = _read("agent/auxiliary_client.py")
+
+    assert "plaintext in ``~/.hermes/.env``" not in bitwarden
+    assert "plaintext in ``~/.doppel/.env``" in bitwarden
+    assert "The access token is stored in ``~/.hermes/.env`` as" not in bitwarden
+    assert "The access token is stored in ``~/.doppel/.env`` as" in bitwarden
+    assert "back-to-back ``hermes`` invocations" not in bitwarden
+    assert "back-to-back ``doppel`` invocations" in bitwarden
+    assert "`hermes secrets bitwarden setup`." not in bitwarden
+    assert "`doppel secrets bitwarden setup`." in bitwarden
+    assert "not set.  Run `hermes secrets bitwarden setup`." not in bitwarden
+    assert "not set.  Run `doppel secrets bitwarden setup`." in bitwarden
+    assert "Run `hermes secrets bitwarden setup` to install." not in bitwarden
+    assert "Run `doppel secrets bitwarden setup` to install." in bitwarden
+
+    assert "To port your config, memory, and skills over to Hermes, run " not in onboarding
+    assert "To port your config, memory, and skills over to Doppel, run " in onboarding
+    assert "`hermes claw migrate`." not in onboarding
+    assert "`doppel claw migrate`." in onboarding
+    assert "run `hermes claw cleanup`" not in onboarding
+    assert "run `doppel claw cleanup`" in onboarding
+
+    assert "runtime resolution failed (run: hermes doctor for " not in auxiliary_client
+    assert "runtime resolution failed (run: doppel doctor for " in auxiliary_client

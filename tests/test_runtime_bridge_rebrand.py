@@ -46,6 +46,22 @@ def test_runtime_bridge_and_dashboard_surfaces_prefer_doppel() -> None:
 
     assert "add the key to ~/.hermes/.env manually." not in gateway_base
     assert "add the key to ~/.doppel/.env manually." in gateway_base
+    assert "Audio file extensions Hermes recognizes for native audio delivery." not in gateway_base
+    assert "Audio file extensions Doppel recognizes for native audio delivery." in gateway_base
+    assert "Telegram private-chat topics created through Hermes' DM-topic helper" not in gateway_base
+    assert "Telegram private-chat topics created through Doppel's DM-topic helper" in gateway_base
+    assert "replying to the triggering message. Hermes-created Telegram private-chat" not in gateway_base
+    assert "replying to the triggering message. Doppel-created Telegram private-chat" in gateway_base
+    assert '"User-Agent": "Mozilla/5.0 (compatible; HermesAgent/1.0)"' not in gateway_base
+    assert '"User-Agent": "Mozilla/5.0 (compatible; DoppelAgent/1.0)"' in gateway_base
+    assert "The Hermes home itself contains credentials" not in gateway_base
+    assert "The Doppel home itself contains credentials" in gateway_base
+    assert "Hermes-managed cache, under an operator-allowlisted root" not in gateway_base
+    assert "Doppel-managed cache, under an operator-allowlisted root" in gateway_base
+    assert "~/.hermes/.env," not in gateway_base
+    assert "~/.doppel/.env," in gateway_base
+    assert "~/.hermes/auth.json, etc." not in gateway_base
+    assert "~/.doppel/auth.json, etc." in gateway_base
 
     assert "Install agent-browser + Playwright Chromium into ~/.hermes/node/" not in acp_entry
     assert "Install agent-browser + Playwright Chromium into ~/.doppel/node/" in acp_entry

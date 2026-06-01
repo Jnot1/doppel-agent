@@ -8,13 +8,13 @@
   <a href="website/docs/index.mdx"><img src="https://img.shields.io/badge/Docs-Doppel%20Agent-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="https://github.com/Jnot1/doppel-agent"><img src="https://img.shields.io/badge/GitHub-Jnot1%2Fdoppel--agent-111827?style=for-the-badge&logo=github" alt="GitHub repository"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
-  <a href="NOTICE.md"><img src="https://img.shields.io/badge/Notice-Hermes%20fork-blue?style=for-the-badge" alt="Fork notice"></a>
+  <a href="NOTICE.md"><img src="https://img.shields.io/badge/Notice-Upstream%20notice-blue?style=for-the-badge" alt="Upstream notice"></a>
   <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/Lang-中文-red?style=for-the-badge" alt="中文"></a>
 </p>
 
-**Doppel Agent is Your Everyday Personal AI Assistant.** It is a modified fork of Hermes Agent by Nous Research, maintained by Doppelme for everyday life assistance and serious technical work. Use it for email triage, calendar organization, grocery planning, to-do management, personal training support, cooking help, and deep multi-step workflows that benefit from memory, tools, and automation.
+**Doppel Agent is Your Everyday Personal AI Assistant.** Maintained by Doppelme for everyday life assistance and serious technical work. Original upstream attribution is preserved in [NOTICE.md]. Use it for email triage, calendar organization, grocery planning, to-do management, personal training support, cooking help, and deep multi-step workflows that benefit from memory, tools, and automation.
 
-Use any model you want — [Nous Portal](https://portal.nousresearch.com), [OpenRouter](https://openrouter.ai) (200+ models), [NovitaAI](https://novita.ai) (AI-native cloud for Model API, Agent Sandbox, and GPU Cloud), [NVIDIA NIM](https://build.nvidia.com) (Nemotron), [Xiaomi MiMo](https://platform.xiaomimimo.com), [z.ai/GLM](https://z.ai), [Kimi/Moonshot](https://platform.moonshot.ai), [MiniMax](https://www.minimax.io), [Hugging Face](https://huggingface.co), OpenAI, or your own endpoint. Switch with `doppel model` — no code changes, no lock-in. Legacy `hermes` commands remain available as compatibility aliases during the transition.
+Use any model you want — [Nous Portal](https://portal.nousresearch.com), [OpenRouter](https://openrouter.ai) (200+ models), [NovitaAI](https://novita.ai) (AI-native cloud for Model API, Agent Sandbox, and GPU Cloud), [NVIDIA NIM](https://build.nvidia.com) (Nemotron), [Xiaomi MiMo](https://platform.xiaomimimo.com), [z.ai/GLM](https://z.ai), [Kimi/Moonshot](https://platform.moonshot.ai), [MiniMax](https://www.minimax.io), [Hugging Face](https://huggingface.co), OpenAI, or your own endpoint. Switch with `doppel model` — no code changes, no lock-in. Legacy compatibility aliases remain available during the transition.
 
 <table>
 <tr><td><b>A real terminal interface</b></td><td>Full TUI with multiline editing, slash-command autocomplete, conversation history, interrupt-and-redirect, and streaming tool output.</td></tr>
@@ -182,7 +182,7 @@ Quick start for contributors — clone and go with `setup-hermes.sh`:
 ```bash
 git clone https://github.com/Jnot1/doppel-agent.git
 cd doppel-agent
-./setup-hermes.sh     # installs uv, creates venv, installs .[all], exposes both doppel and hermes launchers
+./setup-hermes.sh     # installs uv, creates venv, installs .[all], exposes doppel and keeps legacy launcher aliases available
 ./doppel              # auto-detects the venv, no need to `source` first
 ```
 
@@ -212,4 +212,4 @@ scripts/run_tests.sh
 
 MIT — see [LICENSE](LICENSE).
 
-Doppel Agent is maintained by Doppelme and distributed as a modified fork of Hermes Agent by Nous Research. See [NOTICE.md](NOTICE.md) for required attribution details.
+Doppel Agent is maintained by Doppelme. Original upstream attribution is preserved in [NOTICE.md].

@@ -286,6 +286,6 @@ mcp_servers:
 Behavior:
 - Doppel Agent uses the MCP SDK's OAuth 2.1 PKCE flow (metadata discovery, dynamic client registration, token exchange, and refresh)
 - On first connect, a browser window opens for authorization
-- Tokens are persisted under your agent home (`~/.doppel/mcp-tokens/<server>.json` on fresh installs; legacy `~/.hermes/` installs still work) and reused across sessions
+- Tokens are persisted under your agent home (`~/.doppel/mcp-tokens/<server>.json` on fresh installs; legacy home-dir installs still work) and reused across sessions
 - Token refresh is automatic; re-authorization only happens when refresh fails
 - Only applies to HTTP/StreamableHTTP transport (`url`-based servers)

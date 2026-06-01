@@ -63,7 +63,7 @@ Field notes:
 | Network failure, no cache | Silent fallback to in-repo snapshot |
 | Manifest fails schema validation | Treated as unreachable |
 
-Cache location: `~/.doppel/cache/model_catalog.json` on fresh installs (legacy `~/.hermes/cache/model_catalog.json` still works).
+Cache location: `~/.doppel/cache/model_catalog.json` on fresh installs (legacy cache paths still work).
 
 ## Config
 

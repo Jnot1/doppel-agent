@@ -8,13 +8,13 @@
   <a href="website/docs/index.mdx"><img src="https://img.shields.io/badge/Docs-Doppel%20Agent-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="https://github.com/Jnot1/doppel-agent"><img src="https://img.shields.io/badge/GitHub-Jnot1%2Fdoppel--agent-111827?style=for-the-badge&logo=github" alt="GitHub repository"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
-  <a href="NOTICE.md"><img src="https://img.shields.io/badge/Notice-Hermes%20fork-blue?style=for-the-badge" alt="Fork notice"></a>
+  <a href="NOTICE.md"><img src="https://img.shields.io/badge/Notice-Upstream%20notice-blue?style=for-the-badge" alt="Upstream notice"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/Lang-English-lightgrey?style=for-the-badge" alt="English"></a>
 </p>
 
-**Doppel Agent 是你的日常个人 AI 助手。** 它是基于 Nous Research 的 Hermes Agent 修改而来的分叉版本，由 Doppelme 维护，适合处理邮件分拣、日历整理、购物清单、待办事项、健身陪练、烹饪辅助，以及需要记忆、工具和自动化能力的复杂技术工作流。
+**Doppel Agent 是你的日常个人 AI 助手。** 由 Doppelme 维护，适合处理邮件分拣、日历整理、购物清单、待办事项、健身陪练、烹饪辅助，以及需要记忆、工具和自动化能力的复杂技术工作流。原始上游署名保留在 [NOTICE.md]。
 
-支持任意模型——[Nous Portal](https://portal.nousresearch.com)、[OpenRouter](https://openrouter.ai)（200+ 模型）、[NVIDIA NIM](https://build.nvidia.com)（Nemotron）、[小米 MiMo](https://platform.xiaomimimo.com)、[z.ai/GLM](https://z.ai)、[Kimi/Moonshot](https://platform.moonshot.ai)、[MiniMax](https://www.minimax.io)、[Hugging Face](https://huggingface.co)、OpenAI，或自定义端点。使用 `doppel model` 即可切换——无需改代码，无锁定。过渡期间仍兼容旧的 `hermes` 命令。
+支持任意模型——[Nous Portal](https://portal.nousresearch.com)、[OpenRouter](https://openrouter.ai)（200+ 模型）、[NVIDIA NIM](https://build.nvidia.com)（Nemotron）、[小米 MiMo](https://platform.xiaomimimo.com)、[z.ai/GLM](https://z.ai)、[Kimi/Moonshot](https://platform.moonshot.ai)、[MiniMax](https://www.minimax.io)、[Hugging Face](https://huggingface.co)、OpenAI，或自定义端点。使用 `doppel model` 即可切换——无需改代码，无锁定。过渡期间仍保留旧版兼容别名。
 
 <table>
 <tr><td><b>真正的终端界面</b></td><td>完整的 TUI，支持多行编辑、斜杠命令自动补全、对话历史、中断重定向和流式工具输出。</td></tr>
@@ -168,7 +168,7 @@ doppel claw migrate --overwrite  # 覆盖已有冲突
 ```bash
 git clone https://github.com/Jnot1/doppel-agent.git
 cd doppel-agent
-./setup-hermes.sh     # 安装 uv、创建 venv、安装 .[all]，并同时暴露 doppel / hermes 启动器
+./setup-hermes.sh     # 安装 uv、创建 venv、安装 .[all]，提供 doppel，并保留旧版启动器兼容别名
 ./doppel              # 自动检测 venv，无需先 source
 ```
 
@@ -198,4 +198,4 @@ python -m pytest tests/ -q
 
 MIT — 详见 [LICENSE](LICENSE)。
 
-Doppel Agent 由 Doppelme 维护，并作为 Nous Research 的 Hermes Agent 修改分叉发布。所需归属说明请参阅 [NOTICE.md](NOTICE.md)。
+Doppel Agent 由 Doppelme 维护。原始上游署名保留在 [NOTICE.md](NOTICE.md)。

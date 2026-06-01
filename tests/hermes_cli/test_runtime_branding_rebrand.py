@@ -44,6 +44,15 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
     sticker_cache = Path(
         "/Users/macshelton/Documents/DoppelFork-repair2/gateway/sticker_cache.py"
     ).read_text(encoding="utf-8")
+    install_sh = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/scripts/install.sh"
+    ).read_text(encoding="utf-8")
+    profile_tui = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/scripts/profile-tui.py"
+    ).read_text(encoding="utf-8")
+    platform_registry = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/gateway/platform_registry.py"
+    ).read_text(encoding="utf-8")
 
     skin_required = [
         "Skins are defined as YAML files in ~/.doppel/skins/ or as built-in presets.",
@@ -175,6 +184,28 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
     sticker_cache_forbidden = [
         "Cache location: ~/.hermes/sticker_cache.json",
     ]
+    install_sh_required = [
+        "Existing installs at ~/.doppel/$MANAGED_CHECKOUT_DIR_NAME are preserved in-place.",
+    ]
+    install_sh_forbidden = [
+        "Existing installs at ~/.hermes/$MANAGED_CHECKOUT_DIR_NAME are preserved in-place.",
+    ]
+    profile_tui_required = [
+        "~30 Hz (matching xterm key-repeat), summarizes ~/.doppel/perf.log on exit.",
+        "HERMES_PERF_LOG     (default ~/.doppel/perf.log)",
+    ]
+    profile_tui_forbidden = [
+        "~30 Hz (matching xterm key-repeat), summarizes ~/.hermes/perf.log on exit.",
+        "HERMES_PERF_LOG     (default ~/.hermes/perf.log)",
+    ]
+    platform_registry_required = [
+        "# Env vars this platform needs (for ``doppel setup`` display).",
+        "# built-ins).  Used by ``doppel gateway setup`` to auto-enable the",
+    ]
+    platform_registry_forbidden = [
+        "# Env vars this platform needs (for ``hermes setup`` display).",
+        "# built-ins).  Used by ``hermes gateway setup`` to auto-enable the",
+    ]
 
     for text in skin_required:
         assert text in skin_engine, text
@@ -232,3 +263,15 @@ def test_runtime_branding_and_path_surfaces_prefer_doppel() -> None:
         assert text in sticker_cache, text
     for text in sticker_cache_forbidden:
         assert text not in sticker_cache, text
+    for text in install_sh_required:
+        assert text in install_sh, text
+    for text in install_sh_forbidden:
+        assert text not in install_sh, text
+    for text in profile_tui_required:
+        assert text in profile_tui, text
+    for text in profile_tui_forbidden:
+        assert text not in profile_tui, text
+    for text in platform_registry_required:
+        assert text in platform_registry, text
+    for text in platform_registry_forbidden:
+        assert text not in platform_registry, text

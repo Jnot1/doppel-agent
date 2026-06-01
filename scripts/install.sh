@@ -177,7 +177,7 @@ while [[ $# -gt 0 ]]; do
             echo "  for compatibility with existing runtime internals."
             echo "  This keeps bind-mounted /root volumes small and ensures the"
             echo "  command is on PATH for all shells."
-            echo "  Existing installs at ~/.hermes/$MANAGED_CHECKOUT_DIR_NAME are preserved in-place."
+            echo "  Existing installs at ~/.doppel/$MANAGED_CHECKOUT_DIR_NAME are preserved in-place."
             echo "  --ensure DEPS  Install only specified deps (comma-separated)"
             echo "                   Supported: node, browser, ripgrep, ffmpeg"
             echo "                   Does NOT clone repo or create venv"

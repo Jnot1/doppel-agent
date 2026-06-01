@@ -34,6 +34,17 @@ def test_web_server_customer_facing_copy_prefers_doppel() -> None:
         "1. User plugins:    ~/.doppel/plugins/<name>/dashboard/manifest.json",
         "~/.doppel/plugins/ if you trust it)",
         "Each provider plugin that ships with Doppel Agent exposes a",
+        '"X-Doppel-Session-Token"',
+        "Install Doppel inside WSL2 to use the dashboard's /chat ",
+        '"label": "Doppel Teal"',
+        '"label": "Doppel Teal (Large)"',
+        '"description": "Classic dark teal — the canonical Doppel look"',
+        '"description": "Doppel Teal with bigger fonts and roomier spacing"',
+        'print(f"  Doppel Web UI → http://{host}:{port}")',
+        "__DOPPEL_BASE_PATH__",
+        "__DOPPEL_AUTH_REQUIRED__",
+        "__DOPPEL_SESSION_TOKEN__",
+        "__DOPPEL_DASHBOARD_EMBEDDED_CHAT__",
     ]
     forbidden = [
         "Hermes Agent — Web UI server.",
@@ -63,6 +74,17 @@ def test_web_server_customer_facing_copy_prefers_doppel() -> None:
         "1. User plugins:    ~/.hermes/plugins/<name>/dashboard/manifest.json",
         "~/.hermes/plugins/ if you trust it)",
         "Each provider plugin that ships with Hermes Agent exposes a",
+        '"X-Hermes-Session-Token"',
+        "Install Hermes inside WSL2 to use the dashboard's /chat ",
+        '"label": "Hermes Teal"',
+        '"label": "Hermes Teal (Large)"',
+        '"description": "Classic dark teal — the canonical Hermes look"',
+        '"description": "Hermes Teal with bigger fonts and roomier spacing"',
+        'print(f"  Hermes Web UI → http://{host}:{port}")',
+        "__HERMES_BASE_PATH__",
+        "__HERMES_AUTH_REQUIRED__",
+        "__HERMES_SESSION_TOKEN__",
+        "__HERMES_DASHBOARD_EMBEDDED_CHAT__",
     ]
 
     for text in required:

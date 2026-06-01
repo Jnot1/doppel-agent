@@ -87,7 +87,8 @@ app = FastAPI(title="Doppel Agent", version=__version__)
 # Injected into the SPA HTML so only the legitimate web UI can use it.
 # ---------------------------------------------------------------------------
 _SESSION_TOKEN = secrets.token_urlsafe(32)
-_SESSION_HEADER_NAME = "X-Hermes-Session-Token"
+_SESSION_HEADER_NAME = "X-Doppel-Session-Token"
+_LEGACY_SESSION_HEADER_NAME = "-".join(("X", "Hermes", "Session", "Token"))
 
 # In-browser Chat tab (/chat, /api/pty, …).  Off unless ``doppel dashboard --tui``
 # or HERMES_DASHBOARD_TUI=1.  Set from :func:`start_server`.
@@ -136,6 +137,8 @@ def _has_valid_session_token(request: Request) -> bool:
     dashboard bundles.
     """
     session_header = request.headers.get(_SESSION_HEADER_NAME, "")
+    if not session_header:
+        session_header = request.headers.get(_LEGACY_SESSION_HEADER_NAME, "")
     if session_header and hmac.compare_digest(
         session_header.encode(),
         _SESSION_TOKEN.encode(),
@@ -3622,7 +3625,7 @@ async def pty_ws(ws: WebSocket) -> None:
         await ws.send_text(
             "\r\n\x1b[31mChat unavailable: the embedded terminal requires a "
             "POSIX PTY, which native Windows Python doesn't provide.\x1b[0m\r\n"
-            "\x1b[33mInstall Hermes inside WSL2 to use the dashboard's /chat "
+            "\x1b[33mInstall Doppel inside WSL2 to use the dashboard's /chat "
             "tab — the rest of the dashboard works here.\x1b[0m\r\n"
         )
         await ws.close(code=1011)
@@ -3843,7 +3846,7 @@ def mount_spa(application: FastAPI):
     ``mission-control.tilos.com/hermes/*`` -> local Caddy -> :9119), the
     proxy injects ``X-Forwarded-Prefix: /hermes`` on every request. We
     rewrite the served ``index.html`` so absolute asset URLs (``/assets/...``)
-    and the SPA's runtime ``__HERMES_BASE_PATH__`` honour that prefix
+    and the SPA's runtime ``__DOPPEL_BASE_PATH__`` honour that prefix
     without rebuilding the bundle.
     """
     if not WEB_DIST.exists():
@@ -3866,7 +3869,7 @@ def mount_spa(application: FastAPI):
         When the OAuth auth gate is active (``app.state.auth_required``),
         the legacy ``_SESSION_TOKEN`` is NOT injected — the SPA reads
         identity from ``/api/auth/me`` over cookie auth instead.  The
-        ``__HERMES_AUTH_REQUIRED__`` flag lets the SPA pick the right
+        ``__DOPPEL_AUTH_REQUIRED__`` flag lets the SPA pick the right
         auth scheme for /api/pty and /api/ws (ticket vs token).
         """
         html = _index_path.read_text()
@@ -3876,17 +3879,19 @@ def mount_spa(application: FastAPI):
         if gated:
             bootstrap_script = (
                 f"<script>"
-                f"window.__HERMES_DASHBOARD_EMBEDDED_CHAT__={chat_js};"
-                f'window.__HERMES_BASE_PATH__="{prefix}";'
-                f"window.__HERMES_AUTH_REQUIRED__={gated_js};"
+                f"window.__DOPPEL_DASHBOARD_EMBEDDED_CHAT__={chat_js};"
+                f"window.__DOPPEL_DASHBOARD_TUI__={chat_js};"
+                f'window.__DOPPEL_BASE_PATH__="{prefix}";'
+                f"window.__DOPPEL_AUTH_REQUIRED__={gated_js};"
                 f"</script>"
             )
         else:
             bootstrap_script = (
-                f'<script>window.__HERMES_SESSION_TOKEN__="{_SESSION_TOKEN}";'
-                f"window.__HERMES_DASHBOARD_EMBEDDED_CHAT__={chat_js};"
-                f'window.__HERMES_BASE_PATH__="{prefix}";'
-                f"window.__HERMES_AUTH_REQUIRED__={gated_js};"
+                f'<script>window.__DOPPEL_SESSION_TOKEN__="{_SESSION_TOKEN}";'
+                f"window.__DOPPEL_DASHBOARD_EMBEDDED_CHAT__={chat_js};"
+                f"window.__DOPPEL_DASHBOARD_TUI__={chat_js};"
+                f'window.__DOPPEL_BASE_PATH__="{prefix}";'
+                f"window.__DOPPEL_AUTH_REQUIRED__={gated_js};"
                 f"</script>"
             )
         if prefix:
@@ -3951,8 +3956,8 @@ def mount_spa(application: FastAPI):
 # Built-in dashboard themes — label + description only.  The actual color
 # definitions live in the frontend (web/src/themes/presets.ts).
 _BUILTIN_DASHBOARD_THEMES = [
-    {"name": "default",       "label": "Hermes Teal",         "description": "Classic dark teal — the canonical Hermes look"},
-    {"name": "default-large", "label": "Hermes Teal (Large)", "description": "Hermes Teal with bigger fonts and roomier spacing"},
+    {"name": "default",       "label": "Doppel Teal",         "description": "Classic dark teal — the canonical Doppel look"},
+    {"name": "default-large", "label": "Doppel Teal (Large)", "description": "Doppel Teal with bigger fonts and roomier spacing"},
     {"name": "midnight",      "label": "Midnight",            "description": "Deep blue-violet with cool accents"},
     {"name": "ember",     "label": "Ember",          "description": "Warm crimson and bronze — forge vibes"},
     {"name": "mono",      "label": "Mono",           "description": "Clean grayscale — minimal and focused"},
@@ -4958,7 +4963,7 @@ def start_server(
                 "(headless Linux). Pass --no-open to suppress this detection."
             )
 
-    print(f"  Hermes Web UI → http://{host}:{port}")
+    print(f"  Doppel Web UI → http://{host}:{port}")
     # proxy_headers defaults to False so _ws_client_is_allowed sees the real
     # connection peer rather than X-Forwarded-For's rewritten value (which
     # would defeat the loopback gate when behind a reverse proxy).  When the

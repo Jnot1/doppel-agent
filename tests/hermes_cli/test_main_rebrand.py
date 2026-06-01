@@ -173,3 +173,99 @@ def test_main_parser_and_help_examples_prefer_doppel() -> None:
         assert text in main_py, text
     for text in forbidden:
         assert text not in main_py, text
+
+
+def test_main_product_wording_prefers_doppel() -> None:
+    main_py = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/hermes_cli/main.py"
+    ).read_text(encoding="utf-8")
+
+    required = [
+        "Determine whether Doppel itself has been explicitly configured",
+        "Only count these if Doppel has been explicitly configured",
+        "Doppel will still save it.",
+        "Use Doppel URL heuristics; best for standard OpenAI-compatible endpoints.",
+        "Doppel typically makes 3-10 API calls per user turn",
+        "To use Gemini with Doppel, enable billing on your",
+        "Doppel will use Claude's credential store directly instead of copying a setup-token into",
+        '"""Authenticate Doppel CLI with a provider."""',
+        '"""Back up Doppel home directory to a zip file."""',
+        '"""Restore a Doppel backup from a zip file."""',
+        "Close Doppel Desktop, exit other `doppel` REPLs, stop the ",
+        '"""Update Doppel via pip (for PyPI installs)."""',
+        '"""Main entry point for doppel CLI."""',
+    ]
+    forbidden = [
+        "Determine whether Hermes itself has been explicitly configured",
+        "Only count these if Hermes has been explicitly configured",
+        "Hermes will still save it.",
+        "Use Hermes URL heuristics; best for standard OpenAI-compatible endpoints.",
+        "Hermes typically makes 3-10 API calls per user turn",
+        "To use Gemini with Hermes, enable billing on your",
+        "Hermes will use Claude's credential store directly instead of copying a setup-token into",
+        '"""Authenticate Hermes CLI with a provider."""',
+        '"""Back up Hermes home directory to a zip file."""',
+        '"""Restore a Hermes backup from a zip file."""',
+        "Close Hermes Desktop, exit other `hermes` REPLs, stop the ",
+        '"""Update Hermes via pip (for PyPI installs)."""',
+        '"""Main entry point for hermes CLI."""',
+    ]
+
+    for text in required:
+        assert text in main_py, text
+    for text in forbidden:
+        assert text not in main_py, text
+
+
+def test_main_runtime_update_guidance_prefers_doppel() -> None:
+    main_py = Path(
+        "/Users/macshelton/Documents/DoppelFork-repair2/hermes_cli/main.py"
+    ).read_text(encoding="utf-8")
+
+    required = [
+        "Every subsequent `doppel gateway` then paid a 30s",
+        "`doppel gateway` skips it cleanly instead of paying a 30s",
+        "fast paths like `doppel --version` and slash-command dispatch",
+        "providers if the user switches without running 'doppel model'.",
+        "even run ``doppel update`` again to roll forward.",
+        "Used by ``doppel update --gateway`` so interactive prompts",
+        "the next ``doppel update`` to stash the",
+        "instead of a soft warning (used by ``doppel web``).",
+        "# Fork detection and upstream management for `doppel update`",
+        "``doppel update``, every profile is now current.",
+        "know ``doppel update`` is still progressing even if pip/uv itself is silent.",
+        "path in `doppel gateway restart`",
+        "every `doppel update` surfaces the issue until the user migrates.",
+        "check `doppel curator status`. Self-stamps after printing so it",
+        "Tying the refresh to ``doppel update`` gives users a predictable",
+        "When running as ``doppel update --gateway``",
+        "Reuse the same SIGTERM-grace-SIGKILL path used after `doppel update`.",
+        "`doppel --tui` is the hot path on phones.",
+        "# ``doppel update`` runs on Windows. Silent no-op on non-Windows or when",
+    ]
+    forbidden = [
+        "Every subsequent `hermes gateway` then paid a 30s",
+        "`hermes gateway` skips it cleanly instead of paying a 30s",
+        "fast paths like `hermes --version` and slash-command dispatch",
+        "providers if the user switches without running 'hermes model'.",
+        "even run ``hermes update`` again to roll forward.",
+        "Used by ``hermes update --gateway`` so interactive prompts",
+        "the next ``hermes update`` to stash the",
+        "instead of a soft warning (used by ``hermes web``).",
+        "# Fork detection and upstream management for `hermes update`",
+        "``hermes update``, every profile is now current.",
+        "know ``hermes update`` is still progressing even if pip/uv itself is silent.",
+        "path in `hermes gateway restart`",
+        "every `hermes update` surfaces the issue until the user migrates.",
+        "check `hermes curator status`. Self-stamps after printing so it",
+        "Tying the refresh to ``hermes update`` gives users a predictable",
+        "When running as ``hermes update --gateway``",
+        "Reuse the same SIGTERM-grace-SIGKILL path used after `hermes update`.",
+        "`hermes --tui` is the hot path on phones.",
+        "# ``hermes update`` runs on Windows. Silent no-op on non-Windows or when",
+    ]
+
+    for text in required:
+        assert text in main_py, text
+    for text in forbidden:
+        assert text not in main_py, text

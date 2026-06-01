@@ -1,9 +1,9 @@
 """
-Multi-provider authentication system for Hermes Agent.
+Multi-provider authentication system for Doppel Agent.
 
 Supports OAuth device code flows (Nous Portal, future: OpenAI Codex) and
 traditional API key providers (OpenRouter, custom endpoints). Auth state
-is persisted in ~/.hermes/auth.json with cross-process file locking.
+is persisted in ~/.doppel/auth.json with cross-process file locking.
 
 Architecture:
 - ProviderConfig registry defines known OAuth providers
@@ -585,7 +585,7 @@ def _resolve_api_key_provider_secret(
 
     from hermes_cli.config import get_env_value
     for env_var in pconfig.api_key_env_vars:
-        # Check both os.environ and ~/.hermes/.env file
+        # Check both os.environ and ~/.doppel/.env file
         val = (get_env_value(env_var) or "").strip()
         if has_usable_secret(val):
             return val, env_var
@@ -747,7 +747,7 @@ def is_rate_limited_auth_error(error: Exception) -> bool:
 
     These failures are transient — re-authenticating cannot resolve them — so
     callers should surface a "retry later" notice and prefer a fallback chain
-    instead of prompting the operator to run ``hermes auth``.
+    instead of prompting the operator to run ``doppel auth``.
     """
     return (
         isinstance(error, AuthError)
@@ -855,7 +855,7 @@ def _oauth_trace(event: str, *, sequence_id: Optional[str] = None, **fields: Any
 
 
 # =============================================================================
-# Auth Store — persistence layer for ~/.hermes/auth.json
+# Auth Store — persistence layer for ~/.doppel/auth.json
 # =============================================================================
 
 def _auth_file_path() -> Path:
@@ -918,7 +918,7 @@ def _load_global_auth_store() -> Dict[str, Any]:
     or the global auth.json is absent). Never raises on missing file.
 
     Seat belt: under pytest, refuses to read the real user's
-    ``~/.hermes/auth.json`` even when HERMES_HOME is set to a profile
+    ``~/.doppel/auth.json`` even when HERMES_HOME is set to a profile
     path. The hermetic conftest does not redirect ``HOME``, so
     ``get_default_hermes_root()`` for a profile-shaped HERMES_HOME can
     still resolve to the real user's home on a dev machine. That would
@@ -1141,7 +1141,7 @@ def _load_provider_state(auth_store: Dict[str, Any], provider_id: str) -> Option
     profile has no entry for ``provider_id``. This mirrors the per-provider
     shadowing already used by ``read_credential_pool``: workers spawned in a
     profile can see providers (e.g. ``nous``) that were only authenticated at
-    global scope. Once the user runs ``hermes auth login <provider>`` inside
+    global scope. Once the user runs ``doppel auth login <provider>`` inside
     the profile, the profile state fully shadows the global state on the next
     read. See issue #18594 follow-up.
     """
@@ -1209,8 +1209,7 @@ def read_credential_pool(provider_id: Optional[str] = None) -> Dict[str, Any]:
     profile can see providers that were only authenticated at global scope.
 
     Profile entries always win: the global fallback only applies per-provider
-    when the profile has zero entries for that provider. Once the user runs
-    ``hermes auth add <provider>`` inside the profile, profile entries
+    when the profile has zero entries for that provider. Once the user runs ``doppel auth add <provider>`` inside the profile, profile entries
     fully shadow global for that provider on the next read.
 
     Writes always go to the profile (``write_credential_pool`` is unchanged).
@@ -2083,7 +2082,7 @@ def get_qwen_auth_status() -> Dict[str, Any]:
     try:
         # Validate the runtime credentials, including refresh when the cached
         # CLI token is expired. Otherwise stale tokens show up as "logged in"
-        # and `hermes model` walks users into a broken Qwen setup flow.
+        # and `doppel model` walks users into a broken Qwen setup flow.
         creds = resolve_qwen_runtime_credentials(refresh_if_expiring=True)
         return {
             "logged_in": True,
@@ -2103,7 +2102,7 @@ def get_qwen_auth_status() -> Dict[str, Any]:
 # =============================================================================
 # Google Gemini OAuth (google-gemini-cli) — PKCE flow + Cloud Code Assist.
 #
-# Tokens live in ~/.hermes/auth/google_oauth.json (managed by agent.google_oauth).
+# Tokens live in ~/.doppel/auth/google_oauth.json (managed by agent.google_oauth).
 # The `base_url` here is the marker "cloudcode-pa://google" that run_agent.py
 # uses to construct a GeminiCloudCodeClient instead of the default OpenAI SDK.
 # Actual HTTP traffic goes to https://cloudcode-pa.googleapis.com/v1internal:*.
@@ -2152,7 +2151,7 @@ def resolve_gemini_oauth_runtime_credentials(
 
 
 def get_gemini_oauth_auth_status() -> Dict[str, Any]:
-    """Return a status dict for `hermes auth list` / `hermes status`."""
+    """Return a status dict for `doppel auth list` / `doppel status`."""
     try:
         from agent.google_oauth import _credentials_path, load_credentials
     except ImportError:
@@ -2174,7 +2173,7 @@ def get_gemini_oauth_auth_status() -> Dict[str, Any]:
         "email": creds.email,
         "project_id": creds.project_id,
     }
-# Spotify auth — PKCE tokens stored in ~/.hermes/auth.json
+# Spotify auth — PKCE tokens stored in ~/.doppel/auth.json
 # =============================================================================
 
 
@@ -2849,7 +2848,7 @@ def get_spotify_auth_status() -> Dict[str, Any]:
 
 def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
     """Walk the user through creating a Spotify developer app, persist the
-    resulting client_id to ~/.hermes/.env, and return it.
+    resulting client_id to ~/.doppel/.env, and return it.
 
     Raises SystemExit if the user aborts or submits an empty value.
     """
@@ -2895,7 +2894,7 @@ def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
         print(f"No Client ID entered. See {SPOTIFY_DOCS_URL} for the full guide.")
         raise SystemExit("Spotify setup cancelled: empty Client ID.")
 
-    # Persist so subsequent `hermes auth spotify` runs skip the wizard.
+    # Persist so subsequent `doppel auth spotify` runs skip the wizard.
     save_env_value("HERMES_SPOTIFY_CLIENT_ID", raw)
     # Only persist the redirect URI if it's non-default, to avoid pinning
     # users to a value the default might later change to.
@@ -3252,7 +3251,7 @@ def _print_loopback_ssh_hint(redirect_uri: str, *, docs_url: str | None = None) 
 
 
 # =============================================================================
-# OpenAI Codex auth — tokens stored in ~/.hermes/auth.json (not ~/.codex/)
+# OpenAI Codex auth — tokens stored in ~/.doppel/auth.json (not ~/.codex/)
 #
 # Hermes maintains its own Codex OAuth session separate from the Codex CLI
 # and VS Code extension. This prevents refresh token rotation conflicts
@@ -3260,8 +3259,8 @@ def _print_loopback_ssh_hint(redirect_uri: str, *, docs_url: str | None = None) 
 # =============================================================================
 
 def _read_codex_tokens(*, _lock: bool = True) -> Dict[str, Any]:
-    """Read Codex OAuth tokens from Hermes auth store (~/.hermes/auth.json).
-    
+    """Read Codex OAuth tokens from Doppel auth store (~/.doppel/auth.json).
+
     Returns dict with 'tokens' (access_token, refresh_token) and 'last_refresh'.
     Raises AuthError if no Codex tokens are stored.
     """
@@ -3324,13 +3323,13 @@ def _sync_codex_pool_entries(
     What gets refreshed:
 
     * ``device_code`` — the singleton-seeded entry written by the device-code
-      OAuth flow when the user logged in via ``hermes setup`` / the model
+      OAuth flow when the user logged in via ``doppel setup`` / the model
       picker.  Always synced with the fresh tokens.
-    * ``manual:device_code`` — entries created by ``hermes auth add openai-codex``
+    * ``manual:device_code`` — entries created by ``doppel auth add openai-codex``
       that use the same device-code OAuth mechanism.  An interactive re-auth
       proves the user owns the ChatGPT account, so it is safe (and expected)
       to refresh these entries too.  Without this, a user who once ran the
-      ``hermes auth add`` workaround for #33000 would silently leave that
+      ``doppel auth add`` workaround for #33000 would silently leave that
       manual entry stale on every subsequent re-auth, recreating the issue
       reported in #33538.
 
@@ -3380,7 +3379,7 @@ def _sync_codex_pool_entries(
 
 
 def _save_codex_tokens(tokens: Dict[str, str], last_refresh: str = None) -> None:
-    """Save Codex OAuth tokens to Hermes auth store (~/.hermes/auth.json)."""
+    """Save Codex OAuth tokens to Doppel auth store (~/.doppel/auth.json)."""
     if last_refresh is None:
         last_refresh = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     with _auth_store_lock():
@@ -3527,8 +3526,8 @@ def _refresh_codex_auth_tokens(
     timeout_seconds: float,
 ) -> Dict[str, str]:
     """Refresh Codex access token using the refresh token.
-    
-    Saves the new tokens to Hermes auth store automatically.
+
+    Saves the new tokens to Doppel auth store automatically.
     """
     refreshed = refresh_codex_oauth_pure(
         str(tokens.get("access_token", "") or ""),
@@ -3545,7 +3544,7 @@ def _refresh_codex_auth_tokens(
 
 def _import_codex_cli_tokens() -> Optional[Dict[str, str]]:
     """Try to read tokens from ~/.codex/auth.json (Codex CLI shared file).
-    
+
     Returns tokens dict if valid and not expired, None otherwise.
     Does NOT write to the shared file.
     """
@@ -3691,7 +3690,7 @@ def _pool_codex_access_token() -> str:
 
 
 # =============================================================================
-# xAI Grok OAuth — tokens stored in ~/.hermes/auth.json
+# xAI Grok OAuth — tokens stored in ~/.doppel/auth.json
 # =============================================================================
 
 def _read_xai_oauth_tokens(*, _lock: bool = True) -> Dict[str, Any]:
@@ -3785,7 +3784,7 @@ def _xai_validate_oauth_endpoint(url: str, *, field: str) -> str:
     """Refuse any OIDC discovery endpoint that isn't HTTPS on the xAI origin.
 
     The OIDC discovery response is a long-lived, low-frequency request whose
-    output is cached in ``~/.hermes/auth.json``. A single MITM during initial
+    output is cached in ``~/.doppel/auth.json``. A single MITM during initial
     login could substitute a malicious ``token_endpoint``; that URL would
     then receive the refresh_token on every subsequent refresh — a permanent
     credential leak from a one-time MITM. Validating scheme + host pins the
@@ -3944,10 +3943,10 @@ def refresh_xai_oauth_pure(
         )
     endpoint = token_endpoint.strip() or _xai_oauth_discovery(timeout_seconds)["token_endpoint"]
     # Re-validate cached endpoints on the refresh hot path: an auth.json
-    # written by an older Hermes (or hand-edited) may carry a non-xAI
+    # written by an older Doppel install (or hand-edited) may carry a non-xAI
     # token_endpoint that would receive every future refresh_token in
     # plaintext if we trusted it blindly. Cheap suffix check; fast-fail
-    # with a clear error so the user can re-run `hermes model` to refetch.
+    # with a clear error so the user can re-run `doppel model` to refetch.
     _xai_validate_oauth_endpoint(endpoint, field="token_endpoint")
     timeout = httpx.Timeout(max(5.0, float(timeout_seconds)))
     with httpx.Client(timeout=timeout, headers={"Accept": "application/json"}) as client:
@@ -3964,7 +3963,7 @@ def refresh_xai_oauth_pure(
         detail = response.text.strip()
         # ``403`` from xAI's token endpoint is almost always a tier /
         # entitlement gate (the OAuth grant exists but the account isn't
-        # on the allowlist for API access).  Re-running ``hermes model``
+        # on the allowlist for API access).  Re-running ``doppel model``
         # won't fix that — surface a separate error code so
         # ``format_auth_error`` doesn't append a misleading
         # re-authenticate hint, and point users at the ``XAI_API_KEY``
@@ -4281,12 +4280,12 @@ def _poll_for_token(
 
 # -----------------------------------------------------------------------------
 # Shared Nous token store — lets OAuth credentials persist across profiles
-# so a new `hermes --profile <name> auth add nous --type oauth` can one-tap
+# so a new `doppel --profile <name> auth add nous --type oauth` can one-tap
 # import instead of running the full device-code flow every time.
 #
 # File lives at ${HERMES_SHARED_AUTH_DIR}/nous_auth.json, defaulting to
-# ``<hermes-root>/shared/nous_auth.json`` where ``<hermes-root>`` is what
-# ``get_default_hermes_root()`` returns — ``~/.hermes`` on Linux/macOS,
+# ``<doppel-root>/shared/nous_auth.json`` where ``<doppel-root>`` is what
+# ``get_default_hermes_root()`` returns — ``~/.doppel`` on Linux/macOS,
 # ``%LOCALAPPDATA%\hermes`` on native Windows, or the Docker/custom root.
 # It is OUTSIDE any named profile's HERMES_HOME so named profiles (which
 # typically live under ``<hermes-root>/profiles/<name>/``) all see the
@@ -4309,7 +4308,7 @@ def _nous_shared_auth_dir() -> Path:
     path without touching the real user's home. Defaults to
     ``<hermes-root>/shared/``, where ``<hermes-root>`` is what
     :func:`hermes_constants.get_default_hermes_root` returns — so
-    Linux/macOS classic installs land at ``~/.hermes/shared/``, native
+    Linux/macOS classic installs land at ``~/.doppel/shared/``, native
     Windows installs at ``%LOCALAPPDATA%\\hermes\\shared\\``, and
     Docker / custom ``HERMES_HOME`` deployments at
     ``<HERMES_HOME>/shared/``. Sits outside any named profile so all
@@ -5081,7 +5080,7 @@ def persist_nous_credentials(
       ``_seed_from_singletons()`` during pool load.
     - ``credential_pool.nous``: used by the runtime ``pool.select()`` path.
 
-    Historically ``hermes auth add nous`` wrote a ``manual:device_code`` pool
+    Historically ``doppel auth add nous`` wrote a ``manual:device_code`` pool
     entry only, skipping ``providers.nous``. When the runtime credential
     expired, the recovery path read the empty singleton state and raised
     ``AuthError`` silently (``logger.debug`` at INFO level).
@@ -5092,7 +5091,7 @@ def persist_nous_credentials(
     place; the pool never accumulates duplicate device_code rows.
 
     ``label`` is an optional user-chosen display name (from
-    ``hermes auth add nous --label <name>``).  It gets embedded in the
+    ``doppel auth add nous --label <name>``).  It gets embedded in the
     singleton state so that ``_seed_from_singletons`` uses it as the pool
     entry's label on every subsequent ``load_pool("nous")`` instead of the
     auto-derived token fingerprint.  When ``None``, the auto-derived label
@@ -5113,7 +5112,7 @@ def persist_nous_credentials(
         _save_auth_store(auth_store)
 
     # Mirror to the shared store so a new profile can one-tap import
-    # these credentials via `hermes auth add nous --type oauth`. Best-
+    # these credentials via `doppel auth add nous --type oauth`. Best-
     # effort: any I/O failure is logged and swallowed (the per-profile
     # auth.json is still the source of truth).
     _write_shared_nous_state(state)
@@ -5447,7 +5446,7 @@ def _snapshot_nous_pool_status() -> Dict[str, Any]:
 # subscription-feature checks) call it many times per render — `hermes tools` → "All Platforms"
 # was firing the refresh ~31× during one menu paint, racking up >13s of HTTP and burning
 # single-use refresh tokens. Cache the snapshot for a few seconds, keyed on the auth.json
-# mtime so that `hermes auth login/logout/add/remove` invalidate naturally on the next call.
+# mtime so that `doppel auth login/logout/add/remove` invalidate naturally on the next call.
 _NOUS_AUTH_STATUS_CACHE_TTL = 15.0  # seconds
 _nous_auth_status_cache: Optional[Tuple[float, Optional[float], Dict[str, Any]]] = None
 
@@ -5559,12 +5558,12 @@ def _compute_nous_auth_status() -> Dict[str, Any]:
 
 def get_codex_auth_status() -> Dict[str, Any]:
     """Status snapshot for Codex auth.
-    
-    Checks the credential pool first (where `hermes auth` stores credentials),
+
+    Checks the credential pool first (where `doppel auth` stores credentials),
     then falls back to the legacy provider state.
     """
-    # Check credential pool first — this is where `hermes auth` and
-    # `hermes model` store device_code tokens.
+    # Check credential pool first — this is where `doppel auth` and
+    # `doppel model` store device_code tokens.
     try:
         from agent.credential_pool import load_pool
         pool = load_pool("openai-codex")
@@ -5771,7 +5770,7 @@ def _get_azure_foundry_auth_status() -> Dict[str, Any]:
     checks:
 
       * ``auth_mode == "entra_id"`` AND ``azure-identity`` is importable
-        (we do NOT mint a token here; ``hermes doctor`` runs the live
+        (we do NOT mint a token here; ``doppel doctor`` runs the live
         probe and reports whether the credential chain can acquire one).
       * ``auth_mode == "api_key"`` (default) AND ``AZURE_FOUNDRY_API_KEY``
         is set with a usable value.
@@ -6272,7 +6271,7 @@ def _login_openai_codex(
     *,
     force_new_login: bool = False,
 ) -> None:
-    """OpenAI Codex login via device code flow. Tokens stored in ~/.hermes/auth.json."""
+    """OpenAI Codex login via device code flow. Tokens stored in ~/.doppel/auth.json."""
 
     del args, pconfig  # kept for parity with other provider login helpers
 
@@ -7023,7 +7022,7 @@ def _minimax_poll_token(
 
 
 def _minimax_save_auth_state(auth_state: Dict[str, Any]) -> None:
-    """Persist MiniMax OAuth state to Hermes auth store (~/.hermes/auth.json)."""
+    """Persist MiniMax OAuth state to Doppel auth store (~/.doppel/auth.json)."""
     with _auth_store_lock():
         auth_store = _load_auth_store()
         _save_provider_state(auth_store, "minimax-oauth", auth_state)
@@ -7265,7 +7264,7 @@ def resolve_minimax_oauth_runtime_credentials(
     :func:`build_minimax_oauth_token_provider` for the rationale.
 
     The default (string ``api_key``) preserves the historical contract for
-    diagnostic call sites like ``hermes status`` that just want to know
+    diagnostic call sites like ``doppel status`` that just want to know
     whether a valid token exists right now.
     """
     state = get_provider_auth_state("minimax-oauth")

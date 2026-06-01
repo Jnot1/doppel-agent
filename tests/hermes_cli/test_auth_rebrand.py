@@ -116,3 +116,87 @@ def test_auth_cli_setup_and_provider_guidance_prefers_doppel() -> None:
         assert needle in auth_text
     for needle in forbidden:
         assert needle not in auth_text
+
+
+def test_auth_store_and_status_docstrings_prefer_doppel_customer_facing_copy() -> None:
+    auth_text = AUTH_PY.read_text(encoding="utf-8")
+    commands_text = AUTH_COMMANDS_PY.read_text(encoding="utf-8")
+
+    expected = [
+        "Multi-provider authentication system for Doppel Agent.",
+        "is persisted in ~/.doppel/auth.json with cross-process file locking.",
+        "instead of prompting the operator to run ``doppel auth``.",
+        "# Auth Store — persistence layer for ~/.doppel/auth.json",
+        "Once the user runs ``doppel auth login <provider>`` inside",
+        "Once the user runs ``doppel auth add <provider>`` inside the profile",
+        "and `doppel model` walks users into a broken Qwen setup flow.",
+        "Tokens live in ~/.doppel/auth/google_oauth.json",
+        '"""Return a status dict for `doppel auth list` / `doppel status`."""',
+        "# Spotify auth — PKCE tokens stored in ~/.doppel/auth.json",
+        "resulting client_id to ~/.doppel/.env, and return it.",
+        "subsequent `doppel auth spotify` runs skip the wizard.",
+        "Read Codex OAuth tokens from Doppel auth store (~/.doppel/auth.json).",
+        "Saves the new tokens to Doppel auth store automatically.",
+        "OAuth flow when the user logged in via ``doppel setup`` / the model",
+        "* ``manual:device_code`` — entries created by ``doppel auth add openai-codex``",
+        "``doppel auth add`` workaround for #33000",
+        '"""Save Codex OAuth tokens to Doppel auth store (~/.doppel/auth.json)."""',
+        '"""OpenAI Codex login via device code flow. Tokens stored in ~/.doppel/auth.json."""',
+        '"""Persist MiniMax OAuth state to Doppel auth store (~/.doppel/auth.json)."""',
+        "output is cached in ``~/.doppel/auth.json``.",
+        "re-run `doppel model` to refetch.",
+        "Re-running ``doppel model``",
+        "`doppel auth` stores credentials",
+        "`doppel model` store device_code tokens.",
+        "``doppel doctor`` runs the live",
+        "``doppel status`` that just want to know",
+        "so a new `doppel --profile <name> auth add nous --type oauth` can one-tap",
+        "``<doppel-root>/shared/nous_auth.json`` where ``<doppel-root>`` is what",
+        "``~/.doppel`` on Linux/macOS,",
+        "Linux/macOS classic installs land at ``~/.doppel/shared/``",
+        "``doppel auth add nous --label <name>``).  It gets embedded in the",
+        "via `doppel auth add nous --type oauth`. Best-",
+        "so a re-link after `doppel auth",
+    ]
+    forbidden = [
+        "Multi-provider authentication system for Hermes Agent.",
+        "is persisted in ~/.hermes/auth.json with cross-process file locking.",
+        "instead of prompting the operator to run ``hermes auth``.",
+        "# Auth Store — persistence layer for ~/.hermes/auth.json",
+        "Once the user runs ``hermes auth login <provider>`` inside",
+        "Once the user runs ``hermes auth add <provider>`` inside the profile",
+        "and `hermes model` walks users into a broken Qwen setup flow.",
+        "Tokens live in ~/.hermes/auth/google_oauth.json",
+        '"""Return a status dict for `hermes auth list` / `hermes status`."""',
+        "# Spotify auth — PKCE tokens stored in ~/.hermes/auth.json",
+        "resulting client_id to ~/.hermes/.env, and return it.",
+        "subsequent `hermes auth spotify` runs skip the wizard.",
+        "Read Codex OAuth tokens from Hermes auth store (~/.hermes/auth.json).",
+        "Saves the new tokens to Hermes auth store automatically.",
+        "OAuth flow when the user logged in via ``hermes setup`` / the model",
+        "* ``manual:device_code`` — entries created by ``hermes auth add openai-codex``",
+        "``hermes auth add`` workaround for #33000",
+        '"""Save Codex OAuth tokens to Hermes auth store (~/.hermes/auth.json)."""',
+        '"""OpenAI Codex login via device code flow. Tokens stored in ~/.hermes/auth.json."""',
+        '"""Persist MiniMax OAuth state to Hermes auth store (~/.hermes/auth.json)."""',
+        "output is cached in ``~/.hermes/auth.json``.",
+        "re-run `hermes model` to refetch.",
+        "Re-running ``hermes model``",
+        "`hermes auth` stores credentials",
+        "`hermes model` store device_code tokens.",
+        "``hermes doctor`` runs the live",
+        "``hermes status`` that just want to know",
+        "so a new `hermes --profile <name> auth add nous --type oauth` can one-tap",
+        "``<hermes-root>/shared/nous_auth.json`` where ``<hermes-root>`` is what",
+        "``~/.hermes`` on Linux/macOS,",
+        "Linux/macOS classic installs land at ``~/.hermes/shared/``",
+        "``hermes auth add nous --label <name>``).  It gets embedded in the",
+        "via `hermes auth add nous --type oauth`. Best-",
+        "so a re-link after `hermes auth",
+    ]
+
+    for needle in expected:
+        assert needle in auth_text or needle in commands_text
+    for needle in forbidden:
+        assert needle not in auth_text
+        assert needle not in commands_text

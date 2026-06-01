@@ -307,7 +307,7 @@ def auth_add_command(args) -> None:
         return
 
     if provider == "openai-codex":
-        # Clear any existing suppression marker so a re-link after `hermes auth
+        # Clear any existing suppression marker so a re-link after `doppel auth
         # remove openai-codex` works without the new tokens being skipped.
         auth_mod.unsuppress_credential_source(provider, "device_code")
         creds = auth_mod._codex_device_code_login()

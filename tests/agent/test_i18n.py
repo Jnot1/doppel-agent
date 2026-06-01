@@ -169,7 +169,10 @@ def test_t_unknown_language_uses_english():
     assert i18n.t("approval.denied", lang="klingon") == i18n.t("approval.denied", lang="en")
 
 
-@pytest.mark.parametrize("lang", ["en", "af", "zh-hant", "es", "ga", "fr"])
+@pytest.mark.parametrize(
+    "lang",
+    ["en", "af", "zh-hant", "es", "ga", "fr", "de", "hu", "it", "ja", "ko", "pt", "ru", "tr", "uk", "zh"],
+)
 def test_gateway_customer_facing_locale_slice_prefers_doppel(lang: str):
     help_header = i18n.t("gateway.help.header", lang=lang)
     assert "Doppel" in help_header
@@ -178,6 +181,10 @@ def test_gateway_customer_facing_locale_slice_prefers_doppel(lang: str):
     debug_hint = i18n.t("gateway.debug.full_logs_hint", lang=lang)
     assert "`doppel debug share`" in debug_hint
     assert "`hermes debug share`" not in debug_hint
+
+    share_hint = i18n.t("gateway.debug.share_hint", lang=lang)
+    assert "Doppel" in share_hint
+    assert "Hermes" not in share_hint
 
     status_header = i18n.t("gateway.status.header", lang=lang)
     assert "Doppel" in status_header

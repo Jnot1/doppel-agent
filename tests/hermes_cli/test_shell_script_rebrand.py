@@ -15,6 +15,7 @@ def test_shell_script_surfaces_prefer_doppel() -> None:
         '_nb_ok "Node $(node --version) found (Doppel-managed)"',
         "#   2. ~/.doppel/node/ from a prior Doppel-managed install",
         "#   5. pinned nodejs.org tarball into ~/.doppel/node/ (always works, zero shell rc edits)",
+        "#   * Proper venv activation (probes .venv, venv, then ~/.doppel/...)",
     ]
     forbidden = [
         'log_info "Legacy alias kept at $command_link_display_dir/hermes"',
@@ -22,9 +23,12 @@ def test_shell_script_surfaces_prefer_doppel() -> None:
         '_nb_ok "Node $(node --version) found (Hermes-managed)"',
         "#   2. ~/.hermes/node/ from a prior Hermes-managed install",
         "#   5. pinned nodejs.org tarball into ~/.hermes/node/ (always works, zero shell rc edits)",
+        "#   * Proper venv activation (probes .venv, venv, then ~/.hermes/...)",
     ]
 
-    haystacks = [install_text, open_webui_text, node_bootstrap_text]
+    run_tests_text = (root / "scripts" / "run_tests.sh").read_text(encoding="utf-8")
+
+    haystacks = [install_text, open_webui_text, node_bootstrap_text, run_tests_text]
     joined = "\n".join(haystacks)
     for needle in required:
         assert needle in joined, needle

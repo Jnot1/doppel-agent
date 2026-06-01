@@ -11,6 +11,7 @@ def _read(rel_path: str) -> str:
 def test_tui_gateway_customer_surfaces_prefer_doppel() -> None:
     server = _read("tui_gateway/server.py")
     entry = _read("tui_gateway/entry.py")
+    publisher = _read("tui_gateway/event_publisher.py")
 
     assert "Re-read ``~/.hermes/.env`` into the gateway process" not in server
     assert "Re-read ``~/.doppel/.env`` into the gateway process" in server
@@ -34,3 +35,6 @@ def test_tui_gateway_customer_surfaces_prefer_doppel() -> None:
 
     assert "``hermes --tui``" not in entry
     assert "``doppel --tui``" in entry
+
+    assert "spawns `hermes --tui` as a child process" not in publisher
+    assert "spawns `doppel --tui` as a child process" in publisher

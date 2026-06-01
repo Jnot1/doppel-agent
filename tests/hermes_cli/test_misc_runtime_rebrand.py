@@ -75,6 +75,14 @@ def test_misc_runtime_and_help_surfaces_prefer_doppel() -> None:
                 "with `hermes model`).",
             ],
         },
+        "/Users/macshelton/Documents/DoppelFork-repair2/hermes_cli/memory_setup.py": {
+            "required": [
+                "# Curses-based interactive picker (same pattern as doppel tools)",
+            ],
+            "forbidden": [
+                "# Curses-based interactive picker (same pattern as hermes tools)",
+            ],
+        },
         "/Users/macshelton/Documents/DoppelFork-repair2/hermes_cli/profile_distribution.py": {
             "required": [
                 '"""Profile distributions — shareable, packaged Doppel profiles via git.',

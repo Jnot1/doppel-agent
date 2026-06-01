@@ -40,6 +40,8 @@ def test_agent_init_and_backend_helper_guidance_prefers_doppel():
     agent_init = _read("agent/agent_init.py")
     backend_helpers = _read("tools/tool_backend_helpers.py")
 
+    assert "by Hermes Agent.  Choose a model with at least " not in agent_init
+    assert "by Doppel Agent.  Choose a model with at least " in agent_init
     assert "switch to a different provider with `hermes model`." not in agent_init
     assert "switch to a different provider with `doppel model`." in agent_init
     assert "No LLM provider configured. Run `hermes model`" not in agent_init
@@ -55,12 +57,19 @@ def test_agent_init_and_backend_helper_guidance_prefers_doppel():
 def test_compression_and_acp_runtime_guidance_prefers_doppel():
     conversation_compression = _read("agent/conversation_compression.py")
     copilot_acp_client = _read("agent/copilot_acp_client.py")
+    codex_app_server = _read("agent/transports/codex_app_server.py")
+    codex_app_server_session = _read("agent/transports/codex_app_server_session.py")
 
     assert "Run `hermes setup` or set OPENROUTER_API_KEY." not in conversation_compression
     assert "Run `doppel setup` or set OPENROUTER_API_KEY." in conversation_compression
 
     assert '"title": "Hermes Agent"' not in copilot_acp_client
     assert '"title": "Doppel Agent"' in copilot_acp_client
+
+    assert 'client_title: str = "Hermes Agent"' not in codex_app_server
+    assert 'client_title: str = "Doppel Agent"' in codex_app_server
+    assert 'client_title="Hermes Agent"' not in codex_app_server_session
+    assert 'client_title="Doppel Agent"' in codex_app_server_session
 
 
 def test_xai_and_tts_runtime_guidance_prefers_doppel():

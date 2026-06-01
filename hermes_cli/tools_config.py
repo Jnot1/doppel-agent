@@ -5,8 +5,7 @@ Unified tool configuration for Doppel Agent.
 Select a platform → toggle toolsets on/off → for newly enabled tools
 that need API keys, run through provider-aware configuration.
 
-Saves per-platform tool configuration to ~/.doppel/config.yaml on fresh
-installs (legacy ~/.hermes/config.yaml still works) under the
+Saves per-platform tool configuration to ~/.doppel/config.yaml under the
 `platform_toolsets` key.
 """
 
@@ -3333,7 +3332,7 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
     print()
     from hermes_constants import display_hermes_home
     print(color(f"  Tool configuration saved to {display_hermes_home()}/config.yaml", Colors.DIM))
-    print(color("  Changes take effect on next 'hermes' or gateway restart.", Colors.DIM))
+    print(color("  Changes take effect on next 'doppel' or gateway restart.", Colors.DIM))
     print()
 
 

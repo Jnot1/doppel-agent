@@ -29,6 +29,12 @@ EXTENDING_CLI_DOC = (
     REPO_ROOT / "website" / "docs" / "developer-guide" / "extending-the-cli.md"
 )
 AGENT_LOOP_DOC = REPO_ROOT / "website" / "docs" / "developer-guide" / "agent-loop.md"
+ADDING_PROVIDERS_DOC = (
+    REPO_ROOT / "website" / "docs" / "developer-guide" / "adding-providers.md"
+)
+PROVIDER_RUNTIME_DOC = (
+    REPO_ROOT / "website" / "docs" / "developer-guide" / "provider-runtime.md"
+)
 
 
 def test_developer_docs_prefer_doppel_for_customer_facing_copy():
@@ -46,6 +52,8 @@ def test_developer_docs_prefer_doppel_for_customer_facing_copy():
             PLUGIN_LLM_ACCESS_DOC,
             EXTENDING_CLI_DOC,
             AGENT_LOOP_DOC,
+            ADDING_PROVIDERS_DOC,
+            PROVIDER_RUNTIME_DOC,
         )
     )
 
@@ -77,6 +85,19 @@ def test_developer_docs_prefer_doppel_for_customer_facing_copy():
         "`~/.doppel/auth.json` / env, including the credential pool when",
         "cd ~/doppel-agent",
         "The session can be resumed later via `/resume` or `doppel chat --resume`",
+        "user plugins at `$DOPPEL_HOME/plugins/model-providers/` both get picked up.",
+        "User plugins at `$DOPPEL_HOME/plugins/model-providers/<name>/` override bundled plugins",
+        "User plugins at `$DOPPEL_HOME/plugins/model-providers/<name>/` override bundled ones",
+        "Point `DOPPEL_HOME` at a temp directory so you don't pollute your real config:",
+        "export DOPPEL_HOME=/tmp/hermes-plugin-test",
+        "mkdir -p $DOPPEL_HOME/plugins/model-providers/my-provider",
+        "cat > $DOPPEL_HOME/plugins/model-providers/my-provider/__init__.py <<'EOF'",
+        "drop an unlabeled user plugin into `$DOPPEL_HOME/plugins/`",
+        "Third parties can add their own by dropping a directory under `$DOPPEL_HOME/plugins/model-providers/`",
+        "User plugins** — `$DOPPEL_HOME/plugins/model-providers/<name>/`",
+        "Drop a `$DOPPEL_HOME/plugins/model-providers/gmi/` directory",
+        "User plugins at `$DOPPEL_HOME/plugins/model-providers/<name>/` override bundled ones",
+        "Adding a new plugin under `plugins/model-providers/<your-provider>/` (or `$DOPPEL_HOME/plugins/model-providers/<your-provider>/`)",
     )
     stale = (
         "| `~/.hermes/.env` | API keys, bot tokens, platform credentials |",
@@ -106,6 +127,18 @@ def test_developer_docs_prefer_doppel_for_customer_facing_copy():
         "`~/.hermes/auth.json` / env, including the credential pool when",
         "cd ~/.hermes/hermes-agent",
         "The session can be resumed later via `/resume` or `hermes chat --resume`",
+        "user plugins at `$HERMES_HOME/plugins/model-providers/` both get picked up.",
+        "User plugins at `$HERMES_HOME/plugins/model-providers/<name>/` override bundled plugins",
+        "User plugins at `$HERMES_HOME/plugins/model-providers/<name>/` override bundled ones",
+        "Point `HERMES_HOME` at a temp directory so you don't pollute your real config:",
+        "export HERMES_HOME=/tmp/hermes-plugin-test",
+        "mkdir -p $HERMES_HOME/plugins/model-providers/my-provider",
+        "cat > $HERMES_HOME/plugins/model-providers/my-provider/__init__.py <<'EOF'",
+        "drop an unlabeled user plugin into `$HERMES_HOME/plugins/`",
+        "Third parties can add their own by dropping a directory under `$HERMES_HOME/plugins/model-providers/`",
+        "User plugins** — `$HERMES_HOME/plugins/model-providers/<name>/`",
+        "Drop a `$HERMES_HOME/plugins/model-providers/gmi/` directory",
+        "Adding a new plugin under `plugins/model-providers/<your-provider>/` (or `$HERMES_HOME/plugins/model-providers/<your-provider>/`)",
     )
 
     for needle in expected:

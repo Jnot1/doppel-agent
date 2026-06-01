@@ -1,7 +1,7 @@
 """Doppel CLI skin/theme engine.
 
 A data-driven skin system that lets users customize the CLI's visual appearance.
-Skins are defined as YAML files in ~/.hermes/skins/ or as built-in presets.
+Skins are defined as YAML files in ~/.doppel/skins/ or as built-in presets.
 No code changes are needed to add a new skin.
 
 SKIN YAML SCHEMA
@@ -65,10 +65,10 @@ All fields are optional. Missing values inherit from the ``default`` skin.
 
     # Branding: text strings used throughout the CLI
     branding:
-      agent_name: "Hermes Agent"          # Banner title, status display
+      agent_name: "Doppel Agent"          # Banner title, status display
       welcome: "Welcome message"          # Shown at CLI startup
       goodbye: "Goodbye! ⚕"              # Shown on exit
-      response_label: " ⚕ Hermes "       # Response box header label
+      response_label: " ⚕ Doppel "       # Response box header label
       prompt_symbol: "❯"                 # Input prompt symbol (bare token; renderers add trailing space)
       help_header: "(^_^)? Commands"      # /help header text
 
@@ -90,10 +90,10 @@ USAGE
 
     skin = get_active_skin()
     print(skin.colors["banner_title"])    # "#FFD700"
-    print(skin.get_branding("agent_name"))  # "Hermes Agent"
+    print(skin.get_branding("agent_name"))  # "Doppel Agent"
 
     set_active_skin("ares")               # Switch to built-in ares skin
-    set_active_skin("mytheme")            # Switch to user skin from ~/.hermes/skins/
+    set_active_skin("mytheme")            # Switch to user skin from ~/.doppel/skins/
 
 BUILT-IN SKINS
 ==============
@@ -108,7 +108,7 @@ BUILT-IN SKINS
 USER SKINS
 ==========
 
-Drop a YAML file in ``~/.hermes/skins/<name>.yaml`` following the schema above.
+Drop a YAML file in ``~/.doppel/skins/<name>.yaml`` following the schema above.
 Activate with ``/skin <name>`` in the CLI or ``display.skin: <name>`` in config.yaml.
 """
 

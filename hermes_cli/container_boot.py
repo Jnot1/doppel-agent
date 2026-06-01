@@ -64,8 +64,8 @@ def reconcile_profile_gateways(
     (the implicit profile that lives at the top of ``$HERMES_HOME``,
     not under ``profiles/``). The dispatcher in ``hermes_cli.gateway``
     maps an empty profile suffix to ``gateway-default``, so this slot
-    is what ``hermes gateway start`` (no ``-p``) targets. Without it,
-    bare ``hermes gateway start`` inside the container would land on
+    is what ``doppel gateway start`` (no ``-p``) targets. Without it,
+    bare ``doppel gateway start`` inside the container would land on
     ``s6-svc -u /run/service/gateway-default`` → uncaught
     ``CalledProcessError`` → traceback to the user (PR #30136 review).
 
@@ -91,7 +91,7 @@ def reconcile_profile_gateways(
 
     # Default profile — always register, even if nothing has ever
     # populated the root profile dir. The slot exists so
-    # ``hermes gateway start`` (no ``-p``) has somewhere to land;
+    # ``doppel gateway start`` (no ``-p``) has somewhere to land;
     # auto-up only when the prior state was "running" (same rule as
     # named profiles).
     default_prior_state = _read_prior_state(hermes_home)
